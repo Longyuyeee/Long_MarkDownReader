@@ -20,6 +20,8 @@ window.pdfNotesAudit=state
 window.__TAURI_INTERNALS__={metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},transformCallback:()=>1,invoke:async(command,args)=>{
  calls.push({command,args:JSON.parse(JSON.stringify(args||{}))})
  if(command==='read_pdf_info')return {length:bytes.length,signature:localStorage.getItem('v1137.fixture.signature')||'fixture',fullData:bytes}
+ if(command==='read_pdf_annotation_state')return {document:await window.__TAURI_INTERNALS__.invoke('read_pdf_annotations',args),revision:'fixture',sourceSignature:localStorage.getItem('v1137.fixture.signature')||'fixture'}
+ if(command==='write_pdf_annotation_state'){if(state.conflict)throw Error('PDF_ANNOTATION_CONFLICT');await window.__TAURI_INTERNALS__.invoke('write_pdf_annotations',args);return 'fixture'}
  if(command==='read_pdf_annotations'){if(state.annotationError)throw Error(state.annotationError);return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:bytes.length,modifiedAt:1},annotations:JSON.parse(JSON.stringify(annotations))}}
  if(command==='read_pdf_ocr')return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:bytes.length,modifiedAt:1},provider:{id:'tesseract-wasm',version:'fixture',languages:['eng']},pages:[]}
  if(command==='build_pdf_annotation_reference'){

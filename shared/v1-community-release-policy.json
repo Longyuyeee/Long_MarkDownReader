@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.1",
-  "releaseCandidate": true,
+  "appVersion": "1.2.2",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-22",
-  "currentStatus": "v1.2.1-community-release-published",
+  "currentStatus": "v1.2.2-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.0",
+    "previousPublicVersion": "1.2.1",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.0-to-1.2.1-pending",
-    "scope": "file-reading-continuity"
+    "managedUpdaterUpgradePath": "1.2.1-to-1.2.2-pending",
+    "scope": "pdf-annotation-history"
   },
   "targetRelease": {
-    "tag": "v1.2.1",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.1",
+    "tag": "v1.2.2",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.2",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "baa46e69679dab1c21e1873d7e1dc9d648c68be3",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39781503881,
-    "hostedInstalledLifecycleRunId": 39787839440,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.2.1_x64_zh-CN.msi",
-        "sizeBytes": 77950976,
-        "sha256": "a3ef75fe1194ad53c151bfff2fca543525fa9b4f85b5a28523cc87671a54b527",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.1_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.2.1_x64-setup.exe",
-        "sizeBytes": 68610085,
-        "sha256": "eeedfa4e805a1ae3eb1c320f614012e23c4ce3496a41094db91a1d4775ff908f",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.1_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.2.1",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.1",
-    "databaseId": 420787528,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "baa46e69679dab1c21e1873d7e1dc9d648c68be3",
-    "publishedAt": "2026-10-22T13:54:42Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -123,7 +92,8 @@
     "v1.1.35-to-v1.1.36-managed-update-observation-pending",
     "v1.1.36-to-v1.1.37-managed-update-observation-pending",
     "v1.1.37-to-v1.2.0-managed-update-observation-pending",
-    "v1.2.0-to-v1.2.1-managed-update-observation-pending"
+    "v1.2.0-to-v1.2.1-managed-update-observation-pending",
+    "v1.2.1-to-v1.2.2-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.2-pdf-annotation-undo-planned"
+  "nextAction": "validate-and-build-v1.2.2-installers"
 }

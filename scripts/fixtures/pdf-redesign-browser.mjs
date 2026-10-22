@@ -14,6 +14,8 @@ const calls = []
 window.__TAURI_INTERNALS__ = {transformCallback:()=>1, metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},invoke:async(command,args)=>{
  calls.push({command,args})
  if(command==='read_pdf_info'||command==='read_external_pdf_info')return {length:bytes.length,signature:'fixture-pdf',fullData:bytes}
+ if(command==='read_pdf_annotation_state')return {document:await window.__TAURI_INTERNALS__.invoke('read_pdf_annotations',args),revision:'fixture',sourceSignature:'fixture-pdf'}
+ if(command==='write_pdf_annotation_state'){await window.__TAURI_INTERNALS__.invoke('write_pdf_annotations',args);return 'fixture'}
  if(command==='read_pdf_annotations')return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:bytes.length,modifiedAt:1,fingerprint:''},annotations:[]}
  if(command==='read_pdf_ocr')return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:bytes.length,modifiedAt:1,fingerprint:''},provider:{id:'tesseract-wasm',version:'fixture',languages:['eng']},updatedAt:1,pages:[]}
  if(command==='inspect_pdf_form_structure')return {status:'no_form',sourceDigest:'fixture',sourceBytes:bytes.length,pageCount:2,hasAcroForm:false,needAppearances:false,fieldCount:0,widgetCount:0,fieldTypeCounts:{},duplicateFieldNames:[],orphanWidgetCount:0,missingAppearanceCount:0,fillableCandidateCount:0,blockers:[],diagnostics:[],fields:[],widgets:[]}

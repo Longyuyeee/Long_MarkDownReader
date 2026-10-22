@@ -2977,6 +2977,69 @@ pub async fn read_pdf_annotations(
     Ok(document)
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfAnnotationState {
+    document: PdfAnnotationDocument,
+    revision: String,
+    source_signature: String,
+}
+
+fn annotation_revision(path: &Path) -> Result<String, String> {
+    if !path.exists() { return Ok("missing".into()); }
+    if path.metadata().map_err(|e| e.to_string())?.len() > MAX_ANNOTATION_FILE_BYTES {
+        return Err("PDF 批注文件超过 5 MB 上限".into());
+    }
+    Ok(format!("{:x}", Sha256::digest(fs::read(path).map_err(|e| e.to_string())?)))
+}
+
+// Read model and revision under one document lock, so another window cannot
+// slip a new sidecar between the two reads.
+#[tauri::command]
+pub async fn read_pdf_annotation_state(library_root: String, pdf_path: String) -> Result<PdfAnnotationState, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let pdf = guard.resolve_existing_file(pdf_path, &["pdf"])?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&pdf)?;
+    let path = annotation_path(&pdf)?;
+    recover_interrupted_write(&path)?;
+    let revision = annotation_revision(&path)?;
+    let document = if revision == "missing" {
+        PdfAnnotationDocument::empty(annotation_source(&pdf, None)?)
+    } else {
+        serde_json::from_slice::<PdfAnnotationDocument>(&fs::read(&path).map_err(|e| e.to_string())?)
+            .map_err(|e| format!("PDF 批注 JSON 损坏: {}", e))?
+    };
+    validate_pdf_annotations(&document)?;
+    if document.source.pdf_file != annotation_source(&pdf, None)?.pdf_file {
+        return Err("PDF 批注源文件与当前 PDF 不匹配".into());
+    }
+    Ok(PdfAnnotationState { document, revision, source_signature: pdf_signature(&pdf.metadata().map_err(|e| e.to_string())?) })
+}
+
+fn write_annotation_state(pdf: &Path, mut document: PdfAnnotationDocument, expected_revision: &str, expected_signature: &str) -> Result<String, String> {
+    let path = annotation_path(pdf)?;
+    recover_interrupted_write(&path)?;
+    if pdf_signature(&pdf.metadata().map_err(|e| e.to_string())?) != expected_signature
+        || annotation_revision(&path)? != expected_revision {
+        return Err("PDF_ANNOTATION_CONFLICT: PDF 或批注已被其他操作修改，当前评论仍保留，请核对后重新读取。".into());
+    }
+    let fingerprint = document.source.fingerprint.take();
+    document.source = annotation_source(pdf, fingerprint)?;
+    validate_pdf_annotations(&document)?;
+    let content = format!("{}\n", serde_json::to_string_pretty(&document).map_err(|e| e.to_string())?);
+    if content.len() as u64 > MAX_ANNOTATION_FILE_BYTES { return Err("PDF 批注文件超过 5 MB 上限".into()); }
+    write_utf8(&path, &content)?;
+    Ok(format!("{:x}", Sha256::digest(content.as_bytes())))
+}
+
+#[tauri::command]
+pub async fn write_pdf_annotation_state(library_root: String, pdf_path: String, document: PdfAnnotationDocument, expected_revision: String, expected_signature: String) -> Result<String, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let pdf = guard.resolve_existing_file(pdf_path, &["pdf"])?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&pdf)?;
+    write_annotation_state(&pdf, document, &expected_revision, &expected_signature)
+}
+
 #[tauri::command]
 pub async fn write_pdf_annotations(
     library_root: String,
@@ -4531,6 +4594,43 @@ mod tests {
                 "{invalid} should be rejected"
             );
         }
+    }
+
+    #[test]
+    fn annotation_state_rejects_external_sidecar_and_source_changes_without_overwrite() {
+        let workspace = TestWorkspace::new();
+        let pdf = workspace.root.join("history.pdf");
+        fs::write(&pdf, b"%PDF-1.7 original").unwrap();
+        let read = || tauri::async_runtime::block_on(read_pdf_annotation_state(workspace.root_string(), pdf.to_string_lossy().into_owned())).unwrap();
+        let initial = read();
+        assert_eq!(initial.revision, "missing");
+        let first = write_annotation_state(&pdf, initial.document, &initial.revision, &initial.source_signature).unwrap();
+        assert_eq!(first, read().revision);
+        let before = read();
+        let path = annotation_path(&pdf).unwrap();
+        let mut external = fs::read(&path).unwrap(); external.push(b' ');
+        fs::write(&path, &external).unwrap();
+        assert!(write_annotation_state(&pdf, before.document, &before.revision, &before.source_signature).unwrap_err().contains("PDF_ANNOTATION_CONFLICT"));
+        assert_eq!(fs::read(&path).unwrap(), external);
+        let before = read();
+        fs::write(&pdf, b"%PDF-1.7 changed source").unwrap();
+        assert!(write_annotation_state(&pdf, before.document, &before.revision, &before.source_signature).unwrap_err().contains("PDF_ANNOTATION_CONFLICT"));
+        assert_eq!(fs::read(&path).unwrap(), external);
+    }
+
+    #[test]
+    fn annotation_state_failed_write_can_retry_without_losing_model() {
+        let workspace = TestWorkspace::new();
+        let pdf = workspace.root.join("retry.pdf");
+        fs::write(&pdf, b"%PDF-1.7 original").unwrap();
+        let state = tauri::async_runtime::block_on(read_pdf_annotation_state(workspace.root_string(), pdf.to_string_lossy().into_owned())).unwrap();
+        let path = annotation_path(&pdf).unwrap();
+        fs::create_dir(&path).unwrap();
+        assert!(write_annotation_state(&pdf, state.document.clone(), &state.revision, &state.source_signature).is_err());
+        fs::remove_dir(&path).unwrap();
+        let revision = write_annotation_state(&pdf, state.document, &state.revision, &state.source_signature).unwrap();
+        assert_eq!(annotation_revision(&path).unwrap(), revision);
+        assert_eq!(fs::read(&pdf).unwrap(), b"%PDF-1.7 original");
     }
 
     #[test]

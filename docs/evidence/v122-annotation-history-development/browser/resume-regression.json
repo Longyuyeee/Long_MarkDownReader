@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "checks": [
+    "A new browser process restores all filters, exact selected IDs, active annotation and nonzero panel scroll",
+    "Existing PDF controls remain available in all six visual styles",
+    "Deleted IDs are discarded while surviving checked annotations remain selected",
+    "A changed source does not receive stale filters or selections",
+    "An explicit annotation reference takes precedence over saved view metadata",
+    "Failed comment saves retain the full input and current PDF; successful retry leaves without an extra prompt and preserves another dirty note",
+    "List groups survive restart and clamp to a valid group when annotations shrink"
+  ],
+  "errors": []
+}

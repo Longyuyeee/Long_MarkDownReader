@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.2.2",
-  "runtimeBaseVersion": "1.2.1",
+  "runtimeBaseVersion": "1.2.2",
   "publicVersion": "1.2.1",
   "publicTag": "v1.2.1",
   "publicTagCommit": "baa46e69679dab1c21e1873d7e1dc9d648c68be3",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-107-v1.2.1-published",
-  "binaryVersionTransition": "v1.2.1-public-release-published",
-  "displayLabel": "v1.2.1 已发布 · 下一目标 v1.2.2",
+  "currentStage": "M8-108-v1.2.2-annotation-history-candidate",
+  "binaryVersionTransition": "v1.2.2-quality-gate-pending",
+  "displayLabel": "v1.2.2 PDF 批注撤销重做候选 · 当前公开 v1.2.1",
   "activeSlice": {
-    "id": "v1.2.1-file-reading-continuity",
-    "status": "published-and-remote-assets-verified",
-    "document": "docs/V1_2_1_Unsigned_Community_Release_Audit_2026-10-22.md"
+    "id": "v1.2.2-pdf-annotation-history",
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_2_2_Unsigned_Community_Release_Audit_2026-10-22.md"
   }
 }

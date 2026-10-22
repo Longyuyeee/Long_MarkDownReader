@@ -40,8 +40,8 @@
         </div>
         <div v-if="!isExternal" v-show="activePdfTask === 'annotations'" class="pdf-task-tools" role="group" aria-label="批注工具">
         <button class="fit-btn" :aria-pressed="sidebarOpen && sidebarTab === 'annotations'" @click="sidebarOpen = true; sidebarTab = 'annotations'">批注列表</button>
-        <button v-if="!isExternal" class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
-        <button v-if="!isExternal" class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment"><MessageSquareTextIcon :size="14"/><span class="action-label">页评论</span></button>
+        <button v-if="!isExternal" class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable || annotationSaveConflict" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
+        <button v-if="!isExternal" class="fit-btn" :disabled="!annotationWritable || annotationSaveConflict" title="为当前页添加评论" @click="createPageComment"><MessageSquareTextIcon :size="14"/><span class="action-label">页评论</span></button>
         </div>
       </div>
     </WorkspaceToolbar>
@@ -77,11 +77,11 @@
           <button v-for="(item, index) in outline" :key="`${item.title}-${index}`" :style="{ paddingLeft: `${12 + item.depth * 14}px` }" @click="openOutlineItem(item)">{{ item.title }}</button>
         </div>
         <div v-else-if="!isExternal && sidebarTab === 'annotations'" ref="annotationPanelRef" class="annotation-panel" @scroll.passive="rememberAnnotationScroll">
+          <div class="annotation-panel-actions"><input v-if="annotations.length" v-model="annotationQuery" aria-label="查找批注摘录或评论" placeholder="查找摘录或评论" maxlength="200" /><NDropdown trigger="click" :options="annotationHistoryActions" @select="key => handleAnnotationHistoryAction(String(key))"><button class="annotation-menu" aria-label="批注历史与保存">···</button></NDropdown></div>
           <div v-if="annotationError" class="annotation-alert" role="alert">{{ annotationError }}</div>
           <div v-if="referenceNotice" class="annotation-alert reference-notice" role="status" aria-live="polite">{{ referenceNotice }}</div>
           <div v-if="!annotationError && !annotations.length" class="annotation-empty"><span>暂无批注</span><WorkspaceHelp label="说明：选择正文后添加高亮，或启用“区域批注" text="选择正文后添加高亮，或启用“区域批注”框选页面。" /></div>
           <div v-if="annotations.length" class="reading-filters">
-            <input v-model="annotationQuery" aria-label="查找批注摘录或评论" placeholder="查找摘录或评论" maxlength="200" />
             <input v-model="annotationPages" aria-label="筛选批注页码" placeholder="全部页码，如 1-5,8" maxlength="512" />
             <select v-model="annotationKindFilter" aria-label="筛选批注类型"><option value="">全部类型</option><option value="highlight">高亮</option><option value="area">区域批注</option><option value="comment">页评论</option></select>
             <select v-model="annotationColorFilter" aria-label="筛选批注颜色"><option value="">全部颜色</option><option v-for="color in annotationColors" :key="color" :value="color">{{ annotationColorLabel(color) }}</option></select>
@@ -104,15 +104,15 @@
           <div v-if="filteredAnnotations.length > 50" class="reading-pagination"><button :disabled="readingListPage === 0" @click="readingListPage--">上一组</button><span>{{ readingListPage + 1 }} / {{ Math.ceil(filteredAnnotations.length / 50) }}</span><button :disabled="(readingListPage + 1) * 50 >= filteredAnnotations.length" @click="readingListPage++">下一组</button></div>
           <NDropdown trigger="manual" :show="annotationContext.show" :x="annotationContext.x" :y="annotationContext.y" :options="annotationActions" @clickoutside="annotationContext.show=false" @select="key => { annotationContext.show=false; handleAnnotationAction(String(key),annotationContext.id) }" />
           <div v-if="selectedAnnotation" class="annotation-editor">
-            <label>评论<textarea v-model="selectedAnnotation.comment" :disabled="!annotationWritable" maxlength="20000" placeholder="为这条批注补充评论…" @input="touchSelectedAnnotation"></textarea></label>
-            <div class="annotation-colors"><button v-for="color in annotationColors" :key="color" :disabled="!annotationWritable" :class="[`color-${color}`, { active: selectedAnnotation.color === color }]" :aria-label="`${annotationColorLabel(color)}批注`" :aria-pressed="selectedAnnotation.color === color" @click="setSelectedAnnotationColor(color)"></button></div>
+            <label>评论<textarea :value="selectedAnnotation.comment" :disabled="!annotationWritable" :readonly="annotationSaveConflict" maxlength="20000" placeholder="为这条批注补充评论…" @input="editSelectedAnnotationComment(($event.target as HTMLTextAreaElement).value)" @blur="annotationHistory.endGroup()"></textarea></label>
+            <div class="annotation-colors"><button v-for="color in annotationColors" :key="color" :disabled="!annotationWritable || annotationSaveConflict" :class="[`color-${color}`, { active: selectedAnnotation.color === color }]" :aria-label="`${annotationColorLabel(color)}批注`" :aria-pressed="selectedAnnotation.color === color" @click="setSelectedAnnotationColor(color)"></button></div>
             <div class="annotation-reference-actions">
               <button :disabled="referenceWorking || !annotationWritable" @click="copySelectedAnnotationReference">复制引用</button>
               <button :disabled="referenceWorking || !annotationWritable" @click="insertSelectedAnnotationReference">插入笔记…</button>
             </div>
-            <button class="delete-annotation" :disabled="!annotationWritable" @click="deleteSelectedAnnotation()">删除批注</button>
+            <button class="delete-annotation" :disabled="!annotationWritable || annotationSaveConflict" @click="deleteSelectedAnnotation()">删除批注</button>
           </div>
-          <WorkspaceStateNotice v-if="annotationDocument" class="annotation-save-state" :kind="annotationSaveError ? 'error' : annotationSaving ? 'loading' : annotationDirty ? 'limited' : 'saved'" :tone="annotationSaveError ? 'danger' : annotationDirty ? 'warning' : annotationSaving ? 'info' : 'success'" compact>{{ annotationSaveError || (annotationSaving ? '正在保存批注' : annotationDirty ? '等待保存' : '批注已保存到 sidecar') }}</WorkspaceStateNotice>
+          <WorkspaceStateNotice v-if="annotationDocument" class="annotation-save-state" :kind="annotationSaveError ? 'error' : annotationSaving ? 'loading' : annotationDirty ? 'limited' : 'saved'" :tone="annotationSaveError ? 'danger' : annotationDirty ? 'warning' : annotationSaving ? 'info' : 'success'" compact>{{ annotationSaveError || (annotationSaving ? '正在保存批注' : annotationDirty ? '等待保存' : '批注已保存') }}<template v-if="annotationSaveError" #action><button class="annotation-menu" :disabled="annotationSaving" @click="annotationSaveConflict ? reloadAnnotationState() : persistAnnotations()">{{ annotationSaveConflict ? '重新读取…' : '重试保存' }}</button></template></WorkspaceStateNotice>
         </div>
         <PdfFormInspectorPanel
           v-else-if="!isExternal && sidebarTab === 'forms'"
@@ -542,7 +542,7 @@
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useContextCommands } from '../services/contextCommands'
 import { beginWindowSave, useWindowDraft, useWindowDraftSnapshot } from '../services/windowDrafts'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowReactive, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { NCard, NModal, NDropdown, useDialog, useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -580,6 +580,7 @@ import { managedReadingMarkdown } from '../utils/pdfReadingContinuity'
 import { annotationPageFilter, appendReadingDraft, MAX_READING_SELECTION, readingItemMarkdown, readingTargetDirectory, type PdfReadingSnapshot } from '../utils/pdfReadingNote'
 import { belongsToLibrary } from '../utils/workSessions'
 import type { PdfAnnotation, PdfAnnotationColor, PdfAnnotationDocument, PdfAnnotationKind, PdfAnnotationRect } from '../types/pdfAnnotations'
+import { PdfAnnotationHistory } from '../utils/pdfAnnotationHistory'
 import type { PdfOcrDocument, PdfOcrPage, PdfOcrTaskState } from '../types/pdfOcr'
 import type { PdfFormInspectionReport, PdfFormTextChange, PdfFormTextFillReport, PdfSavedFormTextReport } from '../types/pdfForms'
 import type { PdfRasterizedRedactionPage, PdfRedactionColor, PdfRedactionCopyReport, PdfRedactionOverlay, PdfSavedRedactionCopyReport } from '../types/pdfRedaction'
@@ -767,6 +768,11 @@ const annotationSaveError = ref('')
 const annotationSaving = ref(false)
 const annotationDirty = ref(false)
 const annotationWritable = ref(true)
+const annotationHistory = reactive(new PdfAnnotationHistory())
+const annotationSaveConflict = ref(false)
+let annotationDiskRevision = ''
+const annotationOwner = () => !loading.value && annotationDocument.value && annotationWritable.value && !annotationSaveConflict.value && annotationSourcePath === pdfPath.value && annotationLibraryRoot === store.libraryPath
+  ? JSON.stringify([annotationLibraryRoot, annotationSourcePath, pdfSourceSignature.value, annotationLoadGeneration]) : ''
 const referenceWorking = ref(false)
 const referenceNotice = ref('')
 const selectedAnnotationId = ref('')
@@ -1103,6 +1109,9 @@ const focusRequestedReference = () => {
 
 const loadAnnotations = async (document: PDFDocumentProxy, saved?: WorkspaceViewState['pdfAnnotations']) => {
   const generation = ++annotationLoadGeneration
+  annotationHistory.reset()
+  annotationSaveConflict.value = false
+  annotationDiskRevision = ''
   annotationError.value = ''
   annotationSaveError.value = ''
   annotationWritable.value = true
@@ -1110,10 +1119,12 @@ const loadAnnotations = async (document: PDFDocumentProxy, saved?: WorkspaceView
   try {
     const sourcePath = pdfPath.value
     const libraryRoot = store.libraryPath
-    const loaded = await invoke<PdfAnnotationDocument>('read_pdf_annotations', { libraryRoot, pdfPath: sourcePath })
+    const state = await invoke<{document: PdfAnnotationDocument; revision: string; sourceSignature: string}>('read_pdf_annotation_state', { libraryRoot, pdfPath: sourcePath })
     if (generation !== annotationLoadGeneration || pdfDocument.value !== document) return
+    const loaded = state.document
+    annotationDiskRevision = state.revision
     const fingerprint = currentFingerprint(document)
-    if (loaded.source.fingerprint && fingerprint && loaded.source.fingerprint !== fingerprint) {
+    if (state.sourceSignature !== pdfSourceSignature.value || loaded.source.fingerprint && fingerprint && loaded.source.fingerprint !== fingerprint) {
       annotationError.value = 'PDF 内容已变化，现有批注位置可能失效；批注仍以只读方式显示。'
       annotationWritable.value = false
     }
@@ -2131,21 +2142,27 @@ const runOcr = async (requestedPages: number[], replaceExisting = false) => {
 }
 
 const persistAnnotations = async () => {
-  if (!annotationDocument.value || !annotationWritable.value || !annotationDirty.value || !annotationSourcePath || !annotationLibraryRoot) return
+  if (!annotationDocument.value || !annotationWritable.value || annotationSaveConflict.value || !annotationDirty.value || !annotationSourcePath || !annotationLibraryRoot) return
   const snapshot = JSON.parse(JSON.stringify(annotationDocument.value)) as PdfAnnotationDocument
   const revision = annotationRevision
   const sourcePath = annotationSourcePath
   const libraryRoot = annotationLibraryRoot
+  const signature = pdfSourceSignature.value
+  const generation = annotationLoadGeneration
+  const current = () => generation === annotationLoadGeneration && annotationSourcePath === sourcePath && annotationLibraryRoot === libraryRoot
   annotationSaving.value = true
   annotationSaveError.value = ''
   annotationSaveChain = annotationSaveChain.catch(() => undefined).then(async () => {
     try {
-      await invoke('write_pdf_annotations', { libraryRoot, pdfPath: sourcePath, document: snapshot })
-      if (annotationSourcePath === sourcePath && annotationLibraryRoot === libraryRoot && revision === annotationRevision) annotationDirty.value = false
+      if (!current() || annotationSaveConflict.value) return
+      const diskRevision = await invoke<string>('write_pdf_annotation_state', { libraryRoot, pdfPath: sourcePath, document: snapshot, expectedRevision: annotationDiskRevision, expectedSignature: signature })
+      if (current()) { annotationDiskRevision = diskRevision; if (revision === annotationRevision) annotationDirty.value = false }
     } catch (cause) {
-      if (annotationSourcePath === sourcePath && annotationLibraryRoot === libraryRoot) {
+      if (current()) {
         annotationDirty.value = true
-        annotationSaveError.value = `批注保存失败：${String(cause)}`
+        annotationSaveConflict.value = String(cause).includes('PDF_ANNOTATION_CONFLICT')
+        if (annotationSaveConflict.value) annotationHistory.reset()
+        annotationSaveError.value = annotationSaveConflict.value ? 'PDF 或批注已在别处修改；当前评论仍保留，请复制需要的内容后重新读取。' : `批注保存失败：${String(cause)}`
       }
     } finally {
       annotationSaving.value = false
@@ -2162,7 +2179,9 @@ const scheduleAnnotationSave = () => {
 }
 
 const addAnnotation = (annotation: PdfAnnotation) => {
-  if (!annotationDocument.value || !annotationWritable.value) return
+  const owner = annotationOwner()
+  if (!annotationDocument.value || !owner) return
+  annotationHistory.record(owner, {before:null,after:annotation,index:annotations.value.length,label:'新增批注',selectedBefore:selectedAnnotationId.value,selectedAfter:annotation.id})
   annotationDocument.value.annotations.push(annotation)
   selectedAnnotationId.value = annotation.id
   sidebarOpen.value = true
@@ -2215,6 +2234,7 @@ const captureTextSelection = () => {
 }
 
 const createSelectionAnnotation = async (color: PdfAnnotationColor, withComment: boolean) => {
+  const owner = annotationOwner()
   const tool = selectionTool.value
   if (!tool.show) return
   annotationColor.value = color
@@ -2225,11 +2245,13 @@ const createSelectionAnnotation = async (color: PdfAnnotationColor, withComment:
     multiline: true,
   }) : ''
   if (withComment && comment === null) return
+  if (!owner || owner !== annotationOwner()) return
   addAnnotation(makeAnnotation('highlight', tool.page, tool.rects, tool.quote, comment || '', color))
   dismissSelectionTool()
 }
 
 const createAreaAnnotation = async (page: number, rect: PdfAnnotationRect) => {
+  const owner = annotationOwner()
   const comment = await promptAppAction(dialog, {
     title: '添加区域批注',
     content: '为当前框选区域补充评论，也可以留空。',
@@ -2237,18 +2259,21 @@ const createAreaAnnotation = async (page: number, rect: PdfAnnotationRect) => {
     multiline: true,
   })
   if (comment === null) return
+  if (!owner || owner !== annotationOwner()) return
   addAnnotation(makeAnnotation('area', page, [rect], '', comment))
   areaMode.value = false
 }
 
 const createPageComment = async () => {
+  const owner = annotationOwner(), page = currentPage.value
   const comment = await promptAppAction(dialog, {
-    title: `为第 ${currentPage.value} 页添加评论`,
+    title: `为第 ${page} 页添加评论`,
     positiveText: '添加页评论',
     multiline: true,
   })
   if (!comment?.trim()) return
-  addAnnotation(makeAnnotation('comment', currentPage.value, [], '', comment.trim()))
+  if (!owner || owner !== annotationOwner()) return
+  addAnnotation(makeAnnotation('comment', page, [], '', comment.trim()))
 }
 
 const scrollToAnnotation = (id: string, attempt = 0) => {
@@ -2260,6 +2285,7 @@ const scrollToAnnotation = (id: string, attempt = 0) => {
 }
 
 const selectAnnotation = (id: string) => {
+  if (selectedAnnotationId.value !== id) annotationHistory.endGroup()
   const annotation = annotations.value.find(item => item.id === id)
   if (!annotation) return
   selectedAnnotationId.value = id
@@ -2271,15 +2297,52 @@ const selectAnnotation = (id: string) => {
   nextTick(() => scrollToAnnotation(id))
 }
 
-const touchSelectedAnnotation = () => {
-  if (!selectedAnnotation.value) return
-  selectedAnnotation.value.updatedAt = Date.now()
+const changeAnnotation = (id: string, label: string, update: (annotation: PdfAnnotation) => void, group?: string) => {
+  const owner = annotationOwner(), index = annotations.value.findIndex(a => a.id === id)
+  if (!owner || index < 0) return
+  const before = JSON.parse(JSON.stringify(annotations.value[index])) as PdfAnnotation
+  const after = JSON.parse(JSON.stringify(before)) as PdfAnnotation
+  update(after)
+  if (JSON.stringify(before) === JSON.stringify(after)) return
+  after.updatedAt = Date.now()
+  annotationHistory.record(owner, {before,after,index,label,selectedBefore:selectedAnnotationId.value,selectedAfter:id,group})
+  annotationDocument.value!.annotations.splice(index, 1, after)
+  selectedAnnotationId.value = id
   scheduleAnnotationSave()
+}
+const editSelectedAnnotationComment = (comment: string) => changeAnnotation(selectedAnnotationId.value, '编辑评论', a => { a.comment = comment.slice(0,20000) }, `comment:${selectedAnnotationId.value}`)
+const applyAnnotationHistory = (direction: 'undo' | 'redo') => {
+  const restored = annotationHistory.apply(annotationOwner(), annotations.value, direction)
+  if (!restored || !annotationDocument.value) return
+  annotationDocument.value.annotations = restored.annotations
+  selectedAnnotationId.value = restored.selected
+  readingSelection.value = readingSelection.value.filter(id => restored.annotations.some(a => a.id === id))
+  if (restored.selected) selectAnnotation(restored.selected)
+  scheduleAnnotationSave()
+}
+const annotationHistoryActions = computed(() => [
+  {key:'undo',label:annotationHistory.undoLabel ? `撤销${annotationHistory.undoLabel}` : '撤销批注操作',disabled:!annotationOwner() || !annotationHistory.undoLabel},
+  {key:'redo',label:annotationHistory.redoLabel ? `重做${annotationHistory.redoLabel}` : '重做批注操作',disabled:!annotationOwner() || !annotationHistory.redoLabel},
+  ...(annotationSaveError.value ? [{key:annotationSaveConflict.value?'reload':'retry',label:annotationSaveConflict.value?'重新读取批注…':'重试保存批注',disabled:annotationSaving.value}] : []),
+])
+const reloadAnnotationState = async () => {
+  const owner = annotationDocument.value, source = pdfDocument.value
+  if (!source || !await confirmAppAction(dialog,{title:'重新读取 PDF 和批注？',content:'当前未保存的批注修改将被放弃。请先复制需要保留的评论。',positiveText:'放弃修改并重新读取',danger:true})) return
+  if (owner !== annotationDocument.value || source !== pdfDocument.value) return
+  annotationDirty.value = false
+  annotationSaveConflict.value = false
+  await loadPdf()
+}
+const handleAnnotationHistoryAction = (action: string) => {
+  if (action === 'undo' || action === 'redo') applyAnnotationHistory(action)
+  else if (action === 'retry') void persistAnnotations()
+  else if (action === 'reload') void reloadAnnotationState()
 }
 const annotationContext = ref({show:false,x:0,y:0,id:''})
 const openAnnotationContext = (event:MouseEvent,id:string) => {annotationContext.value={show:true,x:event.clientX,y:event.clientY,id}}
-const annotationActions = [{key:'edit',label:'编辑评论…'},{key:'locate',label:'定位到原文'},{key:'delete',label:'删除批注…'}]
+const annotationActions = computed(() => [{key:'edit',label:'编辑评论…',disabled:!annotationOwner()},{key:'locate',label:'定位到原文'},{key:'delete',label:'删除批注…',disabled:!annotationOwner()},...annotationHistoryActions.value])
 const handleAnnotationAction = async (action:string,id:string) => {
+  if (['undo','redo','retry','reload'].includes(action)) { handleAnnotationHistoryAction(action); return }
   if(action==='locate'){selectAnnotation(id);return}
   if(action==='delete'){await deleteSelectedAnnotation(id);return}
   const document=annotationDocument.value,annotation=annotations.value.find(a=>a.id===id)
@@ -2287,13 +2350,12 @@ const handleAnnotationAction = async (action:string,id:string) => {
   const before=JSON.stringify(annotation),comment=await promptAppAction(dialog,{title:'编辑批注评论',initialValue:annotation.comment,multiline:true,positiveText:'保存评论'})
   if(comment===null)return
   if(annotationDocument.value!==document||!annotationWritable.value||JSON.stringify(annotation)!==before){message.warning('这条批注已有变化，请重新打开；原评论已保留');return}
-  annotation.comment=comment.slice(0,20000);annotation.updatedAt=Date.now();scheduleAnnotationSave()
+  changeAnnotation(id,'编辑评论',a=>{a.comment=comment.slice(0,20000)})
 }
 const setSelectedAnnotationColor = (color: PdfAnnotationColor) => {
   if (!selectedAnnotation.value) return
-  selectedAnnotation.value.color = color
+  changeAnnotation(selectedAnnotationId.value,'修改颜色',a=>{a.color=color})
   annotationColor.value = color
-  touchSelectedAnnotation()
 }
 
 const buildSelectedAnnotationReference = async (): Promise<PdfAnnotationReference> => {
@@ -2434,6 +2496,9 @@ const deleteSelectedAnnotation = async (id = selectedAnnotationId.value) => {
     danger: true,
   })) return
   if(annotationDocument.value!==document||!annotationWritable.value){message.warning('PDF 已切换，未删除批注');return}
+  const owner = annotationOwner(), index = annotations.value.findIndex(a=>a.id===id)
+  if (!owner || index < 0) return
+  annotationHistory.record(owner,{before:annotations.value[index],after:null,index,label:'删除批注',selectedBefore:id,selectedAfter:''})
   annotationDocument.value.annotations = annotationDocument.value.annotations.filter(annotation => annotation.id !== id)
   if(selectedAnnotationId.value===id)selectedAnnotationId.value = ''
   scheduleAnnotationSave()
@@ -2567,6 +2632,7 @@ const loadPdf = async () => {
   const generation = ++pdfLoadGeneration
   const current = () => generation === pdfLoadGeneration
   restoringPdfView = true
+  annotationHistory.reset()
   try {
   loading.value = true
   referenceGeneration++; referenceWorking.value = false; readingPreviewOpen.value = false; readingSnapshot.value = null
@@ -2857,6 +2923,11 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (!(event.ctrlKey || event.metaKey)) return
   const target = event.target as HTMLElement | null
   const editingText = Boolean(target?.closest('input, textarea, [contenteditable="true"]'))
+  if (sidebarOpen.value && sidebarTab.value === 'annotations' && !editingText && ['z','y'].includes(event.key.toLowerCase())) {
+    event.preventDefault()
+    applyAnnotationHistory(event.key.toLowerCase() === 'y' || event.shiftKey ? 'redo' : 'undo')
+    return
+  }
   if (sidebarTab.value === 'organize' && !editingText && event.key.toLowerCase() === 'z') {
     event.preventDefault()
     if (event.shiftKey) redoPagePlan()
@@ -2994,6 +3065,9 @@ useContextCommands(() => JSON.stringify([store.libraryPath,pdfPath.value,isExter
 .outline-list button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); }
 .sidebar-empty { padding: 24px 14px; color: var(--theme-text-secondary); font-size: var(--text-compact); text-align: center; }
 .annotation-panel { min-height: 0; flex: 1; overflow: auto; padding: 9px; }
+.annotation-panel-actions { display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-bottom:6px; }
+.annotation-panel-actions input { flex:1; min-width:0; min-height:30px; box-sizing:border-box; border:1px solid var(--workspace-border-color); border-radius:5px; background:var(--theme-card); color:var(--theme-text); padding:4px 6px; font:inherit; font-size:var(--text-compact); }
+.annotation-panel-actions .annotation-menu { margin-top:0; min-width:30px; min-height:30px; border:1px solid var(--workspace-border-color); background:var(--theme-card); }
 .pdf-sidebar:has(.annotation-panel) { width: min(310px, 48cqw); min-width: 220px; }
 .reading-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
 .reading-filters input { grid-column: 1 / -1; }
