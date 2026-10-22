@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "checks": [
+    "deferred save receipts retain newer draft",
+    "failed save and retry retain draft",
+    "route recreation and abandoned wait preserve ownership"
+  ],
+  "screenshots": [
+    "01-before.png",
+    "02-new-draft-retained.png",
+    "03-saved.png",
+    "04-failed-draft-retained.png",
+    "05-waiting-save.png",
+    "06-waiting-failed-save.png",
+    "07-reopened.png"
+  ]
+}

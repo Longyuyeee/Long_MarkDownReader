@@ -1,0 +1,3301 @@
+{
+  "appVersion": "1.2.4",
+  "sourceCommit": "797afe406cf3101c8e7070b68bcc024e462464e6",
+  "installerSha256": "1fe28153dcc181f01ff9f5e7876a6a482a5c68274a40cad630be15c8855b689d",
+  "harnessSourceCommit": "797afe406cf3101c8e7070b68bcc024e462464e6",
+  "executableSha256": "d3d208fc386991df5b39a8067bda895877f39948b6042ef4a8fc4ffd93a4e51b",
+  "status": "passed",
+  "evidenceLevel": "installed-pptx-native-save-and-independent-zip-xml",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "owned-three-producer-fixtures",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-target-and-notes",
+      "status": "passed"
+    },
+    {
+      "id": "unapplied-buffer-and-leave-protection",
+      "status": "passed"
+    },
+    {
+      "id": "multi-target-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "copy-collision-preserves-draft",
+      "status": "passed"
+    },
+    {
+      "id": "three-producer-batch-copy-source-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-source-cancel-never-writes",
+      "status": "passed"
+    },
+    {
+      "id": "ctrl-s-exclusive-confirmation",
+      "status": "passed"
+    },
+    {
+      "id": "reload-cancel-preserves-draft",
+      "status": "passed"
+    },
+    {
+      "id": "visible-source-conflict-keeps-peer-bytes",
+      "status": "passed"
+    },
+    {
+      "id": "three-producer-native-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "independent-zip-xml-untouched-parts",
+      "status": "passed"
+    },
+    {
+      "id": "external-read-only",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-input-and-unselected-preserved",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1118-microsoft-powerpoint-16-before.pptx",
+      "sizeBytes": 51494,
+      "sha256": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f"
+    },
+    {
+      "fileName": "installed-v1118-microsoft-powerpoint-16-source.pptx",
+      "sizeBytes": 50031,
+      "sha256": "fb87acf15573144db346b3ee224fbb34e364ed675bbe53777481b489788aaf33"
+    },
+    {
+      "fileName": "installed-v1118-microsoft-powerpoint-16-copy.pptx",
+      "sizeBytes": 50083,
+      "sha256": "6594e4d3fd24065f0962c91d4da160c4a53a08eb922746c4f8dbc5918d7b6440"
+    },
+    {
+      "fileName": "installed-v1118-wps-presentation-before.pptx",
+      "sizeBytes": 94574,
+      "sha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a"
+    },
+    {
+      "fileName": "installed-v1118-wps-presentation-source.pptx",
+      "sizeBytes": 94691,
+      "sha256": "125cf884326aadef08923cdaa1cce135edd85c79344fc578a06aafcbcd2df5e9"
+    },
+    {
+      "fileName": "installed-v1118-wps-presentation-copy.pptx",
+      "sizeBytes": 94739,
+      "sha256": "6ba00f633bcda2a46bba95985d78cb4529e5201cd1a5e773e475bfa358a92284"
+    },
+    {
+      "fileName": "installed-v1118-libreoffice-impress-before.pptx",
+      "sizeBytes": 18288,
+      "sha256": "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140"
+    },
+    {
+      "fileName": "installed-v1118-libreoffice-impress-source.pptx",
+      "sizeBytes": 18012,
+      "sha256": "46d7b073aec692d91069571750a6e6e9c7c14453f0bfe2075ab53cede67734da"
+    },
+    {
+      "fileName": "installed-v1118-libreoffice-impress-copy.pptx",
+      "sizeBytes": 18065,
+      "sha256": "901a7bb0f153e916642ad448fbb6f894d22f2a46ad3e9eb5b02a268d82268e84"
+    }
+  ],
+  "unselectedBefore": "7d817c42b055425992dc3a5639a1857b64dce9007ef13fb2c29b6f2202780c82",
+  "conflictBeforeSha256": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f",
+  "externalConflictSha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a",
+  "conflictAfterSha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a",
+  "sourceConflictPreserved": true,
+  "canvasTargetExact": true,
+  "samePathExternalDraftProtected": true,
+  "rawBufferExact": true,
+  "notesTargetExact": true,
+  "undoRedoExact": true,
+  "cancelExact": true,
+  "reloadCancelExact": true,
+  "shortcutConfirmed": true,
+  "collisionExact": true,
+  "sourceSavedExact": true,
+  "copySourceUnchanged": true,
+  "inspection": {
+    "status": "passed",
+    "reader": "defusedxml-0.7.1-and-stdlib-zipfile",
+    "nativeBridgeMocked": false,
+    "officeVisualAcceptance": false,
+    "cases": [
+      {
+        "producerId": "microsoft-powerpoint-16",
+        "beforeSha256": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f",
+        "source": {
+          "sha256": "fb87acf15573144db346b3ee224fbb34e364ed675bbe53777481b489788aaf33",
+          "preservedParts": [
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "e09bbcb194fcbc7aafd5b36d0a69d0dbe958a61dfda639b4a34722144ced2ce5"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "de11af9d3b354316b50c10ceff7203f24686fe9cbd4202a5e4655398a4c5004f"
+            },
+            {
+              "part": "ppt/presentation.xml",
+              "sha256": "830b91130f2d10cd3af4f8450adcf07366a3803527018f105287f3066e76d176"
+            },
+            {
+              "part": "ppt/_rels/presentation.xml.rels",
+              "sha256": "6c99f1d80770b127a2ff0c57ff19fdab2df703e1e587f3308688b3875f3e2639"
+            },
+            {
+              "part": "ppt/slides/slide2.xml",
+              "sha256": "f84e10786e5be837ee9b855461e575c9545f9f3a63f703dd52385e40a7f9d3fc"
+            },
+            {
+              "part": "ppt/slides/slide3.xml",
+              "sha256": "3780dba1bb7e726da75c7ab0908d67c0f667379a8a33cb1489226009766f4001"
+            },
+            {
+              "part": "ppt/slides/_rels/slide1.xml.rels",
+              "sha256": "5d3e08fae6d355b6a102b52b84e3421fe5018a4aaf30c0c388435a1b74d2f7bc"
+            },
+            {
+              "part": "ppt/slides/_rels/slide3.xml.rels",
+              "sha256": "ac4ab8129291f76c2d5e3e099a86abd3adc60104629cb7ba2be827b2ba8b5ae1"
+            },
+            {
+              "part": "ppt/slides/_rels/slide2.xml.rels",
+              "sha256": "21b9ac5e24c67cf4037dcfdd3d92eb60453850acadb1d51a978bfbe6cde01875"
+            },
+            {
+              "part": "ppt/slideMasters/slideMaster1.xml",
+              "sha256": "d1d8af81876268e6d2e475daa47cb3a16ea26e75a2fb2895e45e526f2d901711"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout9.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout3.xml",
+              "sha256": "87c11314a58e366abb35f5d5274be1be539d9cd64a3a73dcc6ac85dc9fd8ca16"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout1.xml",
+              "sha256": "dd73eb9f2594b855838e0e86c2aa317f49b789b557d415f2081628f4d6fdd2ae"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout2.xml",
+              "sha256": "19b1f5414ddda6a5a5f1503f1591f684f5affab8e74d3f972286738f1496c32c"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout4.xml",
+              "sha256": "b55c7332f3f35aff20bcfb6200369c9ea2742e6366a351b132d1b239f6e207d8"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout5.xml",
+              "sha256": "e5dafe3be4e26b6cc1b3cb765fdc07e6f620a28a5eedec44093bd50feb6b1f70"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout6.xml",
+              "sha256": "115b78144595ddc5c9fab1c526d6789b98b58f1f3a90a6e7d5103294d3a9e283"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout7.xml",
+              "sha256": "db976df4dca84d6c878cf80933f3b97b6065e02eafbc9fb9e9d8e75fdfcf54de"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout8.xml",
+              "sha256": "734927e4895f0ddd60aa9cb45253ad0d9bafbfe6aa9ee5016dab33992a8acce1"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout9.xml",
+              "sha256": "159c6706f20c4e5cb72a3d9eac775ceaec7b9a83142fbbf16ac8f7e904329e43"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout10.xml",
+              "sha256": "0978ce165f194cf2ecc8af5f6d76ccbf28b395ad6d920d533c4d28507bd2ce64"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout11.xml",
+              "sha256": "24674c04865a3cbbfa4f9b01fba3ea682473de389aaa16ab0cf307c9b3f168c6"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide2.xml",
+              "sha256": "e1dae0f11380478dc71fd911455fb2bcbf5d22d53d3845547a317818c6ff5dfd"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide3.xml",
+              "sha256": "dfe7b1e2c3e42354ccd25c81d002a74c4a2bf19d24b1830ef9a6ee69eb26990d"
+            },
+            {
+              "part": "ppt/slideMasters/_rels/slideMaster1.xml.rels",
+              "sha256": "e9e503158ddaff4d9afa825a3d1048ffa1c1275291d9ab818812ff8e061ea8fd"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout2.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout4.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout5.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout6.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout7.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout8.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout3.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout10.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout11.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide1.xml.rels",
+              "sha256": "7ca2b5677964986c27c97e83fae1d8b42f4b9f34e7c14584f0877f4c208d15f5"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide2.xml.rels",
+              "sha256": "b0be6840d8c55422cac8a6049cc6d9862920c93f0f2bb4b3a19f06fdcafcba4b"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide3.xml.rels",
+              "sha256": "4f830a0af9b54f2b7b79c6fb0f88d45640d8f61f222315e7dc4aeb42b9941e81"
+            },
+            {
+              "part": "ppt/notesMasters/notesMaster1.xml",
+              "sha256": "1b1d4499db901a78381ee37e6a2d2468b4fd0fea2de3742f1415d373d5ad9431"
+            },
+            {
+              "part": "docProps/thumbnail.jpeg",
+              "sha256": "ac1a8f351b43e0ec994ca87f449dd6387d16c2ecebb944752a01472e550072b6"
+            },
+            {
+              "part": "ppt/theme/theme1.xml",
+              "sha256": "1f98605413696c4fe4029a7b7df696261233d73d8fd06413d3990abfe51ae216"
+            },
+            {
+              "part": "ppt/notesMasters/_rels/notesMaster1.xml.rels",
+              "sha256": "c900da93a4de8bad9a582295b1dbcb892e6cfec52985354da973ebb3fab497c1"
+            },
+            {
+              "part": "ppt/media/image1.png",
+              "sha256": "2c2d79bd1aa149faefd01086c7b8a7d9d727badcc759151bfea6bed8a50487cd"
+            },
+            {
+              "part": "ppt/theme/theme2.xml",
+              "sha256": "1f98605413696c4fe4029a7b7df696261233d73d8fd06413d3990abfe51ae216"
+            },
+            {
+              "part": "ppt/presProps.xml",
+              "sha256": "cd12d22ac9a3825ff6772a707cd1e67f9ce26eb2aaf316023469a16b02852f85"
+            },
+            {
+              "part": "ppt/tableStyles.xml",
+              "sha256": "0e7ac03251337ecbaf6c8ca13619db1caeda5c90c4e3210d45d6c3f5df4de103"
+            },
+            {
+              "part": "ppt/viewProps.xml",
+              "sha256": "6d04b2e2b626852ae6a8dbfaa75e63a74c7ddc19e05266f2b27c79f9bf90cb2b"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "1fdda9a98b30d42b1d6bc93add95f62e222751f385d033fbd64cac738f7402b7"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "f6b1c07722702b0421dc4b1e6a94a11a50bff8989e851d90991db35021c97586"
+            }
+          ],
+          "changedParts": [
+            "ppt/slides/slide1.xml",
+            "ppt/notesSlides/notesSlide1.xml"
+          ],
+          "changedTextCount": 2,
+          "expectedTextVerified": true,
+          "unchangedStructureVerified": true
+        },
+        "copy": {
+          "sha256": "6594e4d3fd24065f0962c91d4da160c4a53a08eb922746c4f8dbc5918d7b6440",
+          "preservedParts": [
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "e09bbcb194fcbc7aafd5b36d0a69d0dbe958a61dfda639b4a34722144ced2ce5"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "de11af9d3b354316b50c10ceff7203f24686fe9cbd4202a5e4655398a4c5004f"
+            },
+            {
+              "part": "ppt/presentation.xml",
+              "sha256": "830b91130f2d10cd3af4f8450adcf07366a3803527018f105287f3066e76d176"
+            },
+            {
+              "part": "ppt/_rels/presentation.xml.rels",
+              "sha256": "6c99f1d80770b127a2ff0c57ff19fdab2df703e1e587f3308688b3875f3e2639"
+            },
+            {
+              "part": "ppt/slides/slide2.xml",
+              "sha256": "f84e10786e5be837ee9b855461e575c9545f9f3a63f703dd52385e40a7f9d3fc"
+            },
+            {
+              "part": "ppt/slides/slide3.xml",
+              "sha256": "3780dba1bb7e726da75c7ab0908d67c0f667379a8a33cb1489226009766f4001"
+            },
+            {
+              "part": "ppt/slides/_rels/slide1.xml.rels",
+              "sha256": "5d3e08fae6d355b6a102b52b84e3421fe5018a4aaf30c0c388435a1b74d2f7bc"
+            },
+            {
+              "part": "ppt/slides/_rels/slide3.xml.rels",
+              "sha256": "ac4ab8129291f76c2d5e3e099a86abd3adc60104629cb7ba2be827b2ba8b5ae1"
+            },
+            {
+              "part": "ppt/slides/_rels/slide2.xml.rels",
+              "sha256": "21b9ac5e24c67cf4037dcfdd3d92eb60453850acadb1d51a978bfbe6cde01875"
+            },
+            {
+              "part": "ppt/slideMasters/slideMaster1.xml",
+              "sha256": "d1d8af81876268e6d2e475daa47cb3a16ea26e75a2fb2895e45e526f2d901711"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout9.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout3.xml",
+              "sha256": "87c11314a58e366abb35f5d5274be1be539d9cd64a3a73dcc6ac85dc9fd8ca16"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout1.xml",
+              "sha256": "dd73eb9f2594b855838e0e86c2aa317f49b789b557d415f2081628f4d6fdd2ae"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout2.xml",
+              "sha256": "19b1f5414ddda6a5a5f1503f1591f684f5affab8e74d3f972286738f1496c32c"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout4.xml",
+              "sha256": "b55c7332f3f35aff20bcfb6200369c9ea2742e6366a351b132d1b239f6e207d8"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout5.xml",
+              "sha256": "e5dafe3be4e26b6cc1b3cb765fdc07e6f620a28a5eedec44093bd50feb6b1f70"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout6.xml",
+              "sha256": "115b78144595ddc5c9fab1c526d6789b98b58f1f3a90a6e7d5103294d3a9e283"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout7.xml",
+              "sha256": "db976df4dca84d6c878cf80933f3b97b6065e02eafbc9fb9e9d8e75fdfcf54de"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout8.xml",
+              "sha256": "734927e4895f0ddd60aa9cb45253ad0d9bafbfe6aa9ee5016dab33992a8acce1"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout9.xml",
+              "sha256": "159c6706f20c4e5cb72a3d9eac775ceaec7b9a83142fbbf16ac8f7e904329e43"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout10.xml",
+              "sha256": "0978ce165f194cf2ecc8af5f6d76ccbf28b395ad6d920d533c4d28507bd2ce64"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout11.xml",
+              "sha256": "24674c04865a3cbbfa4f9b01fba3ea682473de389aaa16ab0cf307c9b3f168c6"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide2.xml",
+              "sha256": "e1dae0f11380478dc71fd911455fb2bcbf5d22d53d3845547a317818c6ff5dfd"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide3.xml",
+              "sha256": "dfe7b1e2c3e42354ccd25c81d002a74c4a2bf19d24b1830ef9a6ee69eb26990d"
+            },
+            {
+              "part": "ppt/slideMasters/_rels/slideMaster1.xml.rels",
+              "sha256": "e9e503158ddaff4d9afa825a3d1048ffa1c1275291d9ab818812ff8e061ea8fd"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout2.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout4.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout5.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout6.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout7.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout8.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout3.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout10.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout11.xml.rels",
+              "sha256": "8246d333bf3764cd35563e3df1828c26bbc28890815a2987caf3e592791ba60d"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide1.xml.rels",
+              "sha256": "7ca2b5677964986c27c97e83fae1d8b42f4b9f34e7c14584f0877f4c208d15f5"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide2.xml.rels",
+              "sha256": "b0be6840d8c55422cac8a6049cc6d9862920c93f0f2bb4b3a19f06fdcafcba4b"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide3.xml.rels",
+              "sha256": "4f830a0af9b54f2b7b79c6fb0f88d45640d8f61f222315e7dc4aeb42b9941e81"
+            },
+            {
+              "part": "ppt/notesMasters/notesMaster1.xml",
+              "sha256": "1b1d4499db901a78381ee37e6a2d2468b4fd0fea2de3742f1415d373d5ad9431"
+            },
+            {
+              "part": "docProps/thumbnail.jpeg",
+              "sha256": "ac1a8f351b43e0ec994ca87f449dd6387d16c2ecebb944752a01472e550072b6"
+            },
+            {
+              "part": "ppt/theme/theme1.xml",
+              "sha256": "1f98605413696c4fe4029a7b7df696261233d73d8fd06413d3990abfe51ae216"
+            },
+            {
+              "part": "ppt/notesMasters/_rels/notesMaster1.xml.rels",
+              "sha256": "c900da93a4de8bad9a582295b1dbcb892e6cfec52985354da973ebb3fab497c1"
+            },
+            {
+              "part": "ppt/media/image1.png",
+              "sha256": "2c2d79bd1aa149faefd01086c7b8a7d9d727badcc759151bfea6bed8a50487cd"
+            },
+            {
+              "part": "ppt/theme/theme2.xml",
+              "sha256": "1f98605413696c4fe4029a7b7df696261233d73d8fd06413d3990abfe51ae216"
+            },
+            {
+              "part": "ppt/presProps.xml",
+              "sha256": "cd12d22ac9a3825ff6772a707cd1e67f9ce26eb2aaf316023469a16b02852f85"
+            },
+            {
+              "part": "ppt/tableStyles.xml",
+              "sha256": "0e7ac03251337ecbaf6c8ca13619db1caeda5c90c4e3210d45d6c3f5df4de103"
+            },
+            {
+              "part": "ppt/viewProps.xml",
+              "sha256": "6d04b2e2b626852ae6a8dbfaa75e63a74c7ddc19e05266f2b27c79f9bf90cb2b"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "1fdda9a98b30d42b1d6bc93add95f62e222751f385d033fbd64cac738f7402b7"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "f6b1c07722702b0421dc4b1e6a94a11a50bff8989e851d90991db35021c97586"
+            }
+          ],
+          "changedParts": [
+            "ppt/slides/slide1.xml",
+            "ppt/notesSlides/notesSlide1.xml"
+          ],
+          "changedTextCount": 2,
+          "expectedTextVerified": true,
+          "unchangedStructureVerified": true
+        }
+      },
+      {
+        "producerId": "wps-presentation",
+        "beforeSha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a",
+        "source": {
+          "sha256": "125cf884326aadef08923cdaa1cce135edd85c79344fc578a06aafcbcd2df5e9",
+          "preservedParts": [
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "d74634f5f8f65339aebf67a51881b0539815bc12da2e5880c52461df72a211eb"
+            },
+            {
+              "part": "_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "e77f1ecbbd4e3d63e1a7bfb46bd09b5149f66c619c64079dc0b577be1c1116b8"
+            },
+            {
+              "part": "docProps/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "1d1c5b559c4ffeadc12fb5a0c7300038257caf55a46dcd21f2d390aaa16da170"
+            },
+            {
+              "part": "docProps/custom.xml",
+              "sha256": "4f913e8f3cee5d838624c81b7bacb7f1d0be955c3d79f8478a23978aec884176"
+            },
+            {
+              "part": "docProps/thumbnail.jpeg",
+              "sha256": "c67a295760a69258226d8e515b51409eb7fb595952445f688a3d9b1bcb550c18"
+            },
+            {
+              "part": "ppt/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/_rels/presentation.xml.rels",
+              "sha256": "537889eb3062a75c24bb1670f30d523c56cc0401b8404105f2211d4e9489b0d7"
+            },
+            {
+              "part": "ppt/media/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/media/image1.png",
+              "sha256": "2f029e9aa7c35e2214856fcfb95a84c75659935cab5ac77f98d37db0b51862a8"
+            },
+            {
+              "part": "ppt/notesMasters/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/notesMasters/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/notesMasters/_rels/notesMaster1.xml.rels",
+              "sha256": "c900da93a4de8bad9a582295b1dbcb892e6cfec52985354da973ebb3fab497c1"
+            },
+            {
+              "part": "ppt/notesMasters/notesMaster1.xml",
+              "sha256": "6a8e84a31e94665b2f80fb245300b54fdc9853a4446bcb2e3b4c8dd9d8ef7dda"
+            },
+            {
+              "part": "ppt/notesSlides/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide1.xml.rels",
+              "sha256": "5655ed7603302105ca2da02aeddc5053f13858772f2654274ef366488d73394d"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide2.xml.rels",
+              "sha256": "7daba9ff6cd10868449b648e1533683e97a8be60f0aca670dcc541cd5b64b6e6"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide3.xml.rels",
+              "sha256": "6b9e2dbee031e7e00b84259e29ea9241487b35f7c76a36dcf58d4809bf0c49b7"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide2.xml",
+              "sha256": "d149986221c5e50b88d6754252674dc4c69de01790aacbd8e7854d640a6f0ebc"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide3.xml",
+              "sha256": "4ae4c5175ee4e172fd2f9a8d53eef7b50c074eef837641c837cad980a2ba5a52"
+            },
+            {
+              "part": "ppt/presentation.xml",
+              "sha256": "9e357d44301c75b5ee039789ac513e8b0b9c09f9a8e7433e566583e6d5d96a71"
+            },
+            {
+              "part": "ppt/presProps.xml",
+              "sha256": "6c6f405ef1c571adecab9deeef51da4712ef561e87ee2ec12aa2999abc6aa5e2"
+            },
+            {
+              "part": "ppt/slideLayouts/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
+              "sha256": "acdca62f347aaca6fb05d9104e61f61dfb933a43606414d944b22a10ef823f13"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout10.xml.rels",
+              "sha256": "37f910ce5c3c756df14b5c4c202f394e31adef836a26d2219793979873ef364c"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout11.xml.rels",
+              "sha256": "58fca31cdd0a46ceffe8e8c56f2e8d9bf491a4f95a06e6e9266a5152638de977"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout2.xml.rels",
+              "sha256": "5456bd7bf069b23e7801d2ced485177d77c1ce8d47209eefc38512adb41c7375"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout3.xml.rels",
+              "sha256": "a3775f886c79bfa7d9a3721dca23b63553dbce8e7babb387ba519215f5358233"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout4.xml.rels",
+              "sha256": "c409f0faafeb3dc86cda8b8ede3b8bd6dff36810bc4420de0da69621812caba6"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout5.xml.rels",
+              "sha256": "bc6bab2d97484c9eda029e5795c64e903a24babe3120e6a80a631ae52ba388e0"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout6.xml.rels",
+              "sha256": "d92962b9ee5e1f86a61b827af6ce98766352b9c3587d4c5fb998fcf815651f8a"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout7.xml.rels",
+              "sha256": "9bed051e9110d435605e2d6221691af8cb0065b82778c9424a62366e059a9423"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout8.xml.rels",
+              "sha256": "1ceacbe6d6fe787ed4e24a0378cfc0f334262f829f14d039d1a1b6b4c5b794cb"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout9.xml.rels",
+              "sha256": "9b6244891408460e08297da4f1063f9085002b9f76d7ee67e8070a9b0f3d9012"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout1.xml",
+              "sha256": "538ba59c9cdfa5d8e041127ab43edc97a52af2a296f8d0b42460c45bff7fb468"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout10.xml",
+              "sha256": "4e34a3a756cadea22d92ed46fc3d067e621a3f4df99a5e963ecec2e343593e5c"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout11.xml",
+              "sha256": "7bd94c0acb6b91a340421b44b9855e8cc3ca7ca84c3183ca46d4fd2a769b5b9e"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout2.xml",
+              "sha256": "88a8d6ad98da64ca9885489a86f9dc2e99e483757473e7175179886571148377"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout3.xml",
+              "sha256": "364c998fa1d07c08d702785d9c6c069065488a16933cedd4a2ffc432e43ce10c"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout4.xml",
+              "sha256": "cffe2dc2b9048527bbdd13176584ba87602d4da78c849b15ceb9a011abe5ad31"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout5.xml",
+              "sha256": "06c1f31ea2dbd6c80246cc29b50cc75325eac22818e564b91da19b439192eb85"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout6.xml",
+              "sha256": "fb39593457475bbf63d79e46e6e0fdf4d394e6f046601c8c80f045eeadc4e085"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout7.xml",
+              "sha256": "e62a36d63f89cc2c8963e968abe6e63ccc15b8c22bb7b2464988824703ff68cb"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout8.xml",
+              "sha256": "5602d29700153ab981fafec678f2394d2f732e13475c39c7c8ea24cc9f9de39b"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout9.xml",
+              "sha256": "a97a1cc2ca7062876a18c8087a32767474c71e718bf0ac60de550433bcdf581e"
+            },
+            {
+              "part": "ppt/slideMasters/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slideMasters/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slideMasters/_rels/slideMaster1.xml.rels",
+              "sha256": "bf6f2220610f2e78650e0e1a094f81125ef177516a861cb4c1acff6bedfaf0a2"
+            },
+            {
+              "part": "ppt/slideMasters/slideMaster1.xml",
+              "sha256": "c71bc9da01fefc7f8cac961480b39ce67696254deffd6ae6d6f1e3ff1fef073b"
+            },
+            {
+              "part": "ppt/slides/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slides/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slides/_rels/slide1.xml.rels",
+              "sha256": "5d3e08fae6d355b6a102b52b84e3421fe5018a4aaf30c0c388435a1b74d2f7bc"
+            },
+            {
+              "part": "ppt/slides/_rels/slide2.xml.rels",
+              "sha256": "1a8627ab223391329f2e5087481e62a32a0ea617a1c7a89c28789febb9d1fb1e"
+            },
+            {
+              "part": "ppt/slides/_rels/slide3.xml.rels",
+              "sha256": "ac4ab8129291f76c2d5e3e099a86abd3adc60104629cb7ba2be827b2ba8b5ae1"
+            },
+            {
+              "part": "ppt/slides/slide2.xml",
+              "sha256": "b3ab832b2a323f1078cef359eb6ebb91ea53bc9fcd68c3656a85ae40feff75a1"
+            },
+            {
+              "part": "ppt/slides/slide3.xml",
+              "sha256": "327ef38efdb81adfafd7df4ec7a2142c5d8e96a1908abdf65454b09d80100fcd"
+            },
+            {
+              "part": "ppt/tableStyles.xml",
+              "sha256": "934f6deca64a1eeee387f22822824920c88857b806045d88ecb1faeaf67ba1bc"
+            },
+            {
+              "part": "ppt/tags/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/tags/tag1.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag10.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/tags/tag11.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag12.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag13.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag14.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag15.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag16.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag17.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag18.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag19.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag2.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag20.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag21.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag22.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag23.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag24.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag25.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag26.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag27.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag28.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag29.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag3.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag30.xml",
+              "sha256": "d707af2ab05f628b30b405b737ac3bd04822d16b8569973670f71e6795780272"
+            },
+            {
+              "part": "ppt/tags/tag31.xml",
+              "sha256": "d707af2ab05f628b30b405b737ac3bd04822d16b8569973670f71e6795780272"
+            },
+            {
+              "part": "ppt/tags/tag32.xml",
+              "sha256": "d707af2ab05f628b30b405b737ac3bd04822d16b8569973670f71e6795780272"
+            },
+            {
+              "part": "ppt/tags/tag33.xml",
+              "sha256": "d707af2ab05f628b30b405b737ac3bd04822d16b8569973670f71e6795780272"
+            },
+            {
+              "part": "ppt/tags/tag34.xml",
+              "sha256": "1435f63c03b6f4a3e01dcd7f1376e26f8d0b854f6c746a4616f234c8e3a5d711"
+            },
+            {
+              "part": "ppt/tags/tag35.xml",
+              "sha256": "1435f63c03b6f4a3e01dcd7f1376e26f8d0b854f6c746a4616f234c8e3a5d711"
+            },
+            {
+              "part": "ppt/tags/tag36.xml",
+              "sha256": "1435f63c03b6f4a3e01dcd7f1376e26f8d0b854f6c746a4616f234c8e3a5d711"
+            },
+            {
+              "part": "ppt/tags/tag37.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag38.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag39.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag4.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag40.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag41.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag42.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag43.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag44.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag45.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag46.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag47.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag48.xml",
+              "sha256": "e687175c3fc3d81c618b1ea8b3cd80ff60e616c099413f5659c942aa1fe724da"
+            },
+            {
+              "part": "ppt/tags/tag49.xml",
+              "sha256": "e687175c3fc3d81c618b1ea8b3cd80ff60e616c099413f5659c942aa1fe724da"
+            },
+            {
+              "part": "ppt/tags/tag5.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag50.xml",
+              "sha256": "e687175c3fc3d81c618b1ea8b3cd80ff60e616c099413f5659c942aa1fe724da"
+            },
+            {
+              "part": "ppt/tags/tag51.xml",
+              "sha256": "e687175c3fc3d81c618b1ea8b3cd80ff60e616c099413f5659c942aa1fe724da"
+            },
+            {
+              "part": "ppt/tags/tag52.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag53.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag54.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag55.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag56.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag57.xml",
+              "sha256": "087a0256eddb62a1e7fcbea077fde6f70156a44f2be09f6049d310cffa63ba89"
+            },
+            {
+              "part": "ppt/tags/tag58.xml",
+              "sha256": "087a0256eddb62a1e7fcbea077fde6f70156a44f2be09f6049d310cffa63ba89"
+            },
+            {
+              "part": "ppt/tags/tag59.xml",
+              "sha256": "173c313a980356c3efedc3171a21990481f271d51070f4bffc03d3bf9bc1af50"
+            },
+            {
+              "part": "ppt/tags/tag6.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/tags/tag60.xml",
+              "sha256": "173c313a980356c3efedc3171a21990481f271d51070f4bffc03d3bf9bc1af50"
+            },
+            {
+              "part": "ppt/tags/tag61.xml",
+              "sha256": "173c313a980356c3efedc3171a21990481f271d51070f4bffc03d3bf9bc1af50"
+            },
+            {
+              "part": "ppt/tags/tag62.xml",
+              "sha256": "5e0e19c9f53d6c97cbf403e7421a3b8c2cb494c95f0ab49c044c7b08bc037a55"
+            },
+            {
+              "part": "ppt/tags/tag7.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/tags/tag8.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/tags/tag9.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/theme/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/theme/theme1.xml",
+              "sha256": "3e697f74a6c0e2310ef43bb35ed5ed71bab1777ff5b7058dc09a5dbfb81d96f8"
+            },
+            {
+              "part": "ppt/theme/theme2.xml",
+              "sha256": "baca0e39981d74d0a14ba1a79a087b0331c639c9097ce7916cf50b6ef84afe7c"
+            },
+            {
+              "part": "ppt/viewProps.xml",
+              "sha256": "717de3301db1b3e708fc83d3566b2e26eb8e41085006b67424ce944dd1ed09ab"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "c7e5bb309a2190ef39b6c1546483b2e325bfc3a457e1e38b948f503c73451cba"
+            }
+          ],
+          "changedParts": [
+            "ppt/notesSlides/notesSlide1.xml",
+            "ppt/slides/slide1.xml"
+          ],
+          "changedTextCount": 2,
+          "expectedTextVerified": true,
+          "unchangedStructureVerified": true
+        },
+        "copy": {
+          "sha256": "6ba00f633bcda2a46bba95985d78cb4529e5201cd1a5e773e475bfa358a92284",
+          "preservedParts": [
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "d74634f5f8f65339aebf67a51881b0539815bc12da2e5880c52461df72a211eb"
+            },
+            {
+              "part": "_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "e77f1ecbbd4e3d63e1a7bfb46bd09b5149f66c619c64079dc0b577be1c1116b8"
+            },
+            {
+              "part": "docProps/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "1d1c5b559c4ffeadc12fb5a0c7300038257caf55a46dcd21f2d390aaa16da170"
+            },
+            {
+              "part": "docProps/custom.xml",
+              "sha256": "4f913e8f3cee5d838624c81b7bacb7f1d0be955c3d79f8478a23978aec884176"
+            },
+            {
+              "part": "docProps/thumbnail.jpeg",
+              "sha256": "c67a295760a69258226d8e515b51409eb7fb595952445f688a3d9b1bcb550c18"
+            },
+            {
+              "part": "ppt/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/_rels/presentation.xml.rels",
+              "sha256": "537889eb3062a75c24bb1670f30d523c56cc0401b8404105f2211d4e9489b0d7"
+            },
+            {
+              "part": "ppt/media/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/media/image1.png",
+              "sha256": "2f029e9aa7c35e2214856fcfb95a84c75659935cab5ac77f98d37db0b51862a8"
+            },
+            {
+              "part": "ppt/notesMasters/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/notesMasters/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/notesMasters/_rels/notesMaster1.xml.rels",
+              "sha256": "c900da93a4de8bad9a582295b1dbcb892e6cfec52985354da973ebb3fab497c1"
+            },
+            {
+              "part": "ppt/notesMasters/notesMaster1.xml",
+              "sha256": "6a8e84a31e94665b2f80fb245300b54fdc9853a4446bcb2e3b4c8dd9d8ef7dda"
+            },
+            {
+              "part": "ppt/notesSlides/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide1.xml.rels",
+              "sha256": "5655ed7603302105ca2da02aeddc5053f13858772f2654274ef366488d73394d"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide2.xml.rels",
+              "sha256": "7daba9ff6cd10868449b648e1533683e97a8be60f0aca670dcc541cd5b64b6e6"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide3.xml.rels",
+              "sha256": "6b9e2dbee031e7e00b84259e29ea9241487b35f7c76a36dcf58d4809bf0c49b7"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide2.xml",
+              "sha256": "d149986221c5e50b88d6754252674dc4c69de01790aacbd8e7854d640a6f0ebc"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide3.xml",
+              "sha256": "4ae4c5175ee4e172fd2f9a8d53eef7b50c074eef837641c837cad980a2ba5a52"
+            },
+            {
+              "part": "ppt/presentation.xml",
+              "sha256": "9e357d44301c75b5ee039789ac513e8b0b9c09f9a8e7433e566583e6d5d96a71"
+            },
+            {
+              "part": "ppt/presProps.xml",
+              "sha256": "6c6f405ef1c571adecab9deeef51da4712ef561e87ee2ec12aa2999abc6aa5e2"
+            },
+            {
+              "part": "ppt/slideLayouts/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
+              "sha256": "acdca62f347aaca6fb05d9104e61f61dfb933a43606414d944b22a10ef823f13"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout10.xml.rels",
+              "sha256": "37f910ce5c3c756df14b5c4c202f394e31adef836a26d2219793979873ef364c"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout11.xml.rels",
+              "sha256": "58fca31cdd0a46ceffe8e8c56f2e8d9bf491a4f95a06e6e9266a5152638de977"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout2.xml.rels",
+              "sha256": "5456bd7bf069b23e7801d2ced485177d77c1ce8d47209eefc38512adb41c7375"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout3.xml.rels",
+              "sha256": "a3775f886c79bfa7d9a3721dca23b63553dbce8e7babb387ba519215f5358233"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout4.xml.rels",
+              "sha256": "c409f0faafeb3dc86cda8b8ede3b8bd6dff36810bc4420de0da69621812caba6"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout5.xml.rels",
+              "sha256": "bc6bab2d97484c9eda029e5795c64e903a24babe3120e6a80a631ae52ba388e0"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout6.xml.rels",
+              "sha256": "d92962b9ee5e1f86a61b827af6ce98766352b9c3587d4c5fb998fcf815651f8a"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout7.xml.rels",
+              "sha256": "9bed051e9110d435605e2d6221691af8cb0065b82778c9424a62366e059a9423"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout8.xml.rels",
+              "sha256": "1ceacbe6d6fe787ed4e24a0378cfc0f334262f829f14d039d1a1b6b4c5b794cb"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout9.xml.rels",
+              "sha256": "9b6244891408460e08297da4f1063f9085002b9f76d7ee67e8070a9b0f3d9012"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout1.xml",
+              "sha256": "538ba59c9cdfa5d8e041127ab43edc97a52af2a296f8d0b42460c45bff7fb468"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout10.xml",
+              "sha256": "4e34a3a756cadea22d92ed46fc3d067e621a3f4df99a5e963ecec2e343593e5c"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout11.xml",
+              "sha256": "7bd94c0acb6b91a340421b44b9855e8cc3ca7ca84c3183ca46d4fd2a769b5b9e"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout2.xml",
+              "sha256": "88a8d6ad98da64ca9885489a86f9dc2e99e483757473e7175179886571148377"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout3.xml",
+              "sha256": "364c998fa1d07c08d702785d9c6c069065488a16933cedd4a2ffc432e43ce10c"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout4.xml",
+              "sha256": "cffe2dc2b9048527bbdd13176584ba87602d4da78c849b15ceb9a011abe5ad31"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout5.xml",
+              "sha256": "06c1f31ea2dbd6c80246cc29b50cc75325eac22818e564b91da19b439192eb85"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout6.xml",
+              "sha256": "fb39593457475bbf63d79e46e6e0fdf4d394e6f046601c8c80f045eeadc4e085"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout7.xml",
+              "sha256": "e62a36d63f89cc2c8963e968abe6e63ccc15b8c22bb7b2464988824703ff68cb"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout8.xml",
+              "sha256": "5602d29700153ab981fafec678f2394d2f732e13475c39c7c8ea24cc9f9de39b"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout9.xml",
+              "sha256": "a97a1cc2ca7062876a18c8087a32767474c71e718bf0ac60de550433bcdf581e"
+            },
+            {
+              "part": "ppt/slideMasters/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slideMasters/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slideMasters/_rels/slideMaster1.xml.rels",
+              "sha256": "bf6f2220610f2e78650e0e1a094f81125ef177516a861cb4c1acff6bedfaf0a2"
+            },
+            {
+              "part": "ppt/slideMasters/slideMaster1.xml",
+              "sha256": "c71bc9da01fefc7f8cac961480b39ce67696254deffd6ae6d6f1e3ff1fef073b"
+            },
+            {
+              "part": "ppt/slides/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slides/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/slides/_rels/slide1.xml.rels",
+              "sha256": "5d3e08fae6d355b6a102b52b84e3421fe5018a4aaf30c0c388435a1b74d2f7bc"
+            },
+            {
+              "part": "ppt/slides/_rels/slide2.xml.rels",
+              "sha256": "1a8627ab223391329f2e5087481e62a32a0ea617a1c7a89c28789febb9d1fb1e"
+            },
+            {
+              "part": "ppt/slides/_rels/slide3.xml.rels",
+              "sha256": "ac4ab8129291f76c2d5e3e099a86abd3adc60104629cb7ba2be827b2ba8b5ae1"
+            },
+            {
+              "part": "ppt/slides/slide2.xml",
+              "sha256": "b3ab832b2a323f1078cef359eb6ebb91ea53bc9fcd68c3656a85ae40feff75a1"
+            },
+            {
+              "part": "ppt/slides/slide3.xml",
+              "sha256": "327ef38efdb81adfafd7df4ec7a2142c5d8e96a1908abdf65454b09d80100fcd"
+            },
+            {
+              "part": "ppt/tableStyles.xml",
+              "sha256": "934f6deca64a1eeee387f22822824920c88857b806045d88ecb1faeaf67ba1bc"
+            },
+            {
+              "part": "ppt/tags/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/tags/tag1.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag10.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/tags/tag11.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag12.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag13.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag14.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag15.xml",
+              "sha256": "bfb7550864107986ac67b01b82c0495b6cade39237d32d8e5b8e28f21c1afa4d"
+            },
+            {
+              "part": "ppt/tags/tag16.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag17.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag18.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag19.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag2.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag20.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag21.xml",
+              "sha256": "4914f09fa573ec5915369513cfbd15177c20c1913670f49cd8e7bb6fd9b373f8"
+            },
+            {
+              "part": "ppt/tags/tag22.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag23.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag24.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag25.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag26.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag27.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag28.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag29.xml",
+              "sha256": "eacb7fa3cdc8f7eae4735c9e3a03fd0ee8123b02cea391a02ce977432b9fb16a"
+            },
+            {
+              "part": "ppt/tags/tag3.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag30.xml",
+              "sha256": "d707af2ab05f628b30b405b737ac3bd04822d16b8569973670f71e6795780272"
+            },
+            {
+              "part": "ppt/tags/tag31.xml",
+              "sha256": "d707af2ab05f628b30b405b737ac3bd04822d16b8569973670f71e6795780272"
+            },
+            {
+              "part": "ppt/tags/tag32.xml",
+              "sha256": "d707af2ab05f628b30b405b737ac3bd04822d16b8569973670f71e6795780272"
+            },
+            {
+              "part": "ppt/tags/tag33.xml",
+              "sha256": "d707af2ab05f628b30b405b737ac3bd04822d16b8569973670f71e6795780272"
+            },
+            {
+              "part": "ppt/tags/tag34.xml",
+              "sha256": "1435f63c03b6f4a3e01dcd7f1376e26f8d0b854f6c746a4616f234c8e3a5d711"
+            },
+            {
+              "part": "ppt/tags/tag35.xml",
+              "sha256": "1435f63c03b6f4a3e01dcd7f1376e26f8d0b854f6c746a4616f234c8e3a5d711"
+            },
+            {
+              "part": "ppt/tags/tag36.xml",
+              "sha256": "1435f63c03b6f4a3e01dcd7f1376e26f8d0b854f6c746a4616f234c8e3a5d711"
+            },
+            {
+              "part": "ppt/tags/tag37.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag38.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag39.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag4.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag40.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag41.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag42.xml",
+              "sha256": "a8d231e8de24b2e021b1df99d8b88710df10fcb6040f3ac6b2de05ce9b466578"
+            },
+            {
+              "part": "ppt/tags/tag43.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag44.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag45.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag46.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag47.xml",
+              "sha256": "66539ab87bdaa2290eaeda663b70d2e8edb268218902caf1b1261cefb75b7c42"
+            },
+            {
+              "part": "ppt/tags/tag48.xml",
+              "sha256": "e687175c3fc3d81c618b1ea8b3cd80ff60e616c099413f5659c942aa1fe724da"
+            },
+            {
+              "part": "ppt/tags/tag49.xml",
+              "sha256": "e687175c3fc3d81c618b1ea8b3cd80ff60e616c099413f5659c942aa1fe724da"
+            },
+            {
+              "part": "ppt/tags/tag5.xml",
+              "sha256": "3d012f267d09e0ff8b496c5c1985e20f6de33725a15a75abb0bef2921b9ff6bb"
+            },
+            {
+              "part": "ppt/tags/tag50.xml",
+              "sha256": "e687175c3fc3d81c618b1ea8b3cd80ff60e616c099413f5659c942aa1fe724da"
+            },
+            {
+              "part": "ppt/tags/tag51.xml",
+              "sha256": "e687175c3fc3d81c618b1ea8b3cd80ff60e616c099413f5659c942aa1fe724da"
+            },
+            {
+              "part": "ppt/tags/tag52.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag53.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag54.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag55.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag56.xml",
+              "sha256": "f27b94368bada1b0f60f7ab75ed24c98f9ada0019bab2577baa1ac95eb7af23d"
+            },
+            {
+              "part": "ppt/tags/tag57.xml",
+              "sha256": "087a0256eddb62a1e7fcbea077fde6f70156a44f2be09f6049d310cffa63ba89"
+            },
+            {
+              "part": "ppt/tags/tag58.xml",
+              "sha256": "087a0256eddb62a1e7fcbea077fde6f70156a44f2be09f6049d310cffa63ba89"
+            },
+            {
+              "part": "ppt/tags/tag59.xml",
+              "sha256": "173c313a980356c3efedc3171a21990481f271d51070f4bffc03d3bf9bc1af50"
+            },
+            {
+              "part": "ppt/tags/tag6.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/tags/tag60.xml",
+              "sha256": "173c313a980356c3efedc3171a21990481f271d51070f4bffc03d3bf9bc1af50"
+            },
+            {
+              "part": "ppt/tags/tag61.xml",
+              "sha256": "173c313a980356c3efedc3171a21990481f271d51070f4bffc03d3bf9bc1af50"
+            },
+            {
+              "part": "ppt/tags/tag62.xml",
+              "sha256": "5e0e19c9f53d6c97cbf403e7421a3b8c2cb494c95f0ab49c044c7b08bc037a55"
+            },
+            {
+              "part": "ppt/tags/tag7.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/tags/tag8.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/tags/tag9.xml",
+              "sha256": "cd3118e2cfd076496433aaab43b1c5064f4d56629408ef2e163b92b4023e3495"
+            },
+            {
+              "part": "ppt/theme/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "ppt/theme/theme1.xml",
+              "sha256": "3e697f74a6c0e2310ef43bb35ed5ed71bab1777ff5b7058dc09a5dbfb81d96f8"
+            },
+            {
+              "part": "ppt/theme/theme2.xml",
+              "sha256": "baca0e39981d74d0a14ba1a79a087b0331c639c9097ce7916cf50b6ef84afe7c"
+            },
+            {
+              "part": "ppt/viewProps.xml",
+              "sha256": "717de3301db1b3e708fc83d3566b2e26eb8e41085006b67424ce944dd1ed09ab"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "c7e5bb309a2190ef39b6c1546483b2e325bfc3a457e1e38b948f503c73451cba"
+            }
+          ],
+          "changedParts": [
+            "ppt/notesSlides/notesSlide1.xml",
+            "ppt/slides/slide1.xml"
+          ],
+          "changedTextCount": 2,
+          "expectedTextVerified": true,
+          "unchangedStructureVerified": true
+        }
+      },
+      {
+        "producerId": "libreoffice-impress",
+        "beforeSha256": "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140",
+        "source": {
+          "sha256": "46d7b073aec692d91069571750a6e6e9c7c14453f0bfe2075ab53cede67734da",
+          "preservedParts": [
+            {
+              "part": "docProps/core.xml",
+              "sha256": "30caab5234af19b60c47d832c410a69237be5e471b718fa09dd99df359cad061"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "971fe7de80e232a10bff906cca1e43900acb98a9afa2d9552f1707828a63e45c"
+            },
+            {
+              "part": "ppt/theme/theme1.xml",
+              "sha256": "8c817dba7260b1c6e49fc7937dd857b5f42d834bc8c33769d788ea824cb2c29f"
+            },
+            {
+              "part": "ppt/theme/theme2.xml",
+              "sha256": "6b7012cfbcdac060eb08f88d9083d7dabda538f9cfc57bc7f0d3faf41bd49f30"
+            },
+            {
+              "part": "ppt/presentation.xml",
+              "sha256": "14d70fab8994c1b1756a3eef702418b8ef959426cf1a6a4e96407361b65f2fa1"
+            },
+            {
+              "part": "ppt/notesMasters/notesMaster1.xml",
+              "sha256": "0031b880fb4874f14d63676c02a8547c39c54a70bda0e1bcbf96edb5e5685ca2"
+            },
+            {
+              "part": "ppt/notesMasters/_rels/notesMaster1.xml.rels",
+              "sha256": "fc4a9a1c74e4d310047bdc16a1ee798043595bdb810949ab4008eb58db91b499"
+            },
+            {
+              "part": "ppt/media/image1.png",
+              "sha256": "f791096e2204fcb3591f977308dcf638c3a46f5a7c8fdd333f441053739427e5"
+            },
+            {
+              "part": "ppt/slides/slide2.xml",
+              "sha256": "78d84031dc1a3f8d880ba546d4a6fa4bc1a146f6310008f07c3e64fa9f035e48"
+            },
+            {
+              "part": "ppt/slides/_rels/slide1.xml.rels",
+              "sha256": "5de532816a852d27e0c3987b4abfa9317300db0c79925bf1f1cea20a986538a0"
+            },
+            {
+              "part": "ppt/slides/_rels/slide2.xml.rels",
+              "sha256": "d66ff6933e852afa5b1ff9603fae15074e917f7646b63d1d3af098b548b9de2d"
+            },
+            {
+              "part": "ppt/slideMasters/slideMaster1.xml",
+              "sha256": "9cd902c5182396e3135f2e433c0f441c033c097e0f5e37e330644438c0a16d1e"
+            },
+            {
+              "part": "ppt/slideMasters/_rels/slideMaster1.xml.rels",
+              "sha256": "982f43de5d47acc92bcd74f9c6f8b20c07b536597c37e1ff6d26301462fe4819"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide2.xml",
+              "sha256": "82300840ad003309701e2cb60adef0702ac1a5bf40816263fade55321964c02a"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide1.xml.rels",
+              "sha256": "40cf17080b5cc0ec9d253cd260a06b62644ab750c303c7de87142f2c2cd519be"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide2.xml.rels",
+              "sha256": "43cf6b136f5df116d99a237a050c5727fa15c11f19af9306b7fcb11583e64631"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout1.xml",
+              "sha256": "f890d95bd8fb9159338a508f7f63d77a029fe22dc6ea774534caab2cafb42709"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout2.xml",
+              "sha256": "b644889cf610b50fdeff1376460d65ef27e4681b906840d6d9f58bf5d4e5915e"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
+              "sha256": "8d75d283f8517cd39b37d68fe181d89df8dea64d846fd7fd7f9126a530b27f5b"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout2.xml.rels",
+              "sha256": "8d75d283f8517cd39b37d68fe181d89df8dea64d846fd7fd7f9126a530b27f5b"
+            },
+            {
+              "part": "ppt/presProps.xml",
+              "sha256": "0496406a8e1cb4dbeb2e7543e85158d7b36ea551d19265ea59ae751322e05024"
+            },
+            {
+              "part": "ppt/_rels/presentation.xml.rels",
+              "sha256": "e55409429de097a34bec10bee57156061d53d4a39d4990ee3d01fe6370c4a8f7"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "c08869dcbaf3f3808c627865cbdcf35c271afe75a4208d126dd2b9ffe148ac61"
+            },
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "9d882cf30fc8e2da2cdac6d049f59a0858215600406f1342d0eab5394d6546b1"
+            }
+          ],
+          "changedParts": [
+            "ppt/slides/slide1.xml",
+            "ppt/notesSlides/notesSlide1.xml"
+          ],
+          "changedTextCount": 2,
+          "expectedTextVerified": true,
+          "unchangedStructureVerified": true
+        },
+        "copy": {
+          "sha256": "901a7bb0f153e916642ad448fbb6f894d22f2a46ad3e9eb5b02a268d82268e84",
+          "preservedParts": [
+            {
+              "part": "docProps/core.xml",
+              "sha256": "30caab5234af19b60c47d832c410a69237be5e471b718fa09dd99df359cad061"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "971fe7de80e232a10bff906cca1e43900acb98a9afa2d9552f1707828a63e45c"
+            },
+            {
+              "part": "ppt/theme/theme1.xml",
+              "sha256": "8c817dba7260b1c6e49fc7937dd857b5f42d834bc8c33769d788ea824cb2c29f"
+            },
+            {
+              "part": "ppt/theme/theme2.xml",
+              "sha256": "6b7012cfbcdac060eb08f88d9083d7dabda538f9cfc57bc7f0d3faf41bd49f30"
+            },
+            {
+              "part": "ppt/presentation.xml",
+              "sha256": "14d70fab8994c1b1756a3eef702418b8ef959426cf1a6a4e96407361b65f2fa1"
+            },
+            {
+              "part": "ppt/notesMasters/notesMaster1.xml",
+              "sha256": "0031b880fb4874f14d63676c02a8547c39c54a70bda0e1bcbf96edb5e5685ca2"
+            },
+            {
+              "part": "ppt/notesMasters/_rels/notesMaster1.xml.rels",
+              "sha256": "fc4a9a1c74e4d310047bdc16a1ee798043595bdb810949ab4008eb58db91b499"
+            },
+            {
+              "part": "ppt/media/image1.png",
+              "sha256": "f791096e2204fcb3591f977308dcf638c3a46f5a7c8fdd333f441053739427e5"
+            },
+            {
+              "part": "ppt/slides/slide2.xml",
+              "sha256": "78d84031dc1a3f8d880ba546d4a6fa4bc1a146f6310008f07c3e64fa9f035e48"
+            },
+            {
+              "part": "ppt/slides/_rels/slide1.xml.rels",
+              "sha256": "5de532816a852d27e0c3987b4abfa9317300db0c79925bf1f1cea20a986538a0"
+            },
+            {
+              "part": "ppt/slides/_rels/slide2.xml.rels",
+              "sha256": "d66ff6933e852afa5b1ff9603fae15074e917f7646b63d1d3af098b548b9de2d"
+            },
+            {
+              "part": "ppt/slideMasters/slideMaster1.xml",
+              "sha256": "9cd902c5182396e3135f2e433c0f441c033c097e0f5e37e330644438c0a16d1e"
+            },
+            {
+              "part": "ppt/slideMasters/_rels/slideMaster1.xml.rels",
+              "sha256": "982f43de5d47acc92bcd74f9c6f8b20c07b536597c37e1ff6d26301462fe4819"
+            },
+            {
+              "part": "ppt/notesSlides/notesSlide2.xml",
+              "sha256": "82300840ad003309701e2cb60adef0702ac1a5bf40816263fade55321964c02a"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide1.xml.rels",
+              "sha256": "40cf17080b5cc0ec9d253cd260a06b62644ab750c303c7de87142f2c2cd519be"
+            },
+            {
+              "part": "ppt/notesSlides/_rels/notesSlide2.xml.rels",
+              "sha256": "43cf6b136f5df116d99a237a050c5727fa15c11f19af9306b7fcb11583e64631"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout1.xml",
+              "sha256": "f890d95bd8fb9159338a508f7f63d77a029fe22dc6ea774534caab2cafb42709"
+            },
+            {
+              "part": "ppt/slideLayouts/slideLayout2.xml",
+              "sha256": "b644889cf610b50fdeff1376460d65ef27e4681b906840d6d9f58bf5d4e5915e"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
+              "sha256": "8d75d283f8517cd39b37d68fe181d89df8dea64d846fd7fd7f9126a530b27f5b"
+            },
+            {
+              "part": "ppt/slideLayouts/_rels/slideLayout2.xml.rels",
+              "sha256": "8d75d283f8517cd39b37d68fe181d89df8dea64d846fd7fd7f9126a530b27f5b"
+            },
+            {
+              "part": "ppt/presProps.xml",
+              "sha256": "0496406a8e1cb4dbeb2e7543e85158d7b36ea551d19265ea59ae751322e05024"
+            },
+            {
+              "part": "ppt/_rels/presentation.xml.rels",
+              "sha256": "e55409429de097a34bec10bee57156061d53d4a39d4990ee3d01fe6370c4a8f7"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "c08869dcbaf3f3808c627865cbdcf35c271afe75a4208d126dd2b9ffe148ac61"
+            },
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "9d882cf30fc8e2da2cdac6d049f59a0858215600406f1342d0eab5394d6546b1"
+            }
+          ],
+          "changedParts": [
+            "ppt/slides/slide1.xml",
+            "ppt/notesSlides/notesSlide1.xml"
+          ],
+          "changedTextCount": 2,
+          "expectedTextVerified": true,
+          "unchangedStructureVerified": true
+        }
+      }
+    ]
+  },
+  "externalReadOnly": true,
+  "unauthorizedExternalRejected": true,
+  "unselectedAfter": "7d817c42b055425992dc3a5639a1857b64dce9007ef13fb2c29b6f2202780c82",
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    }
+  ],
+  "runtimeErrors": [],
+  "uiMessages": [
+    "已另存副本；原件和本页草稿保持不变",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "未保存 PPTX：PPTX 已被外部修改，请重新打开后再验证事务",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "演示文稿已可靠保存并重新读取",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "幻灯片文本已加入更改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "演讲者备注已加入更改",
+    "可靠另存禁止覆盖源 PPTX",
+    "已另存 2 个更改：microsoft-powerpoint-16-copy.pptx，原件未修改",
+    "可靠另存禁止覆盖源 PPTX"
+  ],
+  "shortcutExclusive": true,
+  "errorOverlay": false
+}

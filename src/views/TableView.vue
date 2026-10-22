@@ -131,7 +131,7 @@
                   :aria-pressed="table.rowIds[item.rowIndex] === selectedRowId"
                   @click="selectRow(item.rowIndex)"
                 >{{ item.rowIndex + 1 }}</button>
-                <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="data-cell" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1, 'range-selected': selectedCellRows.has(table.rowIds[item.rowIndex]) && selectedCellColumns.has(table.columnIds[column]), 'has-multiline': hasCellNewline(item.rowIndex, column), invalid: !!cellIssue(item.rowIndex,column) }" :style="frozenColumnStyle(column)">
+                <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="data-cell" @contextmenu.prevent="openCellMenu($event,item.rowIndex,column)" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1, 'range-selected': selectedCellRows.has(table.rowIds[item.rowIndex]) && selectedCellColumns.has(table.columnIds[column]), 'has-multiline': hasCellNewline(item.rowIndex, column), invalid: !!cellIssue(item.rowIndex,column) }" :style="frozenColumnStyle(column)">
                   <input
                     :value="hasCellNewline(item.rowIndex, column) ? table.rows[item.rowIndex][column].replace(/\r\n|\r|\n/g, ' ⏎ ') : table.rows[item.rowIndex][column]"
                     :readonly="hasCellNewline(item.rowIndex, column)"
@@ -192,6 +192,8 @@
       </template>
     </main>
     <n-dropdown :show="columnMenu.show" trigger="manual" :x="columnMenu.x" :y="columnMenu.y" :options="[{label:'录入规则…',key:'rule'}]" @clickoutside="columnMenu.show=false" @select="selectColumnAction" />
+    <n-dropdown :show="cellMenu.show" trigger="manual" :x="cellMenu.x" :y="cellMenu.y" :options="cellMenuOptions" @clickoutside="cellMenu.show=false" @select="key => selectCellAction(String(key))" />
+    <TableFillDialog v-if="fillDialog" :rows="fillDialog.range.rows.length" :columns="fillDialog.range.columns.length" :empty="fillDialog.empty" :apply-fill="applyRangeFill" @close="fillDialog=undefined" />
     <TableRuleDialog v-if="ruleDialog" :key="ruleDialog.columnId" :column-name="headerLabel(columnIndex(ruleDialog.columnId))" :rule="table?.validationRules?.[ruleDialog.columnId]" :temporary="table?.format!=='longedit-table'" @close="ruleDialog=undefined" @apply="applyRule" />
     <TableIssuesDialog v-if="issuesDialog" :issues="issuesDialog.issues" :columns="issuesDialog.document.headers" :column-ids="issuesDialog.document.columnIds" :scope-label="issuesDialog.scope" :has-rules="Object.keys(issuesDialog.document.validationRules||{}).length>0" :busy="issuesDialog.busy" :failure="issuesDialog.failure" :truncated="issuesDialog.truncated" :can-locate="views.some(view=>view.kind==='grid')" :plan="planCorrection" :apply-edit="applyCorrection" @close="issuesDialog=undefined" @locate="locateIssue" />
   </div>
@@ -210,6 +212,8 @@ import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { NDropdown, useDialog, useMessage } from 'naive-ui'
 import TableRuleDialog from '../components/TableRuleDialog.vue'
+import TableFillDialog from '../components/TableFillDialog.vue'
+import {planTableRangeFill,type TableCellRange,type TableFillMode} from '../utils/tableRangeFill'
 import TableIssuesDialog from '../components/TableIssuesDialog.vue'
 import {normalizeTableRule,tableValueIssue,planTableCorrection,type TableRule,type TableRules,type TableIssue} from '../utils/tableValidation'
 import {
@@ -294,6 +298,7 @@ const dialog = useDialog()
 const scrollRef = ref<HTMLElement | null>(null)
 const table = ref<TableDocument | null>(null)
 const presentedPath = ref('')
+const presentedExternal = ref(false)
 const loading = ref(true)
 const error = ref('')
 const dirty = ref(false)
@@ -472,6 +477,57 @@ const visibleCellIssues=computed(()=>{const map=new Map<string,string>(),doc=tab
 const cellIssue=(row:number,column:number)=>table.value?visibleCellIssues.value.get(table.value.rowIds[row]+':'+table.value.columnIds[column])||'':''
 const captureRuleContext=():RuleContext=>({document:table.value!,revision:editRevision,generation:loadGeneration,path:tablePath.value,root:store.libraryPath,external:isExternal.value})
 function requireRuleContext(context?:RuleContext){if(!context||context.document!==table.value||context.revision!==editRevision||context.generation!==loadGeneration||context.path!==tablePath.value||context.root!==store.libraryPath||context.external!==isExternal.value||loading.value||saving.value||converting.value)throw Error('表格或草稿已有变化，请重新打开检查')}
+const rangeKey = () => JSON.stringify(cellRange.value ? {rows:cellRange.value.rows,columns:cellRange.value.columns} : null)
+const cellMenu=ref({show:false,x:0,y:0,context:undefined as RuleContext|undefined,rangeKey:''})
+const fillDialog=ref<(RuleContext & {range:TableCellRange;rangeKey:string;empty:number})>()
+const cellMenuOptions=computed(()=>[
+  {key:'copy',label:'复制选区'},
+  {key:'cut',label:'剪切选区',disabled:loading.value||saving.value||converting.value},
+  {key:'paste',label:'粘贴到选区',disabled:loading.value||saving.value||converting.value},
+  {key:'fill',label:'填充选区…',disabled:loading.value||saving.value||converting.value},
+  {key:'clear',label:'清空选区',disabled:loading.value||saving.value||converting.value},
+])
+function requireRangeContext(context?:RuleContext & {rangeKey:string}){
+  requireRuleContext(context)
+  if(!cellRange.value||rangeKey()!==context!.rangeKey||activeViewKind.value!=='grid')throw Error('选区已变化，请重新选择后打开；原内容未修改')
+  if(!['csv','tsv','longedit-table'].includes(table.value!.format))throw Error('当前表格不可编辑')
+}
+function openCellMenu(event:MouseEvent,row:number,column:number){
+  if(!table.value||loading.value||saving.value||converting.value)return
+  if(!selectedCellRows.value.has(table.value.rowIds[row])||!selectedCellColumns.value.has(table.value.columnIds[column]))selectCell(row,column)
+  columnMenu.value.show=false
+  cellMenu.value={show:true,x:event.clientX,y:event.clientY,context:captureRuleContext(),rangeKey:rangeKey()}
+}
+async function selectCellAction(action:string){
+  const menu=cellMenu.value,context=menu.context?{...menu.context,rangeKey:menu.rangeKey}:undefined
+  cellMenu.value.show=false
+  try{
+    requireRangeContext(context)
+    if(action==='fill'){
+      const values=selectedValues()
+      fillDialog.value={...context!,range:{rows:[...cellRange.value!.rows],columns:[...cellRange.value!.columns]},empty:values.reduce((sum,row)=>sum+row.filter(value=>value==='').length,0)}
+    }else if(action==='clear')clearSelectedCells()
+    else if(action==='paste'){
+      const items=await navigator.clipboard.read(),item=items.find(item=>item.types.includes('text/plain'))
+      if(!item)throw Error('剪贴板没有可粘贴的文本')
+      const text=await(await item.getType('text/plain')).text(),html=item.types.includes('text/html')?await(await item.getType('text/html')).text():''
+      requireRangeContext(context)
+      const row=table.value!.rowIds.indexOf(cellRange.value!.rows[0]!),column=table.value!.columnIds.indexOf(cellRange.value!.columns[0]!)
+      pasteCellValues(row,column,text,/<table\b/i.test(html))
+    }else if(action==='copy'||action==='cut'){
+      const {text,html}=rangeClipboard()
+      await navigator.clipboard.write([new ClipboardItem({'text/plain':new Blob([text],{type:'text/plain'}),'text/html':new Blob([html],{type:'text/html'})})])
+      if(action==='cut'){requireRangeContext(context);clearSelectedCells()}else notice.value='已复制选区；原值未修改'
+    }
+  }catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''))}
+}
+function applyRangeFill(value:string,mode:TableFillMode){
+  const context=fillDialog.value
+  requireRangeContext(context)
+  const edit=planTableRangeFill(table.value!,table.value!.validationRules||{},context!.range,value,mode)
+  if(edit.cells.length){editSession++;commitCellEdit(edit)}
+  return edit.cells.length
+}
 function openColumnMenu(event:MouseEvent,column:number){if(!table.value)return;columnMenu.value={show:true,x:event.clientX,y:event.clientY,columnId:table.value.columnIds[column],document:table.value}}
 function selectColumnAction(){const menu=columnMenu.value;columnMenu.value.show=false;if(menu.document===table.value)openRule(menu.columnId)}
 function openRule(columnId:string){if(!table.value||loading.value||saving.value||converting.value)return;ruleDialog.value={...captureRuleContext(),columnId}}
@@ -547,6 +603,7 @@ const editMultilineCell = async (row: number, column: number) => {
   catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const selectCell = (row: number, column: number, event?: PointerEvent) => {
+  if (event && event.button !== 0) return
   if (!table.value) return
   const rowId = table.value.rowIds[row], columnId = table.value.columnIds[column]
   if (event?.shiftKey && cellRange.value) {
@@ -586,6 +643,17 @@ const copyCellEvent = (event: ClipboardEvent, cut = false) => {
   try { const { text, html } = rangeClipboard(); event.clipboardData.setData('text/plain', text); event.clipboardData.setData('text/html', html); if (cut) clearSelectedCells() }
   catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
+const pasteCellValues = (row:number,column:number,text:string,structured:boolean) => {
+  if(!table.value)return
+  let values = parseTableClipboard(text, structured)
+  const range = cellRange.value
+  if (range && values.length === 1 && values[0].length === 1 && range.rows.length * range.columns.length > 1) values = range.rows.map(() => range.columns.map(() => values[0][0]))
+  const visible = filteredIndices.value.map(index => table.value!.rowIds[index]), rowId = range?.rows[0] || table.value.rowIds[row], columnId = range?.columns[0] || table.value.columnIds[column]
+  const edit = planTablePaste(table.value, visible, rowId, columnId, values, !filterQuery.value.trim() && sortColumn.value < 0, () => 'row-' + crypto.randomUUID())
+  editSession++; commitCellEdit(edit)
+  const first = visible.indexOf(rowId), startColumn = table.value.columnIds.indexOf(columnId)
+  cellRange.value = { anchorRow: rowId, anchorColumn: columnId, rows: [...visible.slice(first, first + values.length), ...edit.appended.map(item => item.id)], columns: table.value.columnIds.slice(startColumn, startColumn + values[0].length) }
+}
 const pasteCells = (row: number, column: number, event: ClipboardEvent) => {
   if (!table.value || !event.clipboardData) return
   const text = event.clipboardData.getData('text/plain'), structured = /<table\b/i.test(event.clipboardData.getData('text/html'))
@@ -594,14 +662,7 @@ const pasteCells = (row: number, column: number, event: ClipboardEvent) => {
   if (!structured && !/[\t\r\n]/.test(text) && !hasCellNewline(row, column) && (!cellRange.value || cellRange.value.rows.length * cellRange.value.columns.length === 1)) return
   event.preventDefault()
   try {
-    let values = parseTableClipboard(text, structured)
-    const range = cellRange.value
-    if (range && values.length === 1 && values[0].length === 1 && range.rows.length * range.columns.length > 1) values = range.rows.map(() => range.columns.map(() => values[0][0]))
-    const visible = filteredIndices.value.map(index => table.value!.rowIds[index]), rowId = range?.rows[0] || table.value.rowIds[row], columnId = range?.columns[0] || table.value.columnIds[column]
-    const edit = planTablePaste(table.value, visible, rowId, columnId, values, !filterQuery.value.trim() && sortColumn.value < 0, () => 'row-' + crypto.randomUUID())
-    editSession++; commitCellEdit(edit)
-    const first = visible.indexOf(rowId), startColumn = table.value.columnIds.indexOf(columnId)
-    cellRange.value = { anchorRow: rowId, anchorColumn: columnId, rows: [...visible.slice(first, first + values.length), ...edit.appended.map(item => item.id)], columns: table.value.columnIds.slice(startColumn, startColumn + values[0].length) }
+    pasteCellValues(row,column,text,structured)
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const clearSelectedCells = () => {
@@ -943,13 +1004,32 @@ const toggleCardColumn = (id: string) => {
 }
 
 const loadTable = async () => {
-  ruleDialog.value=undefined;issuesDialog.value=undefined;columnMenu.value.show=false;
+  ruleDialog.value=undefined;issuesDialog.value=undefined;columnMenu.value.show=false;cellMenu.value.show=false;
   if (scrollRef.value && presentedPath.value) {
     rememberWorkspaceViewState(presentedPath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft, frozenColumns: frozenColumns.value })
   }
-  const generation = ++loadGeneration
   const requestedPath = tablePath.value
   const requestedExternal = isExternal.value
+  // References and view links can target an already-open table. Navigate in
+  // its current draft instead of rereading disk or invalidating a pending save.
+  if (table.value && dirty.value && !loading.value && presentedPath.value === requestedPath && presentedExternal.value === requestedExternal) {
+    cellRange.value = null; editSession++
+    const requestedView = typeof route.query.view === 'string' ? route.query.view : ''
+    if (views.value.some(view => view.id === requestedView) && activeViewId.value !== requestedView) switchView(requestedView)
+    const row = table.value.rowIds.indexOf(requestedRowId.value)
+    if (row >= 0) {
+      const grid = views.value.find(view => view.kind === 'grid')
+      if (grid && activeViewId.value !== grid.id) switchView(grid.id)
+      if (!filteredIndices.value.includes(row)) { filterQuery.value = ''; markViewDirty() }
+      selectedRowId.value = table.value.rowIds[row]!
+      await nextTick()
+      const index = filteredIndices.value.indexOf(row)
+      scrollRef.value?.scrollTo({top:Math.max(0,index*rowHeight-100)})
+    }
+    notice.value = '已保留当前未保存的草稿'
+    return
+  }
+  const generation = ++loadGeneration
   if (dirty.value && presentedPath.value && presentedPath.value !== requestedPath) {
     // The route guard has already accepted discarding this draft.
     const previousTab = store.tabs.find(tab => tab.path === presentedPath.value)
@@ -979,6 +1059,7 @@ const loadTable = async () => {
     if (generation !== loadGeneration) return
     table.value = document
     presentedPath.value = requestedPath
+    presentedExternal.value = requestedExternal
     selectedRowId.value = ''
     cellRange.value = null
     pendingTypeColumns.clear()
@@ -1246,7 +1327,7 @@ watch(scrollRef, element => {
   }
 })
 onBeforeRouteLeave(() => mayLeave())
-onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
+onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query.external === from.query.external) || mayLeave())
 onMounted(() => {
   loadTable()
   window.addEventListener('beforeunload', beforeUnload)

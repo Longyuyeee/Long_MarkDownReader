@@ -16,6 +16,10 @@ const rows=[['确认交付','待处理','00123'],['核对合同','隐藏','90071
 const count=Number(params.get('rows')||4);for(let i=4;i<count;i++)rows.push(['任务 '+i,'待处理',String(i).padStart(6,'0')])
 const disk={path:'任务清单.csv',format:params.get('format')==='table'?'longedit-table':'csv',delimiter:',',encoding:'utf-8',hasBom:true,lineEnding:'crlf',signature:'fixture-0',headers:['任务','状态','编号'],rows,columnTypes:['text','text','text'],columnIds:['task','state','code'],rowIds:rows.map((_,i)=>'row-'+i),view,views:['grid','board','chart','dashboard'].map(kind=>({id:kind,name:({grid:'表格',board:'看板',chart:'图表',dashboard:'仪表盘'})[kind],kind,config:structuredClone(view)})),activeView:'grid'}
 const audit=window.tableBulkAudit={disk,writes:[],pending:null,failNext:false,deferred:false,reads:0,trace:[],calls:[]}
+if(params.get('fill')==='1'){
+ Object.assign(disk,{headers:['任务','状态','编号','范围'],columnIds:['task','state','code','scope'],columnTypes:['text','text','integer','text'],rows:[['','待处理','00123','可见'],['隐藏记录','隐藏','9007199254740993123','隐藏'],['已有备注','','00002','可见'],['保持','已完成','=SUM(A1:A2)','其他']],rowIds:['row-0','row-1','row-2','row-3'],validationRules:{state:{kind:'options',required:true,options:['待处理','已完成']}}})
+ disk.view.columnWidths=[180,180,220,150];for(const v of disk.views)v.config.columnWidths=[180,180,220,150]
+}
 document.addEventListener('paste',event=>audit.trace.push({type:event.type,trusted:event.isTrusted}),true)
 window.__TAURI_INTERNALS__={invoke:async(command,args)=>{
  audit.calls.push(command)
@@ -34,6 +38,7 @@ watch(()=>store.theme,value=>{document.body.dataset.theme=resolveThemeName(value
 watch(()=>store.visualStyle,value=>document.body.dataset.style=value,{immediate:true})
 const overrides=computed(()=>{const tone=getThemeTone(store.theme,systemDark).ui,radius=VISUAL_STYLE_RADII[store.visualStyle];return{common:{primaryColor:tone.primary,primaryColorHover:tone.primary,primaryColorPressed:tone.primary,textColor1:tone.text,textColor2:tone.text+'c7',textColor3:tone.text+'8f',borderColor:tone.text+'26',cardColor:tone.surface,modalColor:tone.surface,popoverColor:tone.surface,bodyColor:'transparent',borderRadius:radius.normal,borderRadiusSmall:radius.small}}})
 const router=createRouter({history:createWebHashHistory(),routes:[{path:'/table',component:TableView},{path:'/library',component:{render:()=>h('button',{onClick:()=>router.push('/table?path=任务清单.csv')},'重新打开表格')}}]})
+audit.router=router
 await router.push('/table?path=任务清单.csv')
 const app=createApp({render:()=>h(NConfigProvider,{theme:isDarkTheme(store.theme,systemDark)?darkTheme:null,themeOverrides:overrides.value},{default:()=>h(NDialogProvider,{},{default:()=>h(NMessageProvider,{},{default:()=>h(RouterView)})})})})
 app.use(pinia).use(router).mount('#app')
