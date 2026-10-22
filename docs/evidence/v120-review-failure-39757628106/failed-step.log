@@ -1,0 +1,44 @@
+review	Verify same installers and successful original build gates	﻿2026-10-22T09:44:48.1331840Z ##[group]Run $ErrorActionPreference = 'Stop'
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1332334Z ^[[36;1m$ErrorActionPreference = 'Stop'^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1332857Z ^[[36;1m$run = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:INSTALLER_RUN_ID" | ConvertFrom-Json^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1333603Z ^[[36;1mif ($LASTEXITCODE -ne 0 -or $run.head_sha -ne $env:CANDIDATE_COMMIT) { throw 'Original build source identity drifted' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1334396Z ^[[36;1m$jobs = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:INSTALLER_RUN_ID/jobs" | ConvertFrom-Json^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1335231Z ^[[36;1mif ($LASTEXITCODE -ne 0) { throw 'Original build job receipt unavailable' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1336105Z ^[[36;1mforeach ($name in @('Run frozen candidate release quality gate', 'Run complete Rust regression suite', 'Build frozen candidate MSI and NSIS', 'Capture immutable installer receipt')) {^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1336928Z ^[[36;1m  $step = @($jobs.jobs.steps | Where-Object { $_.name -eq $name })^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1337572Z ^[[36;1m  if ($step.Count -ne 1 -or $step[0].conclusion -ne 'success') { throw "Original gate did not pass: $name" }^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1338035Z ^[[36;1m}^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1338297Z ^[[36;1m$root = Join-Path $env:GITHUB_WORKSPACE 'immutable-build'^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1339044Z ^[[36;1m$receipt = Get-Content -Encoding UTF8 -LiteralPath (Join-Path $root 'community-release-output\installer-build-receipt.json') -Raw | ConvertFrom-Json^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1340089Z ^[[36;1m$previous = Get-Content -Encoding UTF8 -LiteralPath "docs/evidence/v$($env:PREVIOUS_VERSION)-release/release-receipt.json" -Raw | ConvertFrom-Json^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1342741Z ^[[36;1mif ($receipt.candidateSourceCommit -ne $env:CANDIDATE_COMMIT -or $receipt.appVersion -ne $env:RELEASE_VERSION -or $receipt.previousVersion -ne $env:PREVIOUS_VERSION -or $receipt.previousSourceCommit -ne $previous.release.taggedCommit -or $receipt.previousInstallerSource -ne 'official-github-release' -or $receipt.sourceUserContentIncluded -ne $false -or $receipt.artifacts.Count -ne 2) { throw 'Installer receipt identity or boundary drifted' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1344708Z ^[[36;1mforeach ($artifact in $receipt.artifacts) {^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1345397Z ^[[36;1m  if ($artifact.target -notin @('msi','nsis') -or $artifact.authenticodeStatus -ne 'NotSigned') { throw 'Unexpected installer target or signing status' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1346259Z ^[[36;1m  $folder = Join-Path $root "current-product\src-tauri\target\release\bundle\$($artifact.target)"^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1346853Z ^[[36;1m  $file = Get-Item -LiteralPath (Join-Path $folder $artifact.fileName)^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1347782Z ^[[36;1m  if ($file.Length -ne $artifact.sizeBytes -or (Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName).Hash.ToLowerInvariant() -ne $artifact.sha256) { throw 'Current installer size/hash drifted' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1348612Z ^[[36;1m}^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1349073Z ^[[36;1m$old = Get-Item -LiteralPath (Join-Path $root "previous-official\LongEdit_$($env:PREVIOUS_VERSION)_x64-setup.exe")^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1349730Z ^[[36;1m$oldAsset = @($previous.assets | Where-Object { $_.name -eq $old.Name })^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1351187Z ^[[36;1mif ($oldAsset.Count -ne 1 -or $old.Length -ne $oldAsset[0].sizeBytes -or (Get-FileHash -Algorithm SHA256 -LiteralPath $old.FullName).Hash.ToLowerInvariant() -ne $oldAsset[0].sha256 -or $receipt.previousInstallerSha256 -ne $oldAsset[0].sha256) { throw 'Previous official installer drifted' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1352687Z ^[[36;1m"CURRENT_INSTALLER_DIRECTORY=$(Join-Path $root 'current-product\src-tauri\target\release\bundle\nsis')" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1353587Z ^[[36;1m"PREVIOUS_INSTALLER_DIRECTORY=$($old.Directory.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1354448Z ^[[36;1m"CURRENT_INSTALLER_SHA256=$(@($receipt.artifacts | Where-Object { $_.target -eq 'nsis' })[0].sha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append^[[0m
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1424190Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1424639Z env:
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1424842Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1425118Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1425364Z   RELEASE_VERSION: 1.2.0
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1425584Z   PREVIOUS_VERSION: 1.1.37
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1425870Z   CANDIDATE_COMMIT: a45e275cc41ea5be107d6bf4c53bec66df63edc0
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1426204Z   INSTALLER_RUN_ID: 39751778987
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1429175Z   GH_TOKEN: ***
+review	Verify same installers and successful original build gates	2026-10-22T09:44:48.1429426Z ##[endgroup]
+review	Verify same installers and successful original build gates	2026-10-22T09:44:53.9433719Z Original build source identity drifted
+review	Verify same installers and successful original build gates	2026-10-22T09:44:53.9434820Z At D:\a\_temp\3dc17092-b6ef-40c8-8b71-34573d970d91.ps1:4 char:72
+review	Verify same installers and successful original build gates	2026-10-22T09:44:53.9435838Z + ... :CANDIDATE_COMMIT) { throw 'Original build source identity drifted' }
+review	Verify same installers and successful original build gates	2026-10-22T09:44:53.9436856Z +                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+review	Verify same installers and successful original build gates	2026-10-22T09:44:53.9437973Z     + CategoryInfo          : OperationStopped: (Original build source identity drifted:String) [], RuntimeException
+review	Verify same installers and successful original build gates	2026-10-22T09:44:53.9439185Z     + FullyQualifiedErrorId : Original build source identity drifted
+review	Verify same installers and successful original build gates	2026-10-22T09:44:53.9439854Z  
+review	Verify same installers and successful original build gates	2026-10-22T09:44:53.9814360Z ##[error]Process completed with exit code 1.
