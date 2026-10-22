@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "dependency": "dompurify@3.4.17",
+  "nativeBridgeMocked": true,
+  "checks": [
+    "actual DiagramStudio initial flowchart renders",
+    "HTML-label flowchart renders through patched sanitizer",
+    "sequence diagram renders Chinese participants and messages"
+  ],
+  "errors": []
+}
