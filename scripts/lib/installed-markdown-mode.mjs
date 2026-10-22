@@ -19,3 +19,14 @@ export async function chooseInstalledMarkdownMode({ send, evaluate }, value) {
   if (await evaluate(visible('.document-menu-content'))) await ui.click('[data-testid="library-document-menu"]')
   await ui.waitFor(`!(${visible('.document-menu-content')})`, 'document mode menu closed after the user selection')
 }
+
+export async function openInstalledDocumentExport({ send, evaluate }) {
+  const ui = nativeUserInput({ send, evaluate }, { timeoutMs: 45000 })
+  const target = `[...document.querySelectorAll('.document-shortcut-host button')].find(e=>e.textContent.trim()==='导出')`
+  if (await evaluate(`!!(${target})?.getClientRects().length`)) {
+    await ui.clickTarget(target)
+    return
+  }
+  if (!await evaluate(`!!document.querySelector('.document-menu-content')?.getClientRects().length`)) await ui.click('[data-testid="library-document-menu"]')
+  await ui.clickText('.document-menu-content button', '导出')
+}

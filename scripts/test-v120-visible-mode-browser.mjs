@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
-import { chooseInstalledMarkdownMode } from './lib/installed-markdown-mode.mjs'
+import { chooseInstalledMarkdownMode, openInstalledDocumentExport } from './lib/installed-markdown-mode.mjs'
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
 const browser = await chromium.launch({headless:true,channel:process.env.LONGEDIT_BROWSER_CHANNEL||undefined,args:['--no-proxy-server']})
 try {
@@ -18,7 +18,10 @@ try {
       await page.waitForFunction(mode=>document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app').editorMode===mode,mode)
       assert.equal(await page.locator('.document-menu-content:visible').count(),0)
     }
-    console.log(JSON.stringify({width,height,reference,modes:3,status:'passed'}))
+    await openInstalledDocumentExport(controls)
+    await page.getByText('导出 PDF',{exact:true}).waitFor()
+    await page.getByText('导出 HTML',{exact:true}).waitFor()
+    console.log(JSON.stringify({width,height,reference,modes:3,exportMenu:true,status:'passed'}))
     await page.close()
   }
 } finally { await browser.close() }
