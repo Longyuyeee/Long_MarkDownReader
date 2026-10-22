@@ -4,7 +4,7 @@ import { chooseInstalledMarkdownMode, openInstalledDocumentExport } from './lib/
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
 const browser = await chromium.launch({headless:true,channel:process.env.LONGEDIT_BROWSER_CHANNEL||undefined,args:['--no-proxy-server']})
 try {
-  for(const [width,height,reference] of [[1280,820,false],[1280,820,true],[640,480,false]]) {
+  for(const [width,height,reference] of [[1280,820,false],[1280,820,true],[1000,700,true],[640,480,false]]) {
     const page=await browser.newPage({viewport:{width,height}})
     await page.route('**/scripts/fixtures/vditor/**',route=>route.continue({url:route.request().url().replace('/scripts/fixtures/vditor/','/vditor/')}))
     await page.goto('http://127.0.0.1:15941/scripts/fixtures/full-window-review-browser.html?fixture=library-shell&surface=page',{waitUntil:'domcontentloaded',timeout:90000})
@@ -25,5 +25,3 @@ try {
     await page.close()
   }
 } finally { await browser.close() }
-
-

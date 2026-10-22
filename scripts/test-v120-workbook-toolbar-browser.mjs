@@ -36,4 +36,3 @@ try {
  await writeFile(resolve(output,'report.json'),JSON.stringify({checks:results.length,results,errors},null,2))
  console.log(JSON.stringify({checks:results.length,errors:errors.length}))
 } finally {await browser.close()}
-

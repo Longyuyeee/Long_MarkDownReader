@@ -4920,7 +4920,8 @@ useContextCommands(
 }
 @container library-editor (max-width: 520px) {
   .document-toolbar { padding-inline: 8px; gap: 4px; }
-  .document-primary-actions { gap: 2px; }
+  .document-identity { flex-grow: 0; min-width: 88px; }
+  .document-primary-actions { gap: 2px; flex-wrap: wrap; flex-shrink: 1; min-width: 0; justify-content: flex-end; }
   .editor-main :deep(.document-shortcut-host) { padding-left: 0; padding-right: 40px; }
   .document-inline-shortcuts { padding-left: 4px; gap: 2px; }
 }
