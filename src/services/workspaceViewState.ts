@@ -23,11 +23,29 @@ const VIEW_STORAGE_KEY = 'longedit.view-state.v1'
 const SESSION_VIEW_KEY = 'longedit.session-view-state.v1'
 const viewIdentity = (path: string) => path.replace(/^\\\\\?\\UNC\\/i, '//').replace(/^\\\\\?\\/, '').replace(/\\/g, '/').toLowerCase()
 let staged: Map<string, WorkspaceViewState> | undefined
+// Reading metadata contains locators only; annotation text and pending comments
+// remain owned by the sidecar save flow, never the session/view cache.
+const safePdfAnnotations = (value: unknown): WorkspaceViewState['pdfAnnotations'] => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return
+  const v = value as Record<string, unknown>
+  if (typeof v.signature !== 'string' || !v.signature || v.signature.length > 1024) return
+  const text = (key: string, limit: number) => typeof v[key] === 'string' ? (v[key] as string).slice(0, limit) : ''
+  const position = (key: string) => typeof v[key] === 'number' && Number.isFinite(v[key]) ? Math.min(10_000_000, Math.max(0, Math.floor(v[key] as number))) : 0
+  return {
+    signature: v.signature, id: text('id', 200), query: text('query', 200), pages: text('pages', 512),
+    kind: ['highlight', 'area', 'comment'].includes(String(v.kind)) ? String(v.kind) : '',
+    color: ['yellow', 'green', 'blue', 'pink'].includes(String(v.color)) ? String(v.color) : '',
+    listPage: position('listPage'), scrollTop: position('scrollTop'),
+    selection: Array.isArray(v.selection) ? [...new Set(v.selection.slice(0, 200).filter((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 200))] : [],
+  }
+}
 const safeView = (state: WorkspaceViewState): WorkspaceViewState => {
   const view: WorkspaceViewState = { scrollTop: Number.isFinite(state.scrollTop) ? Math.max(0, state.scrollTop) : 0, scrollLeft: Number.isFinite(state.scrollLeft) ? Math.max(0, state.scrollLeft) : 0 }
   for (const key of ['zoom', 'frozenColumns', 'panX', 'panY'] as const) if (typeof state[key] === 'number' && Number.isFinite(state[key])) view[key] = state[key]
   for (const key of ['fitWidth', 'sidebarOpen', 'panelOpen'] as const) if (typeof state[key] === 'boolean') view[key] = state[key]
   for (const key of ['section', 'sidebarTab', 'mode', 'externalApplication'] as const) if (typeof state[key] === 'string') view[key] = state[key].slice(0, 500)
+  const pdfAnnotations = safePdfAnnotations(state.pdfAnnotations)
+  if (pdfAnnotations) view.pdfAnnotations = pdfAnnotations
   return view
 }
 const readStoredViews = (): Record<string, WorkspaceViewState> => {
@@ -94,7 +112,7 @@ export const restoreWorkspaceViewStates = (views: Record<string, WorkspaceViewSt
 export const rememberWorkspaceViewState = (path: string, state: WorkspaceViewState) => {
   if (!path) return
   states.delete(path)
-  states.set(path, { ...state })
+  states.set(path, { ...state, pdfAnnotations: safePdfAnnotations(state.pdfAnnotations) })
   try {
     if (typeof localStorage !== 'undefined') {
       const saved = readStoredViews()
@@ -115,5 +133,5 @@ export const rememberWorkspaceViewState = (path: string, state: WorkspaceViewSta
 
 export const recallWorkspaceViewState = (path: string) => {
   const state = states.get(path) || stagedViews().get(viewIdentity(path)) || readStoredViews()[path]
-  return state ? { ...state } : undefined
+  return state ? { ...state, pdfAnnotations: safePdfAnnotations(state.pdfAnnotations) } : undefined
 }

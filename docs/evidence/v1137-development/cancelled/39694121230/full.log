@@ -1,0 +1,715 @@
+Frontend, Rust and dependency checks	Set up job	﻿2026-10-21T23:33:02.6788732Z Current runner version: '2.338.0'
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6844673Z ##[group]Runner Image Provisioner
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6845578Z Hosted Compute Agent
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6846131Z Version: 20261015.610
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6846744Z Commit: 267fdb4e8bbec4ab5ea31367f3a00d5c480c7656
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6848187Z Build Date: 2026-10-14T17:06:54Z
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6848857Z Worker ID: {b9a5c1f5-2c6e-49ee-889e-d33cdf42f343}
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6849685Z Region: southcentralus
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6850235Z Cloud: Azure
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6850750Z ##[endgroup]
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6852405Z ##[group]Operating System
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6853068Z Microsoft Windows Server 2025
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6853728Z 10.0.26100
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6854221Z Datacenter
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6854706Z ##[endgroup]
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6855269Z ##[group]Runner Image
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6855824Z Image: windows-2025-vs2026
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6856450Z Version: 20261018.275.1
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6857557Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261018.275/images/windows/Windows2025-VS2026-Readme.md
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6859741Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261018.275
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6860684Z ##[endgroup]
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6861760Z ##[group]GITHUB_TOKEN Permissions
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6864299Z Contents: read
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6864948Z Metadata: read
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6865469Z ##[endgroup]
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6867999Z Secret source: Actions
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6868945Z Cache mode: write
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.6869653Z Prepare workflow directory
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.7335369Z Prepare all required actions
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.7387261Z Getting action download info
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:02.9697789Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:03.1117216Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:03.2719681Z Download action repository 'Swatinem/rust-cache@v2' (SHA:d1527c8f67ef9af357290475d4af4b0fab8f12e0)
+Frontend, Rust and dependency checks	Set up job	2026-10-21T23:33:03.9360384Z Complete job name: Frontend, Rust and dependency checks
+Frontend, Rust and dependency checks	Check out repository	﻿2026-10-21T23:33:04.0915307Z ##[group]Run actions/checkout@v6
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0916362Z with:
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0916850Z   fetch-depth: 0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0917277Z   fetch-tags: true
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0917741Z   repository: Longyuyeee/Long_MarkDownReader
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0921995Z   token: ***
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0922408Z   ssh-strict: true
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0922854Z   ssh-user: git
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0923273Z   persist-credentials: true
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0923739Z   clean: true
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0924207Z   sparse-checkout-cone-mode: true
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0924728Z   show-progress: true
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0925185Z   lfs: false
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0925571Z   submodules: false
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0925995Z   set-safe-directory: true
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0926509Z   allow-unsafe-pr-checkout: false
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0927226Z env:
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0927678Z   CARGO_TERM_COLOR: always
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.0928133Z ##[endgroup]
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.2510853Z Syncing repository: Longyuyeee/Long_MarkDownReader
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.2513224Z ##[group]Getting Git version info
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.2514086Z Working directory is 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.3683257Z [command]"C:\Program Files\Git\bin\git.exe" version
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7005677Z git version 2.56.0.windows.2
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7064631Z ##[endgroup]
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7088393Z Temporarily overriding HOME='D:\a\_temp\08710f19-036a-49b4-9823-4ccdf59eaaf8' before making global git config changes
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7090808Z Adding repository directory to the temporary git global config as a safe directory
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7102443Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7856149Z Deleting the contents of 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7863361Z ##[group]Determining repository object format
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7866046Z ##[endgroup]
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7867232Z ##[group]Initializing the repository
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.7875865Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Long_MarkDownReader\Long_MarkDownReader
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.8828054Z Initialized empty Git repository in D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.8892952Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Longyuyeee/Long_MarkDownReader
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.9646087Z ##[endgroup]
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.9647902Z ##[group]Disabling automatic garbage collection
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:04.9656022Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:05.0133288Z ##[endgroup]
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:05.0135256Z ##[group]Setting up auth
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:05.0136730Z Removing SSH command configuration
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:05.0146815Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:05.0704596Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:06.5851762Z Removing HTTP extra header
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:06.5863788Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:06.6272909Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:07.2355191Z Removing includeIf entries pointing to credentials config files
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:07.2371176Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:07.2793720Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:07.8882886Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:07.9345221Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:07.9789392Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:08.0332844Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:08.0750978Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:08.1169974Z ##[endgroup]
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:08.1170787Z ##[group]Fetching the repository
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:08.1185688Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +adbba057293a43efc885c0c93b450391015697fe:refs/remotes/pull/90/merge
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1525930Z From https://github.com/Longyuyeee/Long_MarkDownReader
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1528534Z  * [new branch]        agent/audit-s8-7e2e-delivery             -> origin/agent/audit-s8-7e2e-delivery
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1529975Z  * [new branch]        codex/a4-format-closure                  -> origin/codex/a4-format-closure
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1532645Z  * [new branch]        codex/c3c1-pptx-index                    -> origin/codex/c3c1-pptx-index
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1533514Z  * [new branch]        codex/custom-note-templates              -> origin/codex/custom-note-templates
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1534367Z  * [new branch]        codex/foundation-file-management         -> origin/codex/foundation-file-management
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1535168Z  * [new branch]        codex/foundation-template-history        -> origin/codex/foundation-template-history
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1537259Z  * [new branch]        codex/inbox-experience                   -> origin/codex/inbox-experience
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1538133Z  * [new branch]        codex/professional-workspace-foundation  -> origin/codex/professional-workspace-foundation
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1539085Z  * [new branch]        codex/release-1.0.0                      -> origin/codex/release-1.0.0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1539962Z  * [new branch]        codex/s8-2b-table-lifecycle              -> origin/codex/s8-2b-table-lifecycle
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1540752Z  * [new branch]        codex/v1.0.11-candidate-evidence         -> origin/codex/v1.0.11-candidate-evidence
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1541552Z  * [new branch]        codex/v1.0.11-managed-updater            -> origin/codex/v1.0.11-managed-updater
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1542273Z  * [new branch]        codex/v1.0.11-published-evidence         -> origin/codex/v1.0.11-published-evidence
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1543025Z  * [new branch]        codex/v1.0.11-release-closure            -> origin/codex/v1.0.11-release-closure
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1543729Z  * [new branch]        codex/v1.0.15-interaction-polish         -> origin/codex/v1.0.15-interaction-polish
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1544419Z  * [new branch]        codex/v1.0.15-publication                -> origin/codex/v1.0.15-publication
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1545091Z  * [new branch]        codex/v110-editor-shell                  -> origin/codex/v110-editor-shell
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1546705Z  * [new branch]        codex/v1110-installed-proof              -> origin/codex/v1110-installed-proof
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1548776Z  * [new branch]        codex/v1110-installer-closure            -> origin/codex/v1110-installer-closure
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1550506Z  * [new branch]        codex/v1110-management-proof             -> origin/codex/v1110-management-proof
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1551313Z  * [new branch]        codex/v1110-native-error-proof           -> origin/codex/v1110-native-error-proof
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1552063Z  * [new branch]        codex/v1110-stable-native-input          -> origin/codex/v1110-stable-native-input
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1552774Z  * [new branch]        codex/v1110-tags-collections             -> origin/codex/v1110-tags-collections
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1553487Z  * [new branch]        codex/v1111-graph-continuity             -> origin/codex/v1111-graph-continuity
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1554229Z  * [new branch]        codex/v1111-health-loading-handoff       -> origin/codex/v1111-health-loading-handoff
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1555010Z  * [new branch]        codex/v1111-routed-visibility-default    -> origin/codex/v1111-routed-visibility-default
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1555873Z  * [new branch]        codex/v1112-local-content-backup         -> origin/codex/v1112-local-content-backup
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1556611Z  * [new branch]        codex/v1120-release-roadmap              -> origin/codex/v1120-release-roadmap
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1557379Z  * [new branch]        codex/v1120-structured-editing           -> origin/codex/v1120-structured-editing
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1558163Z  * [new branch]        codex/v1121-cross-library-copy           -> origin/codex/v1121-cross-library-copy
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1558910Z  * [new branch]        codex/v1122-file-operation-history       -> origin/codex/v1122-file-operation-history
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1559701Z  * [new branch]        codex/v1123-attachment-management        -> origin/codex/v1123-attachment-management
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1560638Z  * [new branch]        codex/v1124-long-markdown                -> origin/codex/v1124-long-markdown
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1561385Z  * [new branch]        codex/v1125-find-replace                 -> origin/codex/v1125-find-replace
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1562611Z  * [new branch]        codex/v1126-structured-history           -> origin/codex/v1126-structured-history
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1563837Z  * [new branch]        codex/v1127-tags-collections             -> origin/codex/v1127-tags-collections
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1565044Z  * [new branch]        codex/v1128-reference-repair             -> origin/codex/v1128-reference-repair
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1566233Z  * [new branch]        codex/v1129-pdf-continuity               -> origin/codex/v1129-pdf-continuity
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1567822Z  * [new branch]        codex/v1130-table-validation             -> origin/codex/v1130-table-validation
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1569032Z  * [new branch]        codex/v1131-workbook-validation          -> origin/codex/v1131-workbook-validation
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1570336Z  * [new branch]        codex/v1132-restore-continuity           -> origin/codex/v1132-restore-continuity
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1571695Z  * [new branch]        codex/v1133-copy-reading-outcomes        -> origin/codex/v1133-copy-reading-outcomes
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1573060Z  * [new branch]        codex/v1134-portable-chapter-links       -> origin/codex/v1134-portable-chapter-links
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1574587Z  * [new branch]        codex/v1135-attachment-draft-references  -> origin/codex/v1135-attachment-draft-references
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1576066Z  * [new branch]        codex/v1136-contextual-command-actions   -> origin/codex/v1136-contextual-command-actions
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1577463Z  * [new branch]        codex/v1137-pdf-annotation-resume        -> origin/codex/v1137-pdf-annotation-resume
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1578879Z  * [new branch]        codex/v114-release-readiness             -> origin/codex/v114-release-readiness
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1580128Z  * [new branch]        codex/v114-updater-audit                 -> origin/codex/v114-updater-audit
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1581343Z  * [new branch]        codex/v115-foundation-hardening          -> origin/codex/v115-foundation-hardening
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1583091Z  * [new branch]        codex/v116-installed-image-review        -> origin/codex/v116-installed-image-review
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1584802Z  * [new branch]        codex/v116-move-continuity               -> origin/codex/v116-move-continuity
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1585589Z  * [new branch]        codex/v116-safe-library-moves            -> origin/codex/v116-safe-library-moves
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1586332Z  * [new branch]        codex/v116-same-installer-review         -> origin/codex/v116-same-installer-review
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1587455Z  * [new branch]        codex/v117-save-history                  -> origin/codex/v117-save-history
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1588349Z  * [new branch]        codex/v118-candidate                     -> origin/codex/v118-candidate
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1589078Z  * [new branch]        codex/v118-native-ipc-audit              -> origin/codex/v118-native-ipc-audit
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1589831Z  * [new branch]        codex/v118-release-closure               -> origin/codex/v118-release-closure
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1590543Z  * [new branch]        codex/v118-search-completeness           -> origin/codex/v118-search-completeness
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1591640Z  * [new branch]        codex/v119-candidate                     -> origin/codex/v119-candidate
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1592356Z  * [new branch]        codex/v119-native-session-audit          -> origin/codex/v119-native-session-audit
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1636822Z  * [new branch]        codex/v119-publication-complete          -> origin/codex/v119-publication-complete
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1638349Z  * [new branch]        codex/v119-publication-evidence          -> origin/codex/v119-publication-evidence
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1639529Z  * [new branch]        codex/v119-release-closure               -> origin/codex/v119-release-closure
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1641166Z  * [new branch]        codex/v119-work-session-continuity       -> origin/codex/v119-work-session-continuity
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1642422Z  * [new branch]        codex/v124-release-readiness             -> origin/codex/v124-release-readiness
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1643600Z  * [new branch]        codex/v125-experience-roadmap            -> origin/codex/v125-experience-roadmap
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1644551Z  * [new branch]        main                                     -> origin/main
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1645203Z  * [new tag]           v0.1.0                                   -> v0.1.0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1645801Z  * [new tag]           v0.2.0                                   -> v0.2.0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1646377Z  * [new tag]           v0.3.0                                   -> v0.3.0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1646976Z  * [new tag]           v0.3.1                                   -> v0.3.1
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1647951Z  * [new tag]           v0.3.2                                   -> v0.3.2
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1648592Z  * [new tag]           v0.3.3                                   -> v0.3.3
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1649208Z  * [new tag]           v0.3.4                                   -> v0.3.4
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1649843Z  * [new tag]           v0.4.4                                   -> v0.4.4
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1650496Z  * [new tag]           v0.4.5                                   -> v0.4.5
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1651215Z  * [new tag]           v0.4.6                                   -> v0.4.6
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1651841Z  * [new tag]           v0.4.7                                   -> v0.4.7
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1652430Z  * [new tag]           v0.4.8                                   -> v0.4.8
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1653083Z  * [new tag]           v0.4.9                                   -> v0.4.9
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1653782Z  * [new tag]           v0.5.0                                   -> v0.5.0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1654405Z  * [new tag]           v0.5.1                                   -> v0.5.1
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1655033Z  * [new tag]           v0.5.2                                   -> v0.5.2
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1655634Z  * [new tag]           v0.5.3                                   -> v0.5.3
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1656357Z  * [new tag]           v0.5.4                                   -> v0.5.4
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1656744Z  * [new tag]           v0.5.5                                   -> v0.5.5
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1657115Z  * [new tag]           v0.5.6                                   -> v0.5.6
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1657464Z  * [new tag]           v0.5.7                                   -> v0.5.7
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1657815Z  * [new tag]           v0.5.8                                   -> v0.5.8
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1658186Z  * [new tag]           v0.5.9                                   -> v0.5.9
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1658779Z  * [new tag]           v0.6.0                                   -> v0.6.0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1659399Z  * [new tag]           v0.6.1                                   -> v0.6.1
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1664997Z  * [new tag]           v0.6.2                                   -> v0.6.2
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1665755Z  * [new tag]           v0.6.3                                   -> v0.6.3
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1666665Z  * [new tag]           v0.6.4                                   -> v0.6.4
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1667347Z  * [new tag]           v0.6.5                                   -> v0.6.5
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1668091Z  * [new tag]           v0.6.6                                   -> v0.6.6
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1668743Z  * [new tag]           v0.6.7                                   -> v0.6.7
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1669416Z  * [new tag]           v0.6.8                                   -> v0.6.8
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1670066Z  * [new tag]           v0.6.9                                   -> v0.6.9
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1670745Z  * [new tag]           v1.0.0                                   -> v1.0.0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1673043Z  * [new tag]           v1.0.1                                   -> v1.0.1
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1673748Z  * [new tag]           v1.0.10                                  -> v1.0.10
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1674450Z  * [new tag]           v1.0.11                                  -> v1.0.11
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1675116Z  * [new tag]           v1.0.12                                  -> v1.0.12
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1675787Z  * [new tag]           v1.0.13                                  -> v1.0.13
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1676441Z  * [new tag]           v1.0.14                                  -> v1.0.14
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1677084Z  * [new tag]           v1.0.15                                  -> v1.0.15
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1677729Z  * [new tag]           v1.0.16                                  -> v1.0.16
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1678362Z  * [new tag]           v1.0.17                                  -> v1.0.17
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1679005Z  * [new tag]           v1.0.18                                  -> v1.0.18
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1679676Z  * [new tag]           v1.0.19                                  -> v1.0.19
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1680312Z  * [new tag]           v1.0.2                                   -> v1.0.2
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1680976Z  * [new tag]           v1.0.20                                  -> v1.0.20
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1681646Z  * [new tag]           v1.0.21                                  -> v1.0.21
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1682276Z  * [new tag]           v1.0.22                                  -> v1.0.22
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1682901Z  * [new tag]           v1.0.23                                  -> v1.0.23
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1683413Z  * [new tag]           v1.0.24                                  -> v1.0.24
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1683771Z  * [new tag]           v1.0.25                                  -> v1.0.25
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1684132Z  * [new tag]           v1.0.26                                  -> v1.0.26
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1684487Z  * [new tag]           v1.0.3                                   -> v1.0.3
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1684850Z  * [new tag]           v1.0.4                                   -> v1.0.4
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1685188Z  * [new tag]           v1.0.5                                   -> v1.0.5
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1686291Z  * [new tag]           v1.0.6                                   -> v1.0.6
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1687122Z  * [new tag]           v1.0.7                                   -> v1.0.7
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1687505Z  * [new tag]           v1.0.8                                   -> v1.0.8
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1687856Z  * [new tag]           v1.0.9                                   -> v1.0.9
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1688206Z  * [new tag]           v1.1.0                                   -> v1.1.0
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1688565Z  * [new tag]           v1.1.1                                   -> v1.1.1
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1688920Z  * [new tag]           v1.1.10                                  -> v1.1.10
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1689284Z  * [new tag]           v1.1.11                                  -> v1.1.11
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1689631Z  * [new tag]           v1.1.12                                  -> v1.1.12
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1689971Z  * [new tag]           v1.1.13                                  -> v1.1.13
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1690334Z  * [new tag]           v1.1.14                                  -> v1.1.14
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1690677Z  * [new tag]           v1.1.15                                  -> v1.1.15
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1691018Z  * [new tag]           v1.1.16                                  -> v1.1.16
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1691361Z  * [new tag]           v1.1.17                                  -> v1.1.17
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1691704Z  * [new tag]           v1.1.18                                  -> v1.1.18
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1692045Z  * [new tag]           v1.1.19                                  -> v1.1.19
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1692387Z  * [new tag]           v1.1.2                                   -> v1.1.2
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1692939Z  * [new tag]           v1.1.20                                  -> v1.1.20
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1693294Z  * [new tag]           v1.1.21                                  -> v1.1.21
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1693646Z  * [new tag]           v1.1.22                                  -> v1.1.22
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1693992Z  * [new tag]           v1.1.23                                  -> v1.1.23
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1694332Z  * [new tag]           v1.1.24                                  -> v1.1.24
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1694717Z  * [new tag]           v1.1.25                                  -> v1.1.25
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1695064Z  * [new tag]           v1.1.26                                  -> v1.1.26
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1695409Z  * [new tag]           v1.1.27                                  -> v1.1.27
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1695757Z  * [new tag]           v1.1.28                                  -> v1.1.28
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1696098Z  * [new tag]           v1.1.29                                  -> v1.1.29
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1696444Z  * [new tag]           v1.1.3                                   -> v1.1.3
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1696796Z  * [new tag]           v1.1.30                                  -> v1.1.30
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1697146Z  * [new tag]           v1.1.31                                  -> v1.1.31
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1697489Z  * [new tag]           v1.1.32                                  -> v1.1.32
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1697830Z  * [new tag]           v1.1.33                                  -> v1.1.33
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1698171Z  * [new tag]           v1.1.34                                  -> v1.1.34
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1698523Z  * [new tag]           v1.1.35                                  -> v1.1.35
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1698860Z  * [new tag]           v1.1.36                                  -> v1.1.36
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1699206Z  * [new tag]           v1.1.4                                   -> v1.1.4
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1699552Z  * [new tag]           v1.1.5                                   -> v1.1.5
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1699901Z  * [new tag]           v1.1.6                                   -> v1.1.6
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1700243Z  * [new tag]           v1.1.7                                   -> v1.1.7
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1700715Z  * [new tag]           v1.1.8                                   -> v1.1.8
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1701058Z  * [new tag]           v1.1.9                                   -> v1.1.9
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1701469Z  * [new ref]           adbba057293a43efc885c0c93b450391015697fe -> pull/90/merge
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1702627Z ##[endgroup]
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1702962Z ##[group]Determining the checkout info
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1703332Z ##[endgroup]
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.1703604Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.2203325Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.2619125Z ##[group]Checking out the ref
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:26.2629674Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force refs/remotes/pull/90/merge
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:27.4474432Z Updating files:   5% (1334/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:27.6457677Z Updating files:   6% (1472/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:27.8052127Z Updating files:   7% (1717/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:27.9990319Z Updating files:   8% (1962/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:28.2568448Z Updating files:   9% (2207/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:28.3576930Z Updating files:  10% (2453/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:28.4533645Z Updating files:  10% (2576/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:28.6457024Z Updating files:  11% (2698/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:28.8295486Z Updating files:  12% (2943/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:28.9891896Z Updating files:  13% (3188/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:29.1499362Z Updating files:  14% (3433/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:29.2934409Z Updating files:  15% (3679/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:29.3588580Z Updating files:  16% (3924/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:29.4472705Z Updating files:  16% (4029/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:29.7429819Z Updating files:  17% (4169/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:29.8893521Z Updating files:  18% (4414/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:30.0365890Z Updating files:  19% (4659/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:30.1798115Z Updating files:  20% (4905/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:30.3184339Z Updating files:  21% (5150/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:30.3676346Z Updating files:  22% (5395/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:30.4553159Z Updating files:  22% (5484/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:30.5899516Z Updating files:  23% (5640/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:30.7302779Z Updating files:  24% (5886/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:31.0011648Z Updating files:  25% (6131/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:31.1299116Z Updating files:  26% (6376/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:31.2658611Z Updating files:  27% (6621/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:31.3807907Z Updating files:  28% (6866/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:31.4135759Z Updating files:  28% (7049/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:31.5832610Z Updating files:  29% (7112/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:31.7023153Z Updating files:  30% (7357/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:31.8411915Z Updating files:  31% (7602/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:31.9934682Z Updating files:  32% (7847/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:32.1172511Z Updating files:  33% (8092/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:32.3633474Z Updating files:  34% (8338/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:32.3817401Z Updating files:  35% (8583/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:32.5158426Z Updating files:  35% (8615/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:32.6433598Z Updating files:  36% (8828/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:32.8680827Z Updating files:  37% (9073/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:33.0609406Z Updating files:  38% (9318/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:33.1601843Z Updating files:  39% (9564/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:33.2617707Z Updating files:  40% (9809/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:33.3822475Z Updating files:  41% (10054/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:33.4184158Z Updating files:  41% (10240/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:33.6364309Z Updating files:  42% (10299/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:33.8150917Z Updating files:  43% (10545/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:34.0546300Z Updating files:  44% (10790/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:34.2998672Z Updating files:  45% (11035/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:34.3831785Z Updating files:  46% (11280/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:34.4936838Z Updating files:  46% (11375/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:34.6787638Z Updating files:  47% (11525/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:34.8595738Z Updating files:  48% (11771/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:35.0676205Z Updating files:  49% (12016/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:35.2406196Z Updating files:  50% (12261/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:35.3860748Z Updating files:  51% (12506/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:35.4130764Z Updating files:  51% (12717/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:35.5907679Z Updating files:  52% (12751/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:35.7431408Z Updating files:  53% (12997/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:35.9004212Z Updating files:  54% (13242/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:36.0453901Z Updating files:  55% (13487/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:36.1943265Z Updating files:  56% (13732/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:36.3761849Z Updating files:  57% (13977/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:36.3906329Z Updating files:  58% (14223/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:36.5048411Z Updating files:  58% (14253/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:36.6651968Z Updating files:  59% (14468/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:36.8222692Z Updating files:  60% (14713/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:36.9734145Z Updating files:  61% (14958/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:37.1153780Z Updating files:  62% (15204/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:37.2779873Z Updating files:  63% (15449/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:37.4047773Z Updating files:  64% (15694/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:37.4375525Z Updating files:  64% (15888/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:37.5778535Z Updating files:  65% (15939/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:37.7303216Z Updating files:  66% (16184/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:37.8622670Z Updating files:  67% (16430/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:37.9889946Z Updating files:  68% (16675/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:38.1267034Z Updating files:  69% (16920/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:38.2533395Z Updating files:  70% (17165/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:38.3837211Z Updating files:  71% (17410/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:38.4047604Z Updating files:  72% (17656/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:38.5181602Z Updating files:  72% (17697/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:38.7202812Z Updating files:  73% (17901/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:38.8595232Z Updating files:  74% (18146/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:39.0068854Z Updating files:  75% (18391/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:39.1928355Z Updating files:  76% (18636/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:39.3469369Z Updating files:  77% (18882/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:39.4141583Z Updating files:  78% (19127/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:39.4760240Z Updating files:  78% (19256/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:39.6009034Z Updating files:  79% (19372/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:39.7278351Z Updating files:  80% (19617/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:39.8956740Z Updating files:  81% (19863/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:40.0268187Z Updating files:  82% (20108/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:40.1615262Z Updating files:  83% (20353/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:40.3635965Z Updating files:  84% (20598/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:40.4270524Z Updating files:  85% (20843/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:40.5500622Z Updating files:  85% (20907/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:40.7060565Z Updating files:  86% (21089/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:40.8524558Z Updating files:  87% (21334/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.0069456Z Updating files:  88% (21579/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.0616600Z Updating files:  89% (21824/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.4465056Z Updating files:  90% (22069/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.5468608Z Updating files:  90% (22312/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.6139268Z Updating files:  91% (22315/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.6769741Z Updating files:  92% (22560/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.7358386Z Updating files:  93% (22805/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.8348479Z Updating files:  94% (23050/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.8963178Z Updating files:  95% (23295/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:41.9596332Z Updating files:  96% (23541/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.1579233Z Updating files:  97% (23786/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.2575880Z Updating files:  98% (24031/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3366653Z Updating files:  99% (24276/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3367177Z Updating files: 100% (24521/24521)
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3367456Z Updating files: 100% (24521/24521), done.
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3786794Z Note: switching to 'refs/remotes/pull/90/merge'.
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3787700Z 
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3788363Z You are in 'detached HEAD' state. You can look around, make experimental
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3789218Z changes and commit them, and you can discard any commits you make in this
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3790078Z state without impacting any branches by switching back to a branch.
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3790589Z 
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3790932Z If you want to create a new branch to retain commits you create, you may
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3791743Z do so (now or later) by using -c with the switch command. Example:
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3792233Z 
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3792473Z   git switch -c <new-branch-name>
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3792792Z 
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3792952Z Or undo this operation with:
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3793240Z 
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3793394Z   git switch -
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3793599Z 
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3794321Z Turn off this advice by setting config variable advice.detachedHead to false
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3794879Z 
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.3795543Z HEAD is now at adbba057 Merge 52a69d45a75fcc3e675cb5a402329c3618fa71bb into 2c443f5887863fa460aee8a8748e644b8a802955
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.5022743Z ##[endgroup]
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.5486568Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+Frontend, Rust and dependency checks	Check out repository	2026-10-21T23:33:42.5890039Z adbba057293a43efc885c0c93b450391015697fe
+Frontend, Rust and dependency checks	Set up Node.js	﻿2026-10-21T23:33:42.6392950Z ##[group]Run actions/setup-node@v6
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.6393298Z with:
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.6393485Z   node-version: 22
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.6393679Z   cache: npm
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.6393859Z   check-latest: false
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.6396686Z   token: ***
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.6396897Z   package-manager-cache: true
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.6397125Z env:
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.6397291Z   CARGO_TERM_COLOR: always
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.6397506Z ##[endgroup]
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.8346761Z Found in cache @ C:\hostedtoolcache\windows\node\22.23.3\x64
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:42.8354661Z ##[group]Environment details
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:47.7758919Z node: v22.23.3
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:47.7759284Z npm: 10.9.9
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:47.7759462Z yarn: 1.22.22
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:47.7759928Z ##[endgroup]
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:47.8527346Z [command]C:\Windows\system32\cmd.exe /D /S /C "C:\hostedtoolcache\windows\node\22.23.3\x64\npm.cmd config get cache"
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:48.4748851Z C:\npm\cache
+Frontend, Rust and dependency checks	Set up Node.js	2026-10-21T23:33:48.8302342Z npm cache is not found
+Frontend, Rust and dependency checks	Install locked frontend dependencies	﻿2026-10-21T23:33:48.8663602Z ##[group]Run npm ci
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:33:48.8664088Z ^[[36;1mnpm ci^[[0m
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:33:48.9581870Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:33:48.9582386Z env:
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:33:48.9582625Z   CARGO_TERM_COLOR: always
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:33:48.9582905Z ##[endgroup]
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.2933813Z 
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.2948279Z added 311 packages, and audited 312 packages in 25s
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.2948894Z 
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.2949213Z 40 packages are looking for funding
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.2949775Z   run `npm fund` for details
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3043292Z 
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3043937Z 4 high severity vulnerabilities
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3044457Z 
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3044958Z To address issues that do not require attention, run:
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3045704Z   npm audit fix
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3045996Z 
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3046460Z To address all issues (including breaking changes), run:
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3047215Z   npm audit fix --force
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3047534Z 
+Frontend, Rust and dependency checks	Install locked frontend dependencies	2026-10-21T23:34:15.3047902Z Run `npm audit` for details.
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	﻿2026-10-21T23:34:16.6555593Z ##[group]Run Swatinem/rust-cache@v2
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6555937Z with:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6556134Z   workspaces: src-tauri -> target
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6556826Z   prefix-key: v1-foundations-compiled-ci-rust
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6557142Z   cache-on-failure: false
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6557360Z   add-job-id-key: true
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6557607Z   add-rust-environment-hash-key: true
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6557859Z   cache-targets: true
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6558057Z   cache-all-crates: false
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6558269Z   cache-workspace-crates: false
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6558486Z   save-if: true
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6558664Z   cache-provider: github
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6558866Z   cache-bin: true
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6559047Z   lookup-only: false
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6559238Z   cmd-format: {0}
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6559409Z env:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6559571Z   CARGO_TERM_COLOR: always
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:16.6559776Z ##[endgroup]
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0031707Z ##[group]Cache Configuration
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0032668Z Cache Provider:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0035536Z     github
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0036212Z Workspaces:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0044068Z     D:\a\Long_MarkDownReader\Long_MarkDownReader\src-tauri
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0047340Z Cache Paths:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0049815Z     C:\Users\runneradmin\.cargo\bin
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0052438Z     C:\Users\runneradmin\.cargo\.crates.toml
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0053396Z     C:\Users\runneradmin\.cargo\.crates2.json
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0054123Z     C:\Users\runneradmin\.cargo\registry
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0054812Z     C:\Users\runneradmin\.cargo\git
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0055598Z     D:\a\Long_MarkDownReader\Long_MarkDownReader\src-tauri\target
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0056570Z Restore Key:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0057302Z     v1-foundations-compiled-ci-rust-check-Windows_NT-x64-bc559819
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0058100Z Cache Key:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0059673Z     v1-foundations-compiled-ci-rust-check-Windows_NT-x64-bc559819-983b7e98
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0061297Z .. Prefix:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0062742Z   - v1-foundations-compiled-ci-rust-check-Windows_NT-x64
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0064726Z .. Environment considered:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0065196Z   - Rust Versions:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0065833Z     - 1.99.1 x86_64-pc-windows-msvc 58cf8f9c35b355199727627d07ae34a4e2846d67
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0066549Z   - CARGO_INCREMENTAL
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0067459Z   - CARGO_TERM_COLOR
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0067886Z .. Lockfiles considered:
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0068826Z   - D:\a\Long_MarkDownReader\Long_MarkDownReader\src-tauri\Cargo.lock
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0069748Z   - D:\a\Long_MarkDownReader\Long_MarkDownReader\src-tauri\Cargo.toml
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0070795Z ##[endgroup]
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0071477Z 
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.0071704Z ... Restoring cache ...
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:23.2450539Z Cache hit for: v1-foundations-compiled-ci-rust-check-Windows_NT-x64-bc559819-983b7e98
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:24.5615660Z Received 134217728 of 1050209997 (12.8%), 110.7 MBs/sec
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:25.5663239Z Received 272629760 of 1050209997 (26.0%), 120.3 MBs/sec
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:26.5781043Z Received 440401920 of 1050209997 (41.9%), 132.4 MBs/sec
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:27.5882845Z Received 620756992 of 1050209997 (59.1%), 141.6 MBs/sec
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:28.5895080Z Received 796917760 of 1050209997 (75.9%), 146.6 MBs/sec
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:29.6994324Z Received 939524096 of 1050209997 (89.5%), 142.4 MBs/sec
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:30.4020687Z Received 1050209997 of 1050209997 (100.0%), 143.1 MBs/sec
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:30.4024794Z Cache Size: ~1002 MB (1050209997 B)
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:30.4108613Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/e840c9a9-57e5-40aa-9295-ebd3631d1156/cache.tzst -P -C D:/a/Long_MarkDownReader/Long_MarkDownReader --force-local --use-compress-program "zstd -d"
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:52.3084892Z Cache restored successfully
+Frontend, Rust and dependency checks	Cache Rust build dependencies without skipping checks	2026-10-21T23:34:52.3870795Z Restored from cache key "v1-foundations-compiled-ci-rust-check-Windows_NT-x64-bc559819-983b7e98" full match: true.
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	﻿2026-10-21T23:34:52.4195301Z ##[group]Run npm run ci:patch-release
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:52.4195750Z ^[[36;1mnpm run ci:patch-release^[[0m
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:52.4275943Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:52.4276308Z env:
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:52.4276500Z   CARGO_TERM_COLOR: always
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:52.4276857Z   CACHE_ON_FAILURE: false
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:52.4277149Z   CARGO_INCREMENTAL: 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:52.4277442Z ##[endgroup]
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:53.2121471Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:53.2122249Z > tauri-app@1.1.37 ci:patch-release
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:53.2133813Z > npm run test:pdf-annotation-resume && npm run test:context-commands && npm run test:attachment-drafts && npm run build && npm run test:pdf-reading-continuity && npm run check:theme-contract && npm run check:brand-icon-contract && npm run check:ui-consistency && npm run check:ui-typography && npm run check:ui-shared-components && npm run check:ui-management-shell && npm run check:ui4a-shell-visual-harness && npm run check:ui4a-shell-visual-evidence && npm run check:ui4c-release-fact-alignment && npm run check:ui-color-semantics && npm run check:ui-state-semantics && npm run check:dialog-acl && npm run check:settings-navigation-localization && npm run check:settings-information-architecture && npm run check:index-auto-preparation-experience && npm run check:table-row-editing-experience && npm run check:library-context-restoration && npm run check:markdown-default-mode && npm run check:markdown-code-theme-contrast && npm run check:code-editor-theme-contract && npm run check:structured-source-workspace && npm run check:workbook-workspace-experience && npm run check:json-workspace-experience && npm run check:text-workspace-layout && npm run check:external-change-identity && npm run check:managed-file-routing && npm run check:format-registry && npm run check:r1-release-capability-matrix && npm run check:r2-windows-lifecycle-contract && npm run check:d2-safe-degradation-contract && npm run check:v1-installed-hotfix && npm run check:v1-community-release && npm run check:current-development-audit && npm run check:ux33j-installed-docx-harness && cargo check --locked --manifest-path src-tauri/Cargo.toml && npm run audit:prod && npm run test:table-validation && npm run test:workbook-entry-validation && npm run test:content-restore-continuity && npm run test:copy-reading-outcomes && npm run test:portable-chapter-links
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:53.2146063Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:53.5418796Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:53.5419559Z > tauri-app@1.1.37 test:pdf-annotation-resume
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:53.5420241Z > node --test scripts/test-pdf-annotation-resume.mjs scripts/test-v1137-installed-release.mjs
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:53.5420667Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:53.6433946Z TAP version 13
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6580772Z # Subtest: a fresh process restores PDF locators without any draft or annotation contents
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6588312Z ok 1 - a fresh process restores PDF locators without any draft or annotation contents
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6589544Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6590149Z   duration_ms: 179.041
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6590769Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6591869Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6596378Z # Subtest: metadata remains bounded and optional for legacy scenes
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6599176Z ok 2 - metadata remains bounded and optional for legacy scenes
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6600061Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6600404Z   duration_ms: 124.1483
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6600814Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6601147Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6608632Z # Subtest: scene staging preserves locators without expanding the 24-entry live cache
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6609898Z ok 3 - scene staging preserves locators without expanding the 24-entry live cache
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6610871Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6611490Z   duration_ms: 69.6643
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6612634Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6613237Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6614252Z # Subtest: corrupt or unavailable metadata does not block live reading
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6615519Z ok 4 - corrupt or unavailable metadata does not block live reading
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6620014Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6620631Z   duration_ms: 56.6762
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6621304Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6621882Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6622985Z # Subtest: callers cannot mutate the remembered annotation selection through aliases
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6624195Z ok 5 - callers cannot mutate the remembered annotation selection through aliases
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6624930Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6625252Z   duration_ms: 41.4893
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6625606Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6625901Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6769309Z # Subtest: installed PDF resume driver uses real input, a fresh renderer and scalar readiness predicates
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6770992Z ok 6 - installed PDF resume driver uses real input, a fresh renderer and scalar readiness predicates
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6772210Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6772548Z   duration_ms: 36.7479
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6772926Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6773250Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6774109Z # Subtest: installed PDF resume proof rejects partial tasks, changed bytes and untrusted input
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6775471Z ok 7 - installed PDF resume proof rejects partial tasks, changed bytes and untrusted input
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6776283Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6776616Z   duration_ms: 11.8261
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6776996Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6777321Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6777610Z 1..7
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6777905Z # tests 7
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6778210Z # suites 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6778504Z # pass 7
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6778812Z # fail 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6779184Z # cancelled 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6780360Z # skipped 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6780980Z # todo 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:54.6782269Z # duration_ms 1063.4677
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.0001245Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.0001980Z > tauri-app@1.1.37 test:context-commands
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.0003829Z > node --experimental-strip-types --test scripts/test-context-commands.mjs scripts/test-v1136-installed-release.mjs scripts/test-command-palette-shortcut.mjs
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.0004701Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.1088173Z TAP version 13
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8203147Z # Subtest: Ctrl or Cmd P is consumed before embedded editors can switch preview
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8211772Z ok 1 - Ctrl or Cmd P is consumed before embedded editors can switch preview
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8213097Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8213433Z   duration_ms: 74.2707
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8213810Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8214123Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8218227Z # Subtest: other editor and scoped fullscreen shortcuts keep their existing handlers
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8220696Z ok 2 - other editor and scoped fullscreen shortcuts keep their existing handlers
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8221467Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8221806Z   duration_ms: 21.4919
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8222187Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8222509Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8224699Z # Subtest: only the palette shortcut captures keydown and its listener is removed on disposal
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8227546Z ok 3 - only the palette shortcut captures keydown and its listener is removed on disposal
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8228367Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8229061Z   duration_ms: 0.3601
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8229450Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8229776Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8368558Z # Subtest: commands use the live callback and never apply an old result to another document
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8370181Z ok 4 - commands use the live callback and never apply an old result to another document
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8371144Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8371403Z   duration_ms: 4.6859
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8371667Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8371891Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8372758Z # Subtest: a remounted editor cannot inherit an old callback even with the same path
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8373688Z ok 5 - a remounted editor cannot inherit an old callback even with the same path
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8374569Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8374970Z   duration_ms: 0.6165
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8376995Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8377344Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8378175Z # Subtest: local operation failures propagate without saving or unregistering other actions
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8379439Z ok 6 - local operation failures propagate without saving or unregistering other actions
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8379907Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8380105Z   duration_ms: 0.84
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8380317Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8380504Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8381249Z # Subtest: attachment paths display relative Windows and UNC names while preserving input bytes
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8382602Z ok 7 - attachment paths display relative Windows and UNC names while preserving input bytes
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8383517Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8383861Z   duration_ms: 0.6272
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8384246Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8384571Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8385882Z # Subtest: installed context command workflow uses trusted input, restores preferences and registers mandatory output verification
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8388271Z ok 8 - installed context command workflow uses trusted input, restores preferences and registers mandatory output verification
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8389544Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8389993Z   duration_ms: 34.4768
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8390476Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8390963Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8392127Z # Subtest: installed context command evidence rejects partial checks, changed identity, untrusted input and mode loss
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8393973Z ok 9 - installed context command evidence rejects partial checks, changed identity, untrusted input and mode loss
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8395113Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8395537Z   duration_ms: 11.1515
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8396025Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8396445Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8397388Z # Subtest: native readiness predicates return scalar booleans before CDP serialization
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8398756Z ok 10 - native readiness predicates return scalar booleans before CDP serialization
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8399661Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8400121Z   duration_ms: 1.8233
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8400564Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8400971Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8401380Z 1..10
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8401787Z # tests 10
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8402185Z # suites 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8402554Z # pass 10
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8403279Z # fail 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8403638Z # cancelled 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8403979Z # skipped 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8404355Z # todo 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:55.8404828Z # duration_ms 766.8139
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.1685152Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.1685948Z > tauri-app@1.1.37 test:attachment-drafts
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.1686826Z > node --experimental-strip-types --test scripts/test-attachment-drafts.mjs scripts/test-v1135-installed-release.mjs
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.1687375Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.2724419Z TAP version 13
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.3992786Z # Subtest: current-window dirty Markdown overlays preserve empty, Unicode and aliased paths
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4001884Z ok 1 - current-window dirty Markdown overlays preserve empty, Unicode and aliased paths
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4003034Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4003536Z   duration_ms: 21.4296
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4004124Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4004604Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4007775Z # Subtest: unavailable or partial dirty drafts cannot silently fall back to stale disk references
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4011207Z ok 2 - unavailable or partial dirty drafts cannot silently fall back to stale disk references
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4012289Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4012782Z   duration_ms: 0.3375
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4013345Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.4013831Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7846864Z # Subtest: installed draft workflow uses trusted input, restores preferences and registers mandatory output verification
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7851733Z ok 3 - installed draft workflow uses trusted input, restores preferences and registers mandatory output verification
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7855236Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7856066Z   duration_ms: 34.6539
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7856610Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7857053Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7858211Z # Subtest: installed draft evidence rejects partial checks, changed identity, untrusted input and mode loss
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7860660Z ok 4 - installed draft evidence rejects partial checks, changed identity, untrusted input and mode loss
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7862117Z   ---
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7862851Z   duration_ms: 12.3053
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7863575Z   type: 'test'
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.7864151Z   ...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.8016756Z 1..4
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.8018318Z # tests 4
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.8019045Z # suites 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.8019437Z # pass 4
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.8020307Z # fail 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.8020857Z # cancelled 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.8021326Z # skipped 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.8022603Z # todo 0
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:56.8023142Z # duration_ms 562.0672
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:57.1258756Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:57.1259522Z > tauri-app@1.1.37 build
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:57.1259994Z > vue-tsc --noEmit && vite build
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:34:57.1260221Z 
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:35:24.9057139Z ^[[36mvite v6.4.3 ^[[32mbuilding for production...^[[36m^[[39m
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:35:25.0737598Z transforming...
+Frontend, Rust and dependency checks	Run the v1 patch release quality gate	2026-10-21T23:35:32.5887979Z ##[error]The operation was canceled.
+Frontend, Rust and dependency checks	Post Check out repository	﻿2026-10-21T23:35:32.7937031Z Post job cleanup.
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:33.3252076Z [command]"C:\Program Files\Git\bin\git.exe" version
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:33.3679492Z git version 2.56.0.windows.2
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:33.3763250Z Temporarily overriding HOME='D:\a\_temp\a90460ee-3ecd-4b6d-bb5c-612685eaae89' before making global git config changes
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:33.3764836Z Adding repository directory to the temporary git global config as a safe directory
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:33.3776903Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:33.4295556Z Removing SSH command configuration
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:33.4313194Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:33.4769496Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.0885605Z Removing HTTP extra header
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.0897408Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.1331519Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.7494333Z Removing includeIf entries pointing to credentials config files
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.7507630Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.7928132Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.7929374Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.7929903Z includeif.gitdir:/github/workspace/.git.path
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.7930360Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.7984282Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.8359495Z D:\a\_temp\git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.8413773Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.8859476Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.9231801Z D:\a\_temp\git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.9281949Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:34.9706752Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:35.0073327Z /github/runner_temp/git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:35.0122757Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:35.0541458Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:35.0904699Z /github/runner_temp/git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:35.0955296Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:35.1376851Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Frontend, Rust and dependency checks	Post Check out repository	2026-10-21T23:35:35.7384857Z Removing credentials config 'D:\a\_temp\git-credentials-78e84618-4515-4de7-ab1b-d31a4fd0da53.config'
+Frontend, Rust and dependency checks	Complete job	﻿2026-10-21T23:35:35.7701430Z Cleaning up orphan processes

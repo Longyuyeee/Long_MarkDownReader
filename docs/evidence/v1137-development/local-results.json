@@ -1,0 +1,24 @@
+{
+  "status": "passed-after-documentation-and-version-compatibility-fixes",
+  "targetedTests": 37,
+  "workSessionMetadataTests": 12,
+  "overlappingMetadataTests": 5,
+  "distinctTargetedTests": 47,
+  "pdfResumeBrowserTasks": 7,
+  "retainedAnnotationBrowserTasks": 3,
+  "visualStyles": [
+    "soft",
+    "neo",
+    "glass",
+    "airy",
+    "minimal",
+    "sharp"
+  ],
+  "productionBuild": "passed",
+  "patchReleaseStages": "all-passed; first run stopped at missing README disclosure, continuation exposed historical accepted-version state list; both corrected, remainder completed with exit code 0",
+  "nativeBridgeMockedInBrowser": true,
+  "installerAcceptanceClaimed": false,
+  "graphHitTests": 3,
+  "graphOverlapBrowserTasks": 3,
+  "graphOverlapBrowser": "passed; actual GraphView and trusted headless input, controlled overlapping generated nodes; initial navigation load wait timed out before input, corrected to DOM readiness plus actual component readiness"
+}

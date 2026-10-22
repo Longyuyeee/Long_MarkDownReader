@@ -2,7 +2,7 @@
 
 日期：2026-10-21（Asia/Hong_Kong）。审计基线：`eb13b3fcd22f6439bbc08e8aced48f4379f907ae`，已拉取 main，与远端一致。
 
-后续进展：1.1.33—1.1.36 已正式发布，基础路线完成 4/5；下一版 1.1.37 为 PDF 批注跨重启接续，仍为规划。[实际范围](V1_1_36_Unsigned_Community_Release_Audit_2026-10-22.md) · [后续路线](Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md)。以下保留原审计时点，原始证据不改写。
+后续进展：1.1.33—1.1.37 已正式发布，基础路线完成 5/5；[下一轮 1.1.38—1.1.39](Foundation_Deepening_Roadmap_1_1_38_to_1_1_39_2026-10-22.md) 依次深化移动改名接续和 PDF 批注撤销，尚未实施。[本版实际范围](V1_1_37_Unsigned_Community_Release_Audit_2026-10-22.md)。以下保留原审计时点，原始证据不改写。
 
 后续进展：1.1.31 已发布，XLSX 整数、小数、日期及文本长度的统一输入、按需核对与预览修正已交付，保留既有 Table 能力。[实际范围](V1_1_31_Unsigned_Community_Release_Audit_2026-10-21.md)。以下结论保留原审计时点，原始证据不改写。
 

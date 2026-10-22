@@ -1,0 +1,45 @@
+✔ a fresh process restores PDF locators without any draft or annotation contents (113.5573ms)
+✔ metadata remains bounded and optional for legacy scenes (46.73ms)
+✔ scene staging preserves locators without expanding the 24-entry live cache (30.2585ms)
+✔ corrupt or unavailable metadata does not block live reading (23.2771ms)
+✔ callers cannot mutate the remembered annotation selection through aliases (10.7236ms)
+✔ installed PDF resume driver uses real input, a fresh renderer and scalar readiness predicates (104.3426ms)
+✔ installed PDF resume proof rejects partial tasks, changed bytes and untrusted input (10.2208ms)
+✔ graph candidate retains the exact public 1.1.10 predecessor without borrowing old updater success (2.8587ms)
+✔ published v1.0.24 requires its exact tag and keeps the new updater pending (0.3139ms)
+✔ hosted-execution-pending: community=pending, receipt=pending (0.1598ms)
+✔ hosted-execution-pending: community=pending, receipt=passed (0.2669ms)
+✔ hosted-execution-pending: community=passed, receipt=pending (0.132ms)
+✔ hosted-execution-pending: community=passed, receipt=passed (0.0976ms)
+✔ hosted-managed-update-passed: community=pending, receipt=pending (0.9574ms)
+✔ hosted-managed-update-passed: community=pending, receipt=passed (0.155ms)
+✔ hosted-managed-update-passed: community=passed, receipt=pending (0.1287ms)
+✔ hosted-managed-update-passed: community=passed, receipt=passed (0.2929ms)
+✔ unknown status fails closed (0.2115ms)
+✔ v1.0.23 candidate does not inherit historical updater acceptance (0.2924ms)
+✔ published successor boundary requires its own real release identity (0.2491ms)
+✔ v1.1.18 keeps its exact predecessor and a separate update observation in candidate and public states (0.6761ms)
+✔ successor keeps the historical receipt and a separate pending update path (0.1655ms)
+✔ successor rejects pending-predecessor (0.2477ms)
+✔ successor rejects stale-successor-path (0.1311ms)
+✔ successor rejects wrong-previous (0.1221ms)
+✔ successor rejects wrong-tag (0.1078ms)
+✔ successor rejects unknown-version (0.1066ms)
+✔ successor rejects changed-receipt (0.0905ms)
+✔ version boundary admits only current and planned successor runtime (0.3857ms)
+✔ v1.1.19 keeps its exact predecessor and a separate update observation in candidate and public states (0.493ms)
+✔ v1.1.28 keeps predecessor identity and independent updater observation (0.2753ms)
+✔ v1.1.29 keeps predecessor identity and independent updater observation (0.2161ms)
+✔ v1.1.30 keeps predecessor identity and independent updater observation (0.3075ms)
+✔ v1.1.34 retains its real v1.1.33 predecessor and a separate managed-update observation (0.2628ms)
+✔ v1.1.35 retains its real v1.1.34 predecessor and a separate managed-update observation (0.255ms)
+✔ v1.1.36 retains its real v1.1.35 predecessor and a separate managed-update observation (0.2111ms)
+✔ v1.1.37 retains its real v1.1.36 predecessor and a separate managed-update observation (0.2135ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 608.2922

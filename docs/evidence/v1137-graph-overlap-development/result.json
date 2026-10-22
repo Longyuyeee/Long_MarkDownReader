@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "motion": "normal",
+  "checks": [
+    "Overlapping target selects the nearest actual node instead of the earlier file",
+    "Single click stays in the graph",
+    "Double click opens the intended managed file"
+  ],
+  "errors": []
+}
