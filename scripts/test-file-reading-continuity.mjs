@@ -48,9 +48,16 @@ test('partial batch receipts only continue successful paths; retries are idempot
 test('late unmount writes cannot resurrect the old bookmark or block undo; reopening a reused path creates a new owner',()=>{
  const f=fixture();f.views.rememberWorkspaceViewState(f.path,view(30));f.service.continueFileReading(f.notice)
  f.views.rememberWorkspaceViewState(f.path,view(1));assert.equal(f.get('longedit.view-state.v1')[f.path],undefined)
- f.views.rememberWorkspaceViewState(f.next,view(700));f.service.continueFileReading({...f.notice,oldPath:f.target,newPath:f.old})
+ f.views.recallWorkspaceViewState(f.next);f.views.rememberWorkspaceViewState(f.next,view(700));f.service.continueFileReading({...f.notice,oldPath:f.target,newPath:f.old})
  assert.equal(f.views.recallWorkspaceViewState(f.path).scrollTop,700)
  f.views.recallWorkspaceViewState(f.next);f.views.rememberWorkspaceViewState(f.next,view(3));assert.equal(f.views.recallWorkspaceViewState(f.next).scrollTop,3)
+})
+test('an old component observing the new route cannot overwrite its destination before the new reader takes ownership',()=>{
+ const f=fixture();f.views.rememberWorkspaceViewState(f.path,view(30));f.views.rememberWorkspaceViewState(f.next,view(900));f.service.continueFileReading(f.notice)
+ // Some format views derive the path from the reactive route during unmount.
+ f.views.rememberWorkspaceViewState(f.next,view(30));assert.equal(f.get('longedit.view-state.v1')[f.next].scrollTop,900)
+ assert.equal(f.views.recallWorkspaceViewState(f.next).scrollTop,900)
+ f.views.rememberWorkspaceViewState(f.next,view(910));assert.equal(f.views.recallWorkspaceViewState(f.next).scrollTop,910)
 })
 test('destination collision preserves both records; drafts stay at their original owner',()=>{
  const f=fixture();f.views.rememberWorkspaceViewState(f.path,{...view(30),draft:'UNSAVED',selection:'CELL DRAFT'});f.views.rememberWorkspaceViewState(f.next,view(90))

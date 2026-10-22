@@ -26,6 +26,7 @@ let staged: Map<string, WorkspaceViewState> | undefined
 // Route watchers/unmount hooks can finish after a successful move. Their old
 // owner must not resurrect a stale bookmark (which would also break Undo Move).
 const retiredViewOwners = new Set<string>()
+const awaitingViewOwners = new Set<string>()
 // Reading metadata contains locators only; annotation text and pending comments
 // remain owned by the sidecar save flow, never the session/view cache.
 const safePdfAnnotations = (value: unknown): WorkspaceViewState['pdfAnnotations'] => {
@@ -76,8 +77,10 @@ export const relocateWorkspaceViewStates = (mapPath: (path: string) => string) =
       const target = mapPath(path)
       if (target === path) continue
       retiredViewOwners.add(viewIdentity(path)); retiredViewOwners.delete(viewIdentity(target))
+      awaitingViewOwners.add(viewIdentity(target)); awaitingViewOwners.delete(viewIdentity(path))
     }
     while (retiredViewOwners.size > 256) retiredViewOwners.delete(retiredViewOwners.values().next().value!)
+    while (awaitingViewOwners.size > 256) awaitingViewOwners.delete(awaitingViewOwners.values().next().value!)
   }
   // Persistent metadata is changed before live state. Corrupt records are kept
   // verbatim, and a quota error must not turn a completed move into a failure.
@@ -169,12 +172,13 @@ export const restoreWorkspaceViewStates = (views: Record<string, WorkspaceViewSt
   for (const path of paths) {
     const view = views[path]
     if (!view || !Number.isFinite(view.scrollTop) || !Number.isFinite(view.scrollLeft)) continue
+    retiredViewOwners.delete(viewIdentity(path)); awaitingViewOwners.delete(viewIdentity(path))
     rememberWorkspaceViewState(path, safeView(view))
   }
 }
 
 export const rememberWorkspaceViewState = (path: string, state: WorkspaceViewState) => {
-  if (!path || retiredViewOwners.has(viewIdentity(path))) return
+  if (!path || retiredViewOwners.has(viewIdentity(path)) || awaitingViewOwners.has(viewIdentity(path))) return
   states.delete(path)
   states.set(path, { ...state, pdfAnnotations: safePdfAnnotations(state.pdfAnnotations) })
   try {
@@ -200,6 +204,7 @@ export const recallWorkspaceViewState = (path: string) => {
   // Opening that location again establishes a new owner, including a recreated
   // file or the destination of Undo Move. Old components never call recall.
   retiredViewOwners.delete(id)
+  awaitingViewOwners.delete(id)
   const state = states.get(path) || [...states].find(([key]) => viewIdentity(key) === id)?.[1] || stagedViews().get(id) || Object.entries(readStoredViews()).find(([key]) => viewIdentity(key) === id)?.[1]
   return state ? { ...state, pdfAnnotations: safePdfAnnotations(state.pdfAnnotations) } : undefined
 }
