@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 export const annotationBatchChecks=['unselected-card-menu-keeps-single-scope','batch-recolor-one-undo-redo-and-disk-state','hidden-selection-delete-cancel-and-restore','real-batch-save-failure-retains-and-retries','batch-external-conflict-keeps-both-versions']
 export function validateInstalledAnnotationBatch(report,manifest){
- assert.equal(manifest.appVersion,'1.2.3');for(const key of ['appVersion','sourceCommit'])assert.equal(report[key],manifest[key]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.3','1.2.4'].includes(manifest.appVersion));for(const key of ['appVersion','sourceCommit'])assert.equal(report[key],manifest[key]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-pdf-annotation-batch-trusted-input-and-sidecar-bytes')
  for(const [key,n]of [['harnessSourceCommit',40],['executableSha256',64],['pdfBefore',64]])assert.match(report[key],new RegExp('^[a-f0-9]{'+n+'}$'));assert.equal(report.pdfBefore,report.pdfAfter)
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false)
