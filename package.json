@@ -590,7 +590,7 @@
     "test:portable-chapter-links": "node --experimental-strip-types --test scripts/test-portable-chapter-links.mjs scripts/test-v1134-installed-release.mjs",
     "test:context-commands": "node --experimental-strip-types --test scripts/test-context-commands.mjs scripts/test-v1136-installed-release.mjs scripts/test-command-palette-shortcut.mjs",
     "test:attachment-drafts": "node --experimental-strip-types --test scripts/test-attachment-drafts.mjs scripts/test-v1135-installed-release.mjs",
-    "test:pdf-annotation-resume": "node --test scripts/test-pdf-annotation-resume.mjs scripts/test-v1137-installed-release.mjs"
+    "test:pdf-annotation-resume": "node --test scripts/test-pdf-annotation-resume.mjs scripts/test-v1137-installed-release.mjs scripts/test-graph-hit-test.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.3",

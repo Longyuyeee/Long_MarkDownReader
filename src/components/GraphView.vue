@@ -492,6 +492,7 @@ import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHis
 import { createGraphLoadGate, prepareGraphRefresh } from '../utils/graphRefresh'
 import { buildGraphTopology } from '../utils/graphTopology'
 import { placeGraphLabels, type GraphLabelCandidate } from '../utils/graphLabels'
+import { nearestGraphNode } from '../utils/graphHitTest'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
 import { announceFileRelationsChanged, onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
 import { graphLineDash, graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
@@ -2145,19 +2146,7 @@ const resetLayout = () => {
 
 const findNodeAt = (mx: number, my: number): GraphNode | null => {
   if (showCommunityOverview.value) return null
-  // 缩放时调整检测范围 - 缩小时扩大点击区域
-  const detectionRadius = 100 / Math.max(0.5, zoom)
-  for (const n of visibleNodes.value) {
-    const dx = mx - (n.x || 0), dy = my - (n.y || 0)
-    if (viewMode.value === 'mindmap') {
-      const width = n.id === mindmapRoot.value?.id ? 180 : 160
-      if (Math.abs(dx) <= width / 2 && Math.abs(dy) <= 24) return n
-      continue
-    }
-    const r = n.size * 0.6 / Math.sqrt(Math.max(1, zoom))
-    if (dx * dx + dy * dy < r * r + detectionRadius) return n
-  }
-  return null
+  return nearestGraphNode(visibleNodes.value, mx, my, zoom, viewMode.value, mindmapRoot.value?.id)
 }
 
 const currentCommunityOverview = () => {
