@@ -82,22 +82,36 @@ export const relocateWorkspaceViewStates = (mapPath: (path: string) => string) =
     while (retiredViewOwners.size > 256) retiredViewOwners.delete(retiredViewOwners.values().next().value!)
     while (awaitingViewOwners.size > 256) awaitingViewOwners.delete(awaitingViewOwners.values().next().value!)
   }
-  // Persistent metadata is changed before live state. Corrupt records are kept
-  // verbatim, and a quota error must not turn a completed move into a failure.
+  const saved: { key: string; raw: string; entries: Record<string, WorkspaceViewState> }[] = []
   for (const key of [VIEW_STORAGE_KEY, SESSION_VIEW_KEY]) {
     try {
       const raw = localStorage.getItem(key)
       if (!raw) continue
       const parsed = JSON.parse(raw)
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw Error('Invalid reading metadata')
-      retire(Object.keys(parsed))
-      const result = relocateViewEntries(parsed, mapPath)
-      issues += result.conflicts
-      if (JSON.stringify(result.entries) !== raw) localStorage.setItem(key, JSON.stringify(result.entries))
+      saved.push({ key, raw, entries: parsed })
     } catch { issues++ }
   }
-  retire([...states.keys(), ...(staged?.keys() || [])])
-  const live = relocateViewEntries(Object.fromEntries(states), mapPath)
+  // A destination may exist only on disk, only in the live cache, or in a
+  // different window's staged queue. Protect it across all of those layers.
+  const keys = [...states.keys(), ...(staged?.keys() || []), ...saved.flatMap(item => Object.keys(item.entries))]
+  retire(keys)
+  const existing = new Set(keys.filter(path => mapPath(path) === path).map(viewIdentity))
+  const blocked = new Set(keys.filter(path => mapPath(path) !== path && existing.has(viewIdentity(mapPath(path)))).map(viewIdentity))
+  const protectedTargets = new Set(keys.filter(path => blocked.has(viewIdentity(path))).map(path => viewIdentity(mapPath(path))))
+  const eligiblePath = (path: string) => blocked.has(viewIdentity(path)) ? path : mapPath(path)
+  issues += blocked.size
+  let savedStage: Record<string, WorkspaceViewState> | undefined
+  // Corrupt records are kept verbatim; quota failures never fail the file move.
+  for (const item of saved) {
+    try {
+      const result = relocateViewEntries(item.entries, eligiblePath)
+      issues += result.conflicts
+      if (item.key === SESSION_VIEW_KEY) savedStage = result.entries
+      if (JSON.stringify(result.entries) !== item.raw) localStorage.setItem(item.key, JSON.stringify(result.entries))
+    } catch { issues++ }
+  }
+  const live = relocateViewEntries(Object.fromEntries(states), eligiblePath)
   issues += live.conflicts
   // Moving a location never transfers in-memory conversion drafts/selection.
   for (const path of Object.keys(live.entries)) if (!states.has(path)) live.entries[path] = safeView(live.entries[path])
@@ -109,9 +123,14 @@ export const relocateWorkspaceViewStates = (mapPath: (path: string) => string) =
   }
   states.clear(); for (const [path, value] of Object.entries(live.entries)) states.set(path, value)
   if (staged) {
-    const result = relocateViewEntries(Object.fromEntries(staged), mapPath)
+    const result = relocateViewEntries(Object.fromEntries(staged), eligiblePath)
     issues += result.conflicts
-    staged = new Map(Object.entries(result.entries).map(([path, value]) => [viewIdentity(path), safeView(value)]))
+    // Refresh positions introduced by another window without expanding the
+    // queue or importing any draft fields into the live editor cache.
+    staged = new Map([...Object.entries(savedStage || {}), ...Object.entries(result.entries)]
+      .filter(([, value]) => value && Number.isFinite(value.scrollTop) && Number.isFinite(value.scrollLeft))
+      .map(([path, value]) => [viewIdentity(path), safeView(value)]))
+    while (staged.size > 128) staged.delete([...staged.keys()].find(key => !protectedTargets.has(key)) || staged.keys().next().value!)
   }
   return issues
 }

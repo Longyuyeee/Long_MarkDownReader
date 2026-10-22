@@ -59,6 +59,19 @@ test('an old component observing the new route cannot overwrite its destination 
  assert.equal(f.views.recallWorkspaceViewState(f.next).scrollTop,900)
  f.views.rememberWorkspaceViewState(f.next,view(910));assert.equal(f.views.recallWorkspaceViewState(f.next).scrollTop,910)
 })
+test('a persistent-only destination is preserved against a currently open source view',()=>{
+ const f=fixture();f.views.rememberWorkspaceViewState(f.path,view(30));const stored=f.get('longedit.view-state.v1');stored[f.next]=view(900);f.set('longedit.view-state.v1',stored)
+ assert.ok(f.service.continueFileReading(f.notice)>0);assert.equal(f.views.recallWorkspaceViewState(f.next).scrollTop,900)
+ f.views.rememberWorkspaceViewState(f.next,view(910));assert.equal(f.get('longedit.view-state.v1')[f.next].scrollTop,910)
+})
+test('a destination staged by another window remains authoritative when the source is live',()=>{
+ const f=fixture();f.views.rememberWorkspaceViewState(f.path,view(30));f.set('longedit.session-view-state.v1',{[f.next]:view(900)})
+ assert.ok(f.service.continueFileReading(f.notice)>0);assert.equal(f.views.recallWorkspaceViewState(f.next).scrollTop,900);assert.equal(f.views.recallWorkspaceViewState(f.path).scrollTop,30)
+})
+test('new positions staged by another window are refreshed at the move without enlarging the live cache',()=>{
+ const f=fixture();f.views.rememberWorkspaceViewState(f.root+'/unrelated.pdf',view(10));f.set('longedit.session-view-state.v1',{[f.path]:view(520)})
+ assert.equal(f.service.continueFileReading(f.notice),0);assert.equal(f.views.recallWorkspaceViewState(f.next).scrollTop,520);assert.equal(Object.keys(f.get('longedit.view-state.v1')).length,1)
+})
 test('destination collision preserves both records; drafts stay at their original owner',()=>{
  const f=fixture();f.views.rememberWorkspaceViewState(f.path,{...view(30),draft:'UNSAVED',selection:'CELL DRAFT'});f.views.rememberWorkspaceViewState(f.next,view(90))
  assert.ok(f.service.continueFileReading(f.notice)>0);assert.equal(f.views.recallWorkspaceViewState(f.next).scrollTop,90);assert.equal(f.views.recallWorkspaceViewState(f.path).draft,'UNSAVED')
