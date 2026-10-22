@@ -1004,6 +1004,124 @@ pub fn move_json_array_item_source(
     })
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JsonNodeCopy {
+    pub content: String,
+    pub start: usize,
+    pub end: usize,
+}
+
+pub fn copy_json_node_source(
+    content: &str,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    new_key: Option<&str>,
+) -> Result<JsonNodeCopy, String> {
+    let analysis = analyze_json_source(content, jsonc);
+    if !analysis.valid {
+        return Err("JSON 源码存在语法错误，不能复制节点".into());
+    }
+    let entry = analysis
+        .paths
+        .iter()
+        .find(|node| node.start == start && node.end == end)
+        .ok_or_else(|| "目标节点范围已经过期，请重新选择".to_string())?;
+    let parsed = parse_to_ast(
+        content,
+        &CollectOptions {
+            comments: CommentCollectionStrategy::Separate,
+            tokens: false,
+        },
+        &parse_options(jsonc),
+    )
+    .map_err(|error| error.kind().to_string())?;
+    let root = parsed
+        .value
+        .as_ref()
+        .ok_or_else(|| "JSON 文档不能为空".to_string())?;
+    let (node_start, before_start, after_end, copied, value_offset) = if let Some(key) = new_key {
+        if key.chars().count() > MAX_JSON_KEY_CHARS {
+            return Err(format!("对象键不能超过 {MAX_JSON_KEY_CHARS} 个字符"));
+        }
+        let (key_start, key_end) = entry
+            .key_start
+            .zip(entry.key_end)
+            .ok_or_else(|| "只能将对象字段复制为新字段".to_string())?;
+        let (object, index) = find_object_property_by_ranges(root, key_start, key_end, start, end)
+            .ok_or_else(|| "目标字段已经过期，请重新选择".to_string())?;
+        if object
+            .properties
+            .iter()
+            .any(|property| property.name.as_str() == key)
+        {
+            return Err("同级已存在这个字段名，请换一个名称；原字段未被覆盖".into());
+        }
+        let encoded = serde_json::to_string(key).map_err(|_| "字段名无法编码".to_string())?;
+        let offset = encoded.len() + start - key_end;
+        let copied = encoded + &content[key_end..end];
+        (
+            key_start,
+            if index == 0 {
+                object.range.start + 1
+            } else {
+                object.properties[index - 1].range.end
+            },
+            object
+                .properties
+                .get(index + 1)
+                .map_or(object.range.end - 1, |p| p.range.start),
+            copied,
+            offset,
+        )
+    } else {
+        if entry.array_index.is_none() {
+            return Err("只能直接复制数组项；对象字段请使用“复制为新字段…”".into());
+        }
+        let (array, index) = find_array_item_by_range(root, start, end)
+            .ok_or_else(|| "目标数组项已经过期，请重新选择".to_string())?;
+        (
+            start,
+            if index == 0 {
+                array.range.start + 1
+            } else {
+                array.elements[index - 1].range().end
+            },
+            array
+                .elements
+                .get(index + 1)
+                .map_or(array.range.end - 1, |v| v.range().start),
+            content[start..end].to_string(),
+            0,
+        )
+    };
+    let before = &content[before_start..node_start];
+    let after = &content[end..after_end];
+    if !before.chars().all(|c| c.is_whitespace() || c == ',')
+        || !after.chars().all(|c| c.is_whitespace() || c == ',')
+    {
+        return Err("节点旁存在归属不明的注释，可在源码中复制；当前内容未变".into());
+    }
+    // Reuse this node's indentation, while retaining the original suffix and
+    // trailing comma. Only the new key is encoded; the entire value stays raw.
+    let whitespace = before.rsplit(',').next().unwrap_or(before);
+    let insertion = format!(",{whitespace}{copied}");
+    let copy_start = end + 1 + whitespace.len() + value_offset;
+    let mut candidate = String::with_capacity(content.len() + insertion.len());
+    candidate.push_str(&content[..end]);
+    candidate.push_str(&insertion);
+    candidate.push_str(&content[end..]);
+    if !analyze_json_source(&candidate, jsonc).valid {
+        return Err("复制后的 JSON 未通过语法或大小校验，当前内容未变".into());
+    }
+    Ok(JsonNodeCopy {
+        content: candidate,
+        start: copy_start,
+        end: copy_start + end - start,
+    })
+}
+
 fn comma_followed_by_whitespace(value: &str) -> Option<&str> {
     value
         .strip_prefix(',')
@@ -1831,6 +1949,168 @@ mod tests {
         let target = &analysis.paths[1];
         assert!(
             remove_json_array_item_source(source, false, target.start + 1, target.end).is_err()
+        );
+    }
+
+    fn copy_at(
+        source: &str,
+        jsonc: bool,
+        path: &str,
+        key: Option<&str>,
+    ) -> Result<JsonNodeCopy, String> {
+        let entry = analyze_json_source(source, jsonc)
+            .paths
+            .into_iter()
+            .find(|p| p.path == path)
+            .unwrap();
+        copy_json_node_source(source, jsonc, entry.start, entry.end, key)
+    }
+
+    #[test]
+    fn node_copy_preserves_large_numbers_escapes_and_utf8_location() {
+        let source =
+            r#"{"草稿":"未保存","a":{"n":9007199254740993123456789,"s":"\u4e2d\\"},"z":0}"#;
+        let copied = copy_at(source, false, "$.a", Some("副本")).unwrap();
+        assert_eq!(
+            copied.content,
+            source.replace(
+                r#"},"z"#,
+                r#"},"副本":{"n":9007199254740993123456789,"s":"\u4e2d\\"},"z"#
+            )
+        );
+        assert_eq!(
+            &copied.content[copied.start..copied.end],
+            r#"{"n":9007199254740993123456789,"s":"\u4e2d\\"}"#
+        );
+    }
+
+    #[test]
+    fn node_copy_scalar_first_middle_last_singleton_and_unusual_comma_spacing() {
+        for (source, path, expected) in [
+            ("[1,2,3]", "$[0]", "[1,1,2,3]"),
+            ("[1,2,3]", "$[1]", "[1,2,2,3]"),
+            ("[1,2,3]", "$[2]", "[1,2,3,3]"),
+            ("[null]", "$[0]", "[null,null]"),
+            ("[1 \n,2]", "$[1]", "[1 \n,2,2]"),
+        ] {
+            assert_eq!(
+                copy_at(source, false, path, None).unwrap().content,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn node_copy_nested_array_is_independent_and_composes_with_move() {
+        let copied = copy_at(
+            r#"{"draft":true,"a":[[1,{"x":2}],false]}"#,
+            false,
+            "$.a[0]",
+            None,
+        )
+        .unwrap();
+        let moved = move_at(&copied.content, false, "$.a[1]", 1).unwrap();
+        assert_eq!(
+            moved.content,
+            r#"{"draft":true,"a":[[1,{"x":2}],false,[1,{"x":2}]]}"#
+        );
+        let node = analyze_json_source(&moved.content, false)
+            .paths
+            .into_iter()
+            .find(|p| p.path == "$.a[2][1].x")
+            .unwrap();
+        assert_eq!(
+            replace_json_scalar_source(&moved.content, false, node.start, node.end, "9").unwrap(),
+            r#"{"draft":true,"a":[[1,{"x":2}],false,[1,{"x":9}]]}"#
+        );
+    }
+
+    #[test]
+    fn node_copy_rejects_decoded_duplicate_key_and_allows_correction() {
+        let source = r#"{"a":1,"\u0062":2}"#;
+        assert!(copy_at(source, false, "$.a", Some("b"))
+            .unwrap_err()
+            .contains("同级已存在"));
+        assert!(copy_at(source, false, "$.a", Some("a")).is_err());
+        assert_eq!(
+            copy_at(source, false, "$.a", Some("c")).unwrap().content,
+            r#"{"a":1,"c":1,"\u0062":2}"#
+        );
+        assert_eq!(
+            copy_at(r#"{"a":1}"#, false, "$.a", Some("\"\n"))
+                .unwrap()
+                .content,
+            "{\"a\":1,\"\\\"\\n\":1}"
+        );
+        assert!(copy_at(
+            source,
+            false,
+            "$.a",
+            Some(&"x".repeat(MAX_JSON_KEY_CHARS + 1))
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn node_copy_preserves_crlf_tabs_trailing_comma_and_internal_comments() {
+        let source = "{\r\n\t\"a\" /*键*/: {/*内部*/\"n\": -0},\r\n}";
+        let copied = copy_at(source, true, "$.a", Some("b")).unwrap();
+        assert_eq!(copied.content, "{\r\n\t\"a\" /*键*/: {/*内部*/\"n\": -0},\r\n\t\"b\" /*键*/: {/*内部*/\"n\": -0},\r\n}");
+        assert_eq!(
+            &copied.content[copied.start..copied.end],
+            "{/*内部*/\"n\": -0}"
+        );
+        assert_eq!(
+            copy_at("[\r\n\t[1,/*内部*/2],\r\n]", true, "$[0]", None)
+                .unwrap()
+                .content,
+            "[\r\n\t[1,/*内部*/2],\r\n\t[1,/*内部*/2],\r\n]"
+        );
+    }
+
+    #[test]
+    fn node_copy_never_guesses_neighbor_comment_ownership() {
+        for source in ["[/*前*/1]", "[1,/*后*/2]", "[1/*后*/,2]", "[1,//后\n]"] {
+            assert!(copy_at(source, true, "$[0]", None)
+                .unwrap_err()
+                .contains("注释"));
+        }
+        assert!(copy_at("{/*前*/\"a\":1}", true, "$.a", Some("b")).is_err());
+        assert!(copy_at("{\"a\":1/*后*/}", true, "$.a", Some("b")).is_err());
+        assert_eq!(
+            copy_at("{/*其他*/\"x\":0,\"a\":1}", true, "$.a", Some("b"))
+                .unwrap()
+                .content,
+            "{/*其他*/\"x\":0,\"a\":1,\"b\":1}"
+        );
+    }
+
+    #[test]
+    fn node_copy_rejects_stale_invalid_root_and_wrong_node_kind() {
+        for (source, start, end) in [
+            ("[1,", 1, 2),
+            ("[1]", 2, 3),
+            ("[1]", 0, 3),
+            ("[1]", usize::MAX, usize::MAX),
+        ] {
+            assert!(copy_json_node_source(source, false, start, end, None).is_err());
+        }
+        assert!(copy_at("[1]", false, "$[0]", Some("a")).is_err());
+        assert!(copy_at(r#"{"a":1}"#, false, "$.a", None).is_err());
+    }
+
+    #[test]
+    fn node_copy_keeps_unrelated_duplicate_keys_and_large_literals_raw() {
+        let source = r#"{"x":1,"x":2,"a":[1e99,-0]}"#;
+        assert_eq!(
+            copy_at(source, false, "$.a[0]", None).unwrap().content,
+            r#"{"x":1,"x":2,"a":[1e99,1e99,-0]}"#
+        );
+        assert_eq!(
+            copy_at("{\"a\":1}", false, "$.a", Some(""))
+                .unwrap()
+                .content,
+            "{\"a\":1,\"\":1}"
         );
     }
 

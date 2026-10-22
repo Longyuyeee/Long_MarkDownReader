@@ -634,6 +634,18 @@
       </template>
     </n-modal>
 
+    <n-modal v-model:show="copyKeyVisible" preset="card" class="scalar-edit-dialog" title="复制为新字段"
+      :mask-closable="!nodeCopyPending" :closable="!nodeCopyPending" :close-on-esc="!nodeCopyPending" @after-enter="copyKeyInput?.select()" @after-leave="finishCopyKeyDialog">
+      <div class="scalar-edit-context"><code>{{ copyEntry?.path }}</code></div>
+      <n-input ref="copyKeyInput" v-model:value="copyKeyValue" :disabled="nodeCopyPending" :maxlength="4096"
+        aria-label="副本字段名" :input-props="{ 'aria-label': '副本字段名' }" autofocus @keyup.enter="copyNode()" />
+      <p v-if="copyKeyError" role="alert">{{ copyKeyError }}</p>
+      <template #footer><div class="scalar-edit-actions">
+        <n-button :disabled="nodeCopyPending" @click="copyKeyVisible = false">取消</n-button>
+        <n-button type="primary" :loading="nodeCopyPending" @click="copyNode()">预览复制</n-button>
+      </div></template>
+    </n-modal>
+
     <footer class="json-statusbar" aria-live="polite">
       <span>{{ rangeMode ? '大文件渐进只读' : readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span>
       <span>{{ encoding.toUpperCase() }}</span>
@@ -664,7 +676,7 @@ import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { useRoute, useRouter } from 'vue-router'
-import { useDialog, useMessage, NProgress } from 'naive-ui'
+import { useDialog, useMessage, NProgress, type InputInst } from 'naive-ui'
 import {
   AlertCircle as AlertCircleIcon,
   AlertTriangle as AlertIcon,
@@ -861,6 +873,12 @@ const arrayAppendSource = ref('')
 const propertyRemovePendingStart = ref<number | null>(null)
 const arrayRemovePendingStart = ref<number | null>(null)
 const arrayMovePending = ref(false)
+const nodeCopyPending = ref(false)
+const copyKeyVisible = ref(false)
+const copyKeyInput = ref<InputInst | null>(null)
+const copyKeyValue = ref('')
+const copyKeyError = ref('')
+const copyEntry = ref<JsonPathEntry | null>(null)
 let movedItemFocus: { source: string; start: number } | undefined
 const dirty = ref(false)
 const sourceContent = ref('')
@@ -956,7 +974,7 @@ const arrayRemoveDisabled = computed(() => (
   || !analysis.value?.structureEditCandidate
 ))
 const arrayMoveDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value
-  || transformPending.value || arrayMovePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+  || transformPending.value || arrayMovePending.value || nodeCopyPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
 const canMoveArrayItem = (entry: JsonPathEntry, direction: -1 | 1) => {
   if (arrayMoveDisabled.value || entry.arrayIndex === undefined) return false
   const parent = analysis.value?.paths.find(node => node.kind === 'array' && node.depth === entry.depth - 1
@@ -1077,13 +1095,18 @@ const session = useStructuredSession({
   analyze: source => analyzeContent(source), clearAnalysis: () => clearAnalysisTimer(), scheduleAnalysis: () => scheduleAnalysis(),
   applySnapshot: snapshot => applySnapshot(snapshot), load: discard => load(discard),
 })
+let copyOwner: ReturnType<typeof session.capture>
+let copiedFieldPreview: (() => void) | undefined
+const finishCopyKeyDialog = () => { const offer = copiedFieldPreview; copiedFieldPreview = undefined; offer?.() }
 const nodeMenu = useSourceNodeMenu<JsonPathEntry>(session, { fresh: () => analyzedSource.value === sourceContent.value, reveal: entry => showSourceRange(entry), extra: entry => [
     {key:'pointer',label:'复制 JSON Pointer',disabled:jsonPathToPointer(entry.path)===undefined},
     {key:'edit',label:'修改字段值…',disabled:!isScalarKind(entry.kind)||scalarEditDisabled.value},
     {key:'rename',label:'重命名字段…',disabled:entry.keyStart===undefined||keyRenameDisabled.value},
     {key:'append-property',label:'添加字段…',disabled:entry.kind!=='object'||propertyAppendDisabled.value},
     {key:'append-item',label:'追加数组项…',disabled:entry.kind!=='array'||arrayAppendDisabled.value},
+    ...(entry.keyStart === undefined ? [] : [{key:'copy-property',label:'复制为新字段…',disabled:arrayMoveDisabled.value}]),
     ...(entry.arrayIndex === undefined ? [] : [
+      {key:'copy-item',label:'复制此项',disabled:arrayMoveDisabled.value},
       {key:'move-up',label:'上移',disabled:!canMoveArrayItem(entry,-1)},
       {key:'move-down',label:'下移',disabled:!canMoveArrayItem(entry,1)},
     ]),
@@ -1094,6 +1117,8 @@ const nodeMenu = useSourceNodeMenu<JsonPathEntry>(session, { fresh: () => analyz
     else if(key==='append-property')openPropertyAppend(entry); else if(key==='append-item')openArrayAppend(entry);
     else if(key==='remove-property')requestPropertyRemove(entry); else if(key==='remove-item')requestArrayRemove(entry)
     else if(key==='move-up'||key==='move-down')void moveArrayItem(entry,key==='move-up'?-1:1)
+    else if(key==='copy-property')openNodeCopy(entry)
+    else if(key==='copy-item')void copyNode(entry)
   } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerCurrentTab = () => session.bind()
@@ -1347,6 +1372,7 @@ const load = async (discardDraft = false) => {
   const owner = session.capture()
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
+  copyKeyVisible.value = false; nodeCopyPending.value = false; copyOwner = undefined; copyEntry.value = null; copiedFieldPreview = undefined
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
 
@@ -1798,6 +1824,63 @@ const applyArrayRemove = async (entry: JsonPathEntry, source: string) => {
     message.error(`删除数组项失败：${errorMessage(cause)}`)
   } finally {
     if (session.owns(owner)) arrayRemovePendingStart.value = null
+  }
+}
+
+const openNodeCopy = (entry: JsonPathEntry) => {
+  if (arrayMoveDisabled.value || entry.keyStart === undefined) return
+  copyOwner = session.capture()
+  if (!copyOwner) return
+  copyEntry.value = entry
+  const parent = analysis.value?.paths.find(node => node.kind === 'object' && node.depth === entry.depth - 1
+    && node.start < entry.start && node.end > entry.end)
+  const siblings = new Set(analysis.value?.paths.filter(node => node.depth === entry.depth && parent
+    && node.start > parent.start && node.end < parent.end).map(node => node.label))
+  const base = Array.from(entry.label).slice(0, 4080).join('') + '_copy'
+  let key = base, index = 2
+  while (siblings.has(key)) key = `${base}${index++}`
+  copyKeyValue.value = key
+  copyKeyError.value = ''
+  copyKeyVisible.value = true
+}
+
+const copyNode = async (arrayEntry?: JsonPathEntry) => {
+  if (nodeCopyPending.value) return
+  const owner = arrayEntry ? session.capture() : copyOwner
+  const entry = arrayEntry ?? copyEntry.value
+  if (!owner || !entry || !session.unchanged(owner)) {
+    copyKeyError.value = '当前文件或草稿已变化，请重新选择字段；内容未被修改'
+    return
+  }
+  if (arrayMoveDisabled.value) return
+  nodeCopyPending.value = true
+  copyKeyError.value = ''
+  try {
+    const result = await invoke<{ content: string; start: number; end: number }>('copy_json_node_source', {
+      content: owner.source, jsonc: owner.format === 'jsonc', start: entry.start, end: entry.end,
+      newKey: arrayEntry ? null : copyKeyValue.value,
+    })
+    if (!session.unchanged(owner)) return
+    const offer = () => session.offerChange(owner, arrayEntry ? '复制数组项' : '复制为新字段', result.content,
+      byteOffsetToCodeUnit(result.content, result.start), () => {
+        movedItemFocus = { source: result.content, start: result.start }
+        selectedTreeStart.value = result.start
+        void nextTick(() => {
+          if (session.owns(owner) && viewMode.value === 'tree') treeViewport.value?.focus({ preventScroll: true })
+        })
+      })
+    // Finish the name dialog's focus restoration before opening the diff.
+    // Two simultaneous focus traps otherwise take focus away from the editor.
+    if (arrayEntry) offer()
+    else copiedFieldPreview = offer
+    copyKeyVisible.value = false
+  } catch (cause) {
+    if (session.owns(owner)) {
+      if (arrayEntry) message.error(`复制数组项失败：${errorMessage(cause)}`)
+      else copyKeyError.value = errorMessage(cause)
+    }
+  } finally {
+    if (session.owns(owner)) nodeCopyPending.value = false
   }
 }
 

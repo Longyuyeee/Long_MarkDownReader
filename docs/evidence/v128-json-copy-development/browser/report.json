@@ -1,0 +1,44 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "field-suggestion-selected-duplicate-retains-input-correction-and-isolated-history",
+      "status": "passed"
+    },
+    {
+      "id": "adjacent-whole-array-copy-and-mixed-move-history",
+      "status": "passed"
+    },
+    {
+      "id": "independent-copy-edit-tree-selection-and-direct-history",
+      "status": "passed"
+    },
+    {
+      "id": "internal-comments-retained-and-ambiguous-comments-refused-locally",
+      "status": "passed"
+    },
+    {
+      "id": "late-copy-result-never-overwrites-later-input",
+      "status": "passed"
+    },
+    {
+      "id": "stale-copy-preview-keeps-newer-draft",
+      "status": "passed"
+    },
+    {
+      "id": "source-switch-dismisses-name-dialog-preview-and-restores-draft",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-uses-exact-copied-current-draft",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-two-window-sizes-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}
