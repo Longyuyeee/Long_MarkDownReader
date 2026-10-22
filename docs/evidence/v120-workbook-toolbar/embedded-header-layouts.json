@@ -1,0 +1,2045 @@
+[
+  {
+    "id": "pdf",
+    "label": "PDF",
+    "fixture": "pdf-redesign",
+    "surface": "embedded",
+    "layouts": [
+      {
+        "size": "large",
+        "style": "soft",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 350,
+          "y": 204,
+          "width": 1556,
+          "height": 863
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "large",
+        "style": "neo",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 334,
+          "y": 199,
+          "width": 1581,
+          "height": 877
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "large",
+        "style": "glass",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 350,
+          "y": 204,
+          "width": 1556,
+          "height": 863
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "large",
+        "style": "airy",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 352,
+          "y": 204,
+          "width": 1552,
+          "height": 861
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "large",
+        "style": "minimal",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 334,
+          "y": 199,
+          "width": 1581,
+          "height": 877
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "large",
+        "style": "sharp",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 334,
+          "y": 200,
+          "width": 1581,
+          "height": 876
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "soft",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 350,
+          "y": 204,
+          "width": 636,
+          "height": 483
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "neo",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 334,
+          "y": 199,
+          "width": 661,
+          "height": 497
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "glass",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 350,
+          "y": 204,
+          "width": 636,
+          "height": 483
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "airy",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 352,
+          "y": 204,
+          "width": 632,
+          "height": 481
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "minimal",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 334,
+          "y": 199,
+          "width": 661,
+          "height": 497
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "sharp",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 334,
+          "y": 200,
+          "width": 661,
+          "height": 496
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          83
+        ]
+      },
+      {
+        "size": "small",
+        "style": "soft",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 82,
+          "y": 202,
+          "width": 704,
+          "height": 385
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "small",
+        "style": "neo",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 73,
+          "y": 197,
+          "width": 722,
+          "height": 399
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "small",
+        "style": "glass",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 82,
+          "y": 202,
+          "width": 704,
+          "height": 385
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "small",
+        "style": "airy",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 84,
+          "y": 202,
+          "width": 700,
+          "height": 383
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "small",
+        "style": "minimal",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 73,
+          "y": 197,
+          "width": 722,
+          "height": 399
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "small",
+        "style": "sharp",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 73,
+          "y": 198,
+          "width": 722,
+          "height": 398
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "soft",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 58,
+          "y": 202,
+          "width": 572,
+          "height": 269
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "neo",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 53,
+          "y": 197,
+          "width": 582,
+          "height": 279
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "glass",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 62,
+          "y": 202,
+          "width": 564,
+          "height": 265
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "airy",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 64,
+          "y": 202,
+          "width": 560,
+          "height": 263
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "minimal",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 53,
+          "y": 197,
+          "width": 582,
+          "height": 279
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "sharp",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 53,
+          "y": 198,
+          "width": 582,
+          "height": 278
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          83
+        ]
+      }
+    ],
+    "errors": []
+  },
+  {
+    "id": "workbook",
+    "label": "XLSX",
+    "fixture": "workbook-save",
+    "surface": "embedded",
+    "layouts": [
+      {
+        "size": "large",
+        "style": "soft",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 350,
+          "y": 261,
+          "width": 1556,
+          "height": 806
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "neo",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 334,
+          "y": 256,
+          "width": 1581,
+          "height": 820
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "glass",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 350,
+          "y": 261,
+          "width": 1556,
+          "height": 806
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "airy",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 352,
+          "y": 261,
+          "width": 1552,
+          "height": 804
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "minimal",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 334,
+          "y": 256,
+          "width": 1581,
+          "height": 820
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "sharp",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 334,
+          "y": 257,
+          "width": 1581,
+          "height": 819
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "soft",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 350,
+          "y": 264,
+          "width": 636,
+          "height": 423
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          43
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "neo",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 334,
+          "y": 259,
+          "width": 661,
+          "height": 437
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          43
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "glass",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 350,
+          "y": 264,
+          "width": 636,
+          "height": 423
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          43
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "airy",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 352,
+          "y": 264,
+          "width": 632,
+          "height": 421
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          43
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "minimal",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 334,
+          "y": 259,
+          "width": 661,
+          "height": 437
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          43
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "sharp",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 334,
+          "y": 260,
+          "width": 661,
+          "height": 436
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          43
+        ]
+      },
+      {
+        "size": "small",
+        "style": "soft",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 82,
+          "y": 262,
+          "width": 704,
+          "height": 325
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "small",
+        "style": "neo",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 73,
+          "y": 257,
+          "width": 722,
+          "height": 339
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "small",
+        "style": "glass",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 82,
+          "y": 262,
+          "width": 704,
+          "height": 325
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "small",
+        "style": "airy",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 84,
+          "y": 262,
+          "width": 700,
+          "height": 323
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "small",
+        "style": "minimal",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 73,
+          "y": 257,
+          "width": 722,
+          "height": 339
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "small",
+        "style": "sharp",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 73,
+          "y": 258,
+          "width": 722,
+          "height": 338
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "soft",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 58,
+          "y": 262,
+          "width": 572,
+          "height": 209
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "neo",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 53,
+          "y": 257,
+          "width": 582,
+          "height": 219
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "glass",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 62,
+          "y": 262,
+          "width": 564,
+          "height": 205
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "airy",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 64,
+          "y": 262,
+          "width": 560,
+          "height": 203
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "minimal",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 53,
+          "y": 257,
+          "width": 582,
+          "height": 219
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "sharp",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 53,
+          "y": 258,
+          "width": 582,
+          "height": 218
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          43
+        ]
+      }
+    ],
+    "errors": []
+  },
+  {
+    "id": "diagram",
+    "label": "Mermaid",
+    "fixture": "diagram-redesign",
+    "surface": "embedded",
+    "layouts": [
+      {
+        "size": "large",
+        "style": "soft",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 350,
+          "y": 161,
+          "width": 1556,
+          "height": 906
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "neo",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 334,
+          "y": 156,
+          "width": 1581,
+          "height": 920
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "glass",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 350,
+          "y": 161,
+          "width": 1556,
+          "height": 906
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "airy",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 352,
+          "y": 161,
+          "width": 1552,
+          "height": 904
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "minimal",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 334,
+          "y": 156,
+          "width": 1581,
+          "height": 920
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "large",
+        "style": "sharp",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 1852,
+          "height": 1048
+        },
+        "primary": {
+          "x": 334,
+          "y": 157,
+          "width": 1581,
+          "height": 919
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "soft",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 350,
+          "y": 161,
+          "width": 636,
+          "height": 526
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "neo",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 334,
+          "y": 156,
+          "width": 661,
+          "height": 540
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "glass",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 350,
+          "y": 161,
+          "width": 636,
+          "height": 526
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "airy",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 352,
+          "y": 161,
+          "width": 632,
+          "height": 524
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "minimal",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 334,
+          "y": 156,
+          "width": 661,
+          "height": 540
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "normal",
+        "style": "sharp",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 932,
+          "height": 668
+        },
+        "primary": {
+          "x": 334,
+          "y": 157,
+          "width": 661,
+          "height": 539
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          44,
+          40
+        ]
+      },
+      {
+        "size": "small",
+        "style": "soft",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 82,
+          "y": 159,
+          "width": 704,
+          "height": 428
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "small",
+        "style": "neo",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 73,
+          "y": 154,
+          "width": 722,
+          "height": 442
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "small",
+        "style": "glass",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 82,
+          "y": 159,
+          "width": 704,
+          "height": 428
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "small",
+        "style": "airy",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 84,
+          "y": 159,
+          "width": 700,
+          "height": 426
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "small",
+        "style": "minimal",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 73,
+          "y": 154,
+          "width": 722,
+          "height": 442
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "small",
+        "style": "sharp",
+        "route": {
+          "x": 68,
+          "y": 32,
+          "width": 732,
+          "height": 568
+        },
+        "primary": {
+          "x": 73,
+          "y": 155,
+          "width": 722,
+          "height": 441
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "soft",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 58,
+          "y": 159,
+          "width": 572,
+          "height": 312
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "neo",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 53,
+          "y": 154,
+          "width": 582,
+          "height": 322
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "glass",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 62,
+          "y": 159,
+          "width": 564,
+          "height": 308
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "airy",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 64,
+          "y": 159,
+          "width": 560,
+          "height": 306
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "minimal",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 53,
+          "y": 154,
+          "width": 582,
+          "height": 322
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      },
+      {
+        "size": "compact",
+        "style": "sharp",
+        "route": {
+          "x": 48,
+          "y": 32,
+          "width": 592,
+          "height": 448
+        },
+        "primary": {
+          "x": 53,
+          "y": 155,
+          "width": 582,
+          "height": 321
+        },
+        "overflow": 0,
+        "clipControls": [],
+        "covered": [],
+        "alerts": [],
+        "renderErrors": [],
+        "appTitle": "Long编辑",
+        "navCount": 1,
+        "tabBars": 1,
+        "headerHeights": [
+          42,
+          40
+        ]
+      }
+    ],
+    "errors": []
+  }
+]

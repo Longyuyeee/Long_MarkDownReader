@@ -1,3 +1,4 @@
+import {chooseInstalledMarkdownMode,openInstalledDocumentExport} from './installed-markdown-mode.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -17,14 +18,14 @@ export async function runInstalledV1114Workflow({send,evaluate,navigate,capture,
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),evidenceLevel:'installed-writing-native-pickers-print-and-disk',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,status:'running',checks:[]}
  const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),editor=visibleMarkdownInput('#vditor-lib'),check=i=>report.checks.push({id:writingDeliveryChecks[i],status:'passed'})
  const folder=path.join(library,'v1114-writing-'+crypto.randomUUID()),source=path.join(folder,'交付 草稿.md'),shared=path.join(folder,'共享 图片.png'),unselected=path.join(folder,'别改我的正文.md'),html=path.join(folder,'文章 交付.html'),md=path.join(folder,'仅正文.md'),pdf=path.join(folder,'真实 打印.pdf'),cancel=path.join(folder,'取消后不能出现.md'),movedFolder=path.join(folder,'换个目录阅读'),movedHtml=path.join(movedFolder,'独立文章.html')
- const tab=()=>`${store}.tabs.find(t=>t.path===${q(source)})`,mode=async m=>{await ui.click('.inline-mode');await ui.clickText('.n-dropdown-option-body__label',{sv:'源码编辑',wysiwyg:'所见即所得',ir:'即时渲染 IR'}[m]);await ui.waitFor(`${store}.editorMode===${q(m)}&&!!(${editor})`,'actual editor mode '+m)}
+ const tab=()=>`${store}.tabs.find(t=>t.path===${q(source)})`,mode=async m=>{await chooseInstalledMarkdownMode({send,evaluate},{sv:'源码编辑',wysiwyg:'所见即所得',ir:'即时渲染 IR'}[m]);await ui.waitFor(`${store}.editorMode===${q(m)}&&!!(${editor})`,'actual editor mode '+m)}
  const button=t=>ui.clickText('.writing-delivery-dialog button',t)
  const picker=async(title,target,action,tag,cancelled=false)=>{
   const file=path.join(output,`v1114-${tag}-picker.json`),args=['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(repoRoot,'scripts/select-hosted-session-file.ps1'),'-Executable',installedExecutable,'-Title',title,'-SelectedPath',target,'-OwnerRoot',folder,'-Report',file,...(cancelled?['-Cancel']:[])]
   const child=spawn('powershell.exe',args,{windowsHide:true,stdio:'inherit'}),done=new Promise((r,j)=>{child.once('error',j);child.once('exit',c=>c===0?r():j(Error(tag+' native picker failed '+c)))})
   await action();await withDeadline(()=>done,70000,'actual '+tag+' picker');return JSON.parse((await fs.readFile(file,'utf8')).replace(/^\uFEFF/,''))
  }
- const openExport=async()=>{await ui.clickText('.document-shortcut-host button','导出');await ui.clickText('.n-dropdown-option-body__label','导出 PDF');await ui.waitFor(`document.querySelector('.writing-delivery-dialog iframe')?.contentDocument?.querySelector('main')&&[...document.querySelector('.writing-delivery-dialog iframe').contentDocument.images].every(i=>i.complete&&i.naturalWidth>0)`,'actual delivery frame and loaded local images')}
+ const openExport=async()=>{await openInstalledDocumentExport({send,evaluate});await ui.clickText('.n-dropdown-option-body__label','导出 PDF');await ui.waitFor(`document.querySelector('.writing-delivery-dialog iframe')?.contentDocument?.querySelector('main')&&[...document.querySelector('.writing-delivery-dialog iframe').contentDocument.images].every(i=>i.complete&&i.naturalWidth>0)`,'actual delivery frame and loaded local images')}
  let failure
  try{
   await fs.mkdir(folder);await fs.writeFile(path.join(folder,'.v119-installed-owner'),crypto.randomUUID(),{flag:'wx'});await fs.writeFile(source,'# 磁盘原稿\n请不要代存我的内容。\n',{flag:'wx'});await fs.writeFile(shared,writingImageFixture(),{flag:'wx'});await fs.writeFile(unselected,'无关正文和共享图不能改变。\n',{flag:'wx'});await fs.mkdir(movedFolder)
@@ -55,7 +56,7 @@ export async function runInstalledV1114Workflow({send,evaluate,navigate,capture,
   // Owned fault injection: a missing shared resource must remain actionable
   // even if the user first cancels a body-only export. Restore exact bytes.
   await fs.rename(shared,shared+'.missing')
-  await ui.clickText('.document-shortcut-host button','导出');await ui.clickText('.n-dropdown-option-body__label','导出 HTML');await ui.waitFor(`document.querySelector('.writing-delivery-dialog [role=alert]')?.textContent.includes('图片')`,'honest missing-image preparation error')
+  await openInstalledDocumentExport({send,evaluate});await ui.clickText('.n-dropdown-option-body__label','导出 HTML');await ui.waitFor(`document.querySelector('.writing-delivery-dialog [role=alert]')?.textContent.includes('图片')`,'honest missing-image preparation error')
   report.resourceCancelPicker=await picker('导出新文档（不覆盖已有文件）',cancel,()=>button('Markdown 仅正文…'),'resource-recovery-cancel',true)
   report.resourceErrorRetainedAfterMarkdown=await evaluate(`document.querySelector('.writing-delivery-dialog [role=alert]')?.textContent.includes('图片')&&[...document.querySelectorAll('.writing-delivery-dialog button')].some(b=>b.textContent.trim()==='重新准备')`);assert.equal(report.resourceErrorRetainedAfterMarkdown,true)
   await capture('installed-v1114-resource-error-after-markdown.jpg');await fs.rename(shared+'.missing',shared);await button('重新准备');await ui.waitFor(`document.querySelector('.writing-delivery-dialog iframe')?.contentDocument?.images.length===2&&[...document.querySelector('.writing-delivery-dialog iframe').contentDocument.images].every(i=>i.complete&&i.naturalWidth>0)`,'exact restored resource prepares successfully');await button('关闭')

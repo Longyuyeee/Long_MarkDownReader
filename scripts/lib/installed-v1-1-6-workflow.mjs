@@ -1,3 +1,4 @@
+import {chooseInstalledMarkdownMode} from './installed-markdown-mode.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -60,8 +61,7 @@ export async function runInstalledV116Workflow({ send, evaluate, navigate, waitF
     await navigate('#/library?path=' + encodeURIComponent(moved), '.library-mode', 'v116 moved image note')
     await waitFor(`(${editor})?.textContent.includes('Continuity')`, 'moved note opened')
     if (await evaluate(`(${store}).editorMode!=='wysiwyg'`)) {
-      await click(`document.querySelector('.inline-mode')`)
-      await click(`[...document.querySelectorAll('.n-dropdown-option')].find(e=>e.textContent.includes('所见即所得'))`)
+      await chooseInstalledMarkdownMode({send,evaluate}, '所见即所得')
     }
     await waitFor(`!![...document.querySelectorAll('#vditor-lib .vditor-reset img')].find(image=>image.naturalWidth>0)`, 'moved local image rendered')
     await click(`[...document.querySelectorAll('#vditor-lib .vditor-reset a')].find(anchor=>anchor.textContent==='参考')`)
@@ -89,8 +89,7 @@ export async function runInstalledV116Workflow({ send, evaluate, navigate, waitF
     const draftPath = p('draft.md'); await fs.writeFile(draftPath, '# 尚未保存的链接\n\n')
     await navigate('#/library?path=' + encodeURIComponent(draftPath), '.library-mode', 'v116 fresh editor snapshot')
     await waitFor(`(${editor})?.textContent.includes('尚未保存的链接')`, 'v116 editor ready')
-    await click(`document.querySelector('.inline-mode')`)
-    await click(`[...document.querySelectorAll('.n-dropdown-option')].find(e=>e.textContent.includes('源码编辑'))`)
+    await chooseInstalledMarkdownMode({send,evaluate}, '源码编辑')
     await waitFor(`!!document.querySelector('#vditor-lib .vditor-sv[contenteditable="true"]')?.getClientRects().length`, 'v116 source mode ready')
     await click(editor); await press('End', 'End', 35, 2); await send('Input.insertText', { text: '\n[新增](reference.txt)\n尚未保存的新正文' })
     await assert.rejects(invoke('rename_item', { libraryRoot: library, oldPath: p('reference.txt'), newName: 'reference-new.txt' }), /保存/)

@@ -1,3 +1,4 @@
+import {chooseInstalledMarkdownMode} from './installed-markdown-mode.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -21,7 +22,7 @@ export async function runInstalledV1113Workflow({send,evaluate,navigate,capture,
  const noteTab=()=>`${store}.tabs.find(t=>t.path===${q(note)})`,noteBody=()=>evaluate(`${noteTab()}?.content`)
  const openPdf=async(file=pdf,query='')=>{await navigate('#/library?path='+encodeURIComponent(file)+query,'.pdf-view','actual PDF reading workspace');await ui.waitFor(`!!document.querySelector('.pdf-toolbar')&&document.querySelector('.document-title')?.textContent.includes('研究')&&!!document.querySelector('#pdf-page-1 canvas')&&!document.querySelector('#pdf-page-1 .page-placeholder')`,'actual PDF canvas fully rendered')}
  const annotations=()=>ui.clickTarget(`[...document.querySelectorAll('.sidebar-switch button')].find(e=>e.textContent.trim().startsWith('批注'))`)
- const chooseMode=async mode=>{await ui.click('.inline-mode');await ui.clickText('.n-dropdown-option-body__label',({wysiwyg:'所见即所得',ir:'即时渲染 IR',sv:'源码编辑'})[mode]);await ui.waitFor(`${store}.editorMode===${q(mode)}&&!!(${editor})`,'user-chosen Markdown mode '+mode)}
+ const chooseMode=async mode=>{await chooseInstalledMarkdownMode({send,evaluate},({wysiwyg:'所见即所得',ir:'即时渲染 IR',sv:'源码编辑'})[mode]);await ui.waitFor(`${store}.editorMode===${q(mode)}&&!!(${editor})`,'user-chosen Markdown mode '+mode)}
  const prepareSelected=async()=>{await annotations();await ui.fill('[aria-label="筛选批注页码"]','12,15');await ui.waitFor(`document.querySelector('.reading-selection small')?.textContent.includes('6 条匹配')`,'six filtered annotations');await ui.click('[aria-label="选择批注 reading-11"]');await ui.click('[aria-label="选择批注 reading-14"]');await ui.clickText('.reading-organize','整理为笔记 · 2');await ui.waitFor(`document.querySelectorAll('.reading-note-preview article').length===2`,'two selected preview entries')}
  const observePage=async()=>{
   await ui.waitFor(`(()=>{const p=(${observePdfReadingPage.toString()})(12);return p&&p.page===12&&p.annotationId==='reading-11'&&p.text.includes('Reading source page 12')&&p.opaquePixels>0&&p.inkPixels>0})()`,'actual page 12 text, nonblank PDF canvas, page control and selected annotation')
