@@ -4,6 +4,8 @@
 
 排序时位置插入明确禁用，复制仍按所指记录执行。筛选隐藏新增空行时自动显示并定位，方便直接录入。右键删除沿用确认弹窗，并固定最初的记录；等待期间草稿或来源变化会停止过期删除。原有操作入口、主题、快捷键及正常动效保留，不增加常驻表单。
 
-适用于现有 Table、CSV/TSV。保持保存中的新增修改、保存失败重试、外部冲突和同文件行引用草稿接续。未签名 Windows 社区版；完整发布检查与 434 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
+适用于现有 Table、CSV/TSV。保持保存中的新增修改、保存失败重试、外部冲突和同文件行引用草稿接续。未签名 Windows 社区版；完整发布检查与 434 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件已重新下载核对通过。1.2.4→1.2.5 应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
 
 更新 Mermaid 使用的 DOMPurify 至 [3.4.17](https://github.com/cure53/DOMPurify/releases/tag/3.4.17)，生产依赖审计为 0 项。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.5) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_5_Unsigned_Community_Release_Audit_2026-10-23.md)。
