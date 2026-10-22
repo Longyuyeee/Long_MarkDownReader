@@ -99,10 +99,10 @@
             <span class="annotation-card-head"><strong>第 {{ annotation.page }} 页 · {{ annotationKindLabel(annotation.kind) }}</strong><i :class="`dot-${annotation.color}`"></i></span>
             <span>{{ annotation.quote || annotation.comment || '未填写评论' }}</span>
           </button>
-          <NDropdown trigger="click" :options="annotationActions" @select="key => handleAnnotationAction(String(key),annotation.id)"><button class="annotation-menu" :aria-label="`批注操作 ${annotation.id}`">···</button></NDropdown>
+          <NDropdown trigger="click" :options="annotationActions(annotation.id)" @select="key => handleAnnotationAction(String(key),annotation.id)"><button class="annotation-menu" :aria-label="`批注操作 ${annotation.id}`">···</button></NDropdown>
           </div>
           <div v-if="filteredAnnotations.length > 50" class="reading-pagination"><button :disabled="readingListPage === 0" @click="readingListPage--">上一组</button><span>{{ readingListPage + 1 }} / {{ Math.ceil(filteredAnnotations.length / 50) }}</span><button :disabled="(readingListPage + 1) * 50 >= filteredAnnotations.length" @click="readingListPage++">下一组</button></div>
-          <NDropdown trigger="manual" :show="annotationContext.show" :x="annotationContext.x" :y="annotationContext.y" :options="annotationActions" @clickoutside="annotationContext.show=false" @select="key => { annotationContext.show=false; handleAnnotationAction(String(key),annotationContext.id) }" />
+          <NDropdown trigger="manual" :show="annotationContext.show" :x="annotationContext.x" :y="annotationContext.y" :options="annotationActions(annotationContext.id)" @clickoutside="annotationContext.show=false" @select="key => { annotationContext.show=false; handleAnnotationAction(String(key),annotationContext.id) }" />
           <div v-if="selectedAnnotation" class="annotation-editor">
             <label>评论<textarea :value="selectedAnnotation.comment" :disabled="!annotationWritable" :readonly="annotationSaveConflict" maxlength="20000" placeholder="为这条批注补充评论…" @input="editSelectedAnnotationComment(($event.target as HTMLTextAreaElement).value)" @blur="annotationHistory.endGroup()"></textarea></label>
             <div class="annotation-colors"><button v-for="color in annotationColors" :key="color" :disabled="!annotationWritable || annotationSaveConflict" :class="[`color-${color}`, { active: selectedAnnotation.color === color }]" :aria-label="`${annotationColorLabel(color)}批注`" :aria-pressed="selectedAnnotation.color === color" @click="setSelectedAnnotationColor(color)"></button></div>
@@ -2316,14 +2316,16 @@ const applyAnnotationHistory = (direction: 'undo' | 'redo') => {
   if (!restored || !annotationDocument.value) return
   annotationDocument.value.annotations = restored.annotations
   selectedAnnotationId.value = restored.selected
-  readingSelection.value = readingSelection.value.filter(id => restored.annotations.some(a => a.id === id))
-  if (restored.selected) selectAnnotation(restored.selected)
+  readingSelection.value = restored.reading ?? readingSelection.value.filter(id => restored.annotations.some(a => a.id === id))
+  // Preserve the user's filters (including deliberately hidden selected items).
+  if (restored.selected && filteredAnnotations.value.some(a => a.id === restored.selected)) selectAnnotation(restored.selected)
   scheduleAnnotationSave()
 }
 const annotationHistoryActions = computed(() => [
   {key:'undo',label:annotationHistory.undoLabel ? `撤销${annotationHistory.undoLabel}` : '撤销批注操作',disabled:!annotationOwner() || !annotationHistory.undoLabel},
   {key:'redo',label:annotationHistory.redoLabel ? `重做${annotationHistory.redoLabel}` : '重做批注操作',disabled:!annotationOwner() || !annotationHistory.redoLabel},
   ...(annotationSaveError.value ? [{key:annotationSaveConflict.value?'reload':'retry',label:annotationSaveConflict.value?'重新读取批注…':'重试保存批注',disabled:annotationSaving.value}] : []),
+  ...annotationBatchActions(),
 ])
 const reloadAnnotationState = async () => {
   const owner = annotationDocument.value, source = pdfDocument.value
@@ -2337,12 +2339,65 @@ const handleAnnotationHistoryAction = (action: string) => {
   if (action === 'undo' || action === 'redo') applyAnnotationHistory(action)
   else if (action === 'retry') void persistAnnotations()
   else if (action === 'reload') void reloadAnnotationState()
+  else if (action.startsWith('batch-')) void changeAnnotationBatch(action)
 }
 const annotationContext = ref({show:false,x:0,y:0,id:''})
 const openAnnotationContext = (event:MouseEvent,id:string) => {annotationContext.value={show:true,x:event.clientX,y:event.clientY,id}}
-const annotationActions = computed(() => [{key:'edit',label:'编辑评论…',disabled:!annotationOwner()},{key:'locate',label:'定位到原文'},{key:'delete',label:'删除批注…',disabled:!annotationOwner()},...annotationHistoryActions.value])
+const annotationBatchActions = () => {
+  const count = readingSelection.value.length
+  if (!count) return []
+  const scope = `已选 ${count} 条${hiddenReadingSelection.value ? `（含隐藏 ${hiddenReadingSelection.value} 条）` : ''}`
+  return [
+    {key:'batch-color',label:`统一改色 · ${scope}`,disabled:!annotationOwner(),children:annotationColors.map(color => ({key:`batch-color-${color}`,label:annotationColorLabel(color)}))},
+    {key:'batch-delete',label:`删除${scope}…`,disabled:!annotationOwner()},
+  ]
+}
+const annotationActions = (id: string) => [
+  {key:'edit',label:'编辑评论…',disabled:!annotationOwner()},
+  {key:'locate',label:'定位到原文'},
+  {key:'delete',label:'删除批注…',disabled:!annotationOwner()},
+  // A card outside the checked set must never operate on that set.
+  ...annotationHistoryActions.value.filter(option => !String(option.key).startsWith('batch-') || readingSelection.value.includes(id)),
+]
+const changeAnnotationBatch = async (action: string) => {
+  const owner = annotationOwner(), document = annotationDocument.value
+  const ids = [...readingSelection.value], selected = new Set(ids)
+  if (!owner || !document || !ids.length) return
+  const deleting = action === 'batch-delete'
+  // Only the confirmation can yield to another edit. Recolor stays synchronous
+  // and does not serialize every other annotation in a large document.
+  const snapshot = deleting ? JSON.stringify(document.annotations) : '', selection = JSON.stringify(ids)
+  const color = action.slice('batch-color-'.length) as PdfAnnotationColor
+  if (!deleting && !annotationColors.includes(color)) return
+  if (deleting && !await confirmAppAction(dialog, {
+    title:`删除选中的 ${ids.length} 条批注？`,
+    content:`仅删除勾选的批注${hiddenReadingSelection.value ? `，包括当前筛选隐藏的 ${hiddenReadingSelection.value} 条` : ''}。PDF 原文和已生成的阅读笔记不变，可一次撤销。`,
+    positiveText:`删除 ${ids.length} 条批注`,danger:true,
+  })) return
+  if (annotationOwner() !== owner || annotationDocument.value !== document
+    || JSON.stringify(readingSelection.value) !== selection || (deleting && JSON.stringify(document.annotations) !== snapshot)) {
+    message.warning('批注或选择已有变化，未执行操作，请重新核对'); return
+  }
+  const updatedAt = Date.now()
+  const patches = document.annotations.flatMap((before,index) => selected.has(before.id) && (deleting || before.color !== color)
+    ? [{before, after:deleting ? null : {...before,color,updatedAt},index}] : [])
+  if (!patches.length) return
+  const afterSelected = deleting && selected.has(selectedAnnotationId.value) ? '' : selectedAnnotationId.value
+  const afterReading = deleting ? [] : ids
+  annotationHistory.recordBatch(owner,patches,{
+    label:deleting ? `删除 ${ids.length} 条批注` : `统一改色 ${patches.length} 条批注`,
+    selectedBefore:selectedAnnotationId.value,selectedAfter:afterSelected,readingBefore:ids,readingAfter:afterReading,
+  })
+  const replacements = new Map(patches.map(patch => [patch.before.id,patch.after]))
+  document.annotations = document.annotations.flatMap(annotation => replacements.has(annotation.id)
+    ? replacements.get(annotation.id) ? [replacements.get(annotation.id)!] : [] : [annotation])
+  selectedAnnotationId.value = afterSelected
+  readingSelection.value = afterReading
+  scheduleAnnotationSave()
+}
 const handleAnnotationAction = async (action:string,id:string) => {
   if (['undo','redo','retry','reload'].includes(action)) { handleAnnotationHistoryAction(action); return }
+  if (action.startsWith('batch-')) { if (readingSelection.value.includes(id)) await changeAnnotationBatch(action); return }
   if(action==='locate'){selectAnnotation(id);return}
   if(action==='delete'){await deleteSelectedAnnotation(id);return}
   const document=annotationDocument.value,annotation=annotations.value.find(a=>a.id===id)

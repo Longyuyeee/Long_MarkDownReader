@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import {createRequire} from 'node:module'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
+const base=process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:15941',output=process.env.LONGEDIT_TEST_OUTPUT||'.release-secrets/v123-browser'
+await fs.mkdir(output,{recursive:true})
+const browser=await chromium.launch({args:['--no-proxy-server']}),page=await browser.newPage({viewport:{width:1440,height:960}}),checks=[],errors=[]
+page.setDefaultTimeout(60000);page.on('pageerror',e=>errors.push(String(e)))
+const option=name=>page.locator('.n-dropdown-option-body__label').filter({hasText:new RegExp('^'+name+'$')})
+const menu=async name=>{await page.getByLabel('批注历史与保存',{exact:true}).click();await option(name).click()}
+const saved=()=>page.waitForFunction(()=>document.querySelector('.annotation-save-state')?.textContent.trim()==='批注已保存')
+try{
+ await page.goto(base+'/scripts/fixtures/v1137-pdf-resume-browser.html',{waitUntil:'domcontentloaded',timeout:90000});await page.locator('#pdf-page-1 canvas').waitFor();await page.getByRole('tab',{name:/^批注/}).click()
+ await page.getByLabel('选择批注 annotation-0',{exact:true}).check();await page.getByLabel('选择批注 annotation-2',{exact:true}).check()
+ await page.locator('.reading-row').nth(2).locator('.annotation-card').click({button:'right'});assert.equal(await page.locator('.n-dropdown-option-body__label').filter({hasText:/统一改色/}).count(),0);await page.keyboard.press('Escape');checks.push('右键未勾选条目不扩大到勾选集合')
+ await page.getByLabel('查找批注摘录或评论',{exact:true}).fill('用户评论 0');await page.getByLabel('批注历史与保存',{exact:true}).click();await option('统一改色 · 已选 2 条（含隐藏 1 条）').hover();await option('粉色').click();await saved();await menu('撤销统一改色 2 条批注');await saved();assert.equal(await page.getByLabel('查找批注摘录或评论',{exact:true}).inputValue(),'用户评论 0');assert.ok(await page.getByLabel('选择批注 annotation-0',{exact:true}).isChecked());await menu('重做统一改色 2 条批注');await saved();checks.push('包含筛选隐藏项的统一改色可一次撤销重做，保留筛选和勾选')
+ await menu('删除已选 2 条（含隐藏 1 条）…');assert.match(await page.locator('.n-dialog').innerText(),/筛选隐藏的 1 条/);await page.getByRole('button',{name:'取消',exact:true}).click();assert.ok(await page.getByLabel('选择批注 annotation-0',{exact:true}).isChecked());checks.push('删除确认明确隐藏范围，取消不修改')
+ await menu('删除已选 2 条（含隐藏 1 条）…');await page.getByRole('button',{name:'删除 2 条批注',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.annotation-card'));await menu('撤销删除 2 条批注');await saved();assert.ok(await page.getByLabel('选择批注 annotation-0',{exact:true}).isChecked());await page.getByLabel('查找批注摘录或评论',{exact:true}).fill('');assert.ok(await page.getByLabel('选择批注 annotation-2',{exact:true}).isChecked());checks.push('整批删除与撤销恢复原顺序及隐藏勾选项')
+ await page.evaluate(()=>window.pdfNotesAudit.writeError='模拟磁盘暂不可写');await page.getByLabel('批注历史与保存',{exact:true}).click();await option('统一改色 · 已选 2 条').hover();await option('绿色').click();await page.waitForFunction(()=>document.querySelector('.annotation-save-state')?.textContent.includes('保存失败'));await menu('撤销统一改色 2 条批注');await page.evaluate(()=>window.pdfNotesAudit.writeError='');await page.getByRole('button',{name:'重试保存',exact:true}).click();await saved();checks.push('整批保存失败不丢修改，可撤销后原地重试')
+ for(const [width,height]of [[1440,960],[800,640]])for(const style of ['soft','neo','glass','airy','minimal','sharp']){await page.setViewportSize({width,height});await page.evaluate(s=>{window.pdfNotesAudit.store.visualStyle=s;window.pdfNotesAudit.store.theme=s==='neo'?'dark':'white'},style);await page.getByLabel('批注历史与保存',{exact:true}).click();await option('统一改色 · 已选 2 条').hover();const box=await option('粉色').boundingBox();assert.ok(box&&box.x>=0&&box.y>=0&&box.x+box.width<=width+1&&box.y+box.height<=height+1);await page.screenshot({path:output+`/batch-${width}-${style}.png`});await page.keyboard.press('Escape')};checks.push('大小窗口与六种风格下批量菜单及颜色子菜单完整可用')
+ assert.deepEqual(errors,[]);await fs.writeFile(output+'/result.json',JSON.stringify({status:'passed',nativeBridgeMocked:true,checks,errors},null,2));console.log(checks.join('\n'))
+}catch(error){await page.screenshot({path:output+'/failure.png'}).catch(()=>{});await fs.writeFile(output+'/failure.json',JSON.stringify({error:String(error.stack),checks,errors,body:await page.locator('body').innerText()},null,2));throw error}finally{await browser.close()}

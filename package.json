@@ -1,7 +1,7 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "1.2.2",
+  "version": "1.2.3",
   "type": "module",
   "displayName": "Long编辑",
   "scripts": {
@@ -592,7 +592,7 @@
     "test:attachment-drafts": "node --experimental-strip-types --test scripts/test-attachment-drafts.mjs scripts/test-v1135-installed-release.mjs",
     "test:pdf-annotation-resume": "node --test scripts/test-pdf-annotation-resume.mjs scripts/test-v1137-installed-release.mjs scripts/test-graph-hit-test.mjs",
     "test:file-reading-continuity": "node --test scripts/test-file-reading-continuity.mjs scripts/test-search-return.mjs scripts/test-v121-installed-reading.mjs",
-    "test:pdf-annotation-history": "node --test scripts/test-pdf-annotation-history.mjs scripts/test-v122-installed-annotations.mjs"
+    "test:pdf-annotation-history": "node --test scripts/test-pdf-annotation-history.mjs scripts/test-v122-installed-annotations.mjs && node --test scripts/test-v123-installed-batch.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.3",
