@@ -20,6 +20,8 @@
 
 ## 4. 发布边界
 
+收尾核对发现 Mermaid 的传递依赖 DOMPurify 3.4.16 被 npm 生产依赖审计报告为受影响版本；已更新锁文件至 3.4.17，生产依赖审计恢复 0 项。仅更新该传递依赖，未扩大到无关版本升级；[维护者修复记录](https://github.com/cure53/DOMPurify/releases/tag/3.4.17)。旧 1.2.4 的固定构建与随后标签 CI 分别保留原始结果，不回写历史证据。
+
 范围限现有 Table、CSV/TSV，不扩大 XLSX、公式计算或格式保真承诺。`community-unsigned` 未签名社区版，企业 `releaseCandidate=false`。固定产品构建、同包检查与公开附件核对完成后发布，用户可手动下载安装；应用内自动更新实际观察独立 pending。
 
 ## 5. 接手后的顺序
