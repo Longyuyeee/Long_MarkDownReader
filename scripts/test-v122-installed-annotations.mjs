@@ -9,6 +9,7 @@ test('native annotation tasks retain real input, real disk conflicts and valid r
  const visit=node=>{if(ts.isCallExpression(node)&&/^(?:evaluate|ready|ui\.waitFor)$/.test(node.expression.getText(tree))){const a=node.arguments[0];if(a&&(ts.isStringLiteral(a)||ts.isNoSubstitutionTemplateLiteral(a)||ts.isTemplateExpression(a))){const expr=ts.isTemplateExpression(a)?a.head.text+a.templateSpans.map(s=>'__fixture__'+s.literal.text).join(''):a.text;assert.doesNotThrow(()=>new vm.Script(expr),expr);count++}}ts.forEachChild(node,visit)};visit(tree);assert.ok(count>=10)
  for(const forbidden of ['dispatchEvent(','__TAURI_INTERNALS__=','force: true','Unidentified'])assert.ok(!source.includes(forbidden))
  assert.ok(source.includes('[IO.FileShare]::Read'));assert.ok(source.includes('externalBytes'))
+ assert.ok(source.includes("await ui.clickText('.sidebar-switch button','批注')"),'a newly opened PDF starts with thumbnails; open its annotation panel with real input before testing empty history')
  for(const file of ['scripts/import-community-release-review.mjs','scripts/lib/installed-release-runtime.mjs','.github/workflows/community-release-publish.yml'])assert.ok(fs.readFileSync(file,'utf8').includes('assertAnnotationHistoryOutputBytes'))
 })
 test('installed annotation proof rejects stale source, partial tasks, runtime errors and synthetic input',()=>{

@@ -1,0 +1,51 @@
+{
+  "appVersion": "1.2.2",
+  "sourceCommit": "dbe6961ef84252ab774fa319f6a8ab76c521ded3",
+  "installerSha256": "2ffef1d01c950a9b32c25c4a3bb10836f5e17ee66fbbf4c7b0bbc8911c0cee79",
+  "harnessSourceCommit": "dbe6961ef84252ab774fa319f6a8ab76c521ded3",
+  "executableSha256": "e1a333ea60c441e3e0d70ebbd1e1e75a4783fc93a7532a703b5b4aaa35acca7a",
+  "status": "failed",
+  "evidenceLevel": "installed-pdf-annotation-history-trusted-input-and-sidecar-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "new-comment-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "continuous-comment-edit-undo-once",
+      "status": "passed"
+    },
+    {
+      "id": "color-and-delete-restore-selection",
+      "status": "passed"
+    },
+    {
+      "id": "text-input-keeps-native-undo",
+      "status": "passed"
+    },
+    {
+      "id": "failed-sidecar-write-retains-undo-and-retries",
+      "status": "passed"
+    },
+    {
+      "id": "external-sidecar-conflict-keeps-both-versions",
+      "status": "passed"
+    },
+    {
+      "id": "cancel-reload-keeps-unsaved-comment",
+      "status": "passed"
+    }
+  ],
+  "outputs": [],
+  "runtimeErrors": [],
+  "inputTrace": [],
+  "pdfBefore": "e48f37c1a02de01eb66622334e83c0f3dd92f58d13da14a8f67f91702e03d366",
+  "failure": "Error: Actual native UI did not become ready: unobscured target document.querySelector(\"[aria-label=\\\"批注历史与保存\\\"]\")\n    at waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async settledPoint (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/v118-native-user-input.mjs:17:5)\n    at async clickTarget (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/v118-native-user-input.mjs:36:17)\n    at async runInstalledV122Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-2-2-workflow.mjs:31:218)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:931:3",
+  "failureUI": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v122-history-18a5ae3a-eb16-4415-b960-3f8c6f300c98%5C%E5%8F%A6%E4%B8%80%E4%B8%AA.pdf",
+    "body": "Long编辑\n资料库\n工作台\n图谱\n设置\n导航\nR5L Disposable Vault\n▾\nr5j-notes\nr5j-config\nUX33J Microsoft Word Hyperlinks-1792680985008-1724\nUX33J WPS Writer Hyperlinks-1792680985008-1724\nUX33J LibreOffice Writer Hyperlinks-1792680985008-1724\n批注\n另一个\n快速笔记\n命令\n搜索文件与正文\n文件\n大纲\n最近\n智能集合\n标签\n关系\n历史\n新建\n收集箱\n17对象·10关系\n000-v122-history-18a5ae3a-eb16-4415-b960-3f8c6f300c98\n另一个.pdf\n批注.pdf\n批注.pdf.annotations.json\ng15c-linked-follow-up.md\nr5i-library-marker.txt\nr5j-config.json\nr5j-network.canvas\nr5j-north-star.md\nr5j-notes.txt\nr5j-plan.md\nUX33J LibreOffice Writer Hyperlinks-1792680985008-1724.docx\nUX33J Microsoft Word Hyperlinks-1792680985008-1724.docx\nUX33J WPS Writer Hyperlinks-1792680985008-1724.docx\n3 篇笔记\n26 词\n设置\nv1.2.2\n另一个.pdf\n关系\n参考\n更多\n☰\n2 页\n阅读\n批注\n页面\n文档工具\n‹\n/ 2\n›\n⌕\n−\n100%\n＋\n适合宽度\n缩略图\n目录\n批注\n表单\n属性\n脱敏\n水印\nOCR\n页面\n1\n2\nReading source page 1\n\n\nKeep the original page and source when writing notes.\n1\n2\n2"
+  }
+}
