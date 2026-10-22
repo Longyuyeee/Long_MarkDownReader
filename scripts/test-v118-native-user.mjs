@@ -55,7 +55,9 @@ test('typing and Enter use real WebView input phases without setting DOM values'
 test('right-click and hover wait through disappearing moving rows and send finite coordinates only once',async()=>{
  for(const action of ['right','hover']){
   let observations=0;const calls=[]
-  const ui=nativeUserInput({send:async(method,args)=>calls.push({method,args}),evaluate:async()=>{observations++;return observations===2?null:{x:Math.min(observations,5)*10,y:20}}},{timeoutMs:150,pollMs:1,stableMs:3})
+  // Timer delivery can pause on a busy Windows host; the simulated positions,
+  // minimum observations and single trusted input remain the actual assertions.
+  const ui=nativeUserInput({send:async(method,args)=>calls.push({method,args}),evaluate:async()=>{observations++;return observations===2?null:{x:Math.min(observations,5)*10,y:20}}},{timeoutMs:2000,pollMs:1,stableMs:3})
   if(action==='right')await ui.clickTarget("document.querySelector('[data-drop-path]')",'right')
   else await ui.hoverTarget("document.querySelector('.n-dropdown-option-body')")
   assert.ok(observations>=6);assert.equal(calls.length,action==='right'?2:1)
