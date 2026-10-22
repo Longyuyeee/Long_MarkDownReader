@@ -59,7 +59,9 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $run = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:INSTALLER_RUN_ID" | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0 -or $run.head_sha -ne $env:CANDIDATE_COMMIT) { throw 'Original build source identity drifted' }
+          if ($LASTEXITCODE -ne 0 -or $run.status -ne 'completed' -or $run.conclusion -ne 'success' -or $run.path -ne '.github/workflows/v1-1-0-candidate-lifecycle.yml') { throw 'Original frozen build is unavailable or failed' }
+          & node scripts/assert-frozen-build-source.mjs --head $run.head_sha --product $env:CANDIDATE_COMMIT
+          if ($LASTEXITCODE -ne 0) { throw 'Original frozen builder definitions differ from the product' }
           $jobs = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:INSTALLER_RUN_ID/jobs" | ConvertFrom-Json
           if ($LASTEXITCODE -ne 0) { throw 'Original build job receipt unavailable' }
           foreach ($name in @('Run frozen candidate release quality gate', 'Run complete Rust regression suite', 'Build frozen candidate MSI and NSIS', 'Capture immutable installer receipt')) {

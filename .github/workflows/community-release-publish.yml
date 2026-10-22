@@ -53,7 +53,9 @@ jobs:
           if ($env:PRODUCT_COMMIT -notmatch '^[a-f0-9]{40}$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:BUILD_RUN -notmatch '^\d+$' -or $env:REVIEW_RUN -notmatch '^\d+$') { throw 'Invalid immutable release inputs' }
           $build = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:BUILD_RUN" | ConvertFrom-Json
           $review = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:REVIEW_RUN" | ConvertFrom-Json
-          if ($build.head_sha -ne $env:PRODUCT_COMMIT -or $review.conclusion -ne 'success') { throw 'Build identity or review result mismatch' }
+          if ($build.status -ne 'completed' -or $build.conclusion -ne 'success' -or $build.path -ne '.github/workflows/v1-1-0-candidate-lifecycle.yml' -or $review.conclusion -ne 'success') { throw 'Build or review result mismatch' }
+          & node scripts/assert-frozen-build-source.mjs --head $build.head_sha --product $env:PRODUCT_COMMIT
+          if ($LASTEXITCODE -ne 0) { throw 'Frozen builder definitions differ from the release product' }
           $jobs = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:BUILD_RUN/jobs" | ConvertFrom-Json
           foreach ($name in @('Run frozen candidate release quality gate','Run complete Rust regression suite','Build frozen candidate MSI and NSIS','Capture immutable installer receipt')) {
             $step = @($jobs.jobs.steps | Where-Object name -eq $name)
