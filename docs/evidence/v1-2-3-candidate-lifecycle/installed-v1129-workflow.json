@@ -1,0 +1,506 @@
+{
+  "appVersion": "1.2.3",
+  "sourceCommit": "91e28bba983e3827d883d15d8ab3740fb6bfee87",
+  "installerSha256": "60f3b99bc0ed77bc565a7cb71deba64fc5fff517db51d06c766070f3a1a0e07b",
+  "harnessSourceCommit": "91e28bba983e3827d883d15d8ab3740fb6bfee87",
+  "executableSha256": "c4d5a41d6b5ef41683a9d8e0d00f2c13ccaad356146222d5d1c897f18b4a4031",
+  "status": "passed",
+  "evidenceLevel": "installed-native-pdf-continuity-and-exact-draft-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "native-note-generation-and-original-source",
+      "status": "passed"
+    },
+    {
+      "id": "annotation-comment-filter-and-return-position",
+      "status": "passed"
+    },
+    {
+      "id": "update-preview-cancel-preserves-draft",
+      "status": "passed"
+    },
+    {
+      "id": "stale-annotation-preview-refused",
+      "status": "passed"
+    },
+    {
+      "id": "targeted-update-keeps-user-text-and-selection-scope",
+      "status": "passed"
+    },
+    {
+      "id": "delayed-single-undo-redo-and-explicit-save",
+      "status": "passed"
+    },
+    {
+      "id": "edited-generated-content-explicit-append",
+      "status": "passed"
+    },
+    {
+      "id": "other-drafts-trusted-input-and-no-runtime-errors",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1129-annotations-before.json",
+      "sizeBytes": 594,
+      "sha256": "88f46c6b6a0cc88e9eea48103fb4f48d03999639b5bf1110a3c95c03da944bcf"
+    },
+    {
+      "fileName": "installed-v1129-disk-before.md",
+      "sizeBytes": 2664,
+      "sha256": "4d12d9256b116bf4f54ffdad49d7bd987332a109ba2a31ed75a2753db8662136"
+    },
+    {
+      "fileName": "installed-v1129-draft-before.md",
+      "sizeBytes": 2705,
+      "sha256": "b8f13b8dc9418f494428574c37fcf8cf739b1f4fbf1ebd0c54c9f8a429eb2347"
+    },
+    {
+      "fileName": "installed-v1129-draft-after.md",
+      "sizeBytes": 3851,
+      "sha256": "cd0d0bec56f339780947f4539d9bcb35116ad357d550433cdf7bb2cb334111e7"
+    },
+    {
+      "fileName": "installed-v1129-saved.md",
+      "sizeBytes": 3851,
+      "sha256": "cd0d0bec56f339780947f4539d9bcb35116ad357d550433cdf7bb2cb334111e7"
+    },
+    {
+      "fileName": "installed-v1129-append-before.md",
+      "sizeBytes": 3893,
+      "sha256": "0c6024979519d606565d01d10df339e4688ec9d8f379f8f126c001232d696e0d"
+    },
+    {
+      "fileName": "installed-v1129-append-after.md",
+      "sizeBytes": 7676,
+      "sha256": "9b766c51f125f227566935742994709c7cdfc0734df53b760c35059fee1386f0"
+    },
+    {
+      "fileName": "installed-v1129-annotations-after.json",
+      "sizeBytes": 711,
+      "sha256": "7d1d5a9d571958b6ad5ecced7c2ea0f07b2e4bf866d82b4e8659ed9980502e23"
+    }
+  ],
+  "pdfBefore": "b29de51a291e97c98e8773e7dde2d7c9fb34e50b43a5a6ec81d4064bfd50434d",
+  "generatedFromNative": true,
+  "annotationEditExact": true,
+  "readingReturnExact": true,
+  "cancelExact": true,
+  "staleRejected": true,
+  "draftOnly": true,
+  "undoExact": true,
+  "redoExact": true,
+  "explicitSaveExact": true,
+  "appendExact": true,
+  "modeRestored": true,
+  "otherDraftsPreserved": true,
+  "pdfAfter": "b29de51a291e97c98e8773e7dde2d7c9fb34e50b43a5a6ec81d4064bfd50434d",
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}
