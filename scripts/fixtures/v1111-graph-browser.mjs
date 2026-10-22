@@ -37,6 +37,7 @@ window.__TAURI_INTERNALS__={transformCallback:()=>1,metadata:{currentWindow:{lab
 }}
 window.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener:()=>{}}
 const positions=Object.fromEntries(Array.from({length:count},(_,i)=>['n'+i,{x:(i%18)*64,y:Math.floor(i/18)*64}]))
+if(params.has('overlap'))positions.n6={x:positions.n17.x+8,y:positions.n17.y}
 localStorage.setItem('longedit.graph.layouts.v1',JSON.stringify({version:1,layouts:Object.fromEntries([rootA,rootB].map(root=>[root+'\nnetwork:force',{updatedAt:Date.now(),positions}]))}))
 store.activeLibraryPath=rootA;store.configReady=true;store.motionSpeed='normal';store.theme=params.get('theme')||'white'
 watch(()=>store.theme,value=>{document.body.dataset.theme=value;document.body.classList.toggle('is-dark',value==='dark')},{immediate:true})

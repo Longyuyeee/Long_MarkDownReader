@@ -24,6 +24,13 @@ test('installed driver keeps the real bridge, trusted input, strict isolated roo
  for(const forbidden of ['dispatchEvent(', '__TAURI_INTERNALS__=', '__TAURI_INTERNALS__ =', 'force:true','force: true','isDirty=false','isDirty = false'])assert.ok(!source.includes(forbidden),forbidden)
 })
 
+test('v1.1.37 graph proof includes actual single-click identity and finite canvas coordinates',()=>{
+ const [report,manifest]=example();report.appVersion=manifest.appVersion='1.1.37'
+ report.singleClickNodeId=report.selectedNodeId;report.doubleClickFocus={nodeId:report.selectedNodeId};report.doubleClickTarget={x:240,y:320}
+ assert.doesNotThrow(()=>validateInstalledGraphExploration(report,manifest))
+ for(const mutate of [r=>r.singleClickNodeId='wrong',r=>r.doubleClickFocus.nodeId='wrong',r=>r.doubleClickTarget.x=NaN]){const copy=structuredClone(report);mutate(copy);assert.throws(()=>validateInstalledGraphExploration(copy,manifest))}
+})
+
 test('governance loading repair has real-component early-click proof and preserves the native topic assertion',()=>{
  const proof=JSON.parse(fs.readFileSync('docs/evidence/v1111-health-handoff-final-guarded/results.json','utf8'))
  assert.equal(proof.checks.length,4);assert.deepEqual(proof.errors,[]);assert.ok(proof.checks[0].includes('during initial load'))
