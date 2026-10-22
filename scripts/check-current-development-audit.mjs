@@ -213,7 +213,7 @@ const required = [
 
 // The approved 1.1.0 minor transition supersedes the old patch-only roadmap.
 // Retain all capability counts and historical acceptance checks above.
-if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1'].includes(pkg.version)) {
+if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2'].includes(pkg.version)) {
   const published = policy.gates?.githubReleasePublished === true
   const version = pkg.version
   const patch = Number(version.split('.')[2])
@@ -305,6 +305,13 @@ if (pkg.version === '1.2.1') {
   required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.2.2' : '1.2.1')]
   required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.1' : '1.2.0') && development.publicTag === `v${development.publicVersion}`]
   required[9] = [published ? '当前阶段：**v1.2.1 已发布**' : '当前阶段：**v1.2.1 移动阅读接续候选**', development.currentStage === (published ? 'M8-107-v1.2.1-published' : 'M8-106-v1.2.1-reading-continuity-candidate') && development.activeSlice?.id === 'v1.2.1-file-reading-continuity' && fs.existsSync(development.activeSlice.document)]
+}
+
+if (pkg.version === '1.2.2') {
+  const published = policy.gates?.githubReleasePublished === true
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.2.3' : '1.2.2')]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.2' : '1.2.1') && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? '当前阶段：**v1.2.2 已发布**' : '当前阶段：**v1.2.2 PDF 批注撤销重做候选**', development.currentStage === (published ? 'M8-109-v1.2.2-published' : 'M8-108-v1.2.2-annotation-history-candidate') && development.activeSlice?.id === 'v1.2.2-pdf-annotation-history' && fs.existsSync(development.activeSlice.document)]
 }
 
 for (const [token, condition] of required) {

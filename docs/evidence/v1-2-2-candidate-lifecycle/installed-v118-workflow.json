@@ -1,0 +1,99 @@
+{
+  "appVersion": "1.2.2",
+  "sourceCommit": "3fbaa24e2e22361bc4137dacb786682ea65386dc",
+  "installerSha256": "63a5ddabe3e3fa687c60d6e97967385fed4b43bccae83745ed1cabf1be6bd96c",
+  "harnessSourceCommit": "3fbaa24e2e22361bc4137dacb786682ea65386dc",
+  "executableSha256": "baa029424bf6e8fa5297965d4c09fed33ce3ba34519befa27effd7b758a0330d",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "desktopInputUsed": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "actual-product-identity-and-generated-config",
+      "status": "passed"
+    },
+    {
+      "id": "production-entry-budget-resumes-generated-21050-unregistered-files",
+      "status": "passed"
+    },
+    {
+      "id": "real-cold-work-and-seven-file-pages-pass-200-with-locators-and-private-exclusion",
+      "status": "passed"
+    },
+    {
+      "id": "same-cursor-is-idempotent-and-sort-binding-rejects-mixed-pages",
+      "status": "passed"
+    },
+    {
+      "id": "camel-case-request-validation-and-unconfigured-scope-are-enforced-by-real-ipc",
+      "status": "passed"
+    },
+    {
+      "id": "exact-case-tag-pages-and-native-modification-order",
+      "status": "passed"
+    },
+    {
+      "id": "native-window-label-and-channel-isolation-prevent-cross-window-close-or-page",
+      "status": "passed"
+    },
+    {
+      "id": "487-healthy-files-survive-one-offline-library-and-all-failure-is-not-complete-empty",
+      "status": "passed"
+    },
+    {
+      "id": "source-change-expires-a-real-issued-page-before-stale-data-is-returned",
+      "status": "passed"
+    },
+    {
+      "id": "real-rebuild-memory-cache-matches-cold-groups-and-persists-for-restart",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-ui-library-80-files-and-main-editor",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-ui-dirty-draft-explicit-reference-no-disk-write",
+      "status": "passed"
+    },
+    {
+      "id": "real-source-change-ui-expiry-refresh-restores-80",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-keyboard-native-modification-sort",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-palette-cross-library-draft-rejection",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-pdf-annotation-identity-and-draft-preservation",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-search-docx-block-visible-and-draft-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-search-pptx-object-highlight-and-draft-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-search-same-pptx-notes-page-and-details",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-search-same-workbook-sheet-repeat-intent",
+      "status": "passed"
+    }
+  ],
+  "temporaryDirectoryIdentity": {
+    "input": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp",
+    "canonical": "C:\\Users\\runneradmin\\AppData\\Local\\Temp",
+    "samePhysicalDirectory": true
+  },
+  "finalDraftAction": "explicit-user-save-after-all-preservation-checks"
+}

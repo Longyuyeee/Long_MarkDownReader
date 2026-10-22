@@ -120,7 +120,7 @@ use commands::pdf::{
     read_pdf_info, read_pdf_ocr, read_pdf_range, save_pdf_form_copy, save_pdf_form_text_copy,
     save_pdf_insert_copy, save_pdf_merge_copy, save_pdf_metadata_copy, save_pdf_page_plan_copy,
     save_pdf_page_range_copy, save_pdf_redaction_copy, save_pdf_watermark_copy,
-    write_pdf_annotations, write_pdf_ocr,
+    write_pdf_annotations, write_pdf_ocr, read_pdf_annotation_state, write_pdf_annotation_state,
 };
 use commands::pdf_reading::{refresh_pdf_reading_note, build_pdf_reading_note, verify_pdf_reference, save_pdf_reading_note};
 use commands::pptx::{
@@ -490,6 +490,8 @@ pub fn run() {
             save_pdf_insert_copy,
             read_pdf_annotations,
             write_pdf_annotations,
+            read_pdf_annotation_state,
+            write_pdf_annotation_state,
             read_pdf_ocr,
             write_pdf_ocr,
             read_pptx_presentation,

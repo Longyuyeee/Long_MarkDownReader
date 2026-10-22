@@ -37,6 +37,10 @@
 
 <p align="center"><sub>真实安装版工作区：紧凑导航、稳定的多文档标签与主编辑区，把更多空间留给内容。</sub></p>
 
+## 开发进展
+
+v1.2.2 正在完成 PDF 批注撤销重做与保存冲突保护的发布检查，尚未发布。当前正式版仍为 v1.2.1；进度见[1.2.2 开发记录](docs/V1_2_2_Unsigned_Community_Release_Audit_2026-10-22.md)。
+
 ## 不只是打开文件，更是接续你的工作
 
 > **v1.2.1 已正式发布**：文件移动、改名后接续阅读位置与工作现场，批量部分失败仅接续成功项；保留未保存正文，复制不抢走源记录。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.1) · [发布说明](docs/RELEASE_NOTES_v1.2.1.md)。
