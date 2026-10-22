@@ -484,6 +484,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useWindowDraft } from '../services/windowDrafts'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -1626,6 +1627,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', beforeUnload)
   window.removeEventListener('keydown', saveShortcut, true)
 })
+
+useWindowDraftSnapshot(() => rememberDocxViewState())
 </script>
 
 <style scoped>

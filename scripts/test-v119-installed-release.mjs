@@ -56,7 +56,7 @@ test('v119 inherits all exact-installer historical reports and refuses any missi
 })
 test('v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker',()=>{
  const smoke=fs.readFileSync('scripts/capture-r5j-installed-artifact-smoke.mjs','utf8');for(let n=0;n<=9;n++){assert.match(smoke,new RegExp('runInstalledV11'+n+'Workflow'));if(n<8)assert.ok(fs.readFileSync(`scripts/lib/installed-v1-1-${n}-workflow.mjs`,'utf8').includes("'1.1.9'"))}
- const current=JSON.parse(fs.readFileSync('package.json','utf8')).version,previous=(current === '1.2.0' ? '1.1.37' : '1.1.'+(Number(current.split('.')[2])-1))
+ const current=JSON.parse(fs.readFileSync('package.json','utf8')).version,previous=(current === '1.2.0' ? '1.1.37' : current.split('.').slice(0,2).join('.')+'.'+(Number(current.split('.')[2])-1))
  for(const file of ['v1-1-0-candidate-lifecycle.yml','v1-1-0-installer-review.yml']){const w=parse(fs.readFileSync('.github/workflows/'+file,'utf8'));assert.equal(w.on.workflow_dispatch.inputs.current_version.default,current);assert.equal(w.on.workflow_dispatch.inputs.previous_version.default,previous)}
  const publisher=fs.readFileSync('.github/workflows/community-release-publish.yml','utf8');assert.match(publisher,/validateInstalledWorkSession/);assert.ok(publisher.includes('$sceneReview.harnessSourceCommit -ne $review.head_sha'))
  const picker=fs.readFileSync('scripts/select-hosted-session-file.ps1','utf8');for(const token of ['github-hosted','LONGEDIT_R5I_DISPOSABLE','.v119-installed-owner','GetWindowThreadProcessId','OwnerPid','Where-Object Title -eq $Title','FromHandle','ValuePattern','InvokePattern','PostMessage'])assert.ok(picker.includes(token))

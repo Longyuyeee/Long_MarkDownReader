@@ -133,6 +133,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import { invoke } from '@tauri-apps/api/core'
 import {
   ChevronDown, ChevronUp, FileText, ImageOff, RefreshCw, Search, ShieldAlert, ShieldCheck,
@@ -276,6 +277,8 @@ watch(odtPath, (_next, previous) => {
 watch(matches, value => { matchIndex.value = value.length ? 0 : -1 })
 watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
 onBeforeUnmount(rememberOdtViewState)
+
+useWindowDraftSnapshot(() => rememberOdtViewState())
 </script>
 
 <style scoped>

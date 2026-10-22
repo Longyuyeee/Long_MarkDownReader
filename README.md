@@ -1,3 +1,4 @@
+<!-- v1.2.1 移动阅读接续开发中；当前正式版仍为 v1.2.0。进展见 docs/V1_2_1_Unsigned_Community_Release_Audit_2026-10-22.md。 -->
 <p align="center">
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>

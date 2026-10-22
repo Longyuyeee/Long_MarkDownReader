@@ -1,0 +1,17 @@
+{
+  "scope": "Actual App/Vue context menus and browser input; native file events and disk simulated. Native installer checked separately.",
+  "checks": [
+    {
+      "id": "actual-context-folder-move-resumes-active-scroll",
+      "before": 1800,
+      "after": 1800
+    },
+    {
+      "id": "named-scene-followed-real-receipt"
+    },
+    {
+      "id": "dirty-markdown-follows-without-implicit-save"
+    }
+  ],
+  "errors": []
+}

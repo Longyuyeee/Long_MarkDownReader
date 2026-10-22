@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useWindowDraft } from '../services/windowDrafts'
@@ -467,6 +468,8 @@ onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query.external === from.query.external) || mayLeave())
 onMounted(() => { loadDiagram(); window.addEventListener('beforeunload', beforeUnload) })
 onBeforeUnmount(() => { rememberDiagramViewState(); window.clearTimeout(renderTimer); window.removeEventListener('beforeunload', beforeUnload) })
+
+useWindowDraftSnapshot(() => rememberDiagramViewState())
 </script>
 
 <style scoped>

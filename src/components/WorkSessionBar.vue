@@ -193,7 +193,12 @@ function imported(entry: WorkSession, duplicate: boolean) {
   notice.value = duplicate ? `“${entry.name}”已存在，未重复添加。` : `已将“${entry.name}”保存到${library?.name || '所选资料库'}；当前文稿不变。`
   failed.value = false
 }
-onBeforeUnmount(()=>{disposed=true;++contextGeneration})
+const refreshMovedSessions = () => {
+  if (!store.libraryPath) return
+  try { sessions.value = readWorkSessions(localStorage, store.libraryPath) } catch (error) { report(error) }
+}
+window.addEventListener('longedit:reading-paths-changed', refreshMovedSessions)
+onBeforeUnmount(()=>{disposed=true;++contextGeneration;window.removeEventListener('longedit:reading-paths-changed',refreshMovedSessions)})
 </script>
 <style scoped>
 .work-session-bar { padding: 10px 12px; margin-bottom: 12px; border: var(--theme-border); border-radius: var(--theme-radius); background: var(--style-card-gradient, var(--theme-surface)); box-shadow: var(--workflow-panel-shadow, none); color: var(--theme-text); }

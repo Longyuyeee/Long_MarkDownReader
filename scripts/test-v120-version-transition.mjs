@@ -17,7 +17,7 @@ test('minor release keeps inherited installer workflows and current PDF resume c
     assert.ok(source.includes('installed-v1137') || source.includes('runInstalledV1137') || (file.endsWith('installer-review.yml') && source.includes('capture-r5j-installed-artifact-smoke.mjs')), file)
   }
   const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json', 'utf8'))
-  assert.equal(policy.patchValidation.previousPublicVersion, '1.1.37')
+  assert.equal(policy.patchValidation.previousPublicVersion, JSON.parse(fs.readFileSync('package.json','utf8')).version === '1.2.0' ? '1.1.37' : '1.2.0')
 })
 
 test('actual-process restart accepts the approved minor release without admitting unreviewed versions', () => {
@@ -25,8 +25,8 @@ test('actual-process restart accepts the approved minor release without admittin
   const literal = source.match(/assert\.ok\((\[[^\]]+\])\.includes\(process\.env\.LONGEDIT_R5J_APP_VERSION\)\)/)?.[1]
   assert.ok(literal, 'Restart driver retains its explicit version boundary')
   const accepted = JSON.parse(literal.replaceAll("'", '"'))
-  for (const version of ['1.1.9', '1.1.37', '1.2.0']) assert.ok(accepted.includes(version), version)
-  for (const version of ['1.1.8', '1.2.1', '2.0.0', '']) assert.ok(!accepted.includes(version), version)
+  for (const version of ['1.1.9', '1.1.37', '1.2.0', '1.2.1']) assert.ok(accepted.includes(version), version)
+  for (const version of ['1.1.8', '1.2.2', '2.0.0', '']) assert.ok(!accepted.includes(version), version)
   assert.ok(source.includes("assert.equal(version,process.env.LONGEDIT_R5J_APP_VERSION)"))
   assert.ok(source.includes('validateInstalledWorkSession(report,'))
 })

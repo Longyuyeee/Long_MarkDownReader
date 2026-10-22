@@ -159,6 +159,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import { NPopover } from 'naive-ui'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useContextCommands } from '../services/contextCommands'
@@ -290,6 +291,7 @@ const openHistoryCopy = (path: string) => { void openManagedFile(router, path) }
 let loadedViewPath = '', viewTimer: ReturnType<typeof setTimeout> | undefined
 const rememberTextPosition = () => { if (editor && loadedViewPath) rememberWorkspaceViewState(loadedViewPath, { scrollTop: editor.scrollDOM.scrollTop, scrollLeft: editor.scrollDOM.scrollLeft }) }
 const queueTextPosition = () => { clearTimeout(viewTimer); viewTimer = setTimeout(rememberTextPosition, 150) }
+useWindowDraftSnapshot(rememberTextPosition)
 const saving = ref(false)
 const loadingRange = ref(false)
 const loadError = ref('')
@@ -855,6 +857,7 @@ onBeforeUnmount(() => {
   editor = null
   window.removeEventListener('keydown', handleKeydown,true)
 })
+
 
 </script>
 
