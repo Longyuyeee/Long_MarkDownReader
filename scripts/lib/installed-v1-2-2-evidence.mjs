@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
-export const annotationHistoryChecks=['new-comment-undo-redo','continuous-comment-edit-undo-once','color-and-delete-restore-selection','text-input-keeps-native-undo','failed-sidecar-write-retains-undo-and-retries','external-sidecar-conflict-keeps-both-versions','cancel-reload-keeps-unsaved-comment','file-switch-clears-history-and-source-bytes-unchanged']
+export const annotationHistoryChecks=['new-comment-undo-redo','continuous-comment-edit-undo-once','color-and-delete-restore-selection','text-input-keeps-native-undo','failed-sidecar-write-retains-undo-and-retries','external-sidecar-conflict-keeps-both-versions','cancel-reload-keeps-unsaved-comment','file-switch-clears-history-and-source-bytes-unchanged','same-source-reload-keeps-unsaved-comment']
 export function validateInstalledAnnotationHistory(report,manifest){
  assert.equal(manifest.appVersion,'1.2.2');for(const key of ['appVersion','sourceCommit'])assert.equal(report[key],manifest[key]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-pdf-annotation-history-trusted-input-and-sidecar-bytes')

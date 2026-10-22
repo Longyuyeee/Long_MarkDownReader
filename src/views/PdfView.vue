@@ -2632,8 +2632,19 @@ const loadPdf = async () => {
   const generation = ++pdfLoadGeneration
   const current = () => generation === pdfLoadGeneration
   restoringPdfView = true
-  annotationHistory.reset()
   try {
+  // A same-file reference may request a reload without leaving this route.
+  // Save before clearing any live comment or changing its history owner.
+  window.clearTimeout(annotationSaveTimer)
+  await persistAnnotations()
+  if (!current()) return
+  if (annotationDirty.value) {
+    sidebarOpen.value = true
+    sidebarTab.value = 'annotations'
+    loading.value = false
+    return
+  }
+  annotationHistory.reset()
   loading.value = true
   referenceGeneration++; referenceWorking.value = false; readingPreviewOpen.value = false; readingSnapshot.value = null
   readingSelection.value = []; readingListPage.value = 0
@@ -2645,7 +2656,6 @@ const loadPdf = async () => {
   annotationLoadGeneration++
   pdfFormInspectionGeneration++
   window.clearTimeout(annotationSaveTimer)
-  await persistAnnotations()
   if (!current()) return
   error.value = ''
   loading.value = true
