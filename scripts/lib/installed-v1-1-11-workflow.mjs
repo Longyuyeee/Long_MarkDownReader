@@ -37,9 +37,10 @@ export async function runInstalledV1111Workflow({send,evaluate,capture,library,o
   assert.equal(owned.length,180);assert.ok(selected);report.nativeGraph={nodes:native.nodes.length,edges:native.edges.length,ownedFiles:owned.length,selectedNodeId:selected.id}
   await evaluate(`window.__v1111Trace=[];window.__v1111Errors=[];for(const type of ['click','keydown','input','pointerdown','pointermove'])addEventListener(type,e=>window.__v1111Trace.push({type,trusted:e.isTrusted}),true);addEventListener('error',e=>window.__v1111Errors.push(e.message));addEventListener('unhandledrejection',e=>window.__v1111Errors.push(String(e.reason)))`)
   await ui.clickText('.app-navigation a','图谱');await graphReady()
-  await ui.click('.graph-filter-control summary')
+  await ui.click('.graph-filter-trigger,.graph-filter-control summary')
+  await ui.waitFor(`!!document.querySelector('.reset-filter')?.getClientRects().length`,'actual filter popover is visible')
   if(await evaluate(`!document.querySelector('.reset-filter').disabled`))await ui.click('.reset-filter')
-  await ui.click('.graph-filter-control summary');await settled();check(0)
+  await ui.click('.graph-filter-trigger,.graph-filter-control summary');await ui.waitFor(`!document.querySelector('.filter-panel')?.getClientRects().length`,'filter popover closed');await settled();check(0)
   await select();report.selectedNodeId=await evaluate(`document.querySelector('[data-testid="graph-selected-node"]').dataset.nodeId`);assert.equal(report.selectedNodeId,selected.id)
   report.labels=JSON.parse(await evaluate(`document.querySelector('[data-testid="graph-canvas"]').dataset.labelDiagnostics`));assert.ok(report.labels.some(l=>l.id===selected.id));await capture('installed-v1111-search.jpg');check(1)
   const before=await pose();await refresh();report.poses.refresh={before,after:await pose()};assert.equal(await evaluate(`document.querySelector('[data-testid="graph-selected-node"]').dataset.nodeId`),selected.id);check(2)
