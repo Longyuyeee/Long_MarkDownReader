@@ -86,7 +86,7 @@ use commands::index::{
     search_knowledge, search_knowledge_libraries, search_knowledge_page, search_knowledge_libraries_page, close_knowledge_search, search_collection_page, get_tag_catalog_page,
 };
 use commands::json::{
-    analyze_json_source, append_json_array_item_source, append_json_object_property_source,
+    analyze_json_source, append_json_array_item_source, append_json_object_property_source, move_json_array_item_source,
     remove_json_array_item_source, remove_json_object_property_source,
     rename_json_object_key_source, replace_json_scalar_source, transform_json_source,
     validate_local_json_schema, write_external_json_source_document, write_json_source_document,
@@ -376,6 +376,7 @@ pub fn run() {
             analyze_json_source,
             validate_local_json_schema,
             append_json_array_item_source,
+            move_json_array_item_source,
             append_json_object_property_source,
             remove_json_array_item_source,
             remove_json_object_property_source,

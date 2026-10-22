@@ -1,0 +1,40 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "whole-record-move-current-draft-isolated-undo-redo-focus",
+      "status": "passed"
+    },
+    {
+      "id": "first-last-boundaries",
+      "status": "passed"
+    },
+    {
+      "id": "nested-array-item-with-unrelated-draft",
+      "status": "passed"
+    },
+    {
+      "id": "late-result-never-overwrites-newer-input",
+      "status": "passed"
+    },
+    {
+      "id": "stale-diff-refuses-and-retains-current-content",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-exact-literals-and-source-switch-dismisses-stale-actions",
+      "status": "passed"
+    },
+    {
+      "id": "tree-selection-and-direct-undo-redo-without-view-switch",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-two-window-sizes-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

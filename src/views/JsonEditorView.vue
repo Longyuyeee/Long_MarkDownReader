@@ -1,5 +1,5 @@
 <template>
-  <div class="json-workspace" data-testid="json-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
+  <div class="json-workspace" data-testid="json-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading" :data-analysis-current="!analysisPending && analyzedSource === sourceContent">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
 
     <header class="workspace-document-header json-toolbar">
@@ -136,6 +136,7 @@
           <div
             ref="treeViewport"
             class="tree-rows"
+            tabindex="-1"
             role="tree"
             aria-label="JSON 节点"
             @scroll.passive="handleTreeScroll"
@@ -347,7 +348,7 @@
           <ShieldCheckIcon v-if="analysis?.structureEditCandidate" :size="17" />
           <ShieldAlertIcon v-else :size="17" />
           <div>
-            <strong>{{ analysis?.structureEditCandidate ? '可安全进入结构编辑' : '暂不进入结构编辑' }}</strong>
+            <strong>{{ analysis?.structureEditCandidate ? '结构操作可用' : '部分结构操作受限' }}</strong>
             <span>{{ structureStatusText }}</span>
           </div>
         </div>
@@ -655,6 +656,7 @@ import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'
+import { undo, redo } from '@codemirror/commands'
 import { json } from '@codemirror/lang-json'
 import { foldAll, unfoldAll } from '@codemirror/language'
 import { openSearchPanel } from '@codemirror/search'
@@ -858,6 +860,8 @@ const arrayAppendValue = ref('null')
 const arrayAppendSource = ref('')
 const propertyRemovePendingStart = ref<number | null>(null)
 const arrayRemovePendingStart = ref<number | null>(null)
+const arrayMovePending = ref(false)
+let movedItemFocus: { source: string; start: number } | undefined
 const dirty = ref(false)
 const sourceContent = ref('')
 const sourceSize = ref(0)
@@ -951,6 +955,14 @@ const arrayRemoveDisabled = computed(() => (
   || arrayRemovePendingStart.value !== null
   || !analysis.value?.structureEditCandidate
 ))
+const arrayMoveDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value
+  || transformPending.value || arrayMovePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const canMoveArrayItem = (entry: JsonPathEntry, direction: -1 | 1) => {
+  if (arrayMoveDisabled.value || entry.arrayIndex === undefined) return false
+  const parent = analysis.value?.paths.find(node => node.kind === 'array' && node.depth === entry.depth - 1
+    && node.start < entry.start && node.end > entry.end)
+  return Boolean(parent && entry.arrayIndex + direction >= 0 && entry.arrayIndex + direction < parent.childCount)
+}
 let editor: EditorView | null = null
 let loadGeneration = 0
 let analysisGeneration = 0
@@ -1071,12 +1083,17 @@ const nodeMenu = useSourceNodeMenu<JsonPathEntry>(session, { fresh: () => analyz
     {key:'rename',label:'重命名字段…',disabled:entry.keyStart===undefined||keyRenameDisabled.value},
     {key:'append-property',label:'添加字段…',disabled:entry.kind!=='object'||propertyAppendDisabled.value},
     {key:'append-item',label:'追加数组项…',disabled:entry.kind!=='array'||arrayAppendDisabled.value},
+    ...(entry.arrayIndex === undefined ? [] : [
+      {key:'move-up',label:'上移',disabled:!canMoveArrayItem(entry,-1)},
+      {key:'move-down',label:'下移',disabled:!canMoveArrayItem(entry,1)},
+    ]),
     {key:'remove-property',label:'删除字段…',disabled:entry.keyStart===undefined||propertyRemoveDisabled.value},
     {key:'remove-item',label:'删除数组项…',disabled:entry.arrayIndex===undefined||arrayRemoveDisabled.value},
   ], action: (key,entry) => {
     if(key==='pointer')void copyPath(jsonPathToPointer(entry.path) || ''); else if(key==='edit')openScalarEditor(entry); else if(key==='rename')openKeyRename(entry);
     else if(key==='append-property')openPropertyAppend(entry); else if(key==='append-item')openArrayAppend(entry);
     else if(key==='remove-property')requestPropertyRemove(entry); else if(key==='remove-item')requestArrayRemove(entry)
+    else if(key==='move-up'||key==='move-down')void moveArrayItem(entry,key==='move-up'?-1:1)
   } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerCurrentTab = () => session.bind()
@@ -1098,9 +1115,19 @@ const resetTreeForAnalysis = (result: JsonSourceAnalysis) => {
   collapsedTreeNodes.value = result.paths.length >= LARGE_TREE_AUTO_COLLAPSE_NODES
     ? new Set(result.paths.filter(entry => entry.childCount > 0 && entry.depth > 1).map(entry => entry.start))
     : new Set()
-  selectedTreeStart.value = null
-  treeScrollTop.value = 0
-  if (treeViewport.value) treeViewport.value.scrollTop = 0
+  const focus = movedItemFocus?.source === analyzedSource.value ? movedItemFocus : undefined
+  selectedTreeStart.value = focus?.start ?? null
+  movedItemFocus = undefined
+  if (focus) {
+    for (const entry of result.paths) {
+      if (entry.start < focus.start && entry.end > focus.start) collapsedTreeNodes.value.delete(entry.start)
+    }
+    const index = expandedTreePaths.value.findIndex(entry => entry.start === focus.start)
+    if (index >= 0 && treeViewport.value) treeViewport.value.scrollTop = Math.max(0, index * TREE_ROW_HEIGHT - treeViewport.value.clientHeight / 2)
+  } else {
+    treeScrollTop.value = 0
+    if (treeViewport.value) treeViewport.value.scrollTop = 0
+  }
 }
 
 const validateSchemaContent = async (content: string, syntaxValid = analysis.value?.valid === true) => {
@@ -1319,14 +1346,14 @@ const load = async (discardDraft = false) => {
   loadGeneration++; analysisGeneration++; clearAnalysisTimer()
   const owner = session.capture()
   if (!owner) return
-  session.cancelChange(); session.closeConflict()
+  session.cancelChange(); session.closeConflict(); nodeMenu.close()
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
 
   rangeSearchGeneration++; rangeSearchPending.value = false
   scalarEditVisible.value = false; keyRenameVisible.value = false; propertyAppendVisible.value = false; arrayAppendVisible.value = false
   schemaGeneration++; schemaPending.value = false
-  scalarEditPending.value = false; keyRenamePending.value = false; propertyAppendPending.value = false; arrayAppendPending.value = false; transformPending.value = false; propertyRemovePendingStart.value = null; arrayRemovePendingStart.value = null
+  scalarEditPending.value = false; keyRenamePending.value = false; propertyAppendPending.value = false; arrayAppendPending.value = false; transformPending.value = false; propertyRemovePendingStart.value = null; arrayRemovePendingStart.value = null; arrayMovePending.value = false; movedItemFocus = undefined
 
   try {
     if (!owner.path || !['json','jsonc'].includes(owner.format)) throw new Error('当前路径不是已注册的结构化文件')
@@ -1774,6 +1801,30 @@ const applyArrayRemove = async (entry: JsonPathEntry, source: string) => {
   }
 }
 
+const moveArrayItem = async (entry: JsonPathEntry, direction: -1 | 1) => {
+  if (!canMoveArrayItem(entry, direction)) return
+  const owner = session.capture()
+  if (!owner) return
+  arrayMovePending.value = true
+  try {
+    const result = await invoke<{ content: string; start: number; end: number }>('move_json_array_item_source', {
+      content: owner.source, jsonc: owner.format === 'jsonc', start: entry.start, end: entry.end, direction,
+    })
+    session.offerChange(owner, direction === -1 ? '上移数组项' : '下移数组项', result.content,
+      byteOffsetToCodeUnit(result.content, result.start), () => {
+        movedItemFocus = { source: result.content, start: result.start }
+        selectedTreeStart.value = result.start
+        void nextTick(() => {
+          if (session.owns(owner) && viewMode.value === 'tree') treeViewport.value?.focus({ preventScroll: true })
+        })
+      })
+  } catch (cause) {
+    if (session.owns(owner)) message.error(`移动数组项失败：${errorMessage(cause)}`)
+  } finally {
+    if (session.owns(owner)) arrayMovePending.value = false
+  }
+}
+
 const locatePathQuery = () => { deferredPathQuery.value = pathQuery.value; const entry = filteredPaths.value[0]; if (entry) void showSourceRange(entry) }
 
 const showSourceRange = async (entry: JsonPathEntry) => {
@@ -1879,7 +1930,21 @@ watch(viewMode, async mode => {
   await nextTick()
   measureTreeViewport()
 })
+const handleTreeHistoryKey = (event: KeyboardEvent) => {
+  if (!editor || viewMode.value !== 'tree' || loading.value || saving.value || readOnly.value
+    || !session.hasDocument() || !(event.ctrlKey || event.metaKey) || event.altKey || document.body.inert
+    || document.querySelector('.n-modal,.n-dialog')) return
+  const target = event.target instanceof Element ? event.target : null
+  if (target?.closest('input,textarea,[contenteditable="true"]')) return
+  const key = event.key.toLowerCase()
+  const command = key === 'z' ? (event.shiftKey ? redo : undo) : key === 'y' ? redo : null
+  if (!command) return
+  event.preventDefault(); event.stopImmediatePropagation()
+  command(editor)
+}
+
 onMounted(async () => {
+  window.addEventListener('keydown', handleTreeHistoryKey, true)
   await nextTick()
   createEditor()
   await load()
@@ -1902,6 +1967,7 @@ onBeforeUnmount(() => {
   editor = null
 
   window.removeEventListener('resize', measureTreeViewport)
+  window.removeEventListener('keydown', handleTreeHistoryKey, true)
 
 })
 </script>

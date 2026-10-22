@@ -1,0 +1,2581 @@
+{
+  "appVersion": "1.2.7",
+  "sourceCommit": "6b10d611e2cb87284df0ee01bd4ac3de0f116c26",
+  "installerSha256": "1c83bce39df41ebbf7a44aee1f578a358cc4dce4d5a93de8fa17eb17e5e6e209",
+  "harnessSourceCommit": "96212999c094290986cb9d26f6ea3ffca18525a9",
+  "executableSha256": "f16390ac272e47493103348631d6450c40b5574b2332bb6b3daa638e80f19499",
+  "status": "passed",
+  "evidenceLevel": "installed-document-find-replace-trusted-ui-and-output-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "three-mode-exact-selected-duplicate",
+      "status": "passed"
+    },
+    {
+      "id": "three-mode-single-undo-preserves-live-drafts",
+      "status": "passed"
+    },
+    {
+      "id": "case-word-and-next-previous",
+      "status": "passed"
+    },
+    {
+      "id": "all-preview-cancel-keeps-disk",
+      "status": "passed"
+    },
+    {
+      "id": "literal-all-replace-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "text-selected-replace-and-native-find",
+      "status": "passed"
+    },
+    {
+      "id": "switch-closes-old-preview-and-keeps-drafts",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-close-and-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "external-conflict-copy-keeps-current-draft",
+      "status": "passed"
+    },
+    {
+      "id": "exact-output-bytes-and-shared-image",
+      "status": "passed"
+    }
+  ],
+  "modes": [
+    {
+      "mode": "wysiwyg",
+      "selectedText": "用户",
+      "selectionExact": true,
+      "replaceExact": true,
+      "undoExact": true
+    },
+    {
+      "mode": "ir",
+      "selectedText": "用户",
+      "selectionExact": true,
+      "replaceExact": true,
+      "undoExact": true
+    },
+    {
+      "mode": "sv",
+      "selectedText": "用户",
+      "selectionExact": true,
+      "replaceExact": true,
+      "undoExact": true
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1125-saved.txt",
+      "sizeBytes": 104,
+      "sha256": "1c8b5e8b1e40cbb6d8023431834d20e6b9b58f020f75b0c81e83ecb1f0db4c75"
+    },
+    {
+      "fileName": "installed-v1125-saved.md",
+      "sizeBytes": 305,
+      "sha256": "52735c1dd1e3b8a0247c3fc96b4c5f9cf09cd0e349d667929935ef8a91d16d2c"
+    },
+    {
+      "fileName": "installed-v1125-conflict-copy.md",
+      "sizeBytes": 324,
+      "sha256": "c7052e0019154ac9f4f3a593471eed44b9d3910586bd288bc1b4167eeb18e672"
+    },
+    {
+      "fileName": "installed-v1125-external-original.md",
+      "sizeBytes": 331,
+      "sha256": "2857fa9a30e942137b90dbc5154dc2bb0a43c9ef23d1dc36a5c1a3e4fd9727d4"
+    },
+    {
+      "fileName": "installed-v1125-shared.png",
+      "sizeBytes": 462,
+      "sha256": "88da038f717679ff1e5f523e39dd37f4be222f1890d2dea8f8780fe5c86e9396"
+    }
+  ],
+  "findOpenAttempts": [
+    {
+      "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1125-find-1afa9f07-716b-46c5-aeb3-d154cb719bb3%5C%E6%9F%A5%E6%89%BE%E9%95%BF%E6%96%87-v1125.md",
+      "selection": "",
+      "focused": "TEXTAREA",
+      "modals": [
+        {
+          "className": "n-card n-modal document-find-dialog fade-in-scale-up-transition-enter-active fade-in-scale-up-transition-enter-to",
+          "visible": true,
+          "text": "查找与替换查找长文-v1125.mdMarkdown 源码查找内容用户\r\n替换为留空将删除匹配文字\r\n打开前的选区 区分大小写 整词匹配1 / 1 处上一处下一处第 5 行 · 打开前的选区# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情"
+        }
+      ],
+      "messages": [],
+      "keys": [
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        }
+      ]
+    },
+    {
+      "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1125-find-1afa9f07-716b-46c5-aeb3-d154cb719bb3%5C%E6%9F%A5%E6%89%BE%E9%95%BF%E6%96%87-v1125.md",
+      "selection": "",
+      "focused": "TEXTAREA",
+      "modals": [
+        {
+          "className": "n-card n-modal document-find-dialog fade-in-scale-up-transition-enter-active fade-in-scale-up-transition-enter-to",
+          "visible": true,
+          "text": "查找与替换查找长文-v1125.mdMarkdown 源码查找内容用户\r\n替换为访客\r\n打开前的选区 区分大小写 整词匹配1 / 1 处上一处下一处第 5 行 · 打开前的选区# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n!["
+        }
+      ],
+      "messages": [],
+      "keys": [
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        }
+      ]
+    },
+    {
+      "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1125-find-1afa9f07-716b-46c5-aeb3-d154cb719bb3%5C%E6%9F%A5%E6%89%BE%E9%95%BF%E6%96%87-v1125.md",
+      "selection": "",
+      "focused": "TEXTAREA",
+      "modals": [
+        {
+          "className": "n-card n-modal document-find-dialog fade-in-scale-up-transition-enter-active fade-in-scale-up-transition-enter-to",
+          "visible": true,
+          "text": "查找与替换查找长文-v1125.mdMarkdown 源码查找内容用户\r\n替换为访客\r\n打开前的选区 区分大小写 整词匹配1 / 1 处上一处下一处第 5 行 · 打开前的选区# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n!["
+        }
+      ],
+      "messages": [
+        "已替换，可撤销"
+      ],
+      "keys": [
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        }
+      ]
+    },
+    {
+      "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1125-find-1afa9f07-716b-46c5-aeb3-d154cb719bb3%5C%E6%9F%A5%E6%89%BE%E9%95%BF%E6%96%87-v1125.md",
+      "selection": "",
+      "focused": "TEXTAREA",
+      "modals": [
+        {
+          "className": "n-card n-modal document-find-dialog fade-in-scale-up-transition-enter-active fade-in-scale-up-transition-enter-to",
+          "visible": true,
+          "text": "查找与替换查找长文-v1125.mdMarkdown 源码查找内容用户\r\n替换为访客\r\n整篇文档 区分大小写 整词匹配1 / 4 处上一处下一处第 3 行 · 整篇文档# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片"
+        }
+      ],
+      "messages": [
+        "已替换，可撤销"
+      ],
+      "keys": [
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        }
+      ]
+    },
+    {
+      "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1125-find-1afa9f07-716b-46c5-aeb3-d154cb719bb3%5C%E6%9F%A5%E6%89%BE%E9%95%BF%E6%96%87-v1125.md",
+      "selection": "",
+      "focused": "TEXTAREA",
+      "modals": [
+        {
+          "className": "n-card n-modal document-find-dialog fade-in-scale-up-transition-enter-active fade-in-scale-up-transition-enter-to",
+          "visible": true,
+          "text": "查找与替换查找长文-v1125.mdMarkdown 源码查找内容User\r\n替换为访$&\r\n整篇文档 区分大小写 整词匹配1 / 3 处上一处下一处第 7 行 · 整篇文档# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保"
+        }
+      ],
+      "messages": [],
+      "keys": [
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        }
+      ]
+    },
+    {
+      "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1125-find-1afa9f07-716b-46c5-aeb3-d154cb719bb3%5C%E6%9F%A5%E6%89%BE%E6%96%87%E6%9C%AC-v1125.txt",
+      "selection": "",
+      "focused": "TEXTAREA",
+      "modals": [
+        {
+          "className": "n-card n-modal document-find-dialog fade-in-scale-up-transition-enter-active fade-in-scale-up-transition-enter-to",
+          "visible": true,
+          "text": "查找与替换查找文本-v1125.txt当前文本查找内容用户\r\n替换为留空将删除匹配文字\r\n打开前的选区 区分大小写 整词匹配1 / 1 处上一处下一处第 1 行 · 打开前的选区用户 外部保留\n第二行 用户 选区 用户\nUser user USER users\n😀 结尾\n只改当前草稿，可撤销关闭替换这一处预览全部替换"
+        }
+      ],
+      "messages": [
+        "已替换 3 处，可一次撤销"
+      ],
+      "keys": [
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Home",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "ArrowRight",
+          "ctrl": false,
+          "shift": true,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "ArrowRight",
+          "ctrl": false,
+          "shift": true,
+          "alt": false,
+          "meta": false
+        }
+      ]
+    },
+    {
+      "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1125-find-1afa9f07-716b-46c5-aeb3-d154cb719bb3%5C%E6%9F%A5%E6%89%BE%E9%95%BF%E6%96%87-v1125.md",
+      "selection": "",
+      "focused": "TEXTAREA",
+      "modals": [
+        {
+          "className": "n-card n-modal document-find-dialog fade-in-scale-up-transition-enter-active fade-in-scale-up-transition-enter-to",
+          "visible": true,
+          "text": "查找与替换查找长文-v1125.mdMarkdown 源码查找内容User\r\n替换为$&\r\n整篇文档 区分大小写 整词匹配1 / 3 处上一处下一处第 7 行 · 整篇文档# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留"
+        }
+      ],
+      "messages": [
+        "已替换，可撤销",
+        "文本已安全保存"
+      ],
+      "keys": [
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Home",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "ArrowRight",
+          "ctrl": false,
+          "shift": true,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "ArrowRight",
+          "ctrl": false,
+          "shift": true,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "z",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "f",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Escape",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        }
+      ]
+    },
+    {
+      "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1125-find-1afa9f07-716b-46c5-aeb3-d154cb719bb3%5C%E6%9F%A5%E6%89%BE%E9%95%BF%E6%96%87-v1125.md",
+      "selection": "",
+      "focused": "TEXTAREA",
+      "modals": [
+        {
+          "className": "n-card n-modal document-find-dialog fade-in-scale-up-transition-enter-active fade-in-scale-up-transition-enter-to",
+          "visible": true,
+          "text": "查找与替换查找长文-v1125.mdMarkdown 源码查找内容用户\r\n替换为成员\r\n整篇文档 区分大小写 整词匹配1 / 4 处上一处下一处第 3 行 · 整篇文档# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片"
+        }
+      ],
+      "messages": [
+        "文本已安全保存",
+        "已安全保存"
+      ],
+      "keys": [
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "z",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "f",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Escape",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "End",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Enter",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "a",
+          "ctrl": true,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        },
+        {
+          "type": "keydown",
+          "trusted": true,
+          "key": "Backspace",
+          "ctrl": false,
+          "shift": false,
+          "alt": false,
+          "meta": false
+        }
+      ]
+    }
+  ],
+  "caseWordExact": true,
+  "navigationExact": true,
+  "cancelExact": true,
+  "allReplaceExact": true,
+  "allUndoExact": true,
+  "diskUnchanged": true,
+  "textSelectionExact": true,
+  "textUndoExact": true,
+  "nativeFindRetained": true,
+  "savedText": "用户 外部保留\n第二行 用户 选区 用户\nUser user USER users\n😀 结尾\n\n文本未保存稿\n",
+  "switchExact": true,
+  "otherDraftsPreserved": true,
+  "submittedDraft": "# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片](images/shared.png)\n\n```txt\ncode stays\n```\n\n结尾保留。\n需要保留的查找草稿 sv\n\n需要保留的查找草稿 ir\n\n需要保留的查找草稿 wysiwyg\n\n",
+  "saveConvention": {
+    "lineEnding": "lf",
+    "hasFinalNewline": true
+  },
+  "savedExact": true,
+  "savedFindAvailable": true,
+  "reopenedExact": true,
+  "conflictDraft": "# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片](images/shared.png)\n\n```txt\ncode stays\n```\n\n结尾保留。\n冲突查找草稿\n需要保留的查找草稿 sv\n\n需要保留的查找草稿 ir\n\n需要保留的查找草稿 wysiwyg\n\n",
+  "externalContent": "# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片](images/shared.png)\n\n```txt\ncode stays\n```\n\n结尾保留。\n需要保留的查找草稿 sv\n\n需要保留的查找草稿 ir\n\n需要保留的查找草稿 wysiwyg\n\n外部修改必须保留\n",
+  "externalOriginalKept": true,
+  "conflictDraftKept": true,
+  "conflictCopyExact": true,
+  "imageUnchanged": true,
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "End",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Enter",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "End",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Enter",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "End",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Enter",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Home",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "ArrowRight",
+      "ctrl": false,
+      "shift": true,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "ArrowRight",
+      "ctrl": false,
+      "shift": true,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "f",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Escape",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "End",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Enter",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrl": true,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "End",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Enter",
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "meta": false
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}

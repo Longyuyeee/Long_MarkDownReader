@@ -1,0 +1,119 @@
+{
+  "status": "passed",
+  "evidenceLevel": "real-WebView2-print-UI-trusted-pointer",
+  "sourceCommit": "6b10d611e2cb87284df0ee01bd4ac3de0f116c26",
+  "harnessSourceCommit": "96212999c094290986cb9d26f6ea3ffca18525a9",
+  "nativeBridgeMocked": false,
+  "sourceUserContentIncluded": false,
+  "actions": [
+    {
+      "action": "open-real-printer-combobox",
+      "role": "combobox",
+      "name": "",
+      "point": {
+        "connected": true,
+        "x": 138,
+        "y": 149,
+        "width": 212,
+        "height": 20,
+        "viewportWidth": 950,
+        "viewportHeight": 678
+      }
+    },
+    {
+      "action": "choose-real-Save-as-PDF-option",
+      "role": "option",
+      "name": "Save as PDF",
+      "point": {
+        "connected": true,
+        "x": 150,
+        "y": 185,
+        "width": 244,
+        "height": 32,
+        "viewportWidth": 950,
+        "viewportHeight": 678
+      }
+    }
+  ],
+  "targetUrl": "edge://print/",
+  "targetId": "CB5A91083383B8743517509949B19C88",
+  "observedComboboxes": [
+    {
+      "nodeId": "629",
+      "backendDOMNodeId": 629,
+      "role": "combobox",
+      "name": "",
+      "value": "Save as PDF",
+      "ignored": false,
+      "properties": [
+        {
+          "name": "invalid",
+          "value": {
+            "type": "token",
+            "value": "false"
+          }
+        },
+        {
+          "name": "focusable",
+          "value": {
+            "type": "booleanOrUndefined",
+            "value": true
+          }
+        },
+        {
+          "name": "focused",
+          "value": {
+            "type": "booleanOrUndefined",
+            "value": true
+          }
+        },
+        {
+          "name": "hasPopup",
+          "value": {
+            "type": "token",
+            "value": "listbox"
+          }
+        },
+        {
+          "name": "required",
+          "value": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "name": "expanded",
+          "value": {
+            "type": "booleanOrUndefined",
+            "value": false
+          }
+        }
+      ]
+    }
+  ],
+  "observedOptions": [],
+  "initialLabel": "Microsoft Print to PDF",
+  "selectedLabel": "Save as PDF",
+  "inputTrace": [
+    {
+      "type": "mousedown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "mousedown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "change",
+      "trusted": false
+    }
+  ]
+}
