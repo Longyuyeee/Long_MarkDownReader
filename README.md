@@ -32,16 +32,14 @@
 </p>
 
 <p align="center">
-  <img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.1.4 真实安装版，紧凑导航、多文档标签与主编辑区">
+  <img src="docs/evidence/v1-2-0-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.2.0 真实安装版，紧凑导航、多文档标签与主编辑区">
 </p>
 
 <p align="center"><sub>真实安装版工作区：紧凑导航、稳定的多文档标签与主编辑区，把更多空间留给内容。</sub></p>
 
 ## 不只是打开文件，更是接续你的工作
 
-> **v1.2.0 发布候选**：全界面内容空间与小窗口适配已完成，正在进行最终功能和安装检查。[本版说明](docs/RELEASE_NOTES_v1.2.0.md)。正式下载仍为下方已发布版本。
-
-> **v1.1.37 已正式发布**：重开后自动接续 PDF 批注筛选、选择和列表位置，评论保存失败时保留输入。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.37) · [发布说明](docs/RELEASE_NOTES_v1.1.37.md)。
+> **v1.2.0 已正式发布**：统一全界面布局，扩大内容区，完善小窗口与六种风格适配；原有功能通过菜单、右键和按需面板继续使用。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.0) · [发布说明](docs/RELEASE_NOTES_v1.2.0.md)。
 
 
 
@@ -79,19 +77,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.37"><img src="https://img.shields.io/badge/Stable-v1.1.37-cca43b" alt="v1.1.37 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.0"><img src="https://img.shields.io/badge/Stable-v1.2.0-cca43b" alt="v1.2.0 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.37**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.2.0**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.37_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.37/LongEdit_1.1.37_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.37_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.37/LongEdit_1.1.37_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.37](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.37) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.2.0_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.0/LongEdit_1.2.0_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.2.0_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.0/LongEdit_1.2.0_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.2.0](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.0) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.37/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.0/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -99,12 +97,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.37_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.2.0_x64-setup.exe
 ```
 
 ```text
-ccbb948d9de2fd977226064131992aa113bb424cad17c021280127fe15397d7f  LongEdit_1.1.37_x64_zh-CN.msi
-507e32470dcde6233216ab8a6bb4d7e43d53ef0f17644b01961087f422d07483  LongEdit_1.1.37_x64-setup.exe
+9d6c4dfd5277e26c1e996c2a569f0caa6ba7f5235de4744dc2598d58fe5ec2b6  LongEdit_1.2.0_x64_zh-CN.msi
+095479dfd68f30c53f2e91b32712e94c90522940d487185341c046e863fbf22c  LongEdit_1.2.0_x64-setup.exe
 ```
 
 </details>
@@ -234,19 +232,19 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 ## 真实界面
 
-主图、模板、TXT 恢复、文件整理与下方图谱来自 **v1.1.4 真实安装版**。JSON、工作簿和外观截图保留历史安装验收场景，展示对应功能，不代表新版布局；测试库名称、示例文件及原始证据文件名中的旧版本文字也不代表当前软件版本。
+主图、模板、TXT 恢复、文件整理与图谱截图来自 **v1.2.0 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
 
 ### 模板与文本历史
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.1.4 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.1.4 从 TXT 历史恢复独立副本"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-2-0-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.2.0 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-2-0-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.2.0 从 TXT 历史恢复独立副本"></td></tr>
   <tr><td align="center"><sub>在弹窗中编辑模板与变量</sub></td><td align="center"><sub>TXT 恢复副本，保留原文件</sub></td></tr>
 </table>
 
 ### 文件整理与回收
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.1.4 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.1.4 资料库回收站，选择文件后恢复"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-2-0-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.2.0 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-2-0-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.2.0 资料库回收站，选择文件后恢复"></td></tr>
   <tr><td align="center"><sub>选择或输入目标目录</sub></td><td align="center"><sub>在回收站选择恢复</sub></td></tr>
 </table>
 
@@ -265,10 +263,10 @@ JSON、YAML、XML、TOML 与代码文件使用专业源码编辑体验。JSON �
 ### 表格与工作簿
 
 <p align="center">
-  <img src="docs/evidence/v1-1-15-candidate-lifecycle/installed-v1115-csv-reopened.jpg" width="100%" alt="Long编辑 v1.1.15 真实安装版，CSV 保存重开后保留多行内容、前导零和长编号">
+  <img src="docs/evidence/v1-2-0-candidate-lifecycle/installed-v1115-csv-reopened.jpg" width="100%" alt="Long编辑 v1.2.0 真实安装版，CSV 保存重开后保留多行内容、前导零和长编号">
 </p>
 
-<p align="center"><sub>v1.1.15 真实安装版 · 多行按需编辑，CSV 重开与编号保留；原有 XLSX 工作区继续保留。</sub></p>
+<p align="center"><sub>v1.2.0 真实安装版 · 多行按需编辑，CSV 重开与编号保留；原有 XLSX 工作区继续保留。</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/xlsx-workbook-dark.png" width="100%" alt="Long编辑 XLSX 工作簿编辑界面，包含多工作表、公式栏、页面工具和网格编辑区">
@@ -281,10 +279,10 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 ### 知识图谱与思维导图
 
 <p align="center">
-  <img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.1.4 知识图谱与关系健康面板">
+  <img src="docs/evidence/v1-2-0-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.2.0 知识图谱与关系健康面板">
 </p>
 
-<p align="center"><sub>v1.1.4 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
+<p align="center"><sub>v1.2.0 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
 
 知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持稳定后自动全图适配、搜索、筛选、多种布局与主题、框选和拖动、缩放、适应当前选择、有界且尊重减少动效设置的选择反馈、可点击/拖动/键盘操作的语义缩略导航、右键操作、中心节点、视图保存以及 SVG/PNG 导出；密集中景会主动降低普通箭头和状态环噪声，近景仍保留方向语义。
 
@@ -494,7 +492,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ## 开发与验证
 
-1.1.37 已发布：重开后继续整理 PDF 批注，明确引用优先，评论保存失败保留当前页面。[发布说明](docs/RELEASE_NOTES_v1.1.37.md) · [下一轮路线](docs/Foundation_Deepening_Roadmap_1_1_38_to_1_1_39_2026-10-22.md)。
+1.2.0 已发布：完成全界面内容空间与窄窗口收尾，保留原有基础功能、主题和正常动效。[发布说明](docs/RELEASE_NOTES_v1.2.0.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_2_1_to_1_2_2_2026-10-22.md)。
 
 <p>
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
@@ -584,6 +582,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.2.0 | 全界面空间整理、小窗口适配、菜单提示让位与基础功能稳定性收尾 | [发布说明](docs/RELEASE_NOTES_v1.2.0.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.0) · [发布记录](docs/V1_2_0_Unsigned_Community_Release_Audit_2026-10-22.md) |
 | v1.1.37 | PDF 批注筛选、选择与滚动接续，明确引用优先，评论失败保留 | [发布说明](docs/RELEASE_NOTES_v1.1.37.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.37) · [发布记录](docs/V1_1_37_Unsigned_Community_Release_Audit_2026-10-22.md) |
 | v1.1.36 | 按文件查找已有操作、原窗口接续、草稿保护和路径显示整理 | [发布说明](docs/RELEASE_NOTES_v1.1.36.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.36) · [发布记录](docs/V1_1_36_Unsigned_Community_Release_Audit_2026-10-22.md) |
 | v1.1.35 | 附件引用纳入当前窗口草稿、来源区分和局部刷新 | [发布说明](docs/RELEASE_NOTES_v1.1.35.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.35) · [发布记录](docs/V1_1_35_Unsigned_Community_Release_Audit_2026-10-22.md) |
@@ -625,9 +624,13 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并公开 **12/12 版**。本轮 [1.1.33—1.1.37](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md) 已完成并公开 **5/5 版**；[下一轮 1.1.38—1.1.39](docs/Foundation_Deepening_Roadmap_1_1_38_to_1_1_39_2026-10-22.md) 按移动改名后的阅读状态接续、PDF 批注撤销与重做依次推进，均为规划。
+v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并公开 **12/12 版**。本轮 [1.1.33—1.1.37](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md) 已完成并公开 **5/5 版**；[下一轮 1.2.1—1.2.2](docs/Foundation_Deepening_Roadmap_1_2_1_to_1_2_2_2026-10-22.md) 按移动改名后的阅读状态接续、PDF 批注撤销与重做依次推进，均为规划。
 
-### v1.1.37 本次更新
+### v1.2.0 本次更新
+
+减少重复标题与说明，按需打开属性和图谱工具，把空间留给正文、表格及画布。小窗口与六种风格统一适配，保留文件管理、保存保护、历史、搜索、关系和各格式既有能力。[完整窗口复查](docs/UI_Full_Window_Review_2026-10-22.md)。
+
+### v1.1.37 PDF 批注接续
 
 PDF 批注筛选、勾选、当前批注、列表分组和滚动位置自动接续；来源变化不套用旧选择，明确引用优先。评论保存失败时保留输入与页面。[使用方法](docs/Pdf_Annotation_Resume_User_Guide.md)。
 
