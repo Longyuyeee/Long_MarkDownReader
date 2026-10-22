@@ -912,6 +912,98 @@ pub fn remove_json_array_item_source(
     Ok(candidate)
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JsonArrayMove {
+    pub content: String,
+    pub start: usize,
+    pub end: usize,
+}
+
+pub fn move_json_array_item_source(
+    content: &str,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    direction: i32,
+) -> Result<JsonArrayMove, String> {
+    if !matches!(direction, -1 | 1) {
+        return Err("只能向相邻位置上移或下移".into());
+    }
+    let analysis = analyze_json_source(content, jsonc);
+    if !analysis.valid {
+        return Err("JSON 源码存在语法错误，不能移动数组项".into());
+    }
+    analysis
+        .paths
+        .iter()
+        .find(|entry| entry.start == start && entry.end == end && entry.array_index.is_some())
+        .ok_or_else(|| "目标数组项不属于当前 JSON 分析结果，请重新选择".to_string())?;
+    let parsed = parse_to_ast(
+        content,
+        &CollectOptions {
+            comments: CommentCollectionStrategy::Separate,
+            tokens: false,
+        },
+        &parse_options(jsonc),
+    )
+    .map_err(|error| error.kind().to_string())?;
+    let root = parsed
+        .value
+        .as_ref()
+        .ok_or_else(|| "JSON 文档不能为空".to_string())?;
+    let (array, index) = find_array_item_by_range(root, start, end)
+        .ok_or_else(|| "目标数组项范围已经过期".to_string())?;
+    let other = if direction == -1 {
+        index.checked_sub(1)
+    } else {
+        index.checked_add(1).filter(|i| *i < array.elements.len())
+    }
+    .ok_or_else(|| "已经位于数组边界，不能继续移动".to_string())?;
+    let left_index = index.min(other);
+    let right_index = index.max(other);
+    let left = array.elements[left_index].range();
+    let right = array.elements[right_index].range();
+    // Only swap value text. Whitespace and commas stay in their original slots.
+    // Internal comments travel with their value; adjacent comments have no
+    // unambiguous owner, so reject rather than silently reassigning them.
+    let before = if left_index == 0 {
+        &content[array.range.start + 1..left.start]
+    } else {
+        &content[array.elements[left_index - 1].range().end..left.start]
+    };
+    let after = if let Some(next) = array.elements.get(right_index + 1) {
+        &content[right.end..next.range().start]
+    } else {
+        &content[right.end..array.range.end - 1]
+    };
+    let clean_gap = |gap: &str| gap.chars().all(|c| c.is_whitespace() || c == ',');
+    if !clean_gap(before) || !clean_gap(&content[left.end..right.start]) || !clean_gap(after) {
+        return Err(
+            "相邻数组项之间存在注释，无法确定注释归属；可在源码中调整，当前内容未变".into(),
+        );
+    }
+    let mut candidate = String::with_capacity(content.len());
+    candidate.push_str(&content[..left.start]);
+    candidate.push_str(&content[right.start..right.end]);
+    candidate.push_str(&content[left.end..right.start]);
+    candidate.push_str(&content[left.start..left.end]);
+    candidate.push_str(&content[right.end..]);
+    if !analyze_json_source(&candidate, jsonc).valid {
+        return Err("移动后的 JSON 未通过语法校验，当前内容未变".into());
+    }
+    let moved_start = if direction == -1 {
+        left.start
+    } else {
+        left.start + (right.end - right.start) + (right.start - left.end)
+    };
+    Ok(JsonArrayMove {
+        content: candidate,
+        start: moved_start,
+        end: moved_start + end - start,
+    })
+}
+
 fn comma_followed_by_whitespace(value: &str) -> Option<&str> {
     value
         .strip_prefix(',')
@@ -1739,6 +1831,121 @@ mod tests {
         let target = &analysis.paths[1];
         assert!(
             remove_json_array_item_source(source, false, target.start + 1, target.end).is_err()
+        );
+    }
+
+    fn move_at(
+        source: &str,
+        jsonc: bool,
+        path: &str,
+        direction: i32,
+    ) -> Result<JsonArrayMove, String> {
+        let item = analyze_json_source(source, jsonc)
+            .paths
+            .into_iter()
+            .find(|entry| entry.path == path)
+            .unwrap();
+        move_json_array_item_source(source, jsonc, item.start, item.end, direction)
+    }
+
+    #[test]
+    fn array_move_preserves_exact_literals_and_returns_utf8_record_location() {
+        let source =
+            r#"{"说明":"中文","rows":[9007199254740993123456789,{"text":"\u4e2d\\\""},-0]}"#;
+        let moved = move_at(source, false, "$.rows[1]", -1).unwrap();
+        assert_eq!(
+            moved.content,
+            r#"{"说明":"中文","rows":[{"text":"\u4e2d\\\""},9007199254740993123456789,-0]}"#
+        );
+        assert_eq!(
+            &moved.content[moved.start..moved.end],
+            r#"{"text":"\u4e2d\\\""}"#
+        );
+        let restored = move_at(&moved.content, false, "$.rows[0]", 1).unwrap();
+        assert_eq!(restored.content, source);
+    }
+
+    #[test]
+    fn array_move_nested_array_whole_subtree_and_current_draft() {
+        let source = r#"{"draft":"未保存", "rows":[1,[{"id":2},[3,4]],false]}"#;
+        let moved = move_at(source, false, "$.rows[1]", 1).unwrap();
+        assert_eq!(
+            moved.content,
+            r#"{"draft":"未保存", "rows":[1,false,[{"id":2},[3,4]]]}"#
+        );
+        assert_eq!(
+            &moved.content[moved.start..moved.end],
+            r#"[{"id":2},[3,4]]"#
+        );
+    }
+
+    #[test]
+    fn array_move_preserves_crlf_tabs_and_trailing_comma() {
+        let source = "[\r\n\t1,\r\n\t{\r\n\t\t\"x\": 2\r\n\t},\r\n]";
+        assert_eq!(
+            move_at(source, true, "$[1]", -1).unwrap().content,
+            "[\r\n\t{\r\n\t\t\"x\": 2\r\n\t},\r\n\t1,\r\n]"
+        );
+    }
+
+    #[test]
+    fn array_move_internal_comments_travel_with_item() {
+        let source = "/*文档*/ [{/*记录*/\"a\":1}, [2,/*内部*/3], null] //结束";
+        let moved = move_at(source, true, "$[1]", -1).unwrap();
+        assert_eq!(
+            moved.content,
+            "/*文档*/ [[2,/*内部*/3], {/*记录*/\"a\":1}, null] //结束"
+        );
+    }
+
+    #[test]
+    fn array_move_adjacent_comment_ownership_is_never_guessed() {
+        for source in [
+            "[/*前*/1,2,3]",
+            "[1,/*中*/2,3]",
+            "[1,2/*后*/,3]",
+            "[1,2,/*后*/3]",
+        ] {
+            assert!(move_at(source, true, "$[0]", 1)
+                .unwrap_err()
+                .contains("注释归属"));
+        }
+        assert!(move_at("[1,2//尾\n]", true, "$[1]", -1).is_err());
+    }
+
+    #[test]
+    fn array_move_boundaries_singleton_and_bad_direction_rejected() {
+        for (source, path, direction) in [
+            ("[1,2]", "$[0]", -1),
+            ("[1,2]", "$[1]", 1),
+            ("[1]", "$[0]", 1),
+            ("[1,2]", "$[0]", 0),
+            ("[1,2]", "$[0]", 2),
+        ] {
+            assert!(move_at(source, false, path, direction).is_err());
+        }
+    }
+
+    #[test]
+    fn array_move_invalid_stale_root_and_non_item_ranges_rejected() {
+        for (source, start, end) in [
+            ("[1,2", 1, 2),
+            ("[1,2]", 0, 5),
+            ("[1,2]", 2, 3),
+            ("[1,2]", usize::MAX, usize::MAX),
+            (r#"{"a":1}"#, 5, 6),
+        ] {
+            assert!(move_json_array_item_source(source, false, start, end, 1).is_err());
+        }
+    }
+
+    #[test]
+    fn array_move_unrelated_comments_and_duplicate_literals_untouched() {
+        let source = r#"{"other":/*不动*/{"x":1,"x":2},"rows":["a","a",1e99]}"#;
+        let moved = move_at(source, true, "$.rows[2]", -1).unwrap();
+        assert_eq!(
+            moved.content,
+            r#"{"other":/*不动*/{"x":1,"x":2},"rows":["a",1e99,"a"]}"#
         );
     }
 }

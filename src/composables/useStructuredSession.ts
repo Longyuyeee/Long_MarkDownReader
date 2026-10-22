@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, onMounted, shallowRef, type Ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, type Ref } from 'vue'
 import { isolateHistory } from '@codemirror/commands'
 import type { EditorView } from '@codemirror/view'
 import type { DialogApi, MessageApi } from 'naive-ui'
@@ -40,7 +40,7 @@ export function useStructuredSession(options: Options) {
   const conflict = shallowRef<Owner>()
   const history = shallowRef<Owner>()
   const historyDraft = computed(() => history.value?.tab?.content ?? history.value?.source ?? '')
-  const preview = shallowRef<{ owner: Owner; title: string; target: string; anchor: number }>()
+  const preview = shallowRef<{ owner: Owner; title: string; target: string; anchor: number; applied?: () => void }>()
   const previewError = shallowRef('')
   const capture = (): Owner | undefined => {
     const editor = options.editor()
@@ -171,18 +171,21 @@ export function useStructuredSession(options: Options) {
   }
   const closeConflict = () => { conflict.value = undefined }
   const finishCopy = (path: string) => { closeConflict(); options.message.success(`副本已保存：${path.split(/[\\/]/).pop()}；原件与当前草稿未变`) }
-  const offerChange = (owner: Owner, title: string, target: string, anchor = 0) => {
+  const offerChange = (owner: Owner, title: string, target: string, anchor = 0, applied?: () => void) => {
     if (!hasDocument() || !unchanged(owner)) { options.message.info('文件或内容已变化，未应用旧结果；当前修改仍保留'); return }
     if (target === owner.source) { options.message.info('内容无需修改'); return }
-    previewError.value = ''; preview.value = { owner, title, target, anchor }
+    previewError.value = ''; preview.value = { owner, title, target, anchor, applied }
   }
   const applyChange = () => {
     const change = preview.value
     if (!change) return
     if (!hasDocument() || !unchanged(change.owner)) { previewError.value = '已继续编辑或切换文件，未应用旧修改。请关闭后重新操作。'; return }
     change.owner.editor.dispatch({ changes: { from: 0, to: change.owner.source.length, insert: change.target },
-      selection: { anchor: Math.min(change.anchor, change.target.length) } })
+      selection: { anchor: Math.min(change.anchor, change.target.length) },
+      annotations: isolateHistory.of('full'), scrollIntoView: true })
+    change.applied?.()
     preview.value = undefined
+    void nextTick(() => { if (owns(change.owner)) change.owner.editor.focus() })
     options.message.success('已应用到草稿，可撤销；保存后才写入文件')
   }
   const cancelChange = () => { preview.value = undefined; previewError.value = '' }

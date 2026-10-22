@@ -3,7 +3,7 @@ import crypto from 'node:crypto'
 export const contextCommandChecks=['chinese-attachment-command-opens-original-dialog','attachment-path-has-no-device-prefix','history-command-preserves-unsaved-note','table-command-opens-entry-check','workbook-command-opens-selected-check','structured-command-opens-source-history','pdf-commands-filter-unsupported-actions','drafts-disk-and-preferences-preserved']
 export const contextCommandOutputNames=['before.md','draft.md','observations.json'].map(n=>'installed-v1136-'+n)
 export function validateInstalledContextCommands(report,manifest){
- assert.ok(['1.1.36','1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6'].includes(manifest.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.36','1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7'].includes(manifest.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-context-command-trusted-ui-and-output-bytes')
  for(const [k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(report[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[k],false)

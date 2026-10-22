@@ -5,11 +5,12 @@ use crate::formats::json::{
     analyze_json_source as analyze_source,
     append_json_array_item_source as append_array_item_source,
     append_json_object_property_source as append_object_property_source,
+    move_json_array_item_source as move_array_item_source,
     remove_json_array_item_source as remove_array_item_source,
     remove_json_object_property_source as remove_object_property_source,
     rename_json_object_key_source as rename_object_key_source,
     replace_json_scalar_source as replace_scalar_source, transform_json_source as transform_source,
-    JsonSourceAnalysis,
+    JsonArrayMove, JsonSourceAnalysis,
 };
 use crate::formats::json_schema::{
     local_schema_sidecar_path, validate_with_local_schema, JsonSchemaValidation,
@@ -167,6 +168,18 @@ pub fn remove_json_array_item_source(
 }
 
 #[tauri::command]
+pub fn move_json_array_item_source(
+    content: String,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    direction: i32,
+) -> Result<JsonArrayMove, TextDocumentError> {
+    move_array_item_source(&content, jsonc, start, end, direction)
+        .map_err(|message| TextDocumentError::simple("json-array-move-rejected", message))
+}
+
+#[tauri::command]
 pub async fn write_json_source_document(
     library_root: String,
     path: String,
@@ -315,15 +328,16 @@ mod tests {
         fs::write(&path, "{}\n").unwrap();
         let snapshot = read_text_snapshot(&path).unwrap();
 
-        let error = tauri::async_runtime::block_on(crate::commands::formats::write_text_document_base(
-            workspace.root.to_string_lossy().into_owned(),
-            path.to_string_lossy().into_owned(),
-            "json".into(),
-            "{".into(),
-            Some(snapshot.signature),
-            None,
-        ))
-        .unwrap_err();
+        let error =
+            tauri::async_runtime::block_on(crate::commands::formats::write_text_document_base(
+                workspace.root.to_string_lossy().into_owned(),
+                path.to_string_lossy().into_owned(),
+                "json".into(),
+                "{".into(),
+                Some(snapshot.signature),
+                None,
+            ))
+            .unwrap_err();
 
         assert_eq!(error.code, "specialized-writer-required");
         assert_eq!(fs::read_to_string(path).unwrap(), "{}\n");
