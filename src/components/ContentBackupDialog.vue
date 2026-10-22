@@ -12,7 +12,7 @@
           <n-checkbox v-model:checked="includeSession" :disabled="busy">包含工作现场（文件、阅读位置与参考）</n-checkbox>
           <n-checkbox v-model:checked="options.history" :disabled="busy || !options.documents">Markdown / TXT 历史</n-checkbox>
         </div>
-        <p class="content-backup-explanation">整包最多 512 MiB、单文件 128 MiB、10000 个文件条目。大资料库可选择子目录；不会自动跟随范围外链接或图片。历史默认不选，自定义模板仍使用原有模板导入/导出。</p>
+        <WorkspaceHelp label="说明：整包最多 512 MiB、单文件 1" text="整包最多 512 MiB、单文件 128 MiB、10000 个文件条目。大资料库可选择子目录；不会自动跟随范围外链接或图片。历史默认不选，自定义模板仍使用原有模板导入/导出。" />
       </template>
       <template v-if="mode === 'restore' && !completed">
         <div class="content-location"><span class="content-path">{{ backupPath || '尚未选择资料内容包（不是管理备份）' }}</span><n-button :disabled="busy" @click="chooseArchive">{{ backupPath ? '重新选择' : '选择内容包' }}</n-button></div>
@@ -48,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { NButton, NCheckbox, NInput, NModal, NSelect, useMessage } from 'naive-ui'
 import { useRouter } from 'vue-router'

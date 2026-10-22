@@ -1,16 +1,29 @@
 <template>
   <div class="canvas-page" :class="{ 'with-tabs': isExternal }">
-    <header class="canvas-header">
+    <header class="workspace-document-header canvas-header">
       <div class="header-main">
         <button class="icon-button" title="返回知识库" @click="router.push('/library')">←</button>
         <div>
-          <div class="canvas-title">{{ fileName }}</div>
-          <div class="canvas-subtitle">{{ isExternal ? '外部 JSON Canvas · 仅点击保存写回' : '开放 JSON Canvas' }} · {{ visibleNodes.length }}/{{ document.nodes.length }} 个节点可见 · 当前渲染 {{ renderedNodes.length }} 节点 / {{ renderedEdges.length }} 连线<template v-if="measuredFps"> · {{ measuredFps }} FPS</template></div>
+          <div class="workspace-document-copy">
+            <strong class="workspace-file-name canvas-title">{{ fileName }}</strong>
+            <span class="canvas-subtitle">{{ visibleNodes.length }}/{{ document.nodes.length }} 个节点</span>
+            <WorkspaceHelp :text="`${isExternal ? '外部 JSON Canvas，点击保存才会写回文件。' : '开放 JSON Canvas。'}当前渲染 ${renderedNodes.length} 个节点、${renderedEdges.length} 条连线${measuredFps ? `，${measuredFps} FPS` : ''}。`" label="画布说明" />
+          </div>
           <p v-if="operationError" class="operation-error" role="alert">{{ operationError }}</p>
         </div>
       </div>
-      <div class="save-state" :class="saveState" :aria-busy="saving" aria-live="polite">
+      <div class="canvas-header-actions" :inert="loading">
+      <div v-if="saveState !== 'saved'" class="save-state" :class="saveState" :aria-busy="saving" aria-live="polite">
         <span class="state-dot"></span>{{ saveStateLabel }}
+      </div>
+      <button title="缩小画布" aria-label="缩小画布" @click="changeZoom(-0.1)">−</button>
+      <button title="恢复画布视图" :aria-label="`恢复画布视图，当前缩放 ${Math.round(zoom * 100)}%`" @click="resetView">{{ Math.round(zoom * 100) }}%</button>
+      <button title="放大画布" aria-label="放大画布" @click="changeZoom(0.1)">＋</button>
+      <button @click="fitToContent">适应内容</button>
+      <button :disabled="saving || loading" title="重新读取，未保存时先确认" @click="requestReload">↻</button>
+      <button class="primary" :disabled="loading || saving || saveState === 'saved'" aria-live="polite" @click="saveCanvas">
+        {{ saving ? '保存快照中' : saveState === 'saved' ? '已保存' : '保存' }}
+      </button>
       </div>
     </header>
 
@@ -65,15 +78,7 @@
           @click="setNodeColor(color.value)"
         ></button>
       </div>
-      <span class="toolbar-spacer"></span>
-      <button title="缩小画布" aria-label="缩小画布" @click="changeZoom(-0.1)">−</button>
-      <button title="恢复画布视图" :aria-label="`恢复画布视图，当前缩放 ${Math.round(zoom * 100)}%`" @click="resetView">{{ Math.round(zoom * 100) }}%</button>
-      <button title="放大画布" aria-label="放大画布" @click="changeZoom(0.1)">＋</button>
-      <button @click="fitToContent">适应内容</button>
-      <button :disabled="saving || loading" title="重新读取，未保存时先确认" @click="requestReload">↻</button>
-      <button class="primary" :disabled="loading || saving || saveState === 'saved'" aria-live="polite" @click="saveCanvas">
-        {{ saving ? '保存快照中' : saveState === 'saved' ? '已保存' : '保存' }}
-      </button>
+
     </div>
 
     <main
@@ -274,7 +279,7 @@
         <code>{{ selectedNode.file || '尚未指定来源' }}</code>
         <p role="status">{{ sourceResolution?.message || '正在核对来源…' }}</p>
         <div class="source-actions"><button :disabled="sourceResolution?.status !== 'available'" @click="openNode(selectedNode!, true)">打开来源</button><button v-if="!isExternal" @click="relinkSource">重新指定</button></div>
-        <small>路径相对资料库根；不按同名文件猜测。重新指定只修改草稿，点击保存后才写入画布。</small>
+        <WorkspaceHelp label="说明：路径相对资料库根；不按同名文件猜测。" text="路径相对资料库根；不按同名文件猜测。重新指定只修改草稿，点击保存后才写入画布。" />
       </aside>
 
       <div v-if="loading" class="canvas-overlay">正在读取画布…</div>
@@ -304,12 +309,13 @@
 
     <footer class="canvas-statusbar" aria-live="polite">
       <span>{{ hiddenNodeIds.size ? `已折叠 ${hiddenNodeIds.size} 个分支节点` : selectionCount > 1 ? `已选择 ${selectionCount} 个节点` : tool === 'connect' ? '依次点击两个节点建立关系' : '拖拽卡片组织结构 · Shift+拖拽框选' }}</span>
-      <span>Ctrl+C/X/V 复制剪切粘贴 · 方向键微调 · Alt 拖拽暂停吸附 · Ctrl+S 保存</span>
+      <WorkspaceHelp label="说明：Ctrl+C/X/V 复制剪切粘贴 " text="Ctrl+C/X/V 复制剪切粘贴 · 方向键微调 · Alt 拖拽暂停吸附 · Ctrl+S 保存" />
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -1658,4 +1664,9 @@ onBeforeRouteUpdate((to,from) => (to.query.path === from.query.path && to.query.
 @keyframes pulse { 50% { opacity: .35; } } @keyframes sourcePulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--node-color) 13%, transparent); } }
 @media (max-width: 800px) { .canvas-subtitle, .canvas-statusbar span:last-child { display: none; }.canvas-toolbar { padding-inline: 8px; scrollbar-gutter: stable; }.canvas-header { min-height: 52px; padding: 7px 10px; }.canvas-title { max-width: 55vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.save-state { flex: none; padding-inline: 6px; } }
 @container (max-width: 520px) { .canvas-header { gap: 6px; }.header-main { min-width: 0; flex: 1; }.header-main > div { min-width: 0; }.canvas-title { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.save-state { flex: none; white-space: nowrap; } }
+.canvas-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; min-width: 0; flex: 1 1 auto; overflow-x: auto; }
+.canvas-header-actions > * { flex-shrink: 0; }
+.canvas-header-actions button { height: 32px; padding: 0 9px; border: var(--theme-border); border-radius: 8px; color: var(--theme-text); background: var(--theme-card); cursor: pointer; white-space: nowrap; }
+.canvas-header-actions button.primary { background: var(--theme-primary); color: #fff; }
+.canvas-header-actions button:disabled { opacity: .5; cursor: default; }
 </style>

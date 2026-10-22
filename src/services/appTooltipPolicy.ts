@@ -2,7 +2,9 @@ const nativeTooltipOptOutSelector = '[data-native-tooltip="allow"]'
 const tooltipSelector = '[data-app-tooltip]'
 const interactiveSelector = 'button, a[href], input, select, textarea, summary, [role="button"], [role="tab"], [tabindex]'
 const hostId = 'longedit-app-tooltip'
-const popupSelector = '.n-dropdown-menu, .n-base-select-menu, .n-popover:not(.n-tooltip), .vditor-toolbar .vditor-hint, .vditor-toolbar .vditor-panel'
+const popupSelector = '.n-dropdown-menu, .n-base-select-menu, .n-popover:not(.n-tooltip), .vditor-toolbar .vditor-hint, .vditor-toolbar .vditor-panel, [data-app-popup]'
+const popupVisible = (element: Element) => element.isConnected && element.getClientRects().length > 0
+  && !element.closest('details:not([open])') && getComputedStyle(element).visibility !== 'hidden'
 
 const tooltipText = (element: Element) => element.getAttribute('data-app-tooltip')?.trim() || ''
 
@@ -47,13 +49,25 @@ export const installAppTooltipPolicy = () => {
   document.body.appendChild(host)
 
   let activeTarget: HTMLElement | null = null
+  let pendingTarget: HTMLElement | null = null
   let activeDescribedBy: string | null = null
   let showTimer = 0
   let popupOpen = false
   const popupRoots = new Set<Element>()
   const previousPopupState = document.body.getAttribute('data-app-popup-open')
 
+  const canShowTooltip = (target: HTMLElement) => {
+    if (!popupOpen) return true
+    if (!target.matches('[data-workspace-help]')) return false
+    const visible = [...popupRoots].filter(popupVisible)
+    // Contextual help inside an open settings popover is useful. A select or
+    // action menu still owns the space while it is open and must never be covered.
+    return !visible.some(root => root.matches('.n-dropdown-menu, .n-base-select-menu'))
+      && visible.some(root => root.matches('.n-popover') && root.contains(target))
+  }
+
   const cancelShow = () => {
+    pendingTarget = null
     if (!showTimer) return
     window.clearTimeout(showTimer)
     showTimer = 0
@@ -76,16 +90,18 @@ export const installAppTooltipPolicy = () => {
   }
 
   const refreshPopupState = () => {
-    popupOpen = [...popupRoots].some(element => element.isConnected
-      && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden')
+    popupOpen = [...popupRoots].some(popupVisible)
     if (document.body.dataset.appPopupOpen !== String(popupOpen)) document.body.dataset.appPopupOpen = String(popupOpen)
-    if (popupOpen) dismiss()
+    const target = activeTarget || pendingTarget
+    if (target && (!target.isConnected || !canShowTooltip(target))) dismiss()
   }
   // Observe popup surfaces only. Editor changes and pointer movement do not
   // cause a document-wide class/style scan.
   const popupObserver = new MutationObserver(refreshPopupState)
   const observePopup = (element: Element) => {
     popupObserver.observe(element, { attributes: true, attributeFilter: ['class', 'style', 'aria-hidden'] })
+    const disclosure = element.closest('details')
+    if (disclosure) popupObserver.observe(disclosure, { attributes: true, attributeFilter: ['open'] })
     const follower = element.closest('.v-binder-follower-container')
     if (follower) popupObserver.observe(follower, { attributes: true, attributeFilter: ['class', 'style'] })
   }
@@ -120,7 +136,7 @@ export const installAppTooltipPolicy = () => {
 
   const show = (target: HTMLElement) => {
     const text = tooltipText(target)
-    if (!text || !target.isConnected || popupOpen) return
+    if (!text || !target.isConnected || !canShowTooltip(target)) return
     if (activeTarget && activeTarget !== target) hide()
     activeTarget = target
     activeDescribedBy = target.getAttribute('aria-describedby')
@@ -133,11 +149,13 @@ export const installAppTooltipPolicy = () => {
   }
 
   const scheduleShow = (target: HTMLElement, delay: number) => {
-    if (popupOpen) return
+    if (!canShowTooltip(target)) return
     if (activeTarget === target && host.dataset.visible === 'true') return
     cancelShow()
+    pendingTarget = target
     showTimer = window.setTimeout(() => {
       showTimer = 0
+      pendingTarget = null
       show(target)
     }, delay)
   }

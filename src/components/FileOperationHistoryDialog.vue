@@ -6,7 +6,7 @@
       <n-dropdown trigger="click" :options="[{ label: '清除已结束的记录…', key: 'clear', disabled: busy || !records.some(r => r.status !== 'needsReview') }]" @select="clearRecords"><n-button :disabled="busy" aria-label="操作记录菜单"><MoreHorizontal :size="16" /></n-button></n-dropdown>
     </div>
     <p v-if="error" class="history-error" role="alert">{{ error }}</p>
-    <div v-if="!loading && !records.length" class="history-empty"><History :size="28" /><strong>还没有整理记录</strong><span>从本版开始，移动、改名和复制会记在这里。</span></div>
+    <div v-if="!loading && !records.length" class="history-empty"><History :size="28" /><strong>还没有整理记录<WorkspaceHelp label="说明：从本版开始，移动、改名和复制会记在这" text="从本版开始，移动、改名和复制会记在这里。" /></strong></div>
     <p v-else-if="!loading && !filtered.length" class="history-empty">没有匹配的操作</p>
     <div v-if="records.length" class="history-content">
       <div class="history-list" aria-label="文件操作记录" :aria-busy="loading">
@@ -29,6 +29,7 @@
   </n-modal>
 </template>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, ref, watch } from 'vue'
 import { NModal, NInput, NButton, NDropdown, useDialog, useMessage } from 'naive-ui'
 import { Search, RefreshCw, MoreHorizontal, History, Copy, Pencil, Undo2, FolderInput, FolderOpen } from 'lucide-vue-next'

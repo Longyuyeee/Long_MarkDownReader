@@ -676,7 +676,6 @@ body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hov
 
 .app-content { flex: 1; min-height: 0; display: flex; position: relative; overflow: hidden; }
 .app-route-content { flex: 1; min-width: 0; min-height: 0; position: relative; overflow: hidden; }
-@media (max-width: 760px) { .app-content { flex-direction: column; } }
 .route-error-notice {
   position: absolute;
   z-index: 3000;

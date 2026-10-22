@@ -31,7 +31,7 @@ for (const token of [
   "isExternal.value ? 'read_external_pdf_info' : 'read_pdf_info'",
   'v-if="!isExternal"',
   '外部文件 · 只读 · ',
-  '· 不会写回',
+  '外部文件 · 只读',
   'external: isExternal.value',
   'if (!isExternal.value) initializePagePlan',
   'if (!isExternal.value) {',

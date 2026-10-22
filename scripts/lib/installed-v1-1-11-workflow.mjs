@@ -11,7 +11,7 @@ const store=`document.querySelector('#app').__vue_app__.config.globalProperties.
 const normalize=value=>value.replace(/^\\\\\?\\/,'').replaceAll('/','\\').toLowerCase()
 export async function runInstalledV1111Workflow({send,evaluate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  assert.equal(process.env.GITHUB_ACTIONS,'true');assert.equal(process.env.RUNNER_ENVIRONMENT,'github-hosted');assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1')
- assert.ok(['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.ok(['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),evidenceLevel:'installed-webview-input-native-graph-ipc-and-disk',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,status:'running',checks:[],poses:{},sourceFiles:[],inputTrace:[],runtimeErrors:[]}
  const ui=nativeUserInput({send,evaluate},{timeoutMs:90000}),check=i=>report.checks.push({id:graphExplorationChecks[i],status:'passed'})
  const invoke=(command,args={})=>evaluate(`window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)})`)
@@ -37,9 +37,10 @@ export async function runInstalledV1111Workflow({send,evaluate,capture,library,o
   assert.equal(owned.length,180);assert.ok(selected);report.nativeGraph={nodes:native.nodes.length,edges:native.edges.length,ownedFiles:owned.length,selectedNodeId:selected.id}
   await evaluate(`window.__v1111Trace=[];window.__v1111Errors=[];for(const type of ['click','keydown','input','pointerdown','pointermove'])addEventListener(type,e=>window.__v1111Trace.push({type,trusted:e.isTrusted}),true);addEventListener('error',e=>window.__v1111Errors.push(e.message));addEventListener('unhandledrejection',e=>window.__v1111Errors.push(String(e.reason)))`)
   await ui.clickText('.app-navigation a','图谱');await graphReady()
-  await ui.click('.graph-filter-control summary')
+  await ui.click('.graph-filter-trigger,.graph-filter-control summary')
+  await ui.waitFor(`!!document.querySelector('.reset-filter')?.getClientRects().length`,'actual filter popover is visible')
   if(await evaluate(`!document.querySelector('.reset-filter').disabled`))await ui.click('.reset-filter')
-  await ui.click('.graph-filter-control summary');await settled();check(0)
+  await ui.click('.graph-filter-trigger,.graph-filter-control summary');await ui.waitFor(`!document.querySelector('.filter-panel')?.getClientRects().length`,'filter popover closed');await settled();check(0)
   await select();report.selectedNodeId=await evaluate(`document.querySelector('[data-testid="graph-selected-node"]').dataset.nodeId`);assert.equal(report.selectedNodeId,selected.id)
   report.labels=JSON.parse(await evaluate(`document.querySelector('[data-testid="graph-canvas"]').dataset.labelDiagnostics`));assert.ok(report.labels.some(l=>l.id===selected.id));await capture('installed-v1111-search.jpg');check(1)
   const before=await pose();await refresh();report.poses.refresh={before,after:await pose()};assert.equal(await evaluate(`document.querySelector('[data-testid="graph-selected-node"]').dataset.nodeId`),selected.id);check(2)

@@ -1,7 +1,7 @@
 <template>
   <n-modal :show="true" preset="card" :title="`导出文档 · ${title}`" class="writing-delivery-dialog" :style="{width:'min(880px,96vw)',maxHeight:'92dvh'}" :mask-closable="false" :closable="!busy" :close-on-esc="!busy" @close="emit('close')" @esc="emit('close')">
     <p class="delivery-context">导出当前草稿，不会保存或改写原文件。<br>{{ path }}</p>
-    <p class="delivery-context">HTML 携带本地位图；PDF 通过系统打印选择“另存为 PDF”。字体使用本机字体及后备字体，交互图等请核对预览。</p>
+    <WorkspaceHelp label="说明：HTML 携带本地位图；PDF 通过" text="HTML 携带本地位图；PDF 通过系统打印选择“另存为 PDF”。字体使用本机字体及后备字体，交互图等请核对预览。" />
     <p v-if="loading" role="status">正在准备正文与图片…</p>
     <details v-if="warnings.length" class="delivery-warnings" open><summary>交付注意事项（{{warnings.length}}）</summary><ul><li v-for="warning in warnings" :key="warning">{{warning}}</li></ul></details>
     <iframe v-if="documentHtml" ref="preview" title="实际交付预览" sandbox="allow-same-origin allow-modals" :srcdoc="documentHtml" @load="frameReady=true" />
@@ -9,6 +9,7 @@
   </n-modal>
 </template>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import {onMounted,onUnmounted,ref} from 'vue'
 import {NModal,NButton} from 'naive-ui'
 import {invoke} from '../services/tauriRuntime'

@@ -1,15 +1,16 @@
 <template>
   <div ref="workspaceRef" class="docx-workspace">
     <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
-    <header class="docx-toolbar">
+    <header class="workspace-document-header docx-toolbar">
       <div class="document-identity">
         <button type="button" class="toolbar-icon" title="返回上一页" aria-label="返回上一页" @click="leaveDocx">
           <ArrowLeftIcon :size="16" />
         </button>
         <FileTextIcon :size="18" />
-        <div class="document-title">
-          <strong :title="docxPath">{{ fileName }}</strong>
-          <span>{{ isExternal ? '外部 Word 文档 · 只读 · 不会写回' : 'Word 页面编辑 · 草稿只驻留内存 · 点击保存才写入' }}</span>
+        <div class="workspace-document-copy document-title">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
+          <span>{{ isExternal ? '只读' : draftCount ? `${draftCount} 项未保存` : '已同步' }}</span>
+          <WorkspaceHelp label="Word 编辑与保存说明" :text="isExternal ? '外部 Word 文档以只读方式打开，不会写回。' : '页面修改先保留为草稿，点击保存后才写入文件。'" />
         </div>
       </div>
       <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
@@ -390,7 +391,7 @@
                 {{ style.name }} · {{ style.id }}
               </option>
             </select>
-            <small>只选择当前文件已有样式；不会创建或改写样式定义。</small>
+            <WorkspaceHelp label="说明：只选择当前文件已有样式；不会创建或改" text="只选择当前文件已有样式；不会创建或改写样式定义。" />
           </label>
 
           <label v-else class="edit-field">
@@ -403,7 +404,7 @@
               <strong>修改清单</strong>
               <span :class="{ error: draftLimitExceeded }">{{ draftCount }}/32</span>
             </header>
-            <p v-if="!draftCount">修改任一目标后会自动加入清单，切换页面或目标不会丢失。</p>
+            <WorkspaceHelp v-if="!draftCount" label="说明：修改任一目标后会自动加入清单，切换页" text="修改任一目标后会自动加入清单，切换页面或目标不会丢失。" />
             <template v-else>
               <article v-for="entry in draftEntryList" :key="entry.anchor">
                 <button type="button" class="draft-locate" :title="`定位到${entry.label}`" @click="locateDraftEntry(entry)">
@@ -483,6 +484,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useWindowDraft } from '../services/windowDrafts'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'

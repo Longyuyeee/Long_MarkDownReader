@@ -39,6 +39,8 @@
 
 ## 不只是打开文件，更是接续你的工作
 
+> **v1.2.0 发布候选**：全界面内容空间与小窗口适配已完成，正在进行最终功能和安装检查。[本版说明](docs/RELEASE_NOTES_v1.2.0.md)。正式下载仍为下方已发布版本。
+
 > **v1.1.37 已正式发布**：重开后自动接续 PDF 批注筛选、选择和列表位置，评论保存失败时保留输入。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.37) · [发布说明](docs/RELEASE_NOTES_v1.1.37.md)。
 
 

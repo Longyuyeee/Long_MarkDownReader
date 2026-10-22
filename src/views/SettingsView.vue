@@ -2,7 +2,6 @@
   <div class="settings-view">
     <WorkspaceManagementHeader
       title="设置"
-      subtitle="资料库、编辑器与应用偏好"
       :show-back="false"
     />
 
@@ -24,13 +23,12 @@
           <header class="settings-category-heading">
             <div>
               <h2>{{ activeCategoryMeta.label }}</h2>
-              <p>{{ activeCategoryMeta.description }}</p>
+              <WorkspaceHelp :text="activeCategoryMeta.description" :label="`${activeCategoryMeta.label}说明`" />
             </div>
           </header>
       <n-form label-placement="top" size="medium">
-        <n-grid :cols="1" :y-gap="24">
+        <n-grid :cols="1" :y-gap="16">
           <n-grid-item v-if="activeCategory === 'library'" class="animate-item" style="--delay: 0.1s">
-            <div class="section-title">文件库管理</div>
             <div class="library-manager-card">
               <div v-for="(lib, index) in config.libraries" :key="index" class="library-item" :class="{ active: lib.path === config.activeLibraryPath }">
                 <div class="lib-top-row">
@@ -70,8 +68,8 @@
                   <n-input v-model:value="newLib.path" :disabled="libraryAdding" placeholder="完整文件夹路径（不存在时自动创建）" style="flex: 1" />
                   <n-button quaternary :disabled="libraryAdding" @click="chooseNewLibDir">选择</n-button>
                   <n-button type="primary" :loading="libraryAdding" @click="addLibrary">添加库</n-button>
+                  <WorkspaceHelp label="添加资料库说明" text="输入完整路径即可自动创建缺失的文件夹；已有文件会保留。添加后可点击“切换”使用。" />
                 </n-input-group>
-                <p>输入完整路径即可自动创建缺失的文件夹；已有文件会保留。添加后可点击“切换”使用。</p>
                 <p v-if="libraryAddError" role="alert">{{ libraryAddError }}</p>
               </div>
             </div>
@@ -99,8 +97,8 @@
             <div class="section-title">{{ activeCategoryMeta.label }}</div>
             <div v-show="activeCategory === 'system'" class="setting-row">
               <div class="info">
-                <div class="label">开机自动启动</div>
-                <div class="desc">在 Windows 启动时自动运行Long编辑</div>
+                <div class="label">开机自动启动<WorkspaceHelp label="说明：在 Windows 启动时自动运行L" text="在 Windows 启动时自动运行Long编辑" /></div>
+
               </div>
               <n-switch v-model:value="config.isAutostart" />
             </div>
@@ -123,8 +121,8 @@
               data-testid="format-capability-settings"
             >
               <div class="info">
-                <div class="label">格式能力与默认应用</div>
-                <div class="desc">在格式能力页逐项启用、关闭并查看 Long编辑的默认打开状态</div>
+                <div class="label">格式能力与默认应用<WorkspaceHelp label="说明：在格式能力页逐项启用、关闭并查看 L" text="在格式能力页逐项启用、关闭并查看 Long编辑的默认打开状态" /></div>
+
               </div>
               <div class="backup-actions">
                 <n-button secondary type="info" @click="openReleaseCapabilities">管理打开方式</n-button>
@@ -167,12 +165,12 @@
             <details class="advanced-settings" :open="observationRouteFocused" v-show="activeCategory === 'knowledge'">
               <summary>
                 <span>高级：关系改善对比</span>
-                <small>需要比较资料库整理前后的关系覆盖变化时使用</small>
+                <WorkspaceHelp label="说明：需要比较资料库整理前后的关系覆盖变化" text="需要比较资料库整理前后的关系覆盖变化时使用" />
               </summary>
             <div ref="knowledgeObservationRow" class="setting-row" :class="{ 'is-route-focused': observationRouteFocused }" data-testid="knowledge-observation-export">
               <div class="info">
-                <div class="label">记录并对比关系改善</div>
-                <div class="desc">先记录当前关系覆盖情况，整理资料库后再对比变化；报告只保存到你选择的位置，不包含正文、文件名或完整路径。</div>
+                <div class="label">记录并对比关系改善<WorkspaceHelp label="说明：先记录当前关系覆盖情况，整理资料库后" text="先记录当前关系覆盖情况，整理资料库后再对比变化；报告只保存到你选择的位置，不包含正文、文件名或完整路径。" /></div>
+
               </div>
               <div class="backup-actions">
                 <n-button secondary type="info" :disabled="!store.libraryPath" :loading="observationExporting" @click="previewKnowledgeObservation">
@@ -186,8 +184,8 @@
             <section class="knowledge-observation-session" data-testid="knowledge-observation-session" :data-phase="observationSessionPhase">
               <div class="observation-session-heading">
                 <div>
-                  <strong>关系整理效果对比</strong>
-                  <span>按四步记录和比较关系覆盖变化；软件不会自动上传或修改资料库。</span>
+                  <strong>关系整理效果对比<WorkspaceHelp label="说明：按四步记录和比较关系覆盖变化；软件不" text="按四步记录和比较关系覆盖变化；软件不会自动上传或修改资料库。" /></strong>
+
                 </div>
                 <div class="observation-session-heading-actions">
                   <n-button size="tiny" secondary :loading="observationReviewing" data-testid="knowledge-session-review" @click="reviewKnowledgeObservationReceipt">查看已保存结果</n-button>
@@ -210,7 +208,7 @@
                 </li>
                 <li :class="{ complete: observationSessionPhase >= 3 }">
                   <b>3</b>
-                  <div><strong>确认治理动作已经完成</strong><span>此确认只推进本地会话步骤，不读取或记录你修改了什么。</span></div>
+                  <div><strong>确认治理动作已经完成<WorkspaceHelp label="说明：此确认只推进本地会话步骤，不读取或记" text="此确认只推进本地会话步骤，不读取或记录你修改了什么。" /></strong></div>
                   <n-button size="small" secondary type="success" :disabled="observationSessionPhase !== 2" data-testid="knowledge-session-remediation-complete" @click="markObservationRemediationComplete">我已完成一项治理</n-button>
                 </li>
                 <li :class="{ active: observationSessionPhase === 3, complete: observationSessionPhase === 4 }">
@@ -219,7 +217,7 @@
                   <n-button size="small" secondary type="success" :disabled="!store.libraryPath || observationSessionPhase < 3" :loading="observationComparisonExporting" data-testid="knowledge-session-compare" @click="previewKnowledgeObservationComparison">查看对比结果</n-button>
                 </li>
               </ol>
-              <p class="observation-session-privacy">操作进度只保存数字步骤，不保存资料库名称、路径、指纹、正文、文件名、对象 ID 或报告位置。你可以随时取消或重新开始。</p>
+              <WorkspaceHelp label="说明：操作进度只保存数字步骤，不保存资料库" text="操作进度只保存数字步骤，不保存资料库名称、路径、指纹、正文、文件名、对象 ID 或报告位置。你可以随时取消或重新开始。" />
               <article v-if="observationReview" class="observation-review" data-testid="knowledge-session-review-result" :data-outcome="observationReview.outcome">
                 <div class="observation-review-heading">
                   <div><strong>关系改善结果</strong><span>已检查报告结构、隐私边界和统计变化</span></div>
@@ -234,7 +232,7 @@
                 <div v-if="observationReview.achievements.length" class="observation-review-achievements">
                   <span v-for="achievement in observationReview.achievements" :key="achievement">{{ observationAchievementLabel(achievement) }}</span>
                 </div>
-                <p>本次查看不会保存所选路径，也不会上传报告。重新加载页面后需要再次由你选择文件。</p>
+                <WorkspaceHelp label="说明：本次查看不会保存所选路径，也不会上传" text="本次查看不会保存所选路径，也不会上传报告。重新加载页面后需要再次由你选择文件。" />
               </article>
             </section>
             </details>
@@ -245,8 +243,8 @@
             <div class="setting-card">
               <div class="setting-row">
                 <div class="info">
-                  <div class="label">启用 AI 辅助</div>
-                  <div class="desc">开启后可在编辑器工具栏使用 AI 处理文本</div>
+                  <div class="label">启用 AI 辅助<WorkspaceHelp label="说明：开启后可在编辑器工具栏使用 AI 处" text="开启后可在编辑器工具栏使用 AI 处理文本" /></div>
+
                 </div>
                 <n-switch v-model:value="config.aiEnabled" />
               </div>
@@ -255,7 +253,7 @@
               </n-form-item>
               <n-form-item label="接口地址">
                 <n-input v-model:value="config.aiEndpoint" placeholder="https://api.openai.com/v1" />
-                <template #feedback><span style="font-size:11px;opacity:0.5">兼容 OpenAI API 格式即可（DeepSeek/Ollama 等）</span></template>
+                <template #feedback><WorkspaceHelp label="说明：兼容 OpenAI API 格式即可" text="兼容 OpenAI API 格式即可（DeepSeek/Ollama 等）" /></template>
               </n-form-item>
               <n-form-item label="API Key">
                 <div style="width:100%;display:flex;gap:8px">
@@ -274,7 +272,7 @@
           <n-grid-item v-if="activeCategory === 'appearance'" class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观主题</div>
             <section class="theme-preset-group">
-              <p class="theme-library-intro">选择一套主题，一起调整配色、界面质感和动效。文档排版与文件显示仍可单独设置。</p>
+              <WorkspaceHelp label="说明：选择一套主题，一起调整配色、界面质感" text="选择一套主题，一起调整配色、界面质感和动效。文档排版与文件显示仍可单独设置。" />
               <div class="theme-library-toolbar" aria-label="主题类型筛选" data-horizontal-wheel="always">
                 <button v-for="filter in themeFilters" :key="filter.id" type="button" :class="{ active: activeThemeFilter === filter.id }" @click="activeThemeFilter = filter.id">
                   {{ filter.label }}
@@ -374,7 +372,7 @@
             <div class="theme-preview-card" :style="{ backgroundColor: config.editorBgColor }">
               <div class="preview-content">
                 <h3 class="preview-md-h"># 这是一个示例标题</h3>
-                <p class="preview-md-p">这是正文预览效果。当您修改左侧的设置时，此区域的背景色、文字颜色和代码风格将实时同步更新。</p>
+                <p class="preview-md-p">把想法写下来，让阅读和整理更从容。</p>
                 <div class="preview-code-block" :class="'theme-' + config.codeTheme">
                   <div class="code-header">
                     <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
@@ -397,6 +395,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { ref, onMounted, onUnmounted, reactive, watch, nextTick, computed } from 'vue'
 import DisplayPreferencesEditor from '../components/DisplayPreferencesEditor.vue'
 import ContentBackupDialog from '../components/ContentBackupDialog.vue'
@@ -1299,9 +1298,9 @@ onUnmounted(() => {
   height: 100%;
   min-height: 0;
   display: grid;
-  grid-template-columns: 190px minmax(0, 1fr);
+  grid-template-columns: 164px minmax(0, 1fr);
   align-items: stretch;
-  gap: 28px;
+  gap: 16px;
 }
 
 .settings-navigation {
@@ -1344,15 +1343,16 @@ onUnmounted(() => {
 }
 
 .settings-category-heading {
-  min-height: 56px;
-  margin-bottom: 20px;
-  padding-bottom: 14px;
+  min-height: 34px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   display: flex;
   align-items: flex-start;
   border-bottom: var(--theme-border);
 }
 
-.settings-category-heading h2 { margin: 0 0 4px; font-size: 18px; letter-spacing: 0; }
+.settings-category-heading > div { display: flex; align-items: center; gap: 8px; }
+.settings-category-heading h2 { margin: 0; font-size: 18px; letter-spacing: 0; }
 .settings-category-heading p { margin: 0; color: var(--theme-text-secondary); font-size: 12px; line-height: 1.5; }
 
 .section-title {
@@ -1539,11 +1539,13 @@ onUnmounted(() => {
 .lib-actions { display: flex; align-items: center; gap: 12px; margin-left: 16px; }
 
 .add-library-form {
-  margin-top: 26px;
-  padding-top: 26px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: var(--theme-border-strong);
   position: relative;
 }
+.add-library-form:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.add-library-form:first-child::before { display: none; }
 
 .add-library-form::before {
   content: "";
@@ -1595,9 +1597,9 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   background: var(--style-control-bg);
-  padding: calc(18px * var(--theme-spacing)) calc(20px * var(--theme-spacing));
+  padding: calc(10px * var(--theme-spacing)) calc(14px * var(--theme-spacing));
   border-radius: var(--theme-radius);
-  margin-bottom: calc(12px * var(--theme-spacing));
+  margin-bottom: calc(8px * var(--theme-spacing));
   gap: 24px;
   border: var(--theme-border);
   box-shadow: var(--theme-shadow-sm);

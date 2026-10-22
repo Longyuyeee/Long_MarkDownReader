@@ -7,9 +7,9 @@
       <button class="icon-button" aria-label="收集箱设置" :aria-expanded="menu" :disabled="choosing || creating" @click="menu = !menu"><Settings2 /></button>
     </div>
     <section v-if="menu" class="inbox-settings" aria-label="收集箱设置选项">
-      <strong>保存位置</strong><span class="saved-location">{{ inbox }}</span>
+      <strong>保存位置<WorkspaceHelp label="说明：更换位置后，原有资料仍留在原文件夹。" text="更换位置后，原有资料仍留在原文件夹。" /></strong><span class="saved-location">{{ inbox }}</span>
       <button :disabled="choosing || creating" @click="chooseDirectory"><FolderOpen /><span>更换文件夹…</span></button>
-      <small>更换位置后，原有资料仍留在原文件夹。</small>
+
     </section>
     <p v-if="settingStatus" class="setting-status" role="status">{{ settingStatus }}</p>
     <div v-if="actionError" class="action-error" role="alert"><span>这次操作没有完成，请重试或更换保存位置。</span><details><summary>错误详情</summary><pre>{{ actionError }}</pre></details></div>
@@ -35,6 +35,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { invoke, listen } from '../services/tauriRuntime'
 import { emit as broadcast } from '@tauri-apps/api/event'

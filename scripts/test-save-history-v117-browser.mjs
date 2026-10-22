@@ -5,7 +5,7 @@ const {chromium} = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGH
 const output=process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v117-save-history-development'
 const baseUrl=process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9000'
 await fs.mkdir(output,{recursive:true})
-const browser=await chromium.launch({headless:true}), checks=[], layouts=[], errors=[]
+const browser=await chromium.launch({headless:true,channel:process.env.LONGEDIT_BROWSER_CHANNEL||undefined}), checks=[], layouts=[], errors=[]
 try {
   const page=await browser.newPage({viewport:{width:1280,height:900}}); page.setDefaultTimeout(15000); page.on('pageerror',e=>errors.push(e.message))
   await page.goto(new URL('/scripts/fixtures/save-history-v117-browser.html',baseUrl).href)

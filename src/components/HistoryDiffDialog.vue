@@ -2,7 +2,7 @@
   <n-modal :show="true" preset="card" title="历史差异与恢复" class="history-diff-dialog" :style="{ width: 'min(940px, 94vw)' }" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @close="$emit('close')" @update:show="value => { if (!value) $emit('close') }">
     <p class="identity">{{ path }} · {{ new Date(timestamp * 1000).toLocaleString() }}</p>
     <label>对比来源 <select v-model="source" :disabled="busy"><option value="draft">当前编辑区草稿</option><option value="disk">磁盘已保存内容</option></select></label>
-    <p>− 当前来源中将移除的内容；+ 历史版本中将恢复的内容。未改动区域已折叠。</p>
+    <WorkspaceHelp label="说明：− 当前来源中将移除的内容；+ 历史" text="− 当前来源中将移除的内容；+ 历史版本中将恢复的内容。未改动区域已折叠。" />
     <p v-if="source === 'disk'" class="partial-hint">局部恢复应用到当前草稿，请先切换为“当前编辑区草稿”。</p>
     <TextDiff :current="comparisonText" :target="historical" :current-label="source === 'draft' ? '当前草稿' : '磁盘内容'" :busy="busy" partial :partial-enabled="source === 'draft' && !readOnly" @partial="id => $emit('partial', id)" />
     <p v-if="readOnly" role="status">当前文件只读或正在处理，可以比较历史，暂不能恢复。</p>
@@ -12,6 +12,7 @@
   </n-modal>
 </template>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, ref } from 'vue'
 import { NModal, NButton } from 'naive-ui'
 import TextDiff from './TextDiff.vue'

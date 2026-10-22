@@ -39,8 +39,8 @@
         <button type="button" @click="loadContext(true)">重试</button>
       </div>
       <div v-else-if="context && !context.indexed" class="context-state empty">
-        <strong>尚未提取这种格式的关系</strong>
-        <span>文件仍可正常管理和编辑；后续关系提取不会执行其中的代码或配置。</span>
+        <strong>尚未提取这种格式的关系<WorkspaceHelp label="说明：文件仍可正常管理和编辑；后续关系提取" text="文件仍可正常管理和编辑；后续关系提取不会执行其中的代码或配置。" /></strong>
+
       </div>
       <template v-else-if="context">
         <section v-if="collectionMemberships.length" class="collection-memberships" data-horizontal-wheel="always">
@@ -132,6 +132,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'

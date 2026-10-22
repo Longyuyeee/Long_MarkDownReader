@@ -3,10 +3,10 @@
     <n-dropdown trigger="manual" :show="entryMenu !== null" :x="entryMenu?.x || 0" :y="entryMenu?.y || 0" :options="entryMenuOptions" @select="handleEntryMenu" @clickoutside="entryMenu=null" @esc="entryMenu=null" />
     <WorkbookEntryCheckDialog v-if="entryCheckOpen" :issues="entryIssues" :scope="entryCheckScope" :checked="entryChecked" :busy="entryChecking" :failure="entryCheckFailure" :editable="!isExternal && !sheetProtected" :plan="planEntryCorrection" @close="entryCheckOpen=false;entryCheckRequest++" @locate="locateEntryIssue" />
     <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
-    <WorkspaceToolbar class="workbook-toolbar">
+    <WorkspaceToolbar class="workspace-document-header workbook-toolbar">
       <WorkspaceFileIdentity class="workbook-title">
         <button class="icon-button" title="返回知识库" @click="router.push('/library')"><n-icon :component="ArrowLeftIcon" /></button>
-        <div><strong>{{ fileName }}</strong><span v-if="workbook">{{ isExternal ? '外部 XLSX · 只读' : 'XLSX 工作簿' }} · {{ workbook.sheets.length }} 个 Sheet · {{ formatBytes(workbook.size) }}</span></div>
+        <div class="workspace-document-copy"><strong class="workspace-file-name">{{ fileName }}</strong><span v-if="workbook">{{ isExternal ? '外部 XLSX · 只读' : 'XLSX 工作簿' }} · {{ workbook.sheets.length }} 个 Sheet · {{ formatBytes(workbook.size) }}</span></div>
       </WorkspaceFileIdentity>
       <div v-if="workbook" class="workbook-actions" data-command-strip data-horizontal-wheel="always">
         <button v-if="!isExternal" class="icon-button" title="撤销" :disabled="!undoStack.length || saving" @click="undo"><n-icon :component="UndoIcon" /></button>
@@ -32,7 +32,7 @@
     <n-modal v-if="workbook" v-model:show="linkedDataModalOpen" preset="card" title="透视表与数据连接" class="linked-data-modal">
       <div class="linked-data-audit">
         <WorkspaceStateNotice as="section" class="linked-data-policy" kind="readonly" tone="success" title="安全查看模式">
-          <p>这里集中显示工作簿中的透视表、切片器和外部数据来源。LongEdit 不会自动刷新数据，也不会访问外部文件或网络地址。</p>
+          <WorkspaceHelp label="说明：这里集中显示工作簿中的透视表、切片器" text="这里集中显示工作簿中的透视表、切片器和外部数据来源。LongEdit 不会自动刷新数据，也不会访问外部文件或网络地址。" />
           <template #action><span>当前仅查看</span></template>
         </WorkspaceStateNotice>
         <WorkspaceStateNotice
@@ -118,7 +118,7 @@
                   <span :class="{ pass: pivot.audit.writeback.outputCellsPresent }">输出单元格 {{ pivot.audit.writeback.outputCellsPresent ? '存在' : '缺失' }}</span>
                 </div>
                 <p v-if="pivot.audit.writeback.blockers.length">{{ pivot.audit.writeback.blockers.join('；') }}</p>
-                <p v-else>结构门禁已满足；仍需原子回滚、未触及部件保真和 Excel/LibreOffice 真实往返证据。</p>
+
               </section>
               <section v-if="pivotRebuildPlans.get(pivot.part)" class="pivot-rebuild-plan" :class="{ ready: pivotRebuildPlans.get(pivot.part)!.status === 'isolated_dry_run_ready' }">
                 <header>
@@ -325,7 +325,7 @@
           <header><strong>数据连接</strong><span>{{ workbook.linkedData.connections.length }}</span></header>
           <article v-for="connection in workbook.linkedData.connections" :key="connection.id ?? connection.name">
             <div><strong>{{ connection.name }}</strong><small>ID {{ connection.id ?? '—' }} · 类型 {{ connection.kind }}</small></div>
-            <p>连接字符串、命令、凭据和完整路径不会发送到界面。</p>
+            <WorkspaceHelp label="说明：连接字符串、命令、凭据和完整路径不会" text="连接字符串、命令、凭据和完整路径不会发送到界面。" />
             <span :class="{ warning: connection.refreshOnLoad }">{{ connection.refreshOnLoad ? '原文件要求刷新；LongEdit 已阻止' : '未请求刷新' }}</span>
           </article>
         </section>
@@ -467,7 +467,7 @@
           </template>
           <label v-else>安全公式
             <input v-model.trim="conditionalFormatDraft.formula1" class="conditional-expression-input" :placeholder="conditionalFormatExpressionPlaceholder">
-            <small>支持 AND、OR、NOT，以及 A1 单元格引用和字面量比较。</small>
+            <WorkspaceHelp label="说明：支持 AND、OR、NOT，以及 A" text="支持 AND、OR、NOT，以及 A1 单元格引用和字面量比较。" />
           </label>
         </fieldset>
         <fieldset>
@@ -890,6 +890,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useContextCommands } from '../services/contextCommands'
 import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'

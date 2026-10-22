@@ -3,12 +3,12 @@
     <template #header><span class="dialog-title"><Network />添加资料关系</span></template>
     <div v-if="!root" class="no-library"><p>先选择一个资料库，就可以关联其中的文件。</p><button @click="visible = false; router.push({ name: 'Settings', query: { category: 'library' } })">选择资料库</button></div>
     <form v-else class="relation-dialog-body" @submit.prevent="save">
-      <p class="dialog-intro">关联当前资料库里的文件，笔记、PDF、表格、图片等都可以。</p>
+      <WorkspaceHelp label="说明：关联当前资料库里的文件，笔记、PDF" text="关联当前资料库里的文件，笔记、PDF、表格、图片等都可以。" />
       <div class="file-pair"><label><span><FileText />从这份文件</span><RelationFilePicker v-model:value="source" :library-root="root" label="关系起点" :disabled="saving" /></label><span class="pair-arrow"><ArrowRight v-if="kind.directed" /><ArrowLeftRight v-else /></span><label><span><Files />关联到</span><RelationFilePicker v-model:value="target" :library-root="root" label="关系目标文件" :exclude="source" :disabled="saving" /></label></div>
       <label>它们是什么关系？<select v-model="relationType" :disabled="saving" aria-label="资料关系类型"><option v-for="type in fileRelationTypes" :key="type.value" :value="type.value">{{ type.label }}</option></select><small>{{ kind.description }}</small></label>
       <div v-if="source && target" class="relation-preview"><span>{{ filename(source) }}</span><ArrowRight v-if="kind.directed" /><ArrowLeftRight v-else /><span>{{ filename(target) }}</span><b>{{ kind.label }}</b></div>
       <label>补充说明（可不填）<textarea v-model="note" :disabled="saving" maxlength="2000" rows="2" placeholder="例如：这份表格是项目方案的数据依据" /></label>
-      <p class="save-explanation">保存后立即出现在图谱中，原文件内容保持不变。</p>
+      <WorkspaceHelp label="说明：保存后立即出现在图谱中，原文件内容保" text="保存后立即出现在图谱中，原文件内容保持不变。" />
       <div v-if="error" class="dialog-error" role="alert"><p>{{ error }}</p><details v-if="errorDetails"><summary>错误详情</summary><pre>{{ errorDetails }}</pre></details></div>
       <p v-if="notice" class="dialog-notice" role="status"><Check />{{ notice }}</p>
       <div class="dialog-actions"><button type="button" :disabled="saving" @click="visible = false">完成</button><button class="primary" type="submit" :disabled="saving || !source || !target || sameWorkspacePath(source, target)"><Plus />{{ saving ? '正在保存…' : '添加关系' }}</button></div>
@@ -17,6 +17,7 @@
   </n-modal>
 </template>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { NModal } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'

@@ -1,13 +1,13 @@
 <template>
   <div class="workspace toml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
-    <header>
+    <header class="workspace-document-header">
       <div class="identity">
         <n-button quaternary circle size="small" :title="isExternal ? '返回资料库' : '返回知识库'" @click="router.push({ name: 'LibraryMode' })">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <n-icon :component="FileCodeIcon" size="22" class="accent" />
-        <div><strong :title="path">{{ fileName }}</strong><span aria-live="polite"><template v-if="isExternal">外部文件 · </template>TOML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}<template v-if="isExternal && !readOnly"> · 仅点击保存写回</template></span></div>
+        <div class="workspace-document-copy"><strong class="workspace-file-name">{{ fileName }}</strong><span aria-live="polite"><template v-if="isExternal">外部文件 · </template>TOML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}<template v-if="isExternal && !readOnly"> · 仅点击保存写回</template></span></div>
       </div>
       <div class="actions" data-command-strip data-horizontal-wheel="always">
         <n-button quaternary size="small" title="查找" @click="editor && openSearchPanel(editor)"><template #icon><n-icon :component="SearchIcon" /></template>查找</n-button>
@@ -40,7 +40,7 @@
         <button v-for="item in analysis?.diagnostics || []" :key="item.code" class="diagnostic" @click="reveal(item)">
           <n-icon :component="AlertIcon" /><span><strong>语法错误</strong><small>第 {{ item.line }} 行，第 {{ item.column }} 列</small><small>{{ item.message }}</small></span>
         </button>
-        <div v-if="analysis?.valid" class="valid"><n-icon :component="ValidIcon" /><span>语法有效，注释、顺序与字面量由源码保留</span></div>
+        <div v-if="analysis?.valid" class="valid"><n-icon :component="ValidIcon" /><span>语法有效</span><WorkspaceHelp label="说明：语法有效，注释、顺序与字面量由源码保" text="语法有效，注释、顺序与字面量由源码保留" /></div>
         <n-input v-model:value="query" @keydown.enter.prevent="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选键路径或值"><template #prefix><n-icon :component="SearchIcon" /></template></n-input>
         <div class="outline">
           <button v-for="item in filteredOutline" :key="`${item.start}:${item.path}`" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'

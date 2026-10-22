@@ -16,9 +16,13 @@
           <CircleHelp :size="16" />
           <span>如何关联资料</span>
         </button>
-        <button class="graph-tools-entry" type="button" data-testid="graph-tools-entry" title="探索、导出、布局与视图工具" :aria-expanded="graphToolsOpen" @click="graphToolsOpen = !graphToolsOpen"><SlidersHorizontal :size="16" /><span>图谱工具</span></button>
+
         <button class="graph-tools-entry" type="button" data-testid="graph-refresh" :disabled="isLoading" :aria-busy="isLoading" @click="loadGraph"><RotateCcw :size="16" /><span>{{ isLoading ? '读取中' : '刷新' }}</span></button>
-          <div v-if="graphToolsOpen" class="graph-tools-menu" data-testid="graph-tools-menu" @click="graphToolsOpen = false">
+        <NPopover v-model:show="graphToolsOpen" trigger="click" placement="bottom-end" :show-arrow="false">
+          <template #trigger>
+        <button class="graph-tools-entry" type="button" data-testid="graph-tools-entry" title="探索、导出、布局与视图工具" :aria-expanded="graphToolsOpen"><SlidersHorizontal :size="16" /><span>图谱工具</span></button>
+          </template>
+          <div class="graph-tools-menu" data-testid="graph-tools-menu" @click="graphToolsOpen = false">
             <div class="graph-tools-explore">
               <button :class="{ active: pathOpen }" data-testid="graph-path-entry" @click="togglePathPanel">最短路径</button>
               <button :class="{ active: comparisonOpen }" data-testid="graph-comparison-entry" @click="toggleComparisonPanel">节点比较</button>
@@ -41,6 +45,7 @@
               </button>
             </div>
           </div>
+        </NPopover>
       </div>
     </WorkspaceManagementHeader>
     <div class="graph-options" data-horizontal-wheel="always">
@@ -65,8 +70,8 @@
     </div>
     <GraphSemanticLegend :graph="visibleGraph" :dark="isActiveThemeDark(store.theme)" :status-summary="graphNodeStatusSummary" :status-rings-visible="statusRingsVisible" />
     <section v-if="communityOpen" class="graph-community-panel" data-testid="graph-community-panel">
-      <header><div><strong>社区发现建议</strong><span>Louvain · {{ communityResult.communities.length }} 个社区 · 模块度 {{ communityResult.modularity.toFixed(3) }}</span></div><button type="button" data-testid="graph-community-close" aria-label="关闭社区面板" @click="communityOpen = false">×</button></header>
-      <p>社区只用于当前视图探索，不写回文件或用户关系。</p>
+      <header><div><strong>社区发现建议</strong><span>Louvain · {{ communityResult.communities.length }} 个社区 · 模块度 {{ communityResult.modularity.toFixed(3) }}</span></div><WorkspaceHelp label="说明：社区只用于当前视图探索，不写回文件或" text="社区只用于当前视图探索，不写回文件或用户关系。" /><button type="button" data-testid="graph-community-close" aria-label="关闭社区面板" @click="communityOpen = false">×</button></header>
+
       <button v-if="activeCommunityId" class="community-return" type="button" data-testid="graph-community-return" @click="clearCommunityFilter">返回全部社区</button>
       <div class="graph-community-list">
         <button
@@ -135,7 +140,7 @@
           <header>
             <strong>第 {{ edgeIndex + 1 }} 条 · {{ relationTypeLabel(item.edge.relationType) }}</strong>
             <span>{{ item.source.title }} {{ item.edge.directed ? '→' : '↔' }} {{ item.target.title }}</span>
-            <small v-if="item.traversalReversed">路径沿关系反向发现，事实方向保持不变</small>
+            <WorkspaceHelp v-if="item.traversalReversed" label="说明：路径沿关系反向发现，事实方向保持不变" text="路径沿关系反向发现，事实方向保持不变" />
             <small v-else>{{ item.edge.directed ? '有向关系' : '无向关系' }}</small>
           </header>
           <div v-if="item.mentions.length" class="graph-path-mentions">
@@ -147,7 +152,7 @@
             </article>
           </div>
           <div v-else class="graph-path-structural-evidence" data-testid="graph-path-structural-evidence">
-            <span>结构关系没有 Markdown mention；来源对象定位是可审计依据。</span>
+            <WorkspaceHelp label="说明：结构关系没有 Markdown me" text="结构关系没有 Markdown mention；来源对象定位是可审计依据。" />
             <button type="button" data-testid="graph-path-structure-return" @click="openNode(item.source)">打开来源对象</button>
           </div>
         </li>
@@ -191,12 +196,12 @@
             <div v-if="item.mentions.length" class="graph-comparison-mentions">
               <div v-for="(mention, mentionIndex) in item.mentions" :key="`${mention.line}-${mentionIndex}-${mention.syntax}`" data-testid="graph-comparison-mention"><span><b>证据 {{ mentionIndex + 1 }}</b> · 第 {{ mention.line }} 行 · <code>{{ mention.syntax }}</code></span><button type="button" data-testid="graph-comparison-evidence-return" @click="openComparisonMention(item, mention)">回到来源</button></div>
             </div>
-            <div v-else class="graph-comparison-structural" data-testid="graph-comparison-structural-evidence"><span>结构关系没有 Markdown mention；来源对象定位是可审计依据。</span><button type="button" data-testid="graph-comparison-evidence-return" @click="openNode(item.source)">打开来源对象</button></div>
+            <div v-else class="graph-comparison-structural" data-testid="graph-comparison-structural-evidence"><WorkspaceHelp label="说明：结构关系没有 Markdown me" text="结构关系没有 Markdown mention；来源对象定位是可审计依据。" /><button type="button" data-testid="graph-comparison-evidence-return" @click="openNode(item.source)">打开来源对象</button></div>
           </article>
         </div>
       </template>
       <p v-else-if="comparisonHasRun" class="graph-comparison-invalid">请选择两个不同且当前可见的节点进行比较。</p>
-      <p v-else class="graph-comparison-empty">比较对象类型、标签、入出关系、共同与独有邻居，并保留两节点间全部关系证据。</p>
+      <WorkspaceHelp v-else label="说明：比较对象类型、标签、入出关系、共同与" text="比较对象类型、标签、入出关系、共同与独有邻居，并保留两节点间全部关系证据。" />
       <button class="graph-comparison-close" type="button" aria-label="关闭节点比较" @click="closeComparisonPanel">×</button>
     </section>
     <nav v-if="showCommunityOverview" class="graph-community-overview-nav" data-testid="graph-community-overview" :data-community-count="communityResult.communities.length" aria-label="远景社区入口">
@@ -423,7 +428,7 @@
             </select>
             <button :disabled="relationSaving || !relationDraftTarget" @click="addGraphRelation">{{ relationSaving ? '写入中…' : '添加关系' }}</button>
           </div>
-          <small>此方式会修改笔记内容；上方“添加关系”适用于所有文件，原文件内容保持不变。</small></details>
+          <WorkspaceHelp label="说明：此方式会修改笔记内容；上方“添加关系" text="此方式会修改笔记内容；上方“添加关系”适用于所有文件，原文件内容保持不变。" /></details>
         </div>
         <div v-if="selectedRelations.length" class="details-relations">
           <span class="neighbor-title">关系依据</span>
@@ -458,10 +463,11 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, h, nextTick, reactive, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
-import { useDialog, useMessage } from 'naive-ui'
+import { NPopover, useDialog, useMessage } from 'naive-ui'
 import { Circle, CircleHelp, Download, Expand, Link2, Maximize2, Minimize2, Network, Redo2, RotateCcw, ScanSearch, Search, SlidersHorizontal, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { managedFileLocation, openManagedFile, openManagedObject } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
@@ -3138,6 +3144,7 @@ watch(pathMotionEnabled, () => requestGraphFrame())
 let windowFocused = true
 let reducedMotionQuery: MediaQueryList | null = null
 let graphResizeObserver: ResizeObserver | null = null
+let graphViewportSize: { width: number; height: number } | null = null
 const pauseGraphLoop = () => {
   if (!graphPageActive.value) return
   invalidateLayoutWorker()
@@ -3192,7 +3199,21 @@ onMounted(() => {
   loadGraph(); requestGraphFrame(); document.addEventListener('visibilitychange', handleVisibility); document.addEventListener('fullscreenchange', syncGraphFullscreen); document.addEventListener('fullscreenerror', handleGraphFullscreenError); window.addEventListener('blur', handleWindowBlur); window.addEventListener('focus', handleWindowFocus); window.addEventListener('keydown', handleGraphKeydown)
   graphResizeObserver = new ResizeObserver(() => {
     if (canvasRef.value && containerRef.value) {
-      containerRef.value.style.setProperty('--graph-stage-top', `${canvasRef.value.offsetTop}px`)
+      const canvas = canvasRef.value
+      const next = { width: canvas.clientWidth, height: canvas.clientHeight }
+      // Preserve the world point at the centre when the window or panels resize.
+      // Resizing must not reset the user's zoom or saved node positions.
+      if (graphViewportSize && next.width > 0 && next.height > 0) {
+        const dx = (next.width - graphViewportSize.width) / 2
+        const dy = (next.height - graphViewportSize.height) / 2
+        viewX += dx; viewY += dy
+        if (cameraTransition) {
+          cameraTransition.from.x += dx; cameraTransition.from.y += dy
+          cameraTransition.target.x += dx; cameraTransition.target.y += dy
+        }
+      }
+      graphViewportSize = next
+      containerRef.value.style.setProperty('--graph-stage-top', `${canvas.offsetTop}px`)
     }
     if (showCommunityOverview.value) requestAnimationFrame(frameCommunityOverview)
     else if (activeShortestPath.value) requestAnimationFrame(fitGraph)
@@ -4099,16 +4120,15 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
 :global(.graph-canvas-disclosure p) { margin: 0; overflow-wrap: anywhere; }
 :global(.graph-canvas-disclosure ul) { display: grid; gap: 4px; margin: 0; padding-left: 20px; }
 :global(.graph-canvas-disclosure .graph-canvas-source-safety) { padding: 7px 9px; border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); font-weight: 650; }
+.graph-container > :deep(.graph-semantic-legend.collapsed) { position: absolute; z-index: 12; top: calc(var(--graph-stage-top, 140px) + 8px); left: var(--workspace-floating-gutter, 16px); margin: 0; width: auto; }
 </style>
 
 <!-- Naive UI teleports popover content to document.body, so these uniquely
      prefixed rules must be global rather than scoped to GraphView's root. -->
 <style>
 .graph-tools-menu {
-  position: absolute;
-  z-index: 60;
-  top: calc(var(--workspace-management-header-height, 56px) + 8px);
-  right: var(--workspace-floating-gutter, 16px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
   width: 248px;
   display: grid;
   gap: 9px;

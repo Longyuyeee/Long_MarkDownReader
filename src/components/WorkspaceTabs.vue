@@ -1,5 +1,5 @@
 <template>
-  <div class="workspace-tabs" :class="{ 'can-scroll-left': canScrollLeft, 'can-scroll-right': canScrollRight }">
+  <div v-if="!embedded" class="workspace-tabs" :class="{ 'can-scroll-left': canScrollLeft, 'can-scroll-right': canScrollRight }">
     <n-tooltip placement="bottom-start" :delay="tooltipDelay" :duration="tooltipDuration" :show-arrow="false" :theme-overrides="compactTooltipTheme" :content-style="compactTooltipStyle">
       <template #trigger>
         <button
@@ -59,11 +59,11 @@
       向右浏览标签
     </n-tooltip>
   </div>
-  <n-dropdown :show="menu.show" :x="menu.x" :y="menu.y" placement="bottom-start" trigger="manual" :options="menuOptions" @select="menuAction" @clickoutside="menu.show = false" />
+  <n-dropdown v-if="!embedded" :show="menu.show" :x="menu.x" :y="menu.y" placement="bottom-start" trigger="manual" :options="menuOptions" @select="menuAction" @clickoutside="menu.show = false" />
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, type CSSProperties } from 'vue'
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, type CSSProperties } from 'vue'
 import { NTooltip, NDropdown, useDialog, useMessage } from 'naive-ui'
 import { isNavigationFailure, useRouter } from 'vue-router'
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, FileText as FileTextIcon, X as XIcon, Pin as PinIcon } from 'lucide-vue-next'
@@ -71,9 +71,11 @@ import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fil
 import { openManagedFile } from '../services/fileNavigation'
 import { confirmAppAction } from '../services/appDialog'
 import { type TabInfo, useAppStore } from '../store/app'
+import { embeddedDocumentKey } from '../services/embeddedDocument'
 
 const router = useRouter()
 const store = useAppStore()
+const embedded = inject(embeddedDocumentKey, false)
 const dialog = useDialog()
 const message = useMessage()
 const menu = reactive({ show: false, x: 0, y: 0, id: '' })
@@ -222,6 +224,7 @@ const close = async (tab: TabInfo) => {
 watch([() => store.activeTabId, () => store.tabs.length], revealActiveTab)
 
 onMounted(() => {
+  if (embedded) return
   window.addEventListener('keydown', reopenShortcut)
   resizeObserver = new ResizeObserver(() => { updateScrollState(); void revealActiveTab() })
   if (scrollRef.value) resizeObserver.observe(scrollRef.value)

@@ -5,6 +5,7 @@ import vm from 'node:vm'
 import ts from 'typescript'
 import {parse,compileScript} from '@vue/compiler-sfc'
 import * as Vue from 'vue'
+import * as Lucide from 'lucide-vue-next'
 import {renderToString} from '@vue/server-renderer'
 const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const card = fs.readFileSync('src/components/SearchFileCard.vue', 'utf8')
@@ -40,7 +41,22 @@ test('actual file card stacks narrow actions and retains all lazy internal posit
 })
 const statusDescriptor=parse(fs.readFileSync('src/components/SearchPageStatus.vue','utf8')).descriptor
 const statusScript=compileScript(statusDescriptor,{id:'search-refresh-status',inlineTemplate:true})
-const statusModule={exports:{},require:name=>{assert.equal(name,'vue');return Vue}}
+function compileComponent(path, dependencies) {
+  const descriptor = parse(fs.readFileSync(path, 'utf8')).descriptor
+  const script = compileScript(descriptor, { id: path, inlineTemplate: true })
+  const context = { exports: {}, require: name => {
+    assert.ok(Object.hasOwn(dependencies, name), `Unexpected component dependency: ${name}`)
+    return dependencies[name]
+  }}
+  vm.runInNewContext(ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, context)
+  return context.exports
+}
+const helpModule = compileComponent('src/components/workspace/WorkspaceHelp.vue', { vue: Vue, 'lucide-vue-next': Lucide })
+const statusModule={exports:{},require:name=>{
+  if (name === 'vue') return Vue
+  assert.equal(name, './workspace/WorkspaceHelp.vue')
+  return helpModule
+}}
 vm.runInNewContext(ts.transpileModule(statusScript.content,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,statusModule)
 function statusProps(busy,retaining){return {sort:'relevance',page:{busy:Vue.ref(busy),retainingView:Vue.ref(retaining),pendingView:Vue.ref(null),status:Vue.ref({totalFiles:244,scanComplete:true,scanState:'ready'}),files:Vue.ref([{}]),error:Vue.ref(''),errorCode:Vue.ref(''),nextPage:Vue.ref(null),canContinue:Vue.ref(false)}}}
 test('actual status identifies old cards immediately, without presenting an old total as fresh results',async()=>{

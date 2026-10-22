@@ -1,10 +1,10 @@
 <template>
   <section class="external-office" data-testid="e3-wps-native-workspace">
-    <header>
+    <header class="workspace-document-header">
       <div class="identity">
         <FileType2 :size="20" aria-hidden="true" />
-        <div>
-          <strong>{{ fileName }}</strong>
+        <div class="workspace-document-copy">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
           <span>{{ report?.formatLabel || format?.label || 'WPS 原生文件' }} · 外部打开</span>
         </div>
       </div>
@@ -16,25 +16,24 @@
 
     <div v-if="loading && !report" class="state">
       <RefreshCw :size="20" class="spinning" />
-      <span>正在验证文件容器</span>
+      <span>正在识别文件</span>
     </div>
     <div v-else-if="loadError" class="state error" role="alert">
       <ShieldAlert :size="22" />
-      <div><strong>无法确认文件身份</strong><p>{{ loadError }}</p></div>
+      <div><strong>无法识别文件</strong><p>{{ loadError }}</p></div>
       <button @click="load">重试</button>
     </div>
     <main v-else-if="report">
       <div class="status">
         <ShieldCheck :size="22" />
         <div>
-          <strong>文件身份已确认</strong>
-          <span>识别过程只读，源文件摘要保持不变</span>
+          <strong>请选择打开方式<WorkspaceHelp text="已识别文件格式，读取过程不会修改原文件。" label="文件识别说明" /></strong>
         </div>
       </div>
       <p class="boundary">{{ format?.userCapability.description }}</p>
       <ExternalApplicationPanel :path="documentPath" />
       <details class="file-details">
-      <summary>文件详情与完整校验摘要</summary>
+      <summary>文件详情</summary>
       <dl>
         <div><dt>位置</dt><dd class="file-path">{{ documentPath }}</dd></div>
         <div><dt>格式</dt><dd>{{ report.formatLabel }} ({{ report.extension }})</dd></div>
@@ -49,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { invoke } from '@tauri-apps/api/core'
 import { FileType2, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'

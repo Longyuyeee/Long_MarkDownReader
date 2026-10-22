@@ -3,7 +3,7 @@
     :data-document-font="preferences.documentFont" :data-file-density="preferences.fileDensity"
     :data-file-row-style="preferences.fileRowStyle" :data-file-icon-style="preferences.fileIconStyle"
     :style="previewStyle" aria-label="文档与文件显示设置">
-    <p class="display-help">界面风格决定整体质感；下面的选项可以单独调整文档和文件列表。</p>
+    <WorkspaceHelp label="说明：界面风格决定整体质感；下面的选项可以" text="界面风格决定整体质感；下面的选项可以单独调整文档和文件列表。" />
     <div class="display-settings-grid">
       <div class="display-controls">
         <n-form-item label="文档显示">
@@ -17,7 +17,7 @@
         <n-form-item v-if="preferences.documentFont === 'custom'" label="已安装字体名称">
           <n-input :value="preferences.documentCustomFont" :input-props="{ 'aria-label': '已安装字体名称' }" placeholder="例如：Microsoft YaHei" :maxlength="100" @update:value="change('documentCustomFont', $event)" />
         </n-form-item>
-        <p class="display-help">字体需已安装在本机；缺失时自动回退，不会下载字体。</p>
+        <WorkspaceHelp label="说明：字体需已安装在本机；缺失时自动回退，" text="字体需已安装在本机；缺失时自动回退，不会下载字体。" />
         <div class="display-numbers">
           <n-form-item label="字号">
             <n-input-number :value="preferences.documentFontSize" :min="12" :max="28" :step="1" :input-props="{ role: 'spinbutton', 'aria-label': '正文字号', 'aria-valuemin': 12, 'aria-valuemax': 28, 'aria-valuenow': preferences.documentFontSize }" @update:value="change('documentFontSize', $event)" />
@@ -50,7 +50,7 @@
           </n-radio-group>
         </n-form-item>
         <n-button size="small" @click="$emit('update:modelValue', { ...DEFAULT_DISPLAY_PREFERENCES })">恢复显示默认值</n-button>
-        <p class="display-help">这些选项只改变显示。PDF 和 Office 保留原文档排版；文件右键中的单个文件显示样式继续保留。</p>
+        <WorkspaceHelp label="说明：这些选项只改变显示。PDF 和 Of" text="这些选项只改变显示。PDF 和 Office 保留原文档排版；文件右键中的单个文件显示样式继续保留。" />
       </div>
       <div class="display-live-preview" aria-label="显示效果实时预览">
         <span class="display-preview-label">实时预览</span>
@@ -73,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed } from 'vue'
 import { FileText, FileSpreadsheet, Folder } from 'lucide-vue-next'
 import { DEFAULT_DISPLAY_PREFERENCES, normalizeDisplayPreferences, documentTypographyStyle, type DisplayPreferences } from '../config/displayPreferences'

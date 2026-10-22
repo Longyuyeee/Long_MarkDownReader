@@ -1,11 +1,11 @@
 <template>
   <div class="pdf-view" @keydown="handleKeydown" tabindex="-1">
     <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
-    <WorkspaceToolbar class="pdf-toolbar">
+    <WorkspaceToolbar class="workspace-document-header pdf-toolbar">
       <WorkspaceFileIdentity class="toolbar-leading">
         <button class="icon-btn" :title="isExternal ? '返回资料库' : '返回知识库'" @click="router.push('/library')">←</button>
         <button class="icon-btn" :class="{ active: sidebarOpen }" :aria-pressed="sidebarOpen" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
-        <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">{{ pdfWorkspaceDraftLabel }}</i></strong><span v-if="pdfDocument"><template v-if="isExternal">外部文件 · 只读 · </template>{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template><template v-if="isExternal"> · 不会写回</template></span></div>
+        <div class="workspace-document-copy document-title"><strong class="workspace-file-name">{{ fileName }}</strong><i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">{{ pdfWorkspaceDraftLabel }}</i><span v-if="pdfDocument"><template v-if="isExternal">外部文件 · 只读 · </template>{{ pdfDocument.numPages }} 页</span></div>
       </WorkspaceFileIdentity>
       <nav v-if="pdfDocument && !isExternal" class="pdf-task-navigation" aria-label="PDF 工具分组">
         <button v-for="task in pdfTasks" :key="task.id" :aria-pressed="activePdfTask === task.id" @click="activePdfTask = task.id">{{ task.label }}</button>
@@ -79,7 +79,7 @@
         <div v-else-if="!isExternal && sidebarTab === 'annotations'" ref="annotationPanelRef" class="annotation-panel" @scroll.passive="rememberAnnotationScroll">
           <div v-if="annotationError" class="annotation-alert" role="alert">{{ annotationError }}</div>
           <div v-if="referenceNotice" class="annotation-alert reference-notice" role="status" aria-live="polite">{{ referenceNotice }}</div>
-          <div v-if="!annotationError && !annotations.length" class="sidebar-empty">选择正文后添加高亮，或启用“区域批注”框选页面。</div>
+          <div v-if="!annotationError && !annotations.length" class="annotation-empty"><span>暂无批注</span><WorkspaceHelp label="说明：选择正文后添加高亮，或启用“区域批注" text="选择正文后添加高亮，或启用“区域批注”框选页面。" /></div>
           <div v-if="annotations.length" class="reading-filters">
             <input v-model="annotationQuery" aria-label="查找批注摘录或评论" placeholder="查找摘录或评论" maxlength="200" />
             <input v-model="annotationPages" aria-label="筛选批注页码" placeholder="全部页码，如 1-5,8" maxlength="512" />
@@ -157,7 +157,7 @@
               <button :class="{ active: redactionColor === 'black' }" :aria-pressed="redactionColor === 'black'" @click="redactionColor = 'black'">黑色</button>
               <button class="white" :class="{ active: redactionColor === 'white' }" :aria-pressed="redactionColor === 'white'" @click="redactionColor = 'white'">白色</button>
             </div>
-            <small>在右侧任意页面拖出矩形。框选只作为草稿，验证通过前不会写入文件。</small>
+            <WorkspaceHelp label="说明：在右侧任意页面拖出矩形。框选只作为草" text="在右侧任意页面拖出矩形。框选只作为草稿，验证通过前不会写入文件。" />
           </section>
           <div v-if="pdfRedactions.length" class="redaction-list">
             <button v-for="rect in pdfRedactions" :key="rect.id" @click="goToPage(rect.page)">
@@ -261,7 +261,7 @@
                   <button :class="{ active: pdfInsertPosition === 'end' }" @click="setPdfInsertPosition('end')">末尾</button>
                 </div>
               </div>
-              <small>保留来源页填写顺序；只创建新文件，当前 PDF 和来源 PDF 均不修改。</small>
+              <WorkspaceHelp label="说明：保留来源页填写顺序；只创建新文件，当" text="保留来源页填写顺序；只创建新文件，当前 PDF 和来源 PDF 均不修改。" />
               <small v-if="pdfInsertError" class="pdf-merge-error">{{ pdfInsertError }}</small>
               <button
                 class="pdf-merge-verify"
@@ -314,7 +314,7 @@
                   <FolderOpenIcon :size="14"/>
                 </button>
               </div>
-              <small>当前 PDF 始终保留；按列表顺序合并，只在当前目录创建新文件。</small>
+              <WorkspaceHelp label="说明：当前 PDF 始终保留；按列表顺序合" text="当前 PDF 始终保留；按列表顺序合并，只在当前目录创建新文件。" />
               <div class="pdf-merge-list">
                 <article
                   v-for="(input, index) in pdfMergeInputs"
@@ -376,11 +376,11 @@
                   @keydown.enter.prevent="applyPageRangeExtraction"
                 >
               </label>
-              <small>保留填写顺序；只生成同目录新 PDF，源文件始终不变。</small>
+              <WorkspaceHelp label="说明：保留填写顺序；只生成同目录新 PDF" text="保留填写顺序；只生成同目录新 PDF，源文件始终不变。" />
               <button data-testid="b2a-page-range-apply" @click="applyPageRangeExtraction">应用提取范围</button>
               <small v-if="pageRangeError" class="page-range-error" role="alert">{{ pageRangeError }}</small>
             </div>
-            <p>旋转、排序和排除先在内存中预览；验证通过后只能在源文件同目录创建新副本，不会覆盖任何 PDF。</p>
+            <WorkspaceHelp label="说明：旋转、排序和排除先在内存中预览；验证" text="旋转、排序和排除先在内存中预览；验证通过后只能在源文件同目录创建新副本，不会覆盖任何 PDF。" />
             <div class="page-plan-history">
               <button :disabled="!pagePlanUndo.length" title="撤销 Ctrl+Z" @click="undoPagePlan">撤销</button>
               <button :disabled="!pagePlanRedo.length" title="重做 Ctrl+Y" @click="redoPagePlan">重做</button>
@@ -459,9 +459,10 @@
         </div>
         <div v-else-if="!isExternal" class="ocr-panel">
           <div class="ocr-summary">
-            <strong>离线 OCR</strong>
-            <span>Tesseract WASM · 简体中文 + 英文</span>
-            <p>页面只在本机内存中渲染，识别文本写入独立 sidecar，不修改原 PDF。</p>
+            <strong>离线 OCR<WorkspaceHelp label="说明：Tesseract WASM · 简" text="Tesseract WASM · 简体中文 + 英文
+页面只在本机内存中渲染，识别文本写入独立 sidecar，不修改原 PDF。" /></strong>
+
+
           </div>
           <div v-if="ocrSourceChanged" class="annotation-alert">PDF 内容已变化，旧 OCR 结果仅供查看；请重新识别。</div>
           <div v-if="ocrError" class="annotation-alert">{{ ocrError }}</div>
@@ -531,13 +532,14 @@
         <div v-if="readingSnapshot" class="reading-note-options"><label>组织方式 <select v-model="readingGrouping" :disabled="readingNoteSaving" aria-label="笔记组织方式"><option value="page">按页码</option><option value="color">按颜色</option></select></label><label><input v-model="readingComments" :disabled="readingNoteSaving" type="checkbox" /> 包含评论</label></div>
         <div v-if="readingSnapshot" class="reading-note-preview" aria-label="阅读笔记预览"><h3>{{ fileName }} · 阅读笔记</h3><article v-for="item in orderedReadingItems" :key="item.annotation.id"><h4>第 {{ item.annotation.page }} 页 · {{ annotationKindLabel(item.annotation.kind) }} · {{ annotationColorLabel(item.annotation.color) }}</h4><blockquote v-if="item.annotation.quote">{{ item.annotation.quote }}</blockquote><p v-if="readingComments && item.annotation.comment">评论：{{ item.annotation.comment }}</p><span class="reading-source-label">来源：{{ item.label }}</span></article></div>
         <p v-if="readingNoteError || readingGenerated.error" class="reading-note-error" role="alert">{{ readingNoteError || readingGenerated.error }}</p>
-        <template #footer><div class="reading-note-footer"><label>插入目标 <select v-model="readingTargetId" :disabled="referenceWorking || readingNoteSaving" aria-label="阅读笔记插入目标"><option value="">请选择已打开的 Markdown</option><option v-for="tab in readingTargets" :key="tab.id" :value="tab.id">{{ tab.title }} · {{ readingTargetDirectory(store.libraryPath, tab.path) }}{{ tab.isDirty ? '（未保存草稿）' : '' }}</option></select></label><p>插入仅追加到所选草稿，需手动保存。新笔记选择库内位置后保存；不覆盖已有文件或原 PDF。</p><div><button :disabled="readingNoteSaving" @click="closeReadingPreview">取消</button><button :disabled="referenceWorking || readingNoteSaving || !readingMarkdown" @click="copyReadingNote">复制笔记</button><button :disabled="referenceWorking || readingNoteSaving || !readingMarkdown || !readingTargetId" @click="insertReadingNote">插入草稿</button><button :disabled="referenceWorking || readingNoteSaving || !readingTargetId" @click="openExistingReadingUpdate">更新已有笔记…</button><button class="primary" :disabled="referenceWorking || readingNoteSaving || !readingMarkdown" @click="saveReadingNote">新建并保存笔记</button></div></div></template>
+        <template #footer><div class="reading-note-footer"><label>插入目标 <select v-model="readingTargetId" :disabled="referenceWorking || readingNoteSaving" aria-label="阅读笔记插入目标"><option value="">请选择已打开的 Markdown</option><option v-for="tab in readingTargets" :key="tab.id" :value="tab.id">{{ tab.title }} · {{ readingTargetDirectory(store.libraryPath, tab.path) }}{{ tab.isDirty ? '（未保存草稿）' : '' }}</option></select></label><WorkspaceHelp label="说明：插入仅追加到所选草稿，需手动保存。新" text="插入仅追加到所选草稿，需手动保存。新笔记选择库内位置后保存；不覆盖已有文件或原 PDF。" /><div><button :disabled="readingNoteSaving" @click="closeReadingPreview">取消</button><button :disabled="referenceWorking || readingNoteSaving || !readingMarkdown" @click="copyReadingNote">复制笔记</button><button :disabled="referenceWorking || readingNoteSaving || !readingMarkdown || !readingTargetId" @click="insertReadingNote">插入草稿</button><button :disabled="referenceWorking || readingNoteSaving || !readingTargetId" @click="openExistingReadingUpdate">更新已有笔记…</button><button class="primary" :disabled="referenceWorking || readingNoteSaving || !readingMarkdown" @click="saveReadingNote">新建并保存笔记</button></div></div></template>
       </NCard>
     </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useContextCommands } from '../services/contextCommands'
 import { beginWindowSave, useWindowDraft, useWindowDraftSnapshot } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
@@ -890,7 +892,6 @@ const pdfPath = computed(() => String(route.query.path || ''))
 const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => pdfPath.value.split(/[\\/]/).pop()?.replace(/\.pdf$/i, '') || 'PDF 文档')
 const thumbnailScale = computed(() => Math.min(0.25, 132 / basePage.value.width))
-const loadModeLabel = computed(() => loadMode.value === 'range' ? '渐进读取' : '快速读取')
 const positionId = () => `${isExternal.value ? 'external' : store.libraryPath}\n${pdfPath.value}`
 const activeMatchId = computed(() => activeMatchIdState.value || undefined)
 const activeMatchIndex = computed(() => searchMatches.value.findIndex(match => match.id === activeMatchIdState.value))

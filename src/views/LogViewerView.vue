@@ -2,13 +2,13 @@
   <div class="log-workspace" @keydown="handleKeydown">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" class="log-tabs" />
 
-    <header class="log-toolbar">
+    <header class="workspace-document-header log-toolbar">
       <div class="document-identity">
         <n-button quaternary circle size="small" title="返回知识库" @click="leaveViewer">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
-        <div class="document-title">
-          <strong :title="logPath">{{ fileName }}</strong>
+        <div class="workspace-document-copy document-title">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
           <span>{{ workspaceMode === 'viewer' ? `${isExternal ? '外部日志 · ' : ''}专业日志查看` : `${isExternal ? '外部' : ''}日志编辑 · ${dirty ? '未保存' : '已保存'}` }}</span>
         </div>
       </div>
@@ -73,8 +73,8 @@
 
     <section v-else class="edit-bar" aria-label="日志编辑工具">
       <div class="edit-notice">
-        <strong>编辑不会自动写入</strong>
-        <span>自动刷新和尾部跟随已暂停；只有点击保存才会覆盖源日志。</span>
+        <strong>编辑不会自动写入<WorkspaceHelp label="说明：自动刷新和尾部跟随已暂停；只有点击保" text="自动刷新和尾部跟随已暂停；只有点击保存才会覆盖源日志。" /></strong>
+
       </div>
       <div class="edit-actions">
         <n-button quaternary circle size="small" title="撤销" @click="runUndo">
@@ -141,6 +141,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useContextCommands } from '../services/contextCommands'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'

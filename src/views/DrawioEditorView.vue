@@ -1,18 +1,19 @@
 <template>
   <div class="drawio-workspace" :class="{ 'with-tabs': !store.isZen && store.tabs.length }">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
-    <header class="toolbar">
+    <header class="workspace-document-header toolbar">
       <div class="identity">
         <n-button quaternary circle size="small" title="返回知识库" @click="router.push({ name: 'LibraryMode' })">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <n-icon :component="WorkflowIcon" size="21" class="accent" />
-        <div>
-          <strong :title="documentPath">{{ fileName }}</strong>
+        <div class="workspace-document-copy">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
           <span>{{ statusLabel }}</span>
         </div>
       </div>
-      <div class="actions">
+      <div class="actions" data-command-strip data-horizontal-wheel="always">
+        <n-button quaternary size="small" aria-label="节点属性" :aria-expanded="inspectorVisible" @click="toggleInspector">节点属性</n-button>
         <n-button quaternary circle size="small" title="撤销" :disabled="loading || applying || !undoStack.length" @click="undo">
           <template #icon><n-icon :component="UndoIcon" /></template>
         </n-button>
@@ -29,7 +30,7 @@
       </div>
     </header>
 
-    <main class="stage">
+    <main class="stage" :class="{ 'inspector-hidden': !inspectorVisible }">
       <div v-if="loading" class="state"><n-spin size="small" /><strong>正在读取 Draw.io 文件</strong></div>
       <div v-else-if="loadError" class="state error">
         <n-icon :component="AlertIcon" size="26" />
@@ -115,7 +116,8 @@
           </div>
         </section>
 
-        <aside class="inspector-pane">
+        <aside v-show="inspectorVisible" class="inspector-pane">
+          <n-button quaternary size="tiny" aria-label="关闭节点属性" @click="toggleInspector">关闭属性</n-button>
           <div class="pane-heading"><strong>单元格</strong><span>{{ editableCells.length }}</span></div>
           <n-input v-model:value="cellQuery" clearable size="small" placeholder="筛选节点">
             <template #prefix><n-icon :component="SearchIcon" /></template>
@@ -156,6 +158,7 @@
 </template>
 
 <script setup lang="ts">
+import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { useWindowDraft } from '../services/windowDrafts'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -206,6 +209,7 @@ const signature = ref('')
 const dirty = ref(false)
 const analysis = ref<Analysis | null>(null)
 const activePageId = ref('')
+const { inspectorVisible, toggleInspector } = useResponsiveInspector()
 const selectedCellId = ref('')
 const cellQuery = ref('')
 const canvasScrollRef = ref<HTMLElement>()
@@ -505,12 +509,25 @@ onBeforeUnmount(() => {
 .pages-pane { overflow-y: auto; }
 @container (max-width: 980px) { .stage { grid-template-columns: 150px minmax(0, 1fr) 230px; }.diagram-canvas { width: 700px; } }
 @container (max-width: 760px) {
-  .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: 150px 480px minmax(400px, auto); overflow-y: auto; }
+  .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: 44px minmax(0,1fr); overflow: hidden; }
   .pages-pane { border-right: 0; border-bottom: var(--theme-border); overflow-y: auto; }
   .inspector-pane { border-left: 0; border-top: var(--theme-border); }
   .toolbar { flex-wrap: wrap; gap: 6px; }
   .identity { min-width: 0; max-width: 100%; width: 100%; }
   .actions { margin-left: auto; }
   .actions .n-button { min-width: 32px; }
+}
+.stage.inspector-hidden { grid-template-columns: 180px minmax(0,1fr); }
+.inspector-pane { overflow-y: auto; }
+.inspector-pane > * { flex-shrink: 0; }
+@container (max-width: 980px) { .stage.inspector-hidden { grid-template-columns: 150px minmax(0,1fr); } }
+@container (max-width: 760px) {
+  .stage, .stage.inspector-hidden { position: relative; grid-template-columns: minmax(0,1fr); }
+  .pages-pane { flex-direction: row; align-items: center; gap: 5px; padding: 4px 8px; overflow-x: auto; overflow-y: hidden; }
+  .pages-pane > * { flex: none; }
+  .pages-pane .pane-heading { display: none; }
+  .pages-pane button { width: auto; min-width: 100px; min-height: 30px; padding: 4px 8px; }
+  .pages-pane button small, .pages-pane .resource-summary { display: none; }
+  .inspector-pane { position: absolute; z-index: 10; top: 44px; right: 0; bottom: 0; width: min(280px,90%); box-sizing: border-box; border-left: var(--theme-border); box-shadow: var(--workspace-shadow); }
 }
 </style>

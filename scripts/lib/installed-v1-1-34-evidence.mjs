@@ -4,7 +4,7 @@ export const portableChapterChecks=['real-portable-and-local-chapter-clipboard',
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export const chapterOutputNames=['source.md','target.md','copy-source.md','copied.md','dependency.md','rename-before.md','rename-note.md','renamed.md','observations.json'].map(n=>'installed-v1134-'+n)
 export function validateInstalledPortableChapters(report,manifest){
- assert.ok(['1.1.34','1.1.35', '1.1.36', '1.1.37'].includes(manifest.appVersion));for(const key of ['appVersion','sourceCommit'])assert.equal(report[key],manifest[key]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.34','1.1.35', '1.1.36', '1.1.37', '1.2.0'].includes(manifest.appVersion));for(const key of ['appVersion','sourceCommit'])assert.equal(report[key],manifest[key]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-portable-chapters-trusted-ui-and-output-bytes')
  assert.ok(['wysiwyg','ir','sv'].includes(report.editorModeBefore));assert.equal(report.editorModeAfter,report.editorModeBefore)
  for(const[key,length]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(report[key],new RegExp('^[a-f0-9]{'+length+'}$'))

@@ -1,12 +1,12 @@
 <template>
   <section class="media-workspace" data-testid="media-workspace" tabindex="0" @keydown="handleKeydown">
     <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
-    <header class="media-toolbar">
+    <header class="workspace-document-header media-toolbar">
       <div class="media-identity">
         <button v-if="isExternal" class="back-button" title="返回资料库" @click="leaveViewer"><ArrowLeftIcon /></button>
         <component :is="isVideo ? VideoIcon : ImageIcon" :size="19" aria-hidden="true" />
-        <div>
-          <strong :title="fileName">{{ fileName }}</strong>
+        <div class="workspace-document-copy">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
           <span><template v-if="isExternal">外部文件 · </template>{{ report?.formatLabel || '媒体' }} · {{ report?.streaming ? '按需读取' : '只读预览' }} · {{ editableSource ? '可另存编辑副本' : '不会写回' }}</span>
         </div>
       </div>
@@ -172,7 +172,7 @@
           <label class="quality-control"><span>亮度 <strong>{{ signedAdjustment(brightness) }}</strong></span><input v-model.number="brightness" type="range" min="-100" max="100" step="1" /></label>
           <label class="quality-control"><span>对比度 <strong>{{ signedAdjustment(contrast) }}</strong></span><input v-model.number="contrast" type="range" min="-100" max="100" step="1" /></label>
           <label class="quality-control"><span>饱和度 <strong>{{ saturation }}%</strong></span><input v-model.number="saturation" type="range" min="0" max="200" step="1" /></label>
-          <p>画面实时预览；另存时使用确定性像素处理。</p>
+          <WorkspaceHelp label="说明：画面实时预览；另存时使用确定性像素处" text="画面实时预览；另存时使用确定性像素处理。" />
         </section>
         <section>
           <label for="image-output-format">副本格式</label>
@@ -184,7 +184,7 @@
             <input v-model.number="jpegQuality" type="range" min="1" max="100" step="1" />
           </label>
           <p>{{ effectiveOutputWidth }} × {{ effectiveOutputHeight }} px · 仅在资料库内另存新文件</p>
-          <p class="privacy-note">保存时自动校正 EXIF 方向，并移除 EXIF、GPS、注释等隐私元数据。</p>
+          <WorkspaceHelp label="说明：保存时自动校正 EXIF 方向，并移" text="保存时自动校正 EXIF 方向，并移除 EXIF、GPS、注释等隐私元数据。" />
         </section>
         <div v-if="editError" class="edit-message error" role="alert">{{ editError }}</div>
         <div v-if="savedCopy" class="edit-message success" role="status">
@@ -214,6 +214,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { convertFileSrc, invoke } from '@tauri-apps/api/core'
 import { save } from '@tauri-apps/plugin-dialog'
 import { openPath } from '@tauri-apps/plugin-opener'

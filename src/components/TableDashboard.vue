@@ -44,13 +44,14 @@
 
     <div v-else class="dashboard-empty">
       <strong>把已有图表组合成仪表盘</strong>
-      <p v-if="chartViews.length">从右上角选择图表。添加后可拖动排序，并在 4、6、8、12 栅格宽度之间切换。</p>
+      <WorkspaceHelp v-if="chartViews.length" label="说明：从右上角选择图表。添加后可拖动排序，" text="从右上角选择图表。添加后可拖动排序，并在 4、6、8、12 栅格宽度之间切换。" />
       <p v-else>请先新建至少一个图表视图，再回到仪表盘进行组合。</p>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, ref } from 'vue'
 import TableChartEditor from './TableChartEditor.vue'
 

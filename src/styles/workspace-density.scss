@@ -1,0 +1,38 @@
+// Only explicitly reviewed document headers opt into this layout. Document
+// typography, canvas coordinates and editor scroll containers are untouched.
+// Outrank legacy scoped header spacing without overriding document typography.
+body .workspace-document-header.workspace-document-header {
+  min-height: 40px;
+  height: auto;
+  padding-block: 4px;
+  gap: 8px;
+  row-gap: 6px;
+}
+body .workspace-document-header .workspace-document-copy {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  line-height: 1.35;
+}
+body .workspace-document-header .workspace-file-name {
+  min-width: 0;
+  max-width: min(32vw, 360px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+body .workspace-document-header .workspace-document-copy > span {
+  min-width: 0;
+  max-width: min(44vw, 420px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-compact);
+}
+body .workspace-document-header [data-command-strip] { min-width: 0; max-width: 100%; }
+@media (max-width: 700px) {
+  body .workspace-document-header.workspace-document-header { flex-wrap: wrap; }
+  body .workspace-document-header .workspace-file-name { max-width: 55vw; }
+}

@@ -18,7 +18,7 @@ withDefaults(defineProps<{
 .workspace-management-content {
   width: min(var(--workspace-page-max-width), calc(100% - var(--workspace-page-gutter) - var(--workspace-page-gutter)));
   margin: 0 auto;
-  padding: var(--space-6) 0 48px;
+  padding: var(--space-3) 0 var(--space-6);
   box-sizing: border-box;
 }
 

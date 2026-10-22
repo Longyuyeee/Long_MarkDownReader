@@ -98,7 +98,7 @@ if (app.includes("router.push({ name: 'TempMode', query: { path: cleanPath")) fa
 
 for (const token of [
   '外部 Markdown',
-  '仅在点击保存时写回源文件',
+  '点击保存后写回源文件',
   'const showOutline = ref(false)',
   'PanelLeftOpenIcon',
   'leaveExternalEditor',
@@ -143,9 +143,9 @@ for (const token of [
   '管理打开方式',
 ]) requireText(settings, token, `default-app settings are missing ${token}`)
 for (const token of [
-  '外部打开与默认应用',
+  '<h2>外部打开</h2>',
   "'external-ready'",
-  '在此页逐项管理',
+  '展开格式可管理打开方式',
   "'remove_default_app_candidate'",
   "invoke<DefaultAppCandidateStatus>('request_default_app_selection'",
   'externalPolicyDescription',

@@ -1,14 +1,14 @@
 <template>
   <n-modal :show="show" :mask-closable="!checking" @update:show="value => { if (!value && !checking) emit('close') }">
     <section class="archive-result" role="dialog" aria-modal="true" aria-labelledby="archive-result-title">
-      <h2 id="archive-result-title">{{ items.length && items.every(item => item.status === 'completed') ? '归档已完成' : '归档未全部完成' }}</h2>
+      <h2 id="archive-result-title">{{ items.length && items.every(item => item.status === 'completed') ? '归档已完成' : '归档未全部完成' }}<WorkspaceHelp label="说明：已完成的文件不会再次移动。核对只读取" text="已完成的文件不会再次移动。核对只读取状态，不自动覆盖或删除文件。" /></h2>
       <p>目标：{{ targetDirectory }}</p>
       <article v-for="item in items" :key="item.sourcePath">
         <div><strong>{{ basename(item.sourcePath) }} · {{ label(item.status) }}</strong><p>{{ item.message }}</p><small>{{ item.status === 'completed' ? item.targetPath : item.sourcePath }}</small></div>
         <button v-if="item.status === 'completed' && item.targetPath" @click="emit('open', item.targetPath)">打开文件</button>
       </article>
       <p v-if="!items.length" role="alert">未取得处理结果，不能确认归档是否完成。请核对文件状态。</p>
-      <p>已完成的文件不会再次移动。核对只读取状态，不自动覆盖或删除文件。</p>
+
       <p v-if="error" role="alert">{{ error }}</p>
       <details><summary>查看处理记录</summary><div v-for="item in items" :key="item.sourcePath"><p>{{ item.sourcePath }} → {{ item.targetPath || '未确定目标' }}</p><small>{{ item.message }}</small></div></details>
       <footer><button :disabled="checking" @click="emit('close')">关闭并保留记录</button><button v-if="items.some(item => item.status !== 'completed')" :disabled="checking" class="primary" @click="emit('reconcile')">{{ checking ? '正在核对…' : '核对未完成项' }}</button></footer>
@@ -16,6 +16,7 @@
   </n-modal>
 </template>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { NModal } from 'naive-ui'
 export interface ArchiveResultItem { sourcePath: string; targetPath?: string; status: 'completed' | 'not_executed' | 'needs_review'; message: string }
 defineProps<{ show: boolean; targetDirectory: string; items: ArchiveResultItem[]; checking?: boolean; error?: string }>()

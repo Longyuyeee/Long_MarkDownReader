@@ -1,23 +1,25 @@
 <template>
   <section class="work-session-bar" aria-label="工作现场">
-    <div class="session-heading"><strong>接着上次的工作</strong><small>自动记住文件、阅读位置和参考资料</small></div>
     <div class="session-controls">
-      <label for="work-session-choice">工作现场</label>
+      <label for="work-session-choice">工作现场</label><WorkspaceHelp label="工作现场说明" text="自动记住打开的文件、阅读位置和参考资料；命名保存只记录工作现场，不会保存或改写正文。右键现场可以重命名或删除记录。" />
       <select id="work-session-choice" v-model="selected" title="右键或 Shift+F10 重命名、删除命名记录" @contextmenu.prevent="showMenu" @keydown.shift.f10.prevent="showMenu"><option value="">上次工作 · 自动记住</option><option v-for="item in sessions" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <n-button size="small" type="primary" :loading="busy" :disabled="busy" @click="openSession">继续工作</n-button>
       <n-button size="small" :disabled="busy" @click="naming = true">命名保存…</n-button>
       <n-button size="small" :disabled="busy" :aria-expanded="menuOpen" aria-haspopup="menu" @click="showMenu">管理现场</n-button>
     </div>
-    <form v-if="naming" class="session-controls" @submit.prevent="saveSession">
+    <n-modal v-model:show="naming" preset="card" title="保存工作现场" class="work-session-name-modal" style="width: min(440px, calc(100vw - 32px))">
+    <form class="session-controls" @submit.prevent="saveSession">
       <label for="work-session-name">名称</label><input id="work-session-name" v-model="name" maxlength="60" autofocus />
       <n-button size="small" attr-type="submit">保存现场</n-button><n-button size="small" @click="naming = false">取消</n-button>
     </form>
-    <p role="status" :class="{ error: failed }">{{ notice || '自动记住打开的文件；命名保存不写入正文。' }}</p>
+    </n-modal>
+    <p v-if="notice" role="status" :class="{ error: failed }">{{ notice }}</p>
     <n-dropdown trigger="manual" :show="menuOpen" :x="menuX" :y="menuY" :options="menuOptions" @clickoutside="menuOpen = false" @select="manageSession" />
     <WorkSessionTransferDialog v-if="transfer" :mode="transfer.mode" :bundle="transfer.bundle" :root="transfer.root" :expected="transfer.expected" :restore="restoreFromBundle" @close="transfer = null" @imported="imported" @exported="notice = '工作现场已导出；原文和现有记录保持不变。'; failed = false" />
   </section>
 </template>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '../services/tauriRuntime'
@@ -194,11 +196,11 @@ function imported(entry: WorkSession, duplicate: boolean) {
 onBeforeUnmount(()=>{disposed=true;++contextGeneration})
 </script>
 <style scoped>
-.work-session-bar { padding: var(--workflow-panel-padding, 16px); margin-bottom: 18px; border: var(--theme-border); border-radius: var(--theme-radius); background: var(--style-card-gradient, var(--theme-surface)); box-shadow: var(--workflow-panel-shadow, none); color: var(--theme-text); }
+.work-session-bar { padding: 10px 12px; margin-bottom: 12px; border: var(--theme-border); border-radius: var(--theme-radius); background: var(--style-card-gradient, var(--theme-surface)); box-shadow: var(--workflow-panel-shadow, none); color: var(--theme-text); }
 .session-heading { display: grid; gap: 4px; margin-bottom: 12px; }
 .session-heading strong { font-size: var(--text-md); }
 .session-heading small { color: var(--theme-text-secondary); font-size: var(--text-sm); }
-.session-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.session-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 0; }
 .session-controls select, .session-controls input { font: inherit; color: var(--theme-text); background: var(--theme-surface); border: var(--theme-border); border-radius: var(--theme-radius-sm); padding: 6px 8px; min-width: 130px; max-width: 100%; flex: 1; }
 .session-controls select:focus-visible, .session-controls input:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
 .work-session-bar p { margin: 0; font-size: var(--text-compact); color: var(--theme-text-secondary); overflow-wrap: anywhere; }

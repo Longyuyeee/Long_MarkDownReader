@@ -9,7 +9,7 @@ const tauri = readJson('src-tauri/tauri.conf.json')
 const matrix = readJson('shared/release-capability-matrix.json')
 const community = readJson('shared/v1-community-release-policy.json')
 let installedRuntimeVerified = false
-if (['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37'].includes(community.appVersion) && community.gates?.githubReleasePublished === true) {
+if (['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0'].includes(community.appVersion) && community.gates?.githubReleasePublished === true) {
   assertInstalledReleaseRuntime(readJson(`docs/evidence/v${community.appVersion}-release/artifact-manifest.json`))
   installedRuntimeVerified = true
 }
@@ -82,11 +82,11 @@ const m5ManagedUpdater = readJson('shared/v117-managed-updater-lifecycle-policy.
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
-const audit = fs.readFileSync('docs/Development_Alignment_and_Closure_Plan_2026-08-02.md', 'utf8')
+const audit = fs.readFileSync(policy.activeSlice?.document || 'docs/Development_Alignment_and_Closure_Plan_2026-08-02.md', 'utf8')
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim()
 const [publicMajor, publicMinor, publicPatch] = policy.publicVersion.split('.').map(Number)
-const expectedTarget = policy.publicVersion === '1.0.26' && policy.developmentTargetVersion === '1.1.0'
-  ? '1.1.0' : `${publicMajor}.${publicMinor}.${publicPatch + 1}`
+const nextMinor = `${publicMajor}.${publicMinor + 1}.0`
+const expectedTarget = policy.developmentTargetVersion === nextMinor ? nextMinor : `${publicMajor}.${publicMinor}.${publicPatch + 1}`
 const tagCommit = git('rev-list', '-n', '1', policy.publicTag)
 const headCommit = git('rev-parse', 'HEAD')
 const commitsAhead = Number(git('rev-list', '--count', `${policy.publicTag}..HEAD`))
@@ -114,7 +114,7 @@ const checks = {
         && community.gates?.githubReleasePublished === true
         && community.release?.taggedCommit === policy.publicTagCommit),
   publicFactsFrozen: policy.publicTag === `v${policy.publicVersion}`
-    && ['1.0.16', '1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37'].includes(policy.publicVersion),
+    && ['1.0.16', '1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0'].includes(policy.publicVersion),
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
@@ -237,8 +237,8 @@ const checks = {
     && library.includes('appVersionIdentity.value.indicatorLabel')
     && !library.includes('PUBLIC_RELEASE_VERSION'),
   capabilityUiIdentifiesDevelopment: capabilities.includes('appVersionIdentity.value.version')
-    && capabilities.includes('appVersionIdentity.value.developmentLabel')
-    && capabilities.includes('appVersionIdentity.value.remoteLabel'),
+    && capabilities.includes('versionSubtitle')
+    && capabilities.includes('RELEASE_PUBLIC_STATUS_LABEL'),
   auditDocumentsIdentity: audit.includes(`当前开发目标：\`${policy.developmentTargetVersion}\``)
     && audit.includes(`当前运行时版本：\`${policy.runtimeBaseVersion}\``)
     && audit.includes(`当前公开版本：\`${policy.publicVersion}\``),

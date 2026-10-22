@@ -1,15 +1,16 @@
 <template>
   <div class="mindmap-page">
-    <header class="mindmap-header">
+    <header class="workspace-document-header mindmap-header">
       <div class="header-main">
         <button class="icon-button" title="返回知识库" @click="router.push('/library')"><n-icon :component="ArrowLeftIcon" /></button>
-        <div>
+        <div class="workspace-document-copy">
           <input v-if="document" v-model="document.title" class="title-input" maxlength="500" @focus="beginFieldEdit" @input="markFieldDirty" @change="endFieldEdit" />
-          <strong v-else>OPML 思维导图</strong>
+          <strong class="workspace-file-name" v-else>OPML 思维导图</strong>
           <span>{{ isExternal ? '外部 OPML · 仅点击保存写回' : fileName }} · {{ nodeCount }} 个主题 · {{ maxDepth }} 层</span>
         </div>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" data-command-strip data-horizontal-wheel="always">
+        <button aria-label="主题属性" :aria-expanded="inspectorVisible" @click="toggleInspector">主题属性</button>
         <button title="撤销" :disabled="!undoStack.length" @click="undo"><n-icon :component="UndoIcon" /></button>
         <button title="重做" :disabled="!redoStack.length" @click="redo"><n-icon :component="RedoIcon" /></button>
         <button v-if="!isExternal" data-testid="m4c2-project-to-canvas" title="投影到 Canvas" :disabled="saving || loading || projecting" aria-live="polite" @click="requestProjectToCanvas"><n-icon :component="NetworkIcon" />{{ projecting ? '正在创建…' : '投影到 Canvas' }}</button>
@@ -51,15 +52,12 @@
             <option value="focus">专注</option>
           </select>
         </label>
-        <button class="icon-tool" title="缩小" @click="changeZoom(0.85)"><n-icon :component="ZoomOutIcon" /></button>
-        <button class="zoom-readout" title="恢复 100%" @click="resetViewport">{{ Math.round(mapZoom * 100) }}%</button>
-        <button class="icon-tool" title="放大" @click="changeZoom(1.18)"><n-icon :component="ZoomInIcon" /></button>
-        <button class="icon-tool" title="适合窗口" @click="fitMap"><n-icon :component="MaximizeIcon" /></button>
+
       </template>
       <label class="search-box"><n-icon :component="SearchIcon" /><input v-model="query" placeholder="搜索主题或备注" /></label>
     </div>
 
-    <main class="mindmap-main" :class="{ 'with-preservation': preservationIssues.length > 0 && !loading && !error }">
+    <main class="mindmap-main" :class="{ 'with-preservation': preservationIssues.length > 0 && !loading && !error, 'inspector-hidden': !inspectorVisible }">
       <div v-if="preservationIssues.length && !loading && !error" class="preservation-banner" role="status"><details><summary>原件包含无法无损保留的扩展，当前草稿不会覆盖原件</summary><ul><li v-for="issue in preservationIssues" :key="issue">{{ issue }}</li></ul></details><button :disabled="saving" @click="saveCompatibleCopy">另存兼容副本</button></div>
       <div v-if="loading" class="state"><div class="loader"></div><strong>正在解析 OPML</strong></div>
       <div v-else-if="error" class="state error"><strong>无法打开思维导图</strong><p>{{ error }}</p><button @click="requestReload">重试</button></div>
@@ -142,11 +140,18 @@
             </article>
           </div>
           <div v-if="selectionBox" class="selection-box" :style="selectionBoxStyle"></div>
-          <div class="canvas-help"><n-icon :component="HandIcon" />拖动空白处平移 · Shift 拖动框选 · 滚轮缩放 · 方向键移动</div>
+          <div class="map-view-controls" @pointerdown.stop @wheel.stop>
+        <button class="icon-tool" title="缩小" @click="changeZoom(0.85)"><n-icon :component="ZoomOutIcon" /></button>
+        <button class="zoom-readout" title="恢复 100%" @click="resetViewport">{{ Math.round(mapZoom * 100) }}%</button>
+        <button class="icon-tool" title="放大" @click="changeZoom(1.18)"><n-icon :component="ZoomInIcon" /></button>
+        <button class="icon-tool" title="适合窗口" @click="fitMap"><n-icon :component="MaximizeIcon" /></button>
+            <WorkspaceHelp label="导图操作说明" text="拖动空白处平移，Shift 拖动框选，滚轮缩放，方向键移动。双击主题可修改标题；备注等内容在主题属性中编辑。" />
+          </div>
           <div v-if="!mapItems.length" class="empty-search">没有匹配的主题</div>
         </section>
 
-        <aside class="inspector">
+        <aside v-show="inspectorVisible" class="inspector">
+          <button class="inspector-close" aria-label="关闭主题属性" @click="toggleInspector">×</button>
           <template v-if="selectedNode">
             <div class="inspector-head"><strong>主题属性</strong><code>{{ selectedNode.id }}</code></div>
             <label>标题<input v-model="selectedNode.text" maxlength="2000" @focus="beginFieldEdit" @input="markFieldDirty" @change="endFieldEdit" /></label>
@@ -155,7 +160,7 @@
             <div class="inspector-actions">
               <button @click="addChild">添加子主题</button><button @click="addSibling">添加同级</button>
             </div>
-            <p class="drag-hint">画布中可自由拖动和多选主题；树形大纲中可把主题拖到另一个主题下改变层级。所有修改只在点击“保存”后写入源文件。</p>
+            <WorkspaceHelp label="说明：画布中可自由拖动和多选主题；树形大纲" text="画布中可自由拖动和多选主题；树形大纲中可把主题拖到另一个主题下改变层级。所有修改只在点击“保存”后写入源文件。" />
           </template>
           <div v-else class="inspector-empty"><n-icon :component="MousePointerIcon" /><span>选择一个主题进行编辑</span></div>
         </aside>
@@ -181,6 +186,8 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
+import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -188,7 +195,7 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vu
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useDialog, useMessage } from 'naive-ui'
-import { ArrowLeft as ArrowLeftIcon, ChevronRight as ChevronRightIcon, CornerDownRight as CornerDownRightIcon, Hand as HandIcon, ListPlus as ListPlusIcon, ListTree as ListTreeIcon, Maximize2 as MaximizeIcon, MousePointer2 as MousePointerIcon, Network as NetworkIcon, Plus as PlusIcon, Redo2 as RedoIcon, Save as SaveIcon, Search as SearchIcon, Trash2 as TrashIcon, Undo2 as UndoIcon, ZoomIn as ZoomInIcon, ZoomOut as ZoomOutIcon } from 'lucide-vue-next'
+import { ArrowLeft as ArrowLeftIcon, ChevronRight as ChevronRightIcon, CornerDownRight as CornerDownRightIcon, ListPlus as ListPlusIcon, ListTree as ListTreeIcon, Maximize2 as MaximizeIcon, MousePointer2 as MousePointerIcon, Network as NetworkIcon, Plus as PlusIcon, Redo2 as RedoIcon, Save as SaveIcon, Search as SearchIcon, Trash2 as TrashIcon, Undo2 as UndoIcon, ZoomIn as ZoomInIcon, ZoomOut as ZoomOutIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import { confirmAppAction, promptAppAction } from '../services/appDialog'
 import { movedPath, type FileMoveNotice } from '../services/fileMoveProtection'
@@ -200,6 +207,7 @@ interface OpmlFile { path: string; signature: string; document: OpmlDocument; pr
 interface LocatedNode { node: OpmlNode; parent: OpmlNode | null; siblings: OpmlNode[]; index: number; grandSiblings: OpmlNode[] | null; parentIndex: number }
 interface FlatItem { node: OpmlNode; parentId: string | null; depth: number; matches: boolean }
 
+const { inspectorVisible, toggleInspector } = useResponsiveInspector(1100)
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
@@ -245,7 +253,20 @@ watch(mapPanel, panel => {
   let width = panel.clientWidth, height = panel.clientHeight
   mapResizeObserver = new ResizeObserver(() => {
     const nextWidth = panel.clientWidth, nextHeight = panel.clientHeight
-    if (width && height && !loading.value) mapPan.value = {x:mapPan.value.x+(nextWidth-width)/2,y:mapPan.value.y+(nextHeight-height)/2}
+    if (width && height && nextWidth && nextHeight && !loading.value) {
+      const intersects = (item: { x: number; y: number }, pan: { x: number; y: number }, w: number, h: number) =>
+        item.x * mapZoom.value + pan.x < w - 24 && (item.x + 210) * mapZoom.value + pan.x > 24
+        && item.y * mapZoom.value + pan.y < h - 24 && (item.y + 72) * mapZoom.value + pan.y > 24
+      const nextPan = { x: mapPan.value.x + (nextWidth - width) / 2, y: mapPan.value.y + (nextHeight - height) / 2 }
+      if (!mapItems.value.some(item => intersects(item, nextPan, nextWidth, nextHeight))) {
+        const anchor = mapItems.value.find(item => item.node.id === selectedId.value) || mapItems.value[0]
+        if (anchor) {
+          nextPan.x = nextWidth / 2 - (anchor.x + 105) * mapZoom.value
+          nextPan.y = nextHeight / 2 - (anchor.y + 41) * mapZoom.value
+        }
+      }
+      mapPan.value = nextPan
+    }
     width = nextWidth; height = nextHeight
   })
   mapResizeObserver.observe(panel)
@@ -821,16 +842,16 @@ onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query
 .mindmap-page{height:100%;container-type:inline-size;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden;color:var(--theme-text);background:var(--theme-bg)}
 .mindmap-header{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:9px 16px;border-bottom:var(--theme-border);background:var(--theme-surface)}.header-main,.header-actions,.mindmap-toolbar,.view-switch,.inspector-actions{display:flex;align-items:center;gap:8px}.header-main>div{display:flex;min-width:0;flex-direction:column}.header-main span{color:var(--theme-text-secondary);font-size:11px}.title-input{width:min(420px,40vw);border:0;outline:0;color:var(--theme-text);background:transparent;font-size:17px;font-weight:750}.icon-button{width:36px}.header-actions button,.mindmap-toolbar button,.icon-button,.state button,.inspector button{height:34px;padding:0 11px;border:var(--theme-border);border-radius:8px;color:var(--theme-text);background:var(--theme-card);cursor:pointer}.header-actions button{display:flex;align-items:center;gap:5px}.header-actions .primary{color:#fff;border-color:var(--theme-primary);background:var(--theme-primary)}button:disabled{opacity:.4;cursor:default}
 .mindmap-toolbar{min-height:48px;gap:6px;padding:7px 10px;overflow-x:auto;border-bottom:var(--theme-border);background:var(--theme-surface)}.mindmap-toolbar>*{flex:none}.mindmap-toolbar button{padding-inline:9px;white-space:nowrap}.mindmap-toolbar button.active{color:#fff;border-color:var(--theme-primary);background:var(--theme-primary)}.mindmap-toolbar button.danger{color:#d64545}.mindmap-toolbar .icon-tool{width:32px;padding:0;display:grid;place-items:center}.mindmap-toolbar .zoom-readout{min-width:50px;padding-inline:4px;font-variant-numeric:tabular-nums}.divider{height:24px;border-left:var(--theme-border)}.tool-select{height:34px;display:flex;align-items:center;gap:4px;padding-left:7px;border:var(--theme-border);border-radius:8px;color:var(--theme-text-secondary);background:var(--theme-card);font-size:var(--text-compact);white-space:nowrap}.tool-select select{width:67px;height:32px;padding:0 18px 0 2px;border:0;outline:0;color:var(--theme-text);background:transparent}.search-box{min-width:168px;margin-left:auto;display:flex;align-items:center;gap:6px;padding:0 8px;border:var(--theme-border);border-radius:8px;background:var(--theme-card)}.search-box input{width:132px;height:30px;border:0;outline:0;color:var(--theme-text);background:transparent}
-.mindmap-main{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 290px;overflow:hidden}.outline-panel,.map-panel{position:relative;overflow:auto;background:color-mix(in srgb,var(--theme-bg) 96%,var(--theme-primary))}.outline-panel{padding:12px}.outline-head,.outline-row{display:grid;grid-template-columns:minmax(0,1fr) 50px;align-items:center}.outline-head{height:30px;padding:0 14px;color:var(--theme-text-secondary);font-size:11px}.outline-row{position:relative;min-width:560px;height:42px;margin:2px 0;padding:0 10px 0 calc(12px + var(--depth)*26px);border:1px solid transparent;border-radius:8px;background:var(--theme-surface)}.outline-row.selected{border-color:var(--theme-primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--theme-primary) 14%,transparent)}.outline-row.match{background:color-mix(in srgb,var(--theme-surface) 82%,#ffe16b)}.outline-row.dragging,.map-node.dragging{opacity:.4}.outline-row input{min-width:0;height:32px;padding-left:28px;border:0;outline:0;color:var(--theme-text);background:transparent}.outline-row small{text-align:center;color:var(--theme-text-secondary)}.collapse{position:absolute;left:calc(10px + var(--depth)*26px);width:24px;height:24px;border:0;background:transparent;color:var(--theme-text-secondary);transform:rotate(90deg);transition:transform .15s}.outline-row.collapsed .collapse{transform:rotate(0)}.outline-row .collapse.hidden{visibility:hidden}.outline-row .quick-add{position:absolute;right:52px;width:25px;height:25px;border:0;border-radius:6px;opacity:0}.outline-row:hover .quick-add{opacity:1}.tree-lines{position:absolute;left:calc(20px + var(--depth)*26px);top:-4px;bottom:-4px;border-left:1px solid color-mix(in srgb,var(--theme-primary) 30%,transparent);pointer-events:none}
-.map-panel{padding:0;overflow:hidden;outline:0;cursor:grab;touch-action:none;background-color:color-mix(in srgb,var(--theme-bg) 94%,var(--theme-primary));background-image:radial-gradient(circle,color-mix(in srgb,var(--theme-text-secondary) 24%,transparent) 1px,transparent 1px);background-size:22px 22px}.map-panel:active{cursor:grabbing}.map-canvas{position:relative;transform-origin:0 0;will-change:transform}.map-edges{position:absolute;inset:0;overflow:visible;pointer-events:none}.map-edges path{fill:none;stroke:color-mix(in srgb,var(--theme-primary) 62%,var(--theme-text-secondary));stroke-width:2.5}.map-node{position:absolute;width:210px;min-height:72px;box-sizing:border-box;padding:13px 15px;border:2px solid color-mix(in srgb,var(--theme-primary) 42%,var(--theme-border-color,#aaa));border-radius:8px;background:var(--theme-surface);box-shadow:0 8px 22px rgba(0,0,0,.1);cursor:grab;user-select:none;transition:border-color .12s,box-shadow .12s}.map-node:active{cursor:grabbing}.map-node.root{border-color:var(--theme-primary);background:color-mix(in srgb,var(--theme-surface) 84%,var(--theme-primary))}.map-node.selected{border-color:var(--theme-primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--theme-primary) 20%,transparent),0 11px 26px rgba(0,0,0,.14)}.map-node.match{outline:3px solid #f0bd29}.map-node strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.map-node p{display:-webkit-box;margin:5px 0;color:var(--theme-text-secondary);font-size:11px;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.map-node small{color:var(--theme-text-secondary);font-size:var(--text-compact)}.map-title-editor{width:100%;height:27px;padding:0 5px;box-sizing:border-box;border:1px solid var(--theme-primary);border-radius:5px;outline:0;color:var(--theme-text);background:var(--theme-card);font:700 13px var(--font-sans)}.map-collapse{position:absolute;right:-11px;top:23px;width:22px;height:22px;border:0;border-radius:50%;color:#fff;background:var(--theme-primary);cursor:pointer;font-size:var(--text-compact)}.selection-box{position:absolute;z-index:20;border:1px solid var(--theme-primary);background:color-mix(in srgb,var(--theme-primary) 14%,transparent);pointer-events:none}.canvas-help{position:absolute;left:14px;bottom:12px;display:flex;align-items:center;gap:6px;padding:7px 9px;border:var(--theme-border);border-radius:7px;color:var(--theme-text-secondary);background:color-mix(in srgb,var(--theme-surface) 90%,transparent);box-shadow:var(--workspace-shadow-sm);font-size:var(--text-compact);pointer-events:none}.map-theme-colorful .map-node:nth-of-type(5n+1){border-color:#3b82f6}.map-theme-colorful .map-node:nth-of-type(5n+2){border-color:#10b981}.map-theme-colorful .map-node:nth-of-type(5n+3){border-color:#f59e0b}.map-theme-colorful .map-node:nth-of-type(5n+4){border-color:#ec4899}.map-theme-colorful .map-node:nth-of-type(5n){border-color:#8b5cf6}.map-theme-focus{background-image:none;background-color:var(--theme-bg)}.map-theme-focus .map-node{box-shadow:none}.map-theme-professional .map-node{border-left-width:5px}
+.mindmap-main{position:relative;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 290px;overflow:hidden}.outline-panel,.map-panel{position:relative;overflow:auto;background:color-mix(in srgb,var(--theme-bg) 96%,var(--theme-primary))}.outline-panel{padding:12px}.outline-head,.outline-row{display:grid;grid-template-columns:minmax(0,1fr) 50px;align-items:center}.outline-head{height:30px;padding:0 14px;color:var(--theme-text-secondary);font-size:11px}.outline-row{position:relative;min-width:560px;height:42px;margin:2px 0;padding:0 10px 0 calc(12px + var(--depth)*26px);border:1px solid transparent;border-radius:8px;background:var(--theme-surface)}.outline-row.selected{border-color:var(--theme-primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--theme-primary) 14%,transparent)}.outline-row.match{background:color-mix(in srgb,var(--theme-surface) 82%,#ffe16b)}.outline-row.dragging,.map-node.dragging{opacity:.4}.outline-row input{min-width:0;height:32px;padding-left:28px;border:0;outline:0;color:var(--theme-text);background:transparent}.outline-row small{text-align:center;color:var(--theme-text-secondary)}.collapse{position:absolute;left:calc(10px + var(--depth)*26px);width:24px;height:24px;border:0;background:transparent;color:var(--theme-text-secondary);transform:rotate(90deg);transition:transform .15s}.outline-row.collapsed .collapse{transform:rotate(0)}.outline-row .collapse.hidden{visibility:hidden}.outline-row .quick-add{position:absolute;right:52px;width:25px;height:25px;border:0;border-radius:6px;opacity:0}.outline-row:hover .quick-add{opacity:1}.tree-lines{position:absolute;left:calc(20px + var(--depth)*26px);top:-4px;bottom:-4px;border-left:1px solid color-mix(in srgb,var(--theme-primary) 30%,transparent);pointer-events:none}
+.map-panel{min-width:0;padding:0;overflow:hidden;outline:0;cursor:grab;touch-action:none;background-color:color-mix(in srgb,var(--theme-bg) 94%,var(--theme-primary));background-image:radial-gradient(circle,color-mix(in srgb,var(--theme-text-secondary) 24%,transparent) 1px,transparent 1px);background-size:22px 22px}.map-panel:active{cursor:grabbing}.map-canvas{position:relative;transform-origin:0 0;will-change:transform}.map-edges{position:absolute;inset:0;overflow:visible;pointer-events:none}.map-edges path{fill:none;stroke:color-mix(in srgb,var(--theme-primary) 62%,var(--theme-text-secondary));stroke-width:2.5}.map-node{position:absolute;width:210px;min-height:72px;box-sizing:border-box;padding:13px 15px;border:2px solid color-mix(in srgb,var(--theme-primary) 42%,var(--theme-border-color,#aaa));border-radius:8px;background:var(--theme-surface);box-shadow:0 8px 22px rgba(0,0,0,.1);cursor:grab;user-select:none;transition:border-color .12s,box-shadow .12s}.map-node:active{cursor:grabbing}.map-node.root{border-color:var(--theme-primary);background:color-mix(in srgb,var(--theme-surface) 84%,var(--theme-primary))}.map-node.selected{border-color:var(--theme-primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--theme-primary) 20%,transparent),0 11px 26px rgba(0,0,0,.14)}.map-node.match{outline:3px solid #f0bd29}.map-node strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.map-node p{display:-webkit-box;margin:5px 0;color:var(--theme-text-secondary);font-size:11px;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.map-node small{color:var(--theme-text-secondary);font-size:var(--text-compact)}.map-title-editor{width:100%;height:27px;padding:0 5px;box-sizing:border-box;border:1px solid var(--theme-primary);border-radius:5px;outline:0;color:var(--theme-text);background:var(--theme-card);font:700 13px var(--font-sans)}.map-collapse{position:absolute;right:-11px;top:23px;width:22px;height:22px;border:0;border-radius:50%;color:#fff;background:var(--theme-primary);cursor:pointer;font-size:var(--text-compact)}.selection-box{position:absolute;z-index:20;border:1px solid var(--theme-primary);background:color-mix(in srgb,var(--theme-primary) 14%,transparent);pointer-events:none}.canvas-help{position:absolute;left:14px;bottom:12px;display:flex;align-items:center;gap:6px;padding:7px 9px;border:var(--theme-border);border-radius:7px;color:var(--theme-text-secondary);background:color-mix(in srgb,var(--theme-surface) 90%,transparent);box-shadow:var(--workspace-shadow-sm);font-size:var(--text-compact);pointer-events:none}.map-theme-colorful .map-node:nth-of-type(5n+1){border-color:#3b82f6}.map-theme-colorful .map-node:nth-of-type(5n+2){border-color:#10b981}.map-theme-colorful .map-node:nth-of-type(5n+3){border-color:#f59e0b}.map-theme-colorful .map-node:nth-of-type(5n+4){border-color:#ec4899}.map-theme-colorful .map-node:nth-of-type(5n){border-color:#8b5cf6}.map-theme-focus{background-image:none;background-color:var(--theme-bg)}.map-theme-focus .map-node{box-shadow:none}.map-theme-professional .map-node{border-left-width:5px}
 .inspector{min-width:0;padding:16px;border-left:var(--theme-border);overflow:auto;background:var(--theme-surface)}.inspector-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.inspector code{max-width:130px;overflow:hidden;color:var(--theme-text-secondary);font-size: var(--text-compact);text-overflow:ellipsis}.inspector label{display:flex;flex-direction:column;gap:6px;margin:12px 0;color:var(--theme-text-secondary);font-size:11px}.inspector input,.inspector textarea{box-sizing:border-box;width:100%;padding:9px;border:var(--theme-border);border-radius:8px;outline:0;color:var(--theme-text);background:var(--theme-card);font:inherit;resize:vertical}.inspector label.check{flex-direction:row;align-items:center}.inspector .check input{width:auto}.inspector-actions button{flex:1}.drag-hint{margin-top:18px;padding:10px;border-radius:8px;color:var(--theme-text-secondary);background:color-mix(in srgb,var(--theme-card) 85%,var(--theme-primary));font-size: var(--text-compact);line-height:1.6}.inspector-empty,.state,.empty-search{height:100%;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--theme-text-secondary)}.inspector-empty{flex-direction:column}.state{grid-column:1/-1;flex-direction:column}.state.error strong{color:#d64545}.loader{width:28px;height:28px;border:3px solid color-mix(in srgb,var(--theme-primary) 20%,transparent);border-top-color:var(--theme-primary);border-radius:50%;animation:spin .8s linear infinite}.empty-search{min-height:300px}
 .statusbar{min-height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-top:var(--theme-border);color:var(--theme-text-secondary);background:var(--theme-surface);font-size: var(--text-compact)}@keyframes spin{to{transform:rotate(360deg)}}
 :global(.opml-canvas-projection-disclosure){max-width:580px;display:grid;gap:8px;line-height:1.55}.opml-canvas-projection-disclosure :global(p){margin:0;overflow-wrap:anywhere}.opml-canvas-projection-disclosure :global(ul){display:grid;gap:4px;margin:0;padding-left:20px}.opml-canvas-projection-disclosure :global(.opml-projection-source-safety){padding:7px 9px;border-radius:6px;color:var(--theme-primary);background:rgba(var(--theme-primary-rgb),.08);font-weight:650}
 @container(max-width:850px){
-  .mindmap-main.with-preservation{grid-template-rows:auto minmax(0,1fr) minmax(0,35%)}.preservation-banner{max-height:100px;flex-wrap:wrap}
+  .mindmap-main.with-preservation{grid-template-rows:auto minmax(0,1fr)}.preservation-banner{max-height:100px;flex-wrap:wrap}
 
-  .mindmap-main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,35%)}
-  .inspector{display:block;min-height:0;border-left:0;border-top:var(--theme-border);padding:10px}
+  .mindmap-main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+  .inspector{position:absolute;z-index:30;top:0;right:0;bottom:0;width:min(290px,85%);box-sizing:border-box;border-left:var(--theme-border);padding:10px;box-shadow:var(--workspace-shadow)}
   .mindmap-header{flex-wrap:wrap;gap:8px;padding:8px 10px}
   .header-main{min-width:0;width:100%}
   .header-main>div{flex:1}
@@ -844,4 +865,9 @@ onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query
   .statusbar>span{flex-shrink:0}
   .canvas-help{max-width:calc(100% - 48px);flex-wrap:wrap}
 }
+.mindmap-page { grid-template-columns: minmax(0,1fr); }
+.mindmap-main.inspector-hidden { grid-template-columns: minmax(0,1fr); }
+.map-view-controls { position: absolute; top: 10px; right: 10px; z-index: 25; display: flex; align-items: center; gap: 4px; padding: 4px; border: var(--theme-border); border-radius: 8px; background: var(--theme-surface); box-shadow: var(--workspace-shadow-sm); cursor: default; }
+.map-view-controls button { min-width: 30px; height: 30px; padding: 0 6px; border: 0; border-radius: 5px; color: var(--theme-text); background: var(--theme-card); cursor: pointer; }
+.inspector-close { display: block; margin-left: auto; }
 </style>

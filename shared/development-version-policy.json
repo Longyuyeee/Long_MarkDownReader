@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.38",
-  "runtimeBaseVersion": "1.1.37",
+  "developmentTargetVersion": "1.2.0",
+  "runtimeBaseVersion": "1.2.0",
   "publicVersion": "1.1.37",
   "publicTag": "v1.1.37",
   "publicTagCommit": "45ad1d5b5a791885a655bbb8cea851e0a26f8b72",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-103-v1.1.37-published",
-  "binaryVersionTransition": "v1.1.37-public-release-published",
-  "displayLabel": "v1.1.37 已发布 · 下一目标 v1.1.38（移动、改名后的阅读状态接续）",
+  "currentStage": "M8-104-v1.2.0-ui-foundation-candidate",
+  "binaryVersionTransition": "v1.2.0-quality-gate-pending",
+  "displayLabel": "v1.2.0 界面与基础体验候选 · 当前公开 v1.1.37",
   "activeSlice": {
-    "id": "v1.1.37-pdf-annotation-resume",
-    "status": "published-with-installed-workflows-and-public-assets-verified",
-    "document": "docs/V1_1_37_Unsigned_Community_Release_Audit_2026-10-22.md"
+    "id": "v1.2.0-ui-foundation",
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_2_0_Unsigned_Community_Release_Audit_2026-10-22.md"
   }
 }

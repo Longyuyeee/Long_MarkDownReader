@@ -7,10 +7,11 @@
       </button>
       <div class="management-identity">
         <slot name="icon" />
-        <div>
+        <div class="management-copy">
           <strong>{{ title }}</strong>
           <small v-if="subtitle">{{ subtitle }}</small>
         </div>
+        <WorkspaceHelp v-if="help" :text="help" :label="`${title}使用说明`" />
       </div>
     </div>
     <div v-if="$slots.default" class="management-actions">
@@ -22,14 +23,17 @@
 <script setup lang="ts">
 import { ArrowLeft } from 'lucide-vue-next'
 import WorkspaceToolbar from './WorkspaceToolbar.vue'
+import WorkspaceHelp from './WorkspaceHelp.vue'
 
 withDefaults(defineProps<{
   title: string
   subtitle?: string
+  help?: string
   backLabel?: string
   showBack?: boolean
 }>(), {
   subtitle: '',
+  help: '',
   backLabel: '返回资料库',
   showBack: true,
 })
@@ -59,9 +63,9 @@ defineEmits<{ back: [] }>()
 }
 
 .management-leading { gap: var(--space-3); }
-.is-root-page { padding: 10px var(--workspace-page-gutter); gap: var(--space-3); }
+.is-root-page { padding: 6px var(--workspace-page-gutter); gap: var(--space-3); }
 .is-root-page .management-leading { flex-shrink: 0; }
-.is-root-page .management-identity strong { font-size: 18px; line-height: 1.4; }
+.is-root-page .management-identity strong { font-size: 16px; line-height: 1.4; }
 .management-actions { justify-content: flex-end; gap: var(--space-2); }
 
 .management-back {
@@ -84,7 +88,7 @@ defineEmits<{ back: [] }>()
 }
 
 .management-identity { gap: 9px; }
-.management-identity > div { min-width: 0; display: grid; gap: 2px; }
+.management-identity > div { min-width: 0; display: flex; align-items: baseline; gap: 10px; }
 .management-identity strong,
 .management-identity small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .management-identity strong { font-size: var(--text-md); }

@@ -1,10 +1,11 @@
 <template>
-  <details :class="['graph-filter-control', { compact }]">
-    <summary>
+  <div :class="['graph-filter-control', { compact }]">
+    <NPopover v-model:show="open" trigger="click" :placement="compact ? 'bottom-end' : 'bottom-start'" :show-arrow="false" raw>
+    <template #trigger><button type="button" class="graph-filter-trigger" :aria-expanded="open">
       <span>筛选</span>
       <span v-if="activeFilterCount()" class="filter-count">{{ activeFilterCount() }}</span>
-    </summary>
-    <div class="filter-panel" @click.stop>
+    </button></template>
+    <div class="filter-panel" data-app-popup @click.stop>
       <label v-if="showSearch" class="filter-search">
         <span>搜索</span>
         <input v-model="filters.query" placeholder="标题、路径或标签" />
@@ -51,11 +52,14 @@
       <label class="orphan-toggle"><input v-model="filters.showOrphans" type="checkbox" /> 显示孤立笔记</label>
       <button class="reset-filter" :disabled="!activeFilterCount() && !filters.query" @click="resetFilters">清除全部筛选</button>
     </div>
-  </details>
+    </NPopover>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { NPopover } from 'naive-ui'
+const open = ref(false)
 import { graphFilterOptions, useGraphFilters } from '../composables/useGraphFilters'
 import type { GraphData } from '../types/graph'
 
@@ -86,11 +90,11 @@ const objectTypeLabel = (type: string) => ({
 
 <style scoped>
 .graph-filter-control { position: relative; color: var(--theme-text); font-size: var(--text-compact); }
-.graph-filter-control summary { display: flex; align-items: center; gap: 6px; min-height: var(--workspace-control-height); padding: 0 10px; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: var(--workspace-control-bg); cursor: pointer; list-style: none; font-weight: 700; }
-.graph-filter-control summary::-webkit-details-marker { display: none; }
-.graph-filter-control[open] summary { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb), 0.38); }
+.graph-filter-trigger { display: flex; align-items: center; gap: 6px; min-height: var(--workspace-control-height); padding: 0 10px; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: var(--workspace-control-bg); cursor: pointer; list-style: none; font-weight: 700; }
+.graph-filter-trigger::-webkit-details-marker { display: none; }
+.graph-filter-trigger[aria-expanded="true"] { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb), 0.38); }
 .filter-count { display: grid; place-items: center; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 999px; color: #fff; background: var(--theme-primary); font-size: var(--text-compact); }
-.filter-panel { position: absolute; top: calc(100% + 7px); left: 0; z-index: 40; display: flex; flex-direction: column; gap: 11px; width: 280px; max-height: min(560px, calc(100vh - 150px)); padding: 14px; overflow: auto; box-sizing: border-box; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: var(--workspace-surface-raised); box-shadow: var(--workspace-shadow); backdrop-filter: blur(22px); }
+.filter-panel { position: relative; display: flex; flex-direction: column; gap: 11px; width: min(280px, calc(100vw - 24px)); max-height: min(560px, calc(100vh - 100px)); padding: 14px; overflow: auto; box-sizing: border-box; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: var(--workspace-surface-raised); box-shadow: var(--workspace-shadow); backdrop-filter: blur(22px); }
 .compact .filter-panel { left: auto; right: 0; width: min(280px, calc(100vw - 56px)); max-height: 430px; }
 .filter-search { display: grid; gap: 5px; color: var(--theme-text-secondary); }
 .filter-search input, .filter-row select { min-height: 30px; padding: 0 9px; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb), 0.15); border-radius: 7px; color: var(--theme-text); background: var(--theme-bg); outline: none; font: inherit; }
