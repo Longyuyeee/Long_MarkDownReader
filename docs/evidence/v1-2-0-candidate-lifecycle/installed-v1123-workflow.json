@@ -1,0 +1,767 @@
+{
+  "appVersion": "1.2.0",
+  "sourceCommit": "cf48bcb071f359adc4c72fc86e85239bf801e15c",
+  "installerSha256": "095479dfd68f30c53f2e91b32712e94c90522940d487185341c046e863fbf22c",
+  "harnessSourceCommit": "3c4a504af542dd6da4021617e73e54eed934936a",
+  "executableSha256": "76a95c5bc7b7064cf579abdaa009778e1704be107e3a33dbd9b7f29bf8cc5bd4",
+  "status": "passed",
+  "evidenceLevel": "installed-attachments-native-picker-draft-and-output-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "attachment-folders-visible-with-private-metadata-hidden",
+      "status": "passed"
+    },
+    {
+      "id": "menu-inspects-live-draft-without-saving",
+      "status": "passed"
+    },
+    {
+      "id": "missing-file-search-and-local-status",
+      "status": "passed"
+    },
+    {
+      "id": "native-picker-cancellation-keeps-original",
+      "status": "passed"
+    },
+    {
+      "id": "replace-and-undo-preserve-current-draft",
+      "status": "passed"
+    },
+    {
+      "id": "repair-missing-reference-in-draft",
+      "status": "passed"
+    },
+    {
+      "id": "external-copy-keeps-shared-source-and-collision",
+      "status": "passed"
+    },
+    {
+      "id": "incoming-reference-opens-real-note",
+      "status": "passed"
+    },
+    {
+      "id": "attachment-folder-rename-and-history-restore",
+      "status": "passed"
+    },
+    {
+      "id": "exact-output-bytes-and-other-drafts-preserved",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1123-saved.md",
+      "sizeBytes": 127,
+      "sha256": "fc6ce0a7d503d48f2b88a439e8a785a9a06e32f0dc2b5d63fb2bbf98e58a34a7"
+    },
+    {
+      "fileName": "installed-v1123-shared.png",
+      "sizeBytes": 70,
+      "sha256": "2640059609118b695c139804676372eca75c30d30e5906775902d13e44f5356c"
+    },
+    {
+      "fileName": "installed-v1123-imported.png",
+      "sizeBytes": 462,
+      "sha256": "88da038f717679ff1e5f523e39dd37f4be222f1890d2dea8f8780fe5c86e9396"
+    }
+  ],
+  "sourceImageSha256": "2640059609118b695c139804676372eca75c30d30e5906775902d13e44f5356c",
+  "externalImageSha256": "88da038f717679ff1e5f523e39dd37f4be222f1890d2dea8f8780fe5c86e9396",
+  "queryReadOnly": true,
+  "draftPreserved": true,
+  "cancelPicker": {
+    "status": "cancelled-real-native-dialog",
+    "processId": 3512,
+    "dialogProcessId": 3512,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "选择替换文件（库外文件将保留原件并复制到附件目录）",
+    "desktopUserSession": "disposable-github-hosted",
+    "method": "Windows-Win32-owned-cancel-button",
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "cancelExact": true,
+  "internalPicker": {
+    "status": "selected-real-native-dialog",
+    "processId": 3512,
+    "dialogProcessId": 3512,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "选择替换文件（库外文件将保留原件并复制到附件目录）",
+    "fileNameAutomationId": "1148",
+    "selectedPath": "C:\\LongEditR5ILibrary\\000-v1123-attachments-4ce625d5-7517-4152-a2ca-cb2f83d70a76\\images\\new.png",
+    "inputCharacters": 95,
+    "method": "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession": "disposable-github-hosted",
+    "controlCandidates": [
+      {
+        "Handle": 1835772,
+        "ParentHandle": 918348,
+        "ControlId": 0,
+        "ClassName": "Static",
+        "Title": "Namespace Tree Control"
+      },
+      {
+        "Handle": 786958,
+        "ParentHandle": 721720,
+        "ControlId": 1090,
+        "ClassName": "Static",
+        "Title": "File &name:"
+      },
+      {
+        "Handle": 1114924,
+        "ParentHandle": 721720,
+        "ControlId": 1148,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 1835812,
+        "ParentHandle": 1114924,
+        "ControlId": 1148,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1049390,
+        "ParentHandle": 1835812,
+        "ControlId": 1148,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 1114940,
+        "ParentHandle": 721720,
+        "ControlId": 1089,
+        "ClassName": "Static",
+        "Title": "Files of &type:"
+      },
+      {
+        "Handle": 1114952,
+        "ParentHandle": 721720,
+        "ControlId": 1136,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 721706,
+        "ParentHandle": 721720,
+        "ControlId": 1092,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1835758,
+        "ParentHandle": 721720,
+        "ControlId": 1091,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1966840,
+        "ParentHandle": 721720,
+        "ControlId": 1093,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 2031918,
+        "ParentHandle": 721720,
+        "ControlId": 1095,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 852764,
+        "ParentHandle": 983906,
+        "ControlId": 41477,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 1442558,
+        "ParentHandle": 852764,
+        "ControlId": 41477,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 2097778,
+        "ParentHandle": 1442558,
+        "ControlId": 41477,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 2622176,
+        "ParentHandle": 1901224,
+        "ControlId": 0,
+        "ClassName": "UniversalSearchBand",
+        "Title": ""
+      },
+      {
+        "Handle": 1049382,
+        "ParentHandle": 2622176,
+        "ControlId": 0,
+        "ClassName": "Search Box",
+        "Title": ""
+      },
+      {
+        "Handle": 1835604,
+        "ParentHandle": 1049382,
+        "ControlId": 0,
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Title": ""
+      }
+    ],
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "undoExact": true,
+  "missingRepaired": true,
+  "externalPicker": {
+    "status": "selected-real-native-dialog",
+    "processId": 3512,
+    "dialogProcessId": 3512,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "选择替换文件（库外文件将保留原件并复制到附件目录）",
+    "fileNameAutomationId": "1148",
+    "selectedPath": "C:\\LongEditR5IExternal\\v1123-e6eda0e1-275b-46bd-bb6d-44b3b2851a42\\a.png",
+    "inputCharacters": 71,
+    "method": "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession": "disposable-github-hosted",
+    "controlCandidates": [
+      {
+        "Handle": 2097766,
+        "ParentHandle": 2556690,
+        "ControlId": 0,
+        "ClassName": "Static",
+        "Title": "Namespace Tree Control"
+      },
+      {
+        "Handle": 852792,
+        "ParentHandle": 1114932,
+        "ControlId": 1090,
+        "ClassName": "Static",
+        "Title": "File &name:"
+      },
+      {
+        "Handle": 1114970,
+        "ParentHandle": 1114932,
+        "ControlId": 1148,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 2490962,
+        "ParentHandle": 1114970,
+        "ControlId": 1148,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1245996,
+        "ParentHandle": 2490962,
+        "ControlId": 1148,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 1573666,
+        "ParentHandle": 1114932,
+        "ControlId": 1089,
+        "ClassName": "Static",
+        "Title": "Files of &type:"
+      },
+      {
+        "Handle": 1573664,
+        "ParentHandle": 1114932,
+        "ControlId": 1136,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1180498,
+        "ParentHandle": 1114932,
+        "ControlId": 1092,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 2163412,
+        "ParentHandle": 1114932,
+        "ControlId": 1091,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 2163326,
+        "ParentHandle": 1114932,
+        "ControlId": 1093,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1311510,
+        "ParentHandle": 1114932,
+        "ControlId": 1095,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1180462,
+        "ParentHandle": 1049430,
+        "ControlId": 41477,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 2556236,
+        "ParentHandle": 1180462,
+        "ControlId": 41477,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 918376,
+        "ParentHandle": 2556236,
+        "ControlId": 41477,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 2491018,
+        "ParentHandle": 1966700,
+        "ControlId": 0,
+        "ClassName": "UniversalSearchBand",
+        "Title": ""
+      },
+      {
+        "Handle": 3343074,
+        "ParentHandle": 2491018,
+        "ControlId": 0,
+        "ClassName": "Search Box",
+        "Title": ""
+      },
+      {
+        "Handle": 2032296,
+        "ParentHandle": 3343074,
+        "ControlId": 0,
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Title": ""
+      }
+    ],
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "sourcePreserved": true,
+  "collisionPreserved": true,
+  "referenceOpened": true,
+  "renameRestoreExact": true,
+  "otherDraftsPreserved": true,
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}

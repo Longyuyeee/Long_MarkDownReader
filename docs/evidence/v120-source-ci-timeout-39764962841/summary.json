@@ -1,0 +1,22 @@
+{
+  "status": "full-cloud-rerun-passed",
+  "runId": 39764962841,
+  "runAttempt": 1,
+  "sourceCommit": "cf48bcb071f359adc4c72fc86e85239bf801e15c",
+  "completedFunctionalTests": 1125,
+  "pendingTest": "commands::file_relations::tests::metadata_changes_mark_ready_index_stale_after_reopen",
+  "assertionFailureObserved": false,
+  "successfulIndependentFrozenBuild": 39764636030,
+  "isolatedRepeatsPassed": 30,
+  "sourceUserContentIncluded": false,
+  "functionalLogSha256": "e5db9620ef4734c558e97166277112558f86570a6ce19c2643989211ea80eb32",
+  "localSameNativeCodeFunctionalTestsPassed": 1126,
+  "localFunctionalFailures": 0,
+  "localFunctionalExistingIgnores": 5,
+  "localRuntimeVersionIsPreviousCompiledTestBinary": true,
+  "successfulRerunAttempt": 2,
+  "rerunFunctionalPassed": 1126,
+  "rerunFunctionalFailures": 0,
+  "rerunFunctionalLogSha256": "3992aaad6b945bf929b2011f53b7c0a0529a1de3f4bbddf30a9426e0c4498241",
+  "rootCauseReproduced": false
+}
