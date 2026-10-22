@@ -7,4 +7,8 @@
 
 Windows x64 未签名社区版，安装时可能出现“未知发布者”。请从官方 GitHub Release 下载并核对 SHA-256。应用内自动更新仍沿用已有确认流程，实际升级观察单独记录。
 
-发布验证进行中，当前正式版本仍为 v1.2.0。
+固定产品的构建、Rust 功能与性能回归、405 项安装版功能任务及安装升级检查通过。Release 提供 NSIS、MSI 与 `SHA256SUMS.txt`。1.2.0→1.2.1 应用内自动更新实际观察独立待完成。
+
+<!-- publication-check-pending -->
+
+[完整发布记录](V1_2_1_Unsigned_Community_Release_Audit_2026-10-22.md)。
