@@ -5,6 +5,7 @@ export const jsonNodeSource=String.raw`{"draft":"原稿","record":{"n":900719925
 export const jsonNodeDraft=jsonNodeSource.replace('原稿','我的草稿')
 export const jsonNodeField=jsonNodeDraft.replace(',"record_copy":',String.raw`,"record_reuse":{"n":9007199254740993123456789,"text":"\u4e2d\\"},"record_copy":`)
 export const jsonNodeCopied=jsonNodeField.replace('{"id":"甲","nested":[1,{"x":2}]}','{"id":"甲","nested":[1,{"x":2}]},{"id":"甲","nested":[1,{"x":2}]}')
+export const jsonNodeConflict=jsonNodeCopied.replace('{"id":"甲","nested":[1,{"x":2}]}','{"id":"甲","nested":[1,{"x":2}]},{"id":"甲","nested":[1,{"x":2}]}')
 export function validateInstalledJsonNodeCopy(r,m){
  assert.equal(m.appVersion,'1.2.8');for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-json-node-copy-trusted-input-and-file-bytes')
@@ -18,6 +19,6 @@ export function assertJsonNodeCopyOutputBytes(r,read){
  for(const o of r.outputs){const b=read(o.fileName);assert.equal(b.length,o.sizeBytes);assert.equal(crypto.createHash('sha256').update(b).digest('hex'),o.sha256)}
  const obs=JSON.parse(read(r.outputs[0].fileName).toString('utf8'));for(const id of jsonNodeChecks)assert.equal(obs[id],true,id)
  assert.equal(read('installed-v128-copy-saved.json').toString('utf8'),'\uFEFF'+jsonNodeCopied+'\r\n')
- assert.equal(read('installed-v128-copy-copy.json').toString('utf8'),jsonNodeDraft+'\n')
+ assert.equal(read('installed-v128-copy-copy.json').toString('utf8'),jsonNodeConflict+'\n')
  assert.equal(read('installed-v128-copy-external.json').toString('utf8'),'\uFEFF'+jsonNodeCopied.replace('我的草稿','外部保留')+'\r\n')
 }
