@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.2.3",
-  "status": "hosted-lifecycle-and-installed-workflows-passed-ready-to-publish",
+  "status": "published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed",
   "appVersion": "1.2.3",
   "sourceVersion": "1.2.3",
   "sourceCommit": "91e28bba983e3827d883d15d8ab3740fb6bfee87",
@@ -285,10 +285,18 @@
   "boundaries": {
     "communityUnsigned": true,
     "enterprisePromotionEligible": false,
-    "releaseAssetsPublished": false,
-    "managedUpdaterReleaseAssetsPresent": false,
+    "releaseAssetsPublished": true,
+    "managedUpdaterReleaseAssetsPresent": true,
     "legacyTauriUpdaterArtifactsPresent": false
   },
   "sourceUserContentIncluded": false,
-  "releasePublished": false
+  "releasePublished": true,
+  "releaseReceipt": "release-receipt.json",
+  "publication": {
+    "runId": 39825450012,
+    "publicDownloadVerification": {
+      "path": "docs/evidence/v1.2.3-release/public-download-verification.json",
+      "sha256": "68527c6cfcaaa6a3d88ff719e9f65c082aa8a1062cf502857001b3da6b67bdee"
+    }
+  }
 }

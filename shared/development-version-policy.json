@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.2.3",
+  "developmentTargetVersion": "1.2.4",
   "runtimeBaseVersion": "1.2.3",
-  "publicVersion": "1.2.2",
-  "publicTag": "v1.2.2",
-  "publicTagCommit": "3fbaa24e2e22361bc4137dacb786682ea65386dc",
+  "publicVersion": "1.2.3",
+  "publicTag": "v1.2.3",
+  "publicTagCommit": "91e28bba983e3827d883d15d8ab3740fb6bfee87",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-110-v1.2.3-annotation-batch-candidate",
-  "binaryVersionTransition": "v1.2.3-release-ready",
-  "displayLabel": "v1.2.3 PDF 批注批量整理候选 · 当前公开 v1.2.2",
+  "currentStage": "M8-111-v1.2.3-published",
+  "binaryVersionTransition": "v1.2.3-public-release-published",
+  "displayLabel": "v1.2.3 已发布 · 下一目标 v1.2.4",
   "activeSlice": {
     "id": "v1.2.3-pdf-annotation-batch",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-and-remote-assets-verified",
     "document": "docs/V1_2_3_Unsigned_Community_Release_Audit_2026-10-23.md"
   }
 }
