@@ -382,7 +382,7 @@ const nodeMenu = useSourceNodeMenu<YamlOutlineEntry>(session, { fresh: () => !an
   extra: entry => ['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [],
   action: (key,entry) => { if(key==='edit-value')openValueEdit(entry) } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
-const registerCurrentTab = () => session.bind()
+const registerCurrentTab = (snapshot?: TextDocumentSnapshot) => session.bind(snapshot)
 
 const clearAnalysisTimer = () => {
   if (analysisTimer) clearTimeout(analysisTimer)
@@ -426,8 +426,7 @@ const editorExtensions = (isReadOnly: boolean) => [
       sourceContent.value = update.state.doc.toString()
       lineCount.value = update.state.doc.lines
       if (!applyingDocument) {
-        dirty.value = true
-        syncCurrentTab(true)
+        session.refreshDirty()
         scheduleAnalysis()
       }
     }
@@ -470,7 +469,7 @@ const applySnapshot = async (snapshot: TextDocumentSnapshot) => {
   readOnlyReason.value = snapshot.readOnlyReason || ''
   dirty.value = false
   replaceDocument(snapshot.content, Boolean(snapshot.readOnlyReason))
-  registerCurrentTab()
+  registerCurrentTab(snapshot)
   await analyzeContent(editor?.state.doc.toString() || '')
 }
 

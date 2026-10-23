@@ -1121,7 +1121,7 @@ const nodeMenu = useSourceNodeMenu<JsonPathEntry>(session, { fresh: () => analyz
     else if(key==='copy-item')void copyNode(entry)
   } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
-const registerCurrentTab = () => session.bind()
+const registerCurrentTab = (snapshot?: TextDocumentSnapshot) => session.bind(snapshot)
 
 const clearAnalysisTimer = () => {
   if (analysisTimer) clearTimeout(analysisTimer)
@@ -1240,8 +1240,7 @@ const editorExtensions = (isReadOnly: boolean) => [
       lineCount.value = update.state.doc.lines
       selectedTreeStart.value = null
       if (!applyingDocument) {
-        dirty.value = true
-        syncCurrentTab(true)
+        session.refreshDirty()
         scheduleAnalysis()
       }
     }
@@ -1295,7 +1294,7 @@ const applySnapshot = async (loaded: TextDocumentSnapshot) => {
   readOnlyReason.value = loaded.readOnlyReason || ''
   dirty.value = false
   replaceDocument(loaded.content, Boolean(loaded.readOnlyReason))
-  registerCurrentTab()
+  registerCurrentTab(loaded)
   await analyzeContent(editor?.state.doc.toString() || '')
 }
 
