@@ -42,6 +42,30 @@ pub struct XmlOutlineEntry {
     pub text_edit_unavailable_reason: Option<String>,
     pub copy: Option<XmlElementCopy>,
     pub copy_unavailable_reason: Option<String>,
+    pub order: Option<XmlElementOrder>,
+    pub move_unavailable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct XmlElementRange {
+    pub start: usize,
+    pub end: usize,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct XmlElementOrder {
+    pub previous: Option<XmlElementRange>,
+    pub next: Option<XmlElementRange>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct XmlElementMove {
+    pub content: String,
+    pub start: usize,
+    pub end: usize,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -455,6 +479,12 @@ fn push_element(
             text: None,
             text_edit_unavailable_reason: Some("自闭合元素请在源码中展开后修改文字".into()),
             copy: None,
+            order: None,
+            move_unavailable_reason: Some(if depth == 0 {
+                "根元素没有同级元素，请在源码中调整".into()
+            } else {
+                "父元素结构无法完整确认，请在源码中调整顺序".into()
+            }),
             copy_unavailable_reason: Some(if depth == 0 {
                 "根元素不能在同一文档中复制，请在源码中编辑".into()
             } else {
@@ -518,6 +548,15 @@ fn finish_element_copy(
             .bytes()
             .all(|b| matches!(b, b' ' | b'\t' | b'\r' | b'\n'));
     for (position, &index) in parent.children.iter().enumerate() {
+        let range = |i: &usize| XmlElementRange {
+            start: outline[*i].start,
+            end: outline[*i].end,
+        };
+        let previous = position
+            .checked_sub(1)
+            .and_then(|i| parent.children.get(i))
+            .map(&range);
+        let next = parent.children.get(position + 1).map(range);
         let child = &mut outline[index];
         if unambiguous {
             child.copy = Some(XmlElementCopy {
@@ -525,11 +564,97 @@ fn finish_element_copy(
                 separator_end: separators[position].1,
             });
             child.copy_unavailable_reason = None;
+            child.order = Some(XmlElementOrder { previous, next });
+            child.move_unavailable_reason = None;
         } else {
             child.copy_unavailable_reason =
                 Some("同级内容含正文、注释或处理指令，请在源码中确认要复制的范围".into());
+            child.move_unavailable_reason =
+                Some("同级内容含正文、注释或处理指令，请在源码中确认要移动的范围".into());
         }
     }
+}
+
+pub fn move_xml_element_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    direction: &str,
+) -> Result<XmlElementMove, String> {
+    if !matches!(direction, "up" | "down") {
+        return Err("请选择上移或下移；当前草稿未变".into());
+    }
+    let analysis = analyze_xml_source(content);
+    if !analysis.valid || analysis.outline_truncated {
+        return Err("XML 结构尚未完整确认，请先在源码中检查；当前草稿未变".into());
+    }
+    let entry = analysis
+        .outline
+        .iter()
+        .find(|e| e.start == start && e.end == end)
+        .ok_or("元素位置已过期，请重新选择；当前草稿未变")?;
+    let order = entry.order.as_ref().ok_or_else(|| {
+        entry
+            .move_unavailable_reason
+            .clone()
+            .unwrap_or_else(|| "此元素请在源码中调整顺序；当前草稿未变".into())
+    })?;
+    let neighbor = if direction == "up" {
+        &order.previous
+    } else {
+        &order.next
+    };
+    let neighbor = neighbor.as_ref().ok_or(if direction == "up" {
+        "已经是第一个同级元素；当前草稿未变"
+    } else {
+        "已经是最后一个同级元素；当前草稿未变"
+    })?;
+    let selected = XmlElementRange { start, end };
+    let (left, right) = if direction == "up" {
+        (neighbor, &selected)
+    } else {
+        (&selected, neighbor)
+    };
+    let gap = &content[left.end..right.start];
+    let candidate = format!(
+        "{}{}{}{}{}",
+        &content[..left.start],
+        &content[right.start..right.end],
+        gap,
+        &content[left.start..left.end],
+        &content[right.end..]
+    );
+    let moved_start = if direction == "up" {
+        left.start
+    } else {
+        left.start + (right.end - right.start) + gap.len()
+    };
+    let moved_end = moved_start + (end - start);
+    let checked = analyze_xml_source(&candidate);
+    if !checked.valid
+        || checked.outline_truncated
+        || candidate.len() != content.len()
+        || checked.element_count != analysis.element_count
+        || checked.attribute_count != analysis.attribute_count
+        || checked.namespace_count != analysis.namespace_count
+        || checked.comment_count != analysis.comment_count
+        || checked.cdata_count != analysis.cdata_count
+        || checked.processing_instruction_count != analysis.processing_instruction_count
+        || !checked.outline.iter().any(|e| {
+            e.start == moved_start
+                && e.end == moved_end
+                && e.name == entry.name
+                && e.depth == entry.depth
+        })
+        || candidate.get(moved_start..moved_end) != content.get(start..end)
+    {
+        return Err("无法完整保留这些元素，请在源码中调整顺序；当前草稿未变".into());
+    }
+    Ok(XmlElementMove {
+        content: candidate,
+        start: moved_start,
+        end: moved_end,
+    })
 }
 
 pub fn copy_xml_element_source(content: &str, start: usize, end: usize) -> Result<String, String> {
@@ -902,6 +1027,135 @@ fn failed_analysis(diagnostic: XmlDiagnostic) -> XmlSourceAnalysis {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn move_at(source: &str, path: &str, direction: &str) -> Result<XmlElementMove, String> {
+        let a = analyze_xml_source(source);
+        let node = a.outline.iter().find(|n| n.path == path).unwrap();
+        move_xml_element_source(source, node.start, node.end, direction)
+    }
+
+    #[test]
+    fn element_order_preserves_exact_bom_crlf_namespace_and_internal_markup() {
+        let first = "<x:item id='first'/>";
+        let second = "<x:item id=\"900719925474099312345\">😀 &amp; 文字<!-- 内部 --><?keep value?><nested><![CDATA[< > &]]></nested></x:item>";
+        let source = format!("\u{feff}<?xml version='1.0'?>\r\n<!-- 原稿 -->\r\n<root xmlns:x='urn:x'>\r\n\t{first}\r\n\t{second}\r\n  <last/>\r\n</root>\r\n");
+        let moved = move_at(&source, "/root[1]/x:item[2]", "up").unwrap();
+        assert_eq!(
+            moved.content,
+            source.replace(
+                &format!("{first}\r\n\t{second}"),
+                &format!("{second}\r\n\t{first}")
+            )
+        );
+        assert_eq!(&moved.content[moved.start..moved.end], second);
+        assert_eq!(moved.content.len(), source.len());
+        let restored =
+            move_xml_element_source(&moved.content, moved.start, moved.end, "down").unwrap();
+        assert_eq!(restored.content, source);
+    }
+
+    #[test]
+    fn element_order_down_retains_slot_whitespace_and_self_closing_or_paired_empty_source() {
+        for (first, second) in [
+            ("<a/>", "<b>正文😀</b>"),
+            ("<a></a>", "<b/>"),
+            ("<a/>", "<b></b>"),
+        ] {
+            let source = format!("<r> {first}\r\n\t{second}\n</r>");
+            let moved = move_at(&source, "/r[1]/a[1]", "down").unwrap();
+            assert_eq!(moved.content, format!("<r> {second}\r\n\t{first}\n</r>"));
+            assert_eq!(&moved.content[moved.start..moved.end], first);
+            assert_eq!(
+                move_xml_element_source(&moved.content, moved.start, moved.end, "up")
+                    .unwrap()
+                    .content,
+                source
+            );
+        }
+        assert_eq!(
+            move_at("<r><a/><b/></r>", "/r[1]/a[1]", "down")
+                .unwrap()
+                .content,
+            "<r><b/><a/></r>"
+        );
+    }
+
+    #[test]
+    fn element_order_boundaries_and_root_remain_explicit_without_changing_source() {
+        let source = "<r><a/><b/></r>";
+        let a = analyze_xml_source(source);
+        assert!(a.outline[0].order.is_none());
+        assert!(a.outline[1].order.as_ref().unwrap().previous.is_none());
+        assert!(a.outline[1].order.as_ref().unwrap().next.is_some());
+        assert!(a.outline[2].order.as_ref().unwrap().next.is_none());
+        assert!(move_at(source, "/r[1]/a[1]", "up")
+            .unwrap_err()
+            .contains("第一个"));
+        assert!(move_at(source, "/r[1]/b[1]", "down")
+            .unwrap_err()
+            .contains("最后一个"));
+        assert!(move_at(source, "/r[1]", "down")
+            .unwrap_err()
+            .contains("根元素"));
+        let single = analyze_xml_source("<r><a/></r>");
+        let order = single.outline[1].order.as_ref().unwrap();
+        assert!(order.previous.is_none() && order.next.is_none());
+    }
+
+    #[test]
+    fn element_order_ambiguous_outer_text_comments_and_instructions_stay_local() {
+        for source in [
+            "<r>before<a/><b/>after</r>",
+            "<r><!-- owner? --><a/><b/></r>",
+            "<r><a/><?keep value?><b/></r>",
+            "<r><a/><b/><!-- tail --></r>",
+            "<r>&#32;<a/><b/></r>",
+        ] {
+            let a = analyze_xml_source(source);
+            assert!(a.valid);
+            assert!(a.outline.iter().skip(1).all(|e| e.order.is_none()));
+            assert!(move_at(source, "/r[1]/a[1]", "down")
+                .unwrap_err()
+                .contains("同级内容"));
+        }
+    }
+
+    #[test]
+    fn element_order_stale_invalid_direction_and_oversized_source_are_rejected() {
+        let source = "<r><a>😀</a><b/></r>";
+        for (start, end) in [(0, 0), (4, 8), (usize::MAX, usize::MAX), (10, 3)] {
+            assert!(move_xml_element_source(source, start, end, "up").is_err());
+        }
+        assert!(move_at(source, "/r[1]/a[1]", "left").is_err());
+        assert!(move_xml_element_source("<r><a></r>", 3, 6, "up").is_err());
+        assert!(
+            move_xml_element_source(&"a".repeat(MAX_XML_SOURCE_BYTES + 1), 0, 0, "down").is_err()
+        );
+    }
+
+    #[test]
+    fn element_order_repeated_same_named_siblings_refresh_paths_and_moved_selection() {
+        let source = "<r>\n  <item id='1'/>\n  <item id='2'><child>二 😀</child></item>\n  <item id='3'/>\n</r>";
+        let moved = move_at(source, "/r[1]/item[2]", "down").unwrap();
+        let analysis = analyze_xml_source(&moved.content);
+        let selected = analysis
+            .outline
+            .iter()
+            .find(|e| e.start == moved.start && e.end == moved.end)
+            .unwrap();
+        assert_eq!(selected.path, "/r[1]/item[3]");
+        assert!(analysis
+            .outline
+            .iter()
+            .any(|e| e.path == "/r[1]/item[3]/child[1]"));
+        let up = move_xml_element_source(&moved.content, moved.start, moved.end, "up").unwrap();
+        assert_eq!(up.content, source);
+        let first = move_xml_element_source(&up.content, up.start, up.end, "up").unwrap();
+        assert!(analyze_xml_source(&first.content)
+            .outline
+            .iter()
+            .any(|e| e.path == "/r[1]/item[1]" && e.start == first.start));
+    }
 
     fn copy_at(source: &str, path: &str) -> Result<String, String> {
         let analysis = analyze_xml_source(source);
