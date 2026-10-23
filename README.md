@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.2.12 已发布：XML 文字与 CDATA 编辑已完成；[1.2.11—1.2.12](docs/Foundation_Deepening_Roadmap_1_2_11_to_1_2_12_2026-10-23.md) 已交付 2/2。下一轮 [1.2.13—1.2.14](docs/Foundation_Deepening_Roadmap_1_2_13_to_1_2_14_2026-10-23.md) 规划同级元素复制与位置调整，尚未实施。
+v1.2.12 已发布；v1.2.13 正在完成 XML 元素复制，尚未发布。见[开发记录](docs/V1_2_13_Unsigned_Community_Release_Audit_2026-10-23.md)。
 
 ## 不只是打开文件，更是接续你的工作
 

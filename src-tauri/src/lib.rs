@@ -174,7 +174,7 @@ use commands::workspace::{
 };
 use commands::wps_native::inspect_wps_native_file;
 use commands::xml::{
-    analyze_xml_source, replace_xml_attribute_source, replace_xml_text_source, write_external_xml_source_document,
+    analyze_xml_source, copy_xml_element_source, replace_xml_attribute_source, replace_xml_text_source, write_external_xml_source_document,
     write_xml_source_document,
 };
 use commands::yaml::{
@@ -396,6 +396,7 @@ pub fn run() {
             analyze_xml_source,
             replace_xml_attribute_source,
             replace_xml_text_source,
+            copy_xml_element_source,
             write_xml_source_document,
             write_external_xml_source_document,
             analyze_svg_source,
