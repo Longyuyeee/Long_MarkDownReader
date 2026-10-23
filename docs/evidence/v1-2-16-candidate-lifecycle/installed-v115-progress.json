@@ -1,0 +1,262 @@
+{
+  "appVersion": "1.2.16",
+  "sourceCommit": "e7ca2d0598df0c0ff897241a0414d65cf77a5e45",
+  "harnessSourceCommit": "e7ca2d0598df0c0ff897241a0414d65cf77a5e45",
+  "installerSha256": "20aa087f387a1fe73a32ce97fd8f8d6ca413d4c3cc0391fa222f643703c36863",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "unauthorized-import-is-rejected-without-changing-library",
+      "status": "passed"
+    },
+    {
+      "id": "external-window-commands-return-without-blocking-native-ipc",
+      "status": "passed"
+    },
+    {
+      "id": "same-name-document-and-local-images-never-overwrite-existing-content",
+      "status": "passed"
+    },
+    {
+      "id": "batch-import-reports-partial-failure-without-publishing-missing-image-note",
+      "status": "passed"
+    },
+    {
+      "id": "retrying-only-failed-source-retains-completed-file-identities",
+      "status": "passed"
+    },
+    {
+      "id": "shared-native-search-matches-txt-json-and-configured-library-scope",
+      "status": "passed"
+    },
+    {
+      "id": "palette-scope-dropdown-is-clickable-and-shows-real-native-results",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-query-and-genuine-empty-state-are-distinct",
+      "status": "passed"
+    },
+    {
+      "id": "search-result-opens-in-main-editor-without-replacing-reference",
+      "status": "passed"
+    },
+    {
+      "id": "actual-typing-blocks-cross-library-open-until-explicit-save",
+      "status": "passed"
+    },
+    {
+      "id": "v115-workflows-have-no-global-error-overlay",
+      "status": "passed"
+    }
+  ],
+  "commandTrace": [
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-23T19:48:38.485Z",
+      "completedAt": "2026-10-23T19:48:38.493Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-23T19:48:38.493Z",
+      "completedAt": "2026-10-23T19:48:38.559Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-23T19:48:38.559Z",
+      "completedAt": "2026-10-23T19:48:38.621Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-23T19:48:38.621Z",
+      "completedAt": "2026-10-23T19:48:38.632Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-23T19:48:38.632Z",
+      "completedAt": "2026-10-23T19:48:38.716Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-23T19:48:38.716Z",
+      "completedAt": "2026-10-23T19:48:38.792Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-23T19:48:38.792Z",
+      "completedAt": "2026-10-23T19:48:38.796Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|set_focus",
+      "startedAt": "2026-10-23T19:48:38.797Z",
+      "completedAt": "2026-10-23T19:48:39.070Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:app|version",
+      "startedAt": "2026-10-23T19:48:39.070Z",
+      "completedAt": "2026-10-23T19:48:39.106Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-23T19:48:39.106Z",
+      "completedAt": "2026-10-23T19:48:39.188Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-23T19:48:39.204Z",
+      "completedAt": "2026-10-23T19:48:39.395Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-23T19:48:39.417Z",
+      "completedAt": "2026-10-23T19:48:39.478Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-23T19:48:39.478Z",
+      "completedAt": "2026-10-23T19:48:39.509Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-23T19:48:39.649Z",
+      "completedAt": "2026-10-23T19:48:39.884Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-23T19:48:39.884Z",
+      "completedAt": "2026-10-23T19:48:39.946Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-23T19:48:39.946Z",
+      "completedAt": "2026-10-23T19:48:39.964Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-23T19:48:39.964Z",
+      "completedAt": "2026-10-23T19:48:39.975Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge",
+      "startedAt": "2026-10-23T19:48:39.975Z",
+      "completedAt": "2026-10-23T19:48:39.985Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-23T19:48:42.233Z",
+      "completedAt": "2026-10-23T19:48:42.237Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-23T19:48:44.437Z",
+      "completedAt": "2026-10-23T19:48:44.444Z",
+      "status": "completed"
+    },
+    {
+      "command": "read_text_document",
+      "startedAt": "2026-10-23T19:48:44.974Z",
+      "completedAt": "2026-10-23T19:48:44.979Z",
+      "status": "completed"
+    },
+    {
+      "command": "scan_directory",
+      "startedAt": "2026-10-23T19:48:45.853Z",
+      "completedAt": "2026-10-23T19:48:45.857Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-23T19:48:45.860Z",
+      "completedAt": "2026-10-23T19:48:45.865Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-23T19:48:48.344Z"
+    }
+  ],
+  "indexPreparationBusyResponses": 0,
+  "emptyResultScope": {
+    "activeLibrary": "C:\\release-v115-other-library",
+    "expectedLibrary": "C:\\release-v115-other-library",
+    "selection": "当前资料库"
+  },
+  "markdownInputMode": "vditor-wysiwyg",
+  "afterExplicitSave": {
+    "state": "已保存",
+    "tabs": [
+      "整理-release-v114-A",
+      "v115-草稿",
+      "v115-预算资料"
+    ],
+    "dirtyModels": [],
+    "tempDirty": false
+  },
+  "afterDiskWrite": {
+    "state": "已保存",
+    "tabs": [
+      "整理-release-v114-A",
+      "v115-草稿",
+      "v115-预算资料"
+    ],
+    "dirtyModels": [],
+    "tempDirty": false
+  },
+  "switchedDirectory": [
+    {
+      "name": "v115-另库预算.txt",
+      "path": "\\\\?\\C:\\release-v115-other-library\\v115-另库预算.txt",
+      "is_dir": false
+    }
+  ],
+  "navigationBeforeTreeWait": {
+    "hash": "#/library?searchNeedle=%E9%A1%B9%E7%9B%AE&searchLocator=1792784925484&path=%5C%5C?%5CC:%5Crelease-v115-other-library%5Cv115-%E5%8F%A6%E5%BA%93%E9%A2%84%E7%AE%97.txt",
+    "visibility": "visible",
+    "focused": true,
+    "root": "C:\\release-v115-other-library",
+    "tabs": [
+      {
+        "id": "\\\\?\\C:\\release-v115-other-library\\v115-另库预算.txt",
+        "path": "\\\\?\\C:\\release-v115-other-library\\v115-另库预算.txt"
+      }
+    ],
+    "components": [
+      {
+        "name": "LibraryMode",
+        "uid": 33,
+        "unmounted": false
+      },
+      {
+        "name": "Tree",
+        "uid": 2257,
+        "dataKeys": [
+          "\\\\?\\C:\\release-v115-other-library\\v115-另库预算.txt"
+        ]
+      }
+    ],
+    "visibleTreePaths": [
+      "\\\\?\\C:\\release-v115-other-library\\v115-另库预算.txt"
+    ]
+  }
+}

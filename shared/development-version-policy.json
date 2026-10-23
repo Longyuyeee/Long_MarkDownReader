@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-136-v1.2.16-xml-attribute-management-candidate",
-  "binaryVersionTransition": "v1.2.16-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.16-release-ready",
   "displayLabel": "v1.2.16 XML 属性管理候选 · 当前公开 v1.2.15",
   "activeSlice": {
     "id": "v1.2.16-xml-attribute-management",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_16_Unsigned_Community_Release_Audit_2026-10-24.md"
   }
 }

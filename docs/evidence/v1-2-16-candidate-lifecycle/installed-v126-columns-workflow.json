@@ -1,0 +1,276 @@
+{
+  "appVersion": "1.2.16",
+  "sourceCommit": "e7ca2d0598df0c0ff897241a0414d65cf77a5e45",
+  "installerSha256": "20aa087f387a1fe73a32ce97fd8f8d6ca413d4c3cc0391fa222f643703c36863",
+  "harnessSourceCommit": "e7ca2d0598df0c0ff897241a0414d65cf77a5e45",
+  "executableSha256": "094594c046c030ad699cbd5fc19de8eeeb1e5eb8356ddfb479d6e5badaca5ee2",
+  "status": "passed",
+  "evidenceLevel": "installed-table-column-order-trusted-input-and-file-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "move-current-draft-whole-column-and-one-undo",
+      "status": "passed"
+    },
+    {
+      "id": "boundary-sort-filter-and-frozen-prefix-follow-field",
+      "status": "passed"
+    },
+    {
+      "id": "add-edit-move-and-row-history-stay-on-stable-fields",
+      "status": "passed"
+    },
+    {
+      "id": "saved-views-widths-rules-and-field-references-match",
+      "status": "passed"
+    },
+    {
+      "id": "real-locked-save-keeps-column-draft-retries-reopens",
+      "status": "passed"
+    },
+    {
+      "id": "csv-tsv-column-order-preserves-original-text-and-encoding",
+      "status": "passed"
+    },
+    {
+      "id": "column-rule-entry-and-source-switch-clear-old-menu",
+      "status": "passed"
+    },
+    {
+      "id": "external-conflict-keeps-file-and-reordered-draft",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v126-columns-observations.json",
+      "sizeBytes": 1169,
+      "sha256": "697394cca91480b2e48a75b3763587c408ea3924801e8e8881f81ce7fa096bcc"
+    },
+    {
+      "fileName": "installed-v126-columns-final-table.json",
+      "sizeBytes": 5061,
+      "sha256": "02436271317c5b638f55a260847eb9a0cf62d1a1ba7405edd6fb02c105a111c6"
+    },
+    {
+      "fileName": "installed-v126-columns-csv.csv",
+      "sizeBytes": 83,
+      "sha256": "2bd1d22c622fb98dcee8b254531ffe3a424e3a133b6692c0e117458f07d37a27"
+    },
+    {
+      "fileName": "installed-v126-columns-tsv.tsv",
+      "sizeBytes": 83,
+      "sha256": "2b4a28faa9c4ac5a25af0bfb841d4d7bf3dc23aa575dc2e69de38ea8ed17839e"
+    }
+  ],
+  "runtimeErrors": [],
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "lockedBefore": "9950825b5abbd961579da3869bae2e119f40a3fd0f7b9167531fc4b7f99c854a",
+  "lockedAfter": "9950825b5abbd961579da3869bae2e119f40a3fd0f7b9167531fc4b7f99c854a",
+  "externalBefore": "02436271317c5b638f55a260847eb9a0cf62d1a1ba7405edd6fb02c105a111c6",
+  "externalAfter": "02436271317c5b638f55a260847eb9a0cf62d1a1ba7405edd6fb02c105a111c6",
+  "errorOverlay": false
+}
