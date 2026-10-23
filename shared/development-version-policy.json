@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-122-v1.2.9-toml-value-edit-candidate",
-  "binaryVersionTransition": "v1.2.9-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.9-release-ready",
   "displayLabel": "v1.2.9 TOML 配置值编辑候选 · 当前公开 v1.2.8",
   "activeSlice": {
     "id": "v1.2.9-toml-value-edit",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_9_Unsigned_Community_Release_Audit_2026-10-23.md"
   }
 }
