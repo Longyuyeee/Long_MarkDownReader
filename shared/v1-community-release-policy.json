@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.2.11",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-23",
-  "currentStatus": "v1.2.11-community-release-quality-gate-pending",
+  "currentStatus": "v1.2.11-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,22 +24,22 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": false,
-    "rustLockedCheckPassed": false,
-    "productionDependencyAuditPassed": false,
-    "msiBuilt": false,
-    "nsisBuilt": false,
-    "artifactHashesVerified": false,
-    "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": false,
-    "qualityGatePassed": false,
+    "frontendBuildPassed": true,
+    "rustLockedCheckPassed": true,
+    "productionDependencyAuditPassed": true,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "artifactHashesVerified": true,
+    "localRuntimeSmokePassed": true,
+    "installedLifecyclePassed": true,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
     "previousPublicVersion": "1.2.10",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": false,
+    "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
     "managedUpdaterUpgradePath": "1.2.10-to-1.2.11-pending",
@@ -50,7 +50,30 @@
     "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.11",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": null,
+  "candidate": {
+    "artifactSourceCommit": "6a965dc776c69eecf3904b1fe3d056b19f70d84a",
+    "qualityGateCommand": "npm run ci:patch-release",
+    "artifactBuildRunId": 39909095526,
+    "hostedInstalledLifecycleRunId": 39913621961,
+    "artifacts": [
+      {
+        "target": "msi",
+        "fileName": "LongEdit_1.2.11_x64_zh-CN.msi",
+        "sizeBytes": 77983744,
+        "sha256": "1eca545b85a9a61c460f45963f0d55c9ee5e6ecc09a9752abeb5fd5605fdcfd2",
+        "authenticodeStatus": "NotSigned",
+        "sourceFileName": "Long编辑_1.2.11_x64_zh-CN.msi"
+      },
+      {
+        "target": "nsis",
+        "fileName": "LongEdit_1.2.11_x64-setup.exe",
+        "sizeBytes": 68606678,
+        "sha256": "c044b928dbbb3bdc0cec5f4eb5481d248a6ade405334250497807451a00db860",
+        "authenticodeStatus": "NotSigned",
+        "sourceFileName": "Long编辑_1.2.11_x64-setup.exe"
+      }
+    ]
+  },
   "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -104,5 +127,5 @@
     "v1.2.9-to-v1.2.10-managed-update-observation-pending",
     "v1.2.10-to-v1.2.11-managed-update-observation-pending"
   ],
-  "nextAction": "validate-and-build-v1.2.11-installers"
+  "nextAction": "publish-verified-v1.2.11"
 }
