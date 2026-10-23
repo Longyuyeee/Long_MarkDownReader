@@ -1,0 +1,12 @@
+{
+  "status": "blocked-runner-network",
+  "sourceUserContentIncluded": false,
+  "authenticated": false,
+  "officialApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest",
+  "productSourceCommit": "eee1ff0024cdc0cf471d88eb13b6dd5e115b9b77",
+  "harnessSourceCommit": "eee1ff0024cdc0cf471d88eb13b6dd5e115b9b77",
+  "httpStatus": 403,
+  "remaining": 0,
+  "resetAt": "1792769755",
+  "error": "Error: Runner official API unavailable: HTTP 403 {\"message\":\"API rate limit exceeded for 52.159.140.48. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)\",\"documentation_url\":\"https://docs.github.com/rest/overview/resources-in-"
+}
