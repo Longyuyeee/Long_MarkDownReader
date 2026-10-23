@@ -70,6 +70,13 @@ pub struct XmlElementMove {
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+pub struct XmlElementDeletion {
+    pub content: String,
+    pub anchor: usize,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct XmlElementCopy {
     pub separator_start: usize,
     pub separator_end: usize,
@@ -657,6 +664,83 @@ pub fn move_xml_element_source(
     })
 }
 
+pub fn delete_xml_element_source(
+    content: &str,
+    start: usize,
+    end: usize,
+) -> Result<XmlElementDeletion, String> {
+    let analysis = analyze_xml_source(content);
+    if !analysis.valid || analysis.outline_truncated {
+        return Err("XML 结构尚未完整确认，请先在源码中检查；当前草稿未变".into());
+    }
+    let entry = analysis
+        .outline
+        .iter()
+        .find(|e| e.start == start && e.end == end)
+        .ok_or("元素位置已过期，请重新选择；当前草稿未变")?;
+    if entry.depth == 0 {
+        return Err("根元素不能删除，请在源码中编辑；当前草稿未变".into());
+    }
+    let (Some(separator), Some(order)) = (&entry.copy, &entry.order) else {
+        return Err(
+            "同级内容含正文、注释或处理指令，请在源码中确认要删除的范围；当前草稿未变".into(),
+        );
+    };
+    let cut = separator.separator_start;
+    if separator.separator_end != start || cut > start {
+        return Err("元素范围无法完整确认，请在源码中删除；当前草稿未变".into());
+    }
+    // Remove only the selected subtree and its proven XML-whitespace prefix.
+    // The next sibling's own spacing and the parent's closing spelling remain raw.
+    let removed = end - cut;
+    let candidate = format!("{}{}", &content[..cut], &content[end..]);
+    let anchor = if let Some(next) = &order.next {
+        next.start - removed
+    } else if let Some(previous) = &order.previous {
+        previous.start
+    } else {
+        analysis
+            .outline
+            .iter()
+            .filter(|e| e.start < start && e.end > end)
+            .max_by_key(|e| e.depth)
+            .map(|e| e.start)
+            .ok_or("父元素无法完整确认；当前草稿未变")?
+    };
+    let subtree = |e: &&XmlOutlineEntry| e.start >= start && e.end <= end;
+    let deleted: Vec<_> = analysis.outline.iter().filter(subtree).collect();
+    let retained: Vec<_> = analysis.outline.iter().filter(|e| !subtree(e)).collect();
+    let checked = analyze_xml_source(&candidate);
+    let shifted = |offset: usize| {
+        if offset >= end {
+            offset - removed
+        } else {
+            offset
+        }
+    };
+    if !checked.valid
+        || checked.outline_truncated
+        || checked.element_count != analysis.element_count - deleted.len()
+        || checked.attribute_count
+            != analysis.attribute_count - deleted.iter().map(|e| e.attribute_count).sum::<usize>()
+        || checked.root_name != analysis.root_name
+        || checked.outline.len() != retained.len()
+        || !checked.outline.iter().zip(retained).all(|(after, before)| {
+            after.name == before.name
+                && after.depth == before.depth
+                && after.start == shifted(before.start)
+                && after.end == shifted(before.end)
+        })
+        || !checked.outline.iter().any(|e| e.start == anchor)
+    {
+        return Err("无法完整保留相邻内容，请在源码中删除；当前草稿未变".into());
+    }
+    Ok(XmlElementDeletion {
+        content: candidate,
+        anchor,
+    })
+}
+
 pub fn copy_xml_element_source(content: &str, start: usize, end: usize) -> Result<String, String> {
     let analysis = analyze_xml_source(content);
     if !analysis.valid || analysis.outline_truncated {
@@ -1027,6 +1111,122 @@ fn failed_analysis(diagnostic: XmlDiagnostic) -> XmlSourceAnalysis {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn delete_at(source: &str, path: &str) -> Result<XmlElementDeletion, String> {
+        let a = analyze_xml_source(source);
+        let n = a.outline.iter().find(|n| n.path == path).unwrap();
+        delete_xml_element_source(source, n.start, n.end)
+    }
+
+    #[test]
+    fn element_delete_preserves_bom_crlf_namespace_and_unselected_raw_source() {
+        let fragment = "<doc:item id='9007199254740993123456789'><title>中文 &amp; 😀</title><!-- 内部 --><?keep value?><literal><![CDATA[< > &]]></literal></doc:item>";
+        let source = format!("\u{feff}<?xml version='1.0'?>\r\n<!-- 外部保留 -->\r\n<r xmlns:doc='urn:docs'>\r\n  <doc:item id='first'/>\r\n\t{fragment}\r\n  <tail keep=\"raw\"></tail>\r\n</r>\r\n");
+        let changed = delete_at(&source, "/r[1]/doc:item[2]").unwrap();
+        assert_eq!(
+            changed.content,
+            source.replace(&format!("\r\n\t{fragment}"), "")
+        );
+        assert!(changed.content[changed.anchor..].starts_with("<tail"));
+        let a = analyze_xml_source(&changed.content);
+        assert!(a.valid);
+        assert_eq!(a.element_count, 3);
+        assert_eq!(a.namespace_count, 1);
+        assert_eq!(a.comment_count, 1);
+        assert_eq!(a.cdata_count, 0);
+        assert_eq!(a.processing_instruction_count, 0);
+    }
+
+    #[test]
+    fn element_delete_first_last_and_only_child_choose_nearest_retained_element() {
+        for (source, path, expected, anchor) in [
+            (
+                "<r>\n  <a/>\n\t<b/>\n</r>",
+                "/r[1]/a[1]",
+                "<r>\n\t<b/>\n</r>",
+                "<b/>",
+            ),
+            (
+                "<r>\n  <a/>\n\t<b/>\n</r>",
+                "/r[1]/b[1]",
+                "<r>\n  <a/>\n</r>",
+                "<a/>",
+            ),
+            (
+                "<r>\r\n  <only></only>\r\n</r>",
+                "/r[1]/only[1]",
+                "<r>\r\n</r>",
+                "<r>",
+            ),
+            ("<r><only/></r>", "/r[1]/only[1]", "<r></r>", "<r>"),
+        ] {
+            let changed = delete_at(source, path).unwrap();
+            assert_eq!(changed.content, expected);
+            assert!(changed.content[changed.anchor..].starts_with(anchor));
+        }
+    }
+
+    #[test]
+    fn element_delete_repeated_siblings_refresh_paths_without_losing_nested_content() {
+        let source = "<r><item id='a'/><item id='b'><child/></item><item id='c'><child>😀</child></item></r>";
+        let changed = delete_at(source, "/r[1]/item[2]").unwrap();
+        assert_eq!(
+            changed.content,
+            "<r><item id='a'/><item id='c'><child>😀</child></item></r>"
+        );
+        let a = analyze_xml_source(&changed.content);
+        assert_eq!(
+            a.outline
+                .iter()
+                .find(|n| n.start == changed.anchor)
+                .unwrap()
+                .path,
+            "/r[1]/item[2]"
+        );
+        assert!(a.outline.iter().any(|n| n.path == "/r[1]/item[2]/child[1]"));
+    }
+
+    #[test]
+    fn element_delete_root_and_ambiguous_parent_keep_local_source_fallback() {
+        assert!(delete_at("<r><a/></r>", "/r[1]")
+            .unwrap_err()
+            .contains("根元素不能"));
+        for source in [
+            "<r>before<a/>after</r>",
+            "<r><!-- 外部 --><a/></r>",
+            "<r><?keep here?><a/></r>",
+            "<r><a/><!-- 外部 --></r>",
+            "<r>&#32;<a/></r>",
+            "<r><![CDATA[ ]]><a/></r>",
+        ] {
+            assert!(analyze_xml_source(source).valid);
+            assert!(delete_at(source, "/r[1]/a[1]")
+                .unwrap_err()
+                .contains("同级内容含"));
+        }
+    }
+
+    #[test]
+    fn element_delete_stale_invalid_and_oversized_ranges_never_form_a_candidate() {
+        let source = "<r><a>😀</a></r>";
+        for (start, end) in [(usize::MAX, usize::MAX), (0, 3), (5, 4), (7, 9)] {
+            assert!(delete_xml_element_source(source, start, end).is_err());
+        }
+        assert!(delete_xml_element_source("<r><a></r>", 3, 6).is_err());
+        assert!(delete_xml_element_source(&"a".repeat(MAX_XML_SOURCE_BYTES + 1), 0, 0).is_err());
+    }
+
+    #[test]
+    fn element_delete_consecutive_empty_and_self_closing_elements_retain_parent_spelling() {
+        let mut source =
+            "<?xml version='1.0'?>\n<r>\n\t<empty></empty> \t <selfClosing/>\n  <empty/>\n</r>"
+                .to_string();
+        for path in ["/r[1]/empty[1]", "/r[1]/selfClosing[1]", "/r[1]/empty[1]"] {
+            source = delete_at(&source, path).unwrap().content;
+            assert!(analyze_xml_source(&source).valid);
+        }
+        assert_eq!(source, "<?xml version='1.0'?>\n<r>\n</r>");
+    }
 
     fn move_at(source: &str, path: &str, direction: &str) -> Result<XmlElementMove, String> {
         let a = analyze_xml_source(source);
