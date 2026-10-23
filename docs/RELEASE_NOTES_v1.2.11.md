@@ -6,4 +6,6 @@
 
 同时修正 YAML 提纲的长数字预览，按原文显示数字与原有记法，文件内容不变。
 
-未签名 Windows 社区版，完整发布检查与 483 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
+未签名 Windows 社区版，完整发布检查与 483 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件已重新下载核对通过。应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.11) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_11_Unsigned_Community_Release_Audit_2026-10-23.md)。
