@@ -4,4 +4,6 @@ XML“元素与问题”提纲右键“上移 / 下移”，预览后调整同�
 
 沿已有差异预览、独立撤销、草稿接续、保存失败重试和冲突副本保护未保存内容，保留全部功能、风格和正常动效，不增加常驻表单。
 
-未签名 Windows 社区版，完整发布检查与 503 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
+未签名 Windows 社区版，完整发布检查与 503 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件已重新下载核对通过。应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.14) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_14_Unsigned_Community_Release_Audit_2026-10-23.md)。
