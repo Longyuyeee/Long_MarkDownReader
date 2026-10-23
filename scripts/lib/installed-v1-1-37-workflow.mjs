@@ -20,7 +20,7 @@ export async function runInstalledV1137Workflow({send,evaluate,navigate,capture,
   await navigate('#/library?path='+encodeURIComponent(note),'#vditor-lib','owned return note')
   // The Markdown editor stays mounted, but hidden, while PDF is active. Its
   // mere presence does not mean the PDF leave/save guard has completed.
-  await ready(`!document.querySelector('.pdf-view')&&document.querySelector('#vditor-lib')?.getClientRects().length&&document.querySelector('.workspace-file-name')?.textContent===${q(path.basename(note))}`,'PDF leave guard completed and requested note visible')
+  await ready(`!document.querySelector('.pdf-view')&&document.querySelector('#vditor-lib')?.getClientRects().length&&document.querySelector('.document-breadcrumb span')?.textContent.trim()===${q(path.basename(note))}`,'PDF leave guard completed and requested note visible')
  }
  const select=async(selector,index)=>{await ui.click(selector);await ui.key('Home','Home',36);for(let n=0;n<index;n++)await ui.key('ArrowDown','ArrowDown',40);await ui.key('Enter','Enter',13)}
  let failure
