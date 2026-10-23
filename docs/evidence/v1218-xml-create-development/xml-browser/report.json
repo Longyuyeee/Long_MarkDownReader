@@ -1,0 +1,48 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "prefilled-local-name-exact-prefixed-rename-and-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "self-closing-child-escaped-text-selected-path-and-independent-history",
+      "status": "passed"
+    },
+    {
+      "id": "root-paired-empty-self-closing-and-existing-children",
+      "status": "passed"
+    },
+    {
+      "id": "local-name-validation-and-ambiguous-content-retain-form-after-source-location",
+      "status": "passed"
+    },
+    {
+      "id": "late-create-and-rename-results-preserve-subsequent-input",
+      "status": "passed"
+    },
+    {
+      "id": "stale-element-preview-never-replaces-new-source",
+      "status": "passed"
+    },
+    {
+      "id": "old-file-result-does-not-contaminate-new-dialog",
+      "status": "passed"
+    },
+    {
+      "id": "file-switch-clears-old-form-menu-preview-with-draft-continuity",
+      "status": "passed"
+    },
+    {
+      "id": "save-failure-retry-and-trusted-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-and-narrow-create-rename-and-preview-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

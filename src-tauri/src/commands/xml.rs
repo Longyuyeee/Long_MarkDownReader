@@ -3,9 +3,10 @@ use crate::commands::formats::{
 };
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
 use crate::formats::xml::{
-    add_xml_attribute_source as add_attribute, analyze_xml_source as analyze_source,
-    copy_xml_element_source as copy_element, delete_xml_element_source as delete_element,
-    move_xml_element_source as move_element, remove_xml_attribute_source as remove_attribute,
+    add_xml_attribute_source as add_attribute, add_xml_child_source as add_child,
+    analyze_xml_source as analyze_source, copy_xml_element_source as copy_element,
+    delete_xml_element_source as delete_element, move_xml_element_source as move_element,
+    remove_xml_attribute_source as remove_attribute, rename_xml_element_source as rename_element,
     replace_xml_attribute_source as replace_attribute, replace_xml_text_source as replace_text,
     XmlAttributeChange, XmlElementDeletion, XmlElementMove, XmlSourceAnalysis,
 };
@@ -26,6 +27,39 @@ fn validate_save(content: &str, allow_invalid: bool) -> Result<(), TextDocumentE
         format!("XML 源码不满足安全有效性要求（{location}），已阻止覆盖原文件"),
         "修复诊断后保存，或明确选择“按源码保存”保留当前内容",
     ))
+}
+
+#[tauri::command]
+pub fn rename_xml_element_source(
+    content: String,
+    start: usize,
+    end: usize,
+    name: String,
+) -> Result<XmlElementMove, TextDocumentError> {
+    rename_element(&content, start, end, &name).map_err(|message| {
+        TextDocumentError::recoverable(
+            "xml-element-rename-rejected",
+            message,
+            "请调整名称或定位源码；输入与当前草稿保留",
+        )
+    })
+}
+
+#[tauri::command]
+pub fn add_xml_child_source(
+    content: String,
+    start: usize,
+    end: usize,
+    name: String,
+    value: String,
+) -> Result<XmlElementMove, TextDocumentError> {
+    add_child(&content, start, end, &name, &value).map_err(|message| {
+        TextDocumentError::recoverable(
+            "xml-child-add-rejected",
+            message,
+            "请调整输入或定位源码；输入与当前草稿保留",
+        )
+    })
 }
 
 #[tauri::command]
