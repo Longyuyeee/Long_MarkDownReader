@@ -63,7 +63,15 @@ export async function runInstalledV1120Workflow({send,evaluate,navigate,capture,
   await ui.fill(pathFilter,'/a~1b~0c/0');await ui.waitFor(`document.querySelectorAll('.path-item').length===1`,'native escaped pointer search');await ui.key('Enter','Enter',13)
   await ui.waitFor(`document.activeElement?.closest('.cm-editor')`,'pointer Enter focuses source');assert.equal(await content(),prior,'Enter navigation must not replace source');report.navigationSourceExact=true;await ui.waitFor(`getSelection().toString().includes('保留路径')`,'pointer Enter actually selects native source');report.pointerNavigationExact=true
   await ui.key('Home','Home',36,2);await ui.waitFor('getSelection().toString()===""','move away from the target before context navigation');await ui.clickTarget(`document.querySelector('.path-item > button')`,'right');await ui.clickText('.n-dropdown-option-body','定位到源码');await ui.waitFor(`document.activeElement?.closest('.cm-editor')&&getSelection().toString().includes('保留路径')`,'real context menu source navigation');assert.equal(await content(),prior,'Context navigation must preserve source');report.contextNavigationExact=true;mark(9);mark(10);await capture('installed-v1120-source-navigation.jpg')
-  await reload();await ui.clickText('.n-dialog button','放弃修改并重新读取');await gone()
+  if(['1.2.17'].includes(appVersion)){
+   // Formatting was undone to the actual read baseline. Accurate savepoints
+   // should keep this clean, so there must be no discard confirmation.
+   assert.equal(await evaluate(`document.querySelector('.json-workspace')?.dataset.dirty`),'false')
+   const disk=await fs.readFile(json),display=disk.toString('utf8').replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n')
+   assert.equal(await evaluate(`[...document.querySelectorAll('.json-workspace .cm-content[contenteditable="true"] .cm-line')].map(e=>e.textContent).join('\\n')`),display)
+   report.formatUndoDiskBefore=sha(disk);await reload();await ui.waitFor(`document.querySelector('.json-workspace')?.dataset.loading==='false'&&document.querySelector('.json-workspace')?.dataset.dirty==='false'`,'clean original source reloaded without discard')
+   assert.equal(await evaluate(`!!document.querySelector('.n-dialog')`),false);assert.equal(await content(),prior);report.formatUndoDiskAfter=sha(await fs.readFile(json));assert.equal(report.formatUndoDiskBefore,report.formatUndoDiskAfter);report.formatUndoCleanExact=true;report.cleanReloadWithoutConfirmation=true
+  }else{await reload();await ui.clickText('.n-dialog button','放弃修改并重新读取');await gone()}
   await take(p('不要修改.md'),'unselected.md')
   const inspection=path.join(output,'v1120-structured-inspection.json'),child=spawn(process.env.LONGEDIT_XLSX_PYTHON,[path.join(repoRoot,'scripts/inspect-hosted-structured.py'),output,inspection],{windowsHide:true,stdio:'inherit'})
   await withDeadline(()=>new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error('Structured independent inspection failed '+code)))}),60000,'independent structured output inspection');report.inspection=JSON.parse(await fs.readFile(inspection,'utf8'));mark(11)

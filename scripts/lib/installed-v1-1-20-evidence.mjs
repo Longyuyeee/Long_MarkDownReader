@@ -9,6 +9,10 @@ export function validateInstalledStructured(report,manifest){
  assert.deepEqual(report.checks.map(c=>[c.id,c.status]),structuredChecks.map(id=>[id,'passed']))
  for(const key of ['saveExact','reopenExact','conflictOriginalExact','conflictDraftExact','copyExact'])for(const mode of ['json','yaml','xml','toml'])assert.equal(report[key]?.[mode],true,key+' '+mode)
  for(const key of ['formatCancelExact','formatApplyExact','formatUndoExact','pointerNavigationExact','navigationSourceExact','contextNavigationExact','reloadCancelExact','reloadFailureExact','shortcutExclusive'])assert.equal(report[key],true,key)
+ if(['1.2.17'].includes(manifest.appVersion)){
+  for(const key of ['formatUndoCleanExact','cleanReloadWithoutConfirmation'])assert.equal(report[key],true,key)
+  assert.match(report.formatUndoDiskBefore,/^[a-f0-9]{64}$/);assert.equal(report.formatUndoDiskBefore,report.formatUndoDiskAfter)
+ }
  assert.equal(report.unselectedBefore,report.unselectedAfter);assert.match(report.unselectedBefore,/^[a-f0-9]{64}$/);assert.deepEqual(report.runtimeErrors,[])
  for(const type of ['click','pointerdown','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted),type)
  assert.ok(report.inputTrace.every(e=>e.trusted));assert.ok(!report.uiMessages.some(t=>t.includes('当前文件没有文本写入适配器')))
