@@ -32,18 +32,18 @@
 </p>
 
 <p align="center">
-  <img src="docs/evidence/v1-2-8-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.2.8 真实安装版，紧凑导航、多文档标签与主编辑区">
+  <img src="docs/evidence/v1-2-9-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.2.9 真实安装版，紧凑导航、多文档标签与主编辑区">
 </p>
 
 <p align="center"><sub>真实安装版工作区：紧凑导航、稳定的多文档标签与主编辑区，把更多空间留给内容。</sub></p>
 
 ## 开发进展
 
-v1.2.8 已发布。v1.2.9 TOML 右键改值、准确定位与草稿保护已实现，正在完成页面和实际安装检查，尚未发布；见[开发记录](docs/V1_2_9_Unsigned_Community_Release_Audit_2026-10-23.md)。
+v1.2.9 已发布：TOML 右键改值、准确定位与草稿保护已完成；[既定路线](docs/Foundation_Deepening_Roadmap_1_2_9_to_1_2_10_2026-10-23.md) 中的 1.2.10 YAML 简单值编辑尚未实施。
 
 ## 不只是打开文件，更是接续你的工作
 
-> **v1.2.8 已正式发布**：字段与数组项右键复制，保留完整原文并定位副本，可独立撤销及接续草稿。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.8) · [发布说明](docs/RELEASE_NOTES_v1.2.8.md)。
+> **v1.2.9 已正式发布**：TOML 值右键修改，预选原文、错误原地纠正，可独立撤销并保护草稿。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.9) · [发布说明](docs/RELEASE_NOTES_v1.2.9.md)。
 
 
 
@@ -81,19 +81,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.8"><img src="https://img.shields.io/badge/Stable-v1.2.8-cca43b" alt="v1.2.8 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.9"><img src="https://img.shields.io/badge/Stable-v1.2.9-cca43b" alt="v1.2.9 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.2.8**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.2.9**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.2.8_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.8/LongEdit_1.2.8_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.2.8_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.8/LongEdit_1.2.8_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.2.8](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.8) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.2.9_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.9/LongEdit_1.2.9_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.2.9_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.9/LongEdit_1.2.9_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.2.9](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.9) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.8/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.9/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -101,12 +101,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.2.8_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.2.9_x64-setup.exe
 ```
 
 ```text
-e73188089c3c5a1fee49c5fa945cd53d885e7de8e169e90dd59f87884f094b98  LongEdit_1.2.8_x64_zh-CN.msi
-a1f9c6b826faa2633d7080cb457f9c498c657e35ff6480e92b04764bac7dd2e9  LongEdit_1.2.8_x64-setup.exe
+a9c1ac2030f4a9abe92eef984f6c3b46bbac5393d04537104bbcac8a46b77234  LongEdit_1.2.9_x64_zh-CN.msi
+981fd61ed209c82d5615218be8267537e722b30cc8c9d40814a87eb6c810bf63  LongEdit_1.2.9_x64-setup.exe
 ```
 
 </details>
@@ -236,19 +236,19 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 ## 真实界面
 
-主图、模板、TXT 恢复、文件整理与图谱截图来自 **v1.2.8 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
+主图、模板、TXT 恢复、文件整理与图谱截图来自 **v1.2.9 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
 
 ### 模板与文本历史
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-2-8-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.2.8 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-2-8-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.2.8 从 TXT 历史恢复独立副本"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-2-9-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.2.9 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-2-9-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.2.9 从 TXT 历史恢复独立副本"></td></tr>
   <tr><td align="center"><sub>在弹窗中编辑模板与变量</sub></td><td align="center"><sub>TXT 恢复副本，保留原文件</sub></td></tr>
 </table>
 
 ### 文件整理与回收
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-2-8-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.2.8 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-2-8-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.2.8 资料库回收站，选择文件后恢复"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-2-9-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.2.9 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-2-9-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.2.9 资料库回收站，选择文件后恢复"></td></tr>
   <tr><td align="center"><sub>选择或输入目标目录</sub></td><td align="center"><sub>在回收站选择恢复</sub></td></tr>
 </table>
 
@@ -262,15 +262,15 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 <p align="center"><sub>历史安装场景 · JSON 源码、解析状态与字段路径；新版采用开头所示的统一导航。</sub></p>
 
-JSON、YAML、XML、TOML 与代码文件使用专业源码编辑体验。JSON 还提供虚拟化树形查看、结构诊断、字段路径定位和明确的安全编辑提示。
+JSON、YAML、XML、TOML 与代码文件使用专业源码编辑体验。JSON 还提供虚拟化树形查看、结构诊断、字段路径定位和明确的安全编辑提示。TOML 配置值可右键“修改值…”，预览后应用到草稿；只替换当前字面量，保留其他排版与注释。
 
 ### 表格与工作簿
 
 <p align="center">
-  <img src="docs/evidence/v1-2-8-candidate-lifecycle/installed-v1115-csv-reopened.jpg" width="100%" alt="Long编辑 v1.2.8 真实安装版，CSV 保存重开后保留多行内容、前导零和长编号">
+  <img src="docs/evidence/v1-2-9-candidate-lifecycle/installed-v1115-csv-reopened.jpg" width="100%" alt="Long编辑 v1.2.9 真实安装版，CSV 保存重开后保留多行内容、前导零和长编号">
 </p>
 
-<p align="center"><sub>v1.2.8 真实安装版 · 多行按需编辑，CSV 重开与编号保留；原有 XLSX 工作区继续保留。</sub></p>
+<p align="center"><sub>v1.2.9 真实安装版 · 多行按需编辑，CSV 重开与编号保留；原有 XLSX 工作区继续保留。</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/xlsx-workbook-dark.png" width="100%" alt="Long编辑 XLSX 工作簿编辑界面，包含多工作表、公式栏、页面工具和网格编辑区">
@@ -283,10 +283,10 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 ### 知识图谱与思维导图
 
 <p align="center">
-  <img src="docs/evidence/v1-2-8-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.2.8 知识图谱与关系健康面板">
+  <img src="docs/evidence/v1-2-9-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.2.9 知识图谱与关系健康面板">
 </p>
 
-<p align="center"><sub>v1.2.8 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
+<p align="center"><sub>v1.2.9 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
 
 知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持稳定后自动全图适配、搜索、筛选、多种布局与主题、框选和拖动、缩放、适应当前选择、有界且尊重减少动效设置的选择反馈、可点击/拖动/键盘操作的语义缩略导航、右键操作、中心节点、视图保存以及 SVG/PNG 导出；密集中景会主动降低普通箭头和状态环噪声，近景仍保留方向语义。
 
@@ -496,7 +496,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ## 开发与验证
 
-1.2.8 已发布：JSON 字段与数组项复用已完成。[发布说明](docs/RELEASE_NOTES_v1.2.8.md) · [下一轮路线](docs/Foundation_Deepening_Roadmap_1_2_9_to_1_2_10_2026-10-23.md)。
+1.2.9 已发布：TOML 配置值编辑已完成。[发布说明](docs/RELEASE_NOTES_v1.2.9.md) · [下一版 1.2.10 路线](docs/Foundation_Deepening_Roadmap_1_2_9_to_1_2_10_2026-10-23.md)。
 
 <p>
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
@@ -586,6 +586,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.2.9 | TOML 右键改值、准确定位与草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.2.9.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.9) · [发布记录](docs/V1_2_9_Unsigned_Community_Release_Audit_2026-10-23.md) |
 | v1.2.8 | JSON 字段与数组项右键复制、完整原文和草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.2.8.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.8) · [发布记录](docs/V1_2_8_Unsigned_Community_Release_Audit_2026-10-23.md) |
 | v1.2.7 | JSON 数组项右键移动、原文与草稿保护及小窗口节点菜单 | [发布说明](docs/RELEASE_NOTES_v1.2.7.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.7) · [发布记录](docs/V1_2_7_Unsigned_Community_Release_Audit_2026-10-23.md) |
 | v1.2.6 | 列标题右键移动、列结构撤销及视图与草稿接续 | [发布说明](docs/RELEASE_NOTES_v1.2.6.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.6) · [发布记录](docs/V1_2_6_Unsigned_Community_Release_Audit_2026-10-23.md) |
@@ -636,9 +637,13 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并公开 **12/12 版**。本轮 [1.1.33—1.1.37](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md) 已完成并公开 **5/5 版**；1.2.1 移动阅读接续、1.2.2 批注撤销重做均已交付。[1.2.3—1.2.4](docs/Foundation_Deepening_Roadmap_1_2_3_to_1_2_4_2026-10-22.md) 批注批量整理与表格选区填充已完成；[1.2.5—1.2.6](docs/Foundation_Deepening_Roadmap_1_2_5_to_1_2_6_2026-10-23.md) 行插入/复制与列位置调整已交付；[1.2.7—1.2.8](docs/Foundation_Deepening_Roadmap_1_2_7_to_1_2_8_2026-10-23.md) 数组整理与节点复用已完成 **2/2 版**；[1.2.9—1.2.10](docs/Foundation_Deepening_Roadmap_1_2_9_to_1_2_10_2026-10-23.md) 已规划 TOML 与 YAML 值编辑，尚未实施。
+v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并公开 **12/12 版**。本轮 [1.1.33—1.1.37](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md) 已完成并公开 **5/5 版**；1.2.1 移动阅读接续、1.2.2 批注撤销重做均已交付。[1.2.3—1.2.4](docs/Foundation_Deepening_Roadmap_1_2_3_to_1_2_4_2026-10-22.md) 批注批量整理与表格选区填充已完成；[1.2.5—1.2.6](docs/Foundation_Deepening_Roadmap_1_2_5_to_1_2_6_2026-10-23.md) 行插入/复制与列位置调整已交付；[1.2.7—1.2.8](docs/Foundation_Deepening_Roadmap_1_2_7_to_1_2_8_2026-10-23.md) 数组整理与节点复用已完成 **2/2 版**；[1.2.9—1.2.10](docs/Foundation_Deepening_Roadmap_1_2_9_to_1_2_10_2026-10-23.md) 中 TOML 配置值编辑已交付，YAML 简单值编辑待 1.2.10 实施。
 
-### v1.2.8 本次更新
+### v1.2.9 本次更新
+
+TOML 配置值右键“修改值…”编辑字符串、布尔或数字，弹窗预选当前原文，输入错误原地纠正。修复原文位置丢失，同名分区字段、带引号点号键与表数组准确定位。只替换当前值，保留注释、顺序、换行、长整数和转义；沿现有差异预览及独立撤销接续草稿，来源切换、保存失败与外部冲突继续保护内容。数组、内联表和日期时间保留源码入口，不增加常驻表单，保留全部既有功能、风格及动效。
+
+### v1.2.8 字段与数组项复用
 
 字段右键“复制为新字段…”、数组项右键“复制此项”，副本紧邻原内容。建议名称自动避开已有字段并选中，重名保留输入原地纠正。完整节点、长数字、转义和内部注释保持，一次复制可独立撤销，与移动和改值接续；源码和树形定位跟随副本。邻接注释归属不清就地说明，保存失败、外部冲突和来源变化继续保护草稿。保留全部原有功能、风格和正常动效，不增加常驻表单。
 
