@@ -1,10 +1,10 @@
 # 1.2.17—1.2.18：准确保存状态与 XML 元素日常编辑
 
-状态：1.2.17 准确保存状态已接入，正在候选收尾，尚未发布；1.2.18 XML 元素创建与重命名仍为规划，尚未实施。
+状态：1.2.17 准确保存状态已正式发布，本路线 **1/2 版完成**；[发布记录](V1_2_17_Unsigned_Community_Release_Audit_2026-10-24.md)。1.2.18 XML 子元素创建与元素重命名仍为规划，尚未实施。
 
 ## 代码依据与用户需要
 
-`src/views/JsonEditorView.vue`、`YamlEditorView.vue`、`TomlEditorView.vue`、`XmlEditorView.vue` 在源码发生变更时直接标记未保存；`src/composables/useStructuredSession.ts` 已在保存回执中区分保存内容与后续输入，但编辑、撤销回到读取/保存基线后仍可能保留未保存标识。此前实际安装记录也出现过“撤销恢复原文后，仍需显式重新读取才清洁”的情况。用户会因此多做一次保存或确认，下一版先解决这项接续体验。
+`src/views/JsonEditorView.vue`、`YamlEditorView.vue`、`TomlEditorView.vue`、`XmlEditorView.vue` 此前在源码发生变更时直接标记未保存，撤销恢复原文后仍可能要求额外保存或确认。1.2.17 已通过 `src/composables/useStructuredSession.ts` 的可信读取/保存基线解决这项问题，继续保护保存和切换读取期间的后续输入；只读分段保持清洁，未知草稿保守保留。
 
 XML 元素提纲已有属性和文字编辑、元素复制、移动、删除及统一差异预览；用户仍需要手动同时修改成对标签名称，或输入完整新元素。因此后续把元素创建与重命名放在同一版完成，复用准确标签范围与草稿保护。
 

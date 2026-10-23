@@ -32,18 +32,18 @@
 </p>
 
 <p align="center">
-  <img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.2.16 真实安装版，紧凑导航、多文档标签与主编辑区">
+  <img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.2.17 真实安装版，紧凑导航、多文档标签与主编辑区">
 </p>
 
 <p align="center"><sub>真实安装版工作区：紧凑导航、稳定的多文档标签与主编辑区，把更多空间留给内容。</sub></p>
 
 ## 开发进展
 
-v1.2.16 已发布；v1.2.17 正在改进结构化源码保存状态与草稿接续，尚未发布。见[开发记录](docs/V1_2_17_Unsigned_Community_Release_Audit_2026-10-24.md)。
+v1.2.17 已发布：准确保存状态已完成；[1.2.17—1.2.18](docs/Foundation_Deepening_Roadmap_1_2_17_to_1_2_18_2026-10-24.md) 已交付 1/2，下一版继续 XML 子元素创建与元素重命名，尚未实施。
 
 ## 不只是打开文件，更是接续你的工作
 
-> **v1.2.16 已正式发布**：XML 元素右键属性弹窗支持新增与移除，预览后应用到草稿，保留其他属性与排版。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.16) · [发布说明](docs/RELEASE_NOTES_v1.2.16.md)。
+> **v1.2.17 已正式发布**：结构化源码撤销或改回已保存原文后，正确恢复保存状态，并继续保护保存期间的后续输入。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.17) · [发布说明](docs/RELEASE_NOTES_v1.2.17.md)。
 
 
 
@@ -81,19 +81,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.16"><img src="https://img.shields.io/badge/Stable-v1.2.16-cca43b" alt="v1.2.16 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.17"><img src="https://img.shields.io/badge/Stable-v1.2.17-cca43b" alt="v1.2.17 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.2.16**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.2.17**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.2.16_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.16/LongEdit_1.2.16_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.2.16_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.16/LongEdit_1.2.16_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.2.16](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.16) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.2.17_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.17/LongEdit_1.2.17_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.2.17_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.17/LongEdit_1.2.17_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.2.17](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.17) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.16/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.2.17/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -101,12 +101,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.2.16_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.2.17_x64-setup.exe
 ```
 
 ```text
-100c7c7370e70507ff8663a824c863b073e7d95dd2037c1a86b66f149077929c  LongEdit_1.2.16_x64_zh-CN.msi
-20aa087f387a1fe73a32ce97fd8f8d6ca413d4c3cc0391fa222f643703c36863  LongEdit_1.2.16_x64-setup.exe
+05f485cc4317d6830e006cc767e6b26ae918d97b7cb95ad95f1c00aeda72ac17  LongEdit_1.2.17_x64_zh-CN.msi
+c48a94bd492465dd37f5b59570298b9cca4468e9daee075c6dccdb75e289d202  LongEdit_1.2.17_x64-setup.exe
 ```
 
 </details>
@@ -236,19 +236,19 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 ## 真实界面
 
-主图、模板、TXT 恢复、文件整理与图谱截图来自 **v1.2.16 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
+主图、模板、TXT 恢复、文件整理与图谱截图来自 **v1.2.17 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
 
 ### 模板与文本历史
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.2.16 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.2.16 从 TXT 历史恢复独立副本"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.2.17 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.2.17 从 TXT 历史恢复独立副本"></td></tr>
   <tr><td align="center"><sub>在弹窗中编辑模板与变量</sub></td><td align="center"><sub>TXT 恢复副本，保留原文件</sub></td></tr>
 </table>
 
 ### 文件整理与回收
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.2.16 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.2.16 资料库回收站，选择文件后恢复"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.2.17 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.2.17 资料库回收站，选择文件后恢复"></td></tr>
   <tr><td align="center"><sub>选择或输入目标目录</sub></td><td align="center"><sub>在回收站选择恢复</sub></td></tr>
 </table>
 
@@ -262,15 +262,15 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 <p align="center"><sub>历史安装场景 · JSON 源码、解析状态与字段路径；新版采用开头所示的统一导航。</sub></p>
 
-JSON、YAML、XML、TOML 与代码文件使用专业源码编辑体验。JSON 还提供虚拟化树形查看、结构诊断、字段路径定位和明确的安全编辑提示。TOML 与 YAML 简单值可右键“修改值…”，预览后应用到草稿；只替换当前字面量，保留其他排版与注释。打开 XML 的“元素与问题”，可在结构提纲中右键元素，选择“修改属性…”，弹窗选择已有属性并编辑可读值，预览后应用；支持特殊符号、空值和多行，保留原引号与其他属性。XML 同一提纲可右键“修改文字…”，支持连续普通文字、CDATA 和成对空元素，保留其他节点与排版；复杂内容继续使用源码。XML 提纲还可右键复制元素与上移/下移，预览后保留完整原文调整同级内容。XML 提纲还可右键删除元素，预览后移除完整子树，保留其他原文。XML 属性弹窗还可新增与移除普通属性，无属性元素也可使用，预览后应用到草稿。YAML 数字提纲按原文显示长数字与原有记法。
+JSON、YAML、XML、TOML 与代码文件使用专业源码编辑体验。JSON 还提供虚拟化树形查看、结构诊断、字段路径定位和明确的安全编辑提示。TOML 与 YAML 简单值可右键“修改值…”，预览后应用到草稿；只替换当前字面量，保留其他排版与注释。打开 XML 的“元素与问题”，可在结构提纲中右键元素，选择“修改属性…”，弹窗选择已有属性并编辑可读值，预览后应用；支持特殊符号、空值和多行，保留原引号与其他属性。XML 同一提纲可右键“修改文字…”，支持连续普通文字、CDATA 和成对空元素，保留其他节点与排版；复杂内容继续使用源码。XML 提纲还可右键复制元素与上移/下移，预览后保留完整原文调整同级内容。XML 提纲还可右键删除元素，预览后移除完整子树，保留其他原文。XML 属性弹窗还可新增与移除普通属性，无属性元素也可使用，预览后应用到草稿。结构化源码改回已保存原文后会正确恢复保存状态，保存期间后续输入仍受保护。YAML 数字提纲按原文显示长数字与原有记法。
 
 ### 表格与工作簿
 
 <p align="center">
-  <img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v1115-csv-reopened.jpg" width="100%" alt="Long编辑 v1.2.16 真实安装版，CSV 保存重开后保留多行内容、前导零和长编号">
+  <img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v1115-csv-reopened.jpg" width="100%" alt="Long编辑 v1.2.17 真实安装版，CSV 保存重开后保留多行内容、前导零和长编号">
 </p>
 
-<p align="center"><sub>v1.2.16 真实安装版 · 多行按需编辑，CSV 重开与编号保留；原有 XLSX 工作区继续保留。</sub></p>
+<p align="center"><sub>v1.2.17 真实安装版 · 多行按需编辑，CSV 重开与编号保留；原有 XLSX 工作区继续保留。</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/xlsx-workbook-dark.png" width="100%" alt="Long编辑 XLSX 工作簿编辑界面，包含多工作表、公式栏、页面工具和网格编辑区">
@@ -283,10 +283,10 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 ### 知识图谱与思维导图
 
 <p align="center">
-  <img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.2.16 知识图谱与关系健康面板">
+  <img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.2.17 知识图谱与关系健康面板">
 </p>
 
-<p align="center"><sub>v1.2.16 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
+<p align="center"><sub>v1.2.17 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
 
 知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持稳定后自动全图适配、搜索、筛选、多种布局与主题、框选和拖动、缩放、适应当前选择、有界且尊重减少动效设置的选择反馈、可点击/拖动/键盘操作的语义缩略导航、右键操作、中心节点、视图保存以及 SVG/PNG 导出；密集中景会主动降低普通箭头和状态环噪声，近景仍保留方向语义。
 
@@ -496,7 +496,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ## 开发与验证
 
-1.2.16 已发布：XML 属性新增与移除已交付。[发布说明](docs/RELEASE_NOTES_v1.2.16.md) · [下一轮基础功能路线](docs/Foundation_Deepening_Roadmap_1_2_17_to_1_2_18_2026-10-24.md)。
+1.2.17 已发布：准确保存状态与草稿接续已交付。[发布说明](docs/RELEASE_NOTES_v1.2.17.md) · [XML 创建与重命名路线](docs/Foundation_Deepening_Roadmap_1_2_17_to_1_2_18_2026-10-24.md)。
 
 <p>
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
@@ -586,6 +586,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.2.17 | 准确保存状态与草稿接续 | [发布说明](docs/RELEASE_NOTES_v1.2.17.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.17) · [发布记录](docs/V1_2_17_Unsigned_Community_Release_Audit_2026-10-24.md) |
 | v1.2.16 | XML 属性新增与移除及草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.2.16.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.16) · [发布记录](docs/V1_2_16_Unsigned_Community_Release_Audit_2026-10-24.md) |
 | v1.2.15 | XML 完整元素删除与草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.2.15.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.15) · [发布记录](docs/V1_2_15_Unsigned_Community_Release_Audit_2026-10-24.md) |
 | v1.2.14 | XML 同级元素排序与草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.2.14.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.14) · [发布记录](docs/V1_2_14_Unsigned_Community_Release_Audit_2026-10-23.md) |
@@ -644,43 +645,49 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并公开 **12/12 版**。本轮 [1.1.33—1.1.37](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md) 已完成并公开 **5/5 版**；1.2.1 移动阅读接续、1.2.2 批注撤销重做均已交付。[1.2.3—1.2.4](docs/Foundation_Deepening_Roadmap_1_2_3_to_1_2_4_2026-10-22.md) 批注批量整理与表格选区填充已完成；[1.2.5—1.2.6](docs/Foundation_Deepening_Roadmap_1_2_5_to_1_2_6_2026-10-23.md) 行插入/复制与列位置调整已交付；[1.2.7—1.2.8](docs/Foundation_Deepening_Roadmap_1_2_7_to_1_2_8_2026-10-23.md) 数组整理与节点复用已完成 **2/2 版**；[1.2.9—1.2.10](docs/Foundation_Deepening_Roadmap_1_2_9_to_1_2_10_2026-10-23.md) 已完成 **2/2 版**；[1.2.11—1.2.12](docs/Foundation_Deepening_Roadmap_1_2_11_to_1_2_12_2026-10-23.md) 已交付 **2/2 版**；[1.2.13—1.2.14](docs/Foundation_Deepening_Roadmap_1_2_13_to_1_2_14_2026-10-23.md) 已交付 **2/2 版**。[1.2.15—1.2.16](docs/Foundation_Deepening_Roadmap_1_2_15_to_1_2_16_2026-10-23.md) 已交付 **2/2 版**。下一轮 [1.2.17—1.2.18](docs/Foundation_Deepening_Roadmap_1_2_17_to_1_2_18_2026-10-24.md) 规划准确保存状态，以及 XML 元素创建与重命名，尚未实施。
+v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并公开 **12/12 版**。本轮 [1.1.33—1.1.37](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md) 已完成并公开 **5/5 版**；1.2.1 移动阅读接续、1.2.2 批注撤销重做均已交付。[1.2.3—1.2.4](docs/Foundation_Deepening_Roadmap_1_2_3_to_1_2_4_2026-10-22.md) 批注批量整理与表格选区填充已完成；[1.2.5—1.2.6](docs/Foundation_Deepening_Roadmap_1_2_5_to_1_2_6_2026-10-23.md) 行插入/复制与列位置调整已交付；[1.2.7—1.2.8](docs/Foundation_Deepening_Roadmap_1_2_7_to_1_2_8_2026-10-23.md) 数组整理与节点复用已完成 **2/2 版**；[1.2.9—1.2.10](docs/Foundation_Deepening_Roadmap_1_2_9_to_1_2_10_2026-10-23.md) 已完成 **2/2 版**；[1.2.11—1.2.12](docs/Foundation_Deepening_Roadmap_1_2_11_to_1_2_12_2026-10-23.md) 已交付 **2/2 版**；[1.2.13—1.2.14](docs/Foundation_Deepening_Roadmap_1_2_13_to_1_2_14_2026-10-23.md) 已交付 **2/2 版**。[1.2.15—1.2.16](docs/Foundation_Deepening_Roadmap_1_2_15_to_1_2_16_2026-10-23.md) 已交付 **2/2 版**。[1.2.17—1.2.18](docs/Foundation_Deepening_Roadmap_1_2_17_to_1_2_18_2026-10-24.md) 已交付 **1/2 版**；准确保存状态已完成，XML 子元素创建与元素重命名仍为规划，尚未实施。
 
-### v1.2.16 本次更新
+### v1.2.17 本次更新
+
+JSON/JSONC、YAML、TOML、XML 和 SVG 源码视图在撤销、重做、手动恢复或结构化操作回到已保存原文后，正确更新现有状态栏、标签、保存按钮与关闭确认。基线来自真实读取或保存回执，精确比较源码及所属文件、签名与编码；不重新序列化文件，也不在每次输入时读盘。保存期间后续输入、文件切换、失败重试和冲突继续保护草稿，写入未完成时回到旧基线仍保护关闭；已检测到外部修改或无法确认基线时保守保留未保存状态。不增加页面或常驻表单，全部现有功能、主题和正常动效保留。
+
+<img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v1217-savepoint-clean.jpg" width="920" alt="v1.2.17 真实安装版：XML 撤销结构操作后恢复准确的已保存状态">
+
+### v1.2.16 XML 属性新增与移除
 
 XML 元素右键“修改属性…”，在已有弹窗新增普通属性或移除所选属性，无属性元素也可使用。名称和值局部输入与纠正，预览后应用到草稿，保留其他属性顺序、引号、缩进、BOM/换行及其他节点。命名空间声明与前缀属性的增删给出局部提示和源码定位；原有属性值编辑、独立撤销、显式保存、失败重试和冲突副本保留，不增加常驻表单。
 
-<img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v1216-xml-edit.jpg" width="920" alt="v1.2.16 真实安装版：XML 属性新增差异预览">
+<img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v1216-xml-edit.jpg" width="920" alt="v1.2.17 真实安装版：XML 属性新增差异预览">
 
 ### v1.2.15 XML 元素删除
 
 XML 的“元素与问题”提纲右键“删除元素…”，预览后删除完整子树及准确空白，保留相邻原文。支持首尾、唯一子元素、空元素、自闭合元素及连续删除；删除后定位到相邻元素或父元素，同名元素路径刷新。父级混合正文或外部注释归属不明时，局部提示并定位源码；沿已有独立撤销、草稿接续、显式保存、失败重试与冲突副本保护内容，不增加常驻表单。
 
-<img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v1215-xml-edit.jpg" width="920" alt="v1.2.16 真实安装版：XML 完整元素删除差异预览">
+<img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v1215-xml-edit.jpg" width="920" alt="v1.2.17 真实安装版：XML 完整元素删除差异预览">
 
 ### v1.2.14 XML 同级元素排序
 
 XML“元素与问题”提纲右键“上移 / 下移”，沿已有差异预览调整同一父级内相邻元素顺序；保留元素原文、内部属性、命名空间、文字、CDATA、注释和处理指令，移动后定位跟随原元素。首项和末项禁用对应方向；混合正文或外部注释归属不明确时局部提示并定位源码。未保存草稿、独立撤销、显式保存、失败重试与冲突副本沿原流程接续，不增加常驻表单。
 
-<img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v1214-xml-edit.jpg" width="920" alt="v1.2.16 真实安装版：XML 同级元素排序差异预览">
+<img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v1214-xml-edit.jpg" width="920" alt="v1.2.17 真实安装版：XML 同级元素排序差异预览">
 
 ### v1.2.13 XML 元素复制
 
 XML 的“元素与问题”提纲右键“复制元素”，预览后在原元素后插入完整副本；保留属性、命名空间、内部文字、CDATA、注释和换行缩进。支持同名元素、空元素、自闭合元素与连续复制，不自动修改业务标识符。父级混合正文或外部注释归属不明时，局部提示并定位源码；沿已有独立撤销、草稿接续、显式保存、失败重试与冲突副本保护内容，不增加常驻表单。
 
-<img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v1213-xml-edit.jpg" width="920" alt="v1.2.16 真实安装版：XML 完整元素复制差异预览">
+<img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v1213-xml-edit.jpg" width="920" alt="v1.2.17 真实安装版：XML 完整元素复制差异预览">
 
 ### v1.2.12 XML 文字编辑
 
 打开 XML 的“元素与问题”，在结构提纲中右键元素选择“修改文字…”。弹窗预填可读原文，预览后只替换当前连续文字，保留其他节点、属性、注释和排版。支持普通文字、CDATA 及成对空元素，特殊符号自动转义，CDATA 结束符自动拆分并可继续编辑；复杂混合内容局部定位源码。沿已有独立撤销、显式保存、失败重试及冲突副本接续未保存内容，保留全部功能、风格和正常动效。
 
-<img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v1212-xml-edit.jpg" width="920" alt="v1.2.16 真实安装版：右键修改 XML 文字，预填并选中可读原文">
+<img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v1212-xml-edit.jpg" width="920" alt="v1.2.17 真实安装版：右键修改 XML 文字，预填并选中可读原文">
 
 ### v1.2.11 XML 属性编辑
 
 XML 元素右键“修改属性…”选择已有属性并编辑可读值，特殊符号按原引号转义，保留其他属性、注释、排版与换行。支持前缀属性、同名元素、空值和多行；错误在弹窗内纠正，受限内容保留源码入口。沿现有差异预览、独立撤销、显式保存与冲突副本保护未保存内容，不增加常驻表单。同时修正 YAML 提纲的长数字、负数和科学计数原文显示。保留全部功能、风格及正常动效。
 
-<img src="docs/evidence/v1-2-16-candidate-lifecycle/installed-v1211-xml-edit.jpg" width="920" alt="v1.2.16 真实安装版：从 XML 元素右键修改已有属性，预填可读原值">
+<img src="docs/evidence/v1-2-17-candidate-lifecycle/installed-v1211-xml-edit.jpg" width="920" alt="v1.2.17 真实安装版：从 XML 元素右键修改已有属性，预填可读原值">
 
 ### v1.2.10 YAML 简单值编辑
 

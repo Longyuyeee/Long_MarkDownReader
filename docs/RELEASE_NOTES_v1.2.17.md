@@ -8,4 +8,6 @@ JSON/JSONC、YAML、TOML、XML 和 SVG 源码编辑中，撤销或改回已保�
 
 沿现有状态栏、标签、保存按钮和关闭交互，不增加页面上的操作；保留全部主题、正常动效和既有功能。下一版计划完成 XML 子元素创建与元素重命名，尚未实施。
 
-未签名社区版，完整发布检查与 529 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
+未签名社区版，完整发布检查与 529 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件已重新下载核对通过。应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.17) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_17_Unsigned_Community_Release_Audit_2026-10-24.md)。

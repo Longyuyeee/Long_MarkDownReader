@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.2.17",
+  "developmentTargetVersion": "1.2.18",
   "runtimeBaseVersion": "1.2.17",
-  "publicVersion": "1.2.16",
-  "publicTag": "v1.2.16",
-  "publicTagCommit": "e7ca2d0598df0c0ff897241a0414d65cf77a5e45",
+  "publicVersion": "1.2.17",
+  "publicTag": "v1.2.17",
+  "publicTagCommit": "296dc855f440c376ab07ed8364c0456f18cb3226",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-138-v1.2.17-structured-savepoint-continuity-candidate",
-  "binaryVersionTransition": "v1.2.17-release-ready",
-  "displayLabel": "v1.2.17 准确保存状态候选 · 当前公开 v1.2.16",
+  "currentStage": "M8-139-v1.2.17-published",
+  "binaryVersionTransition": "v1.2.17-public-release-published",
+  "displayLabel": "v1.2.17 已发布 · 下一目标 v1.2.18",
   "activeSlice": {
     "id": "v1.2.17-structured-savepoint-continuity",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-and-remote-assets-verified",
     "document": "docs/V1_2_17_Unsigned_Community_Release_Audit_2026-10-24.md"
   }
 }
