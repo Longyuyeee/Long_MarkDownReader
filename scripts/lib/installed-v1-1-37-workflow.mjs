@@ -9,14 +9,19 @@ import {pdfResumeChecks,validateInstalledPdfResume,assertPdfResumeOutputBytes} f
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export async function runInstalledV1137Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
- assert.ok(['1.1.37','1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.ok(['1.1.37','1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const folder=path.join(library,'000-v1137-pdf-'+crypto.randomUUID()),pdf=path.join(folder,'接续.pdf'),note=path.join(folder,'返回.md'),sidecar=pdf+'.annotations.json',store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`,ui=nativeUserInput({send,evaluate},{timeoutMs:60000,stableMs:300}),ready=(e,label)=>ui.waitFor('Boolean('+e+')',label),observed={}
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-pdf-view-reload-trusted-ui-and-sidecar-bytes',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[],inputTrace:[],runtimeErrors:[],rendererReloads:0}
  const mark=i=>report.checks.push({id:pdfResumeChecks[i],status:'passed'}),take=async(n,b)=>{const fileName='installed-v1137-'+n;await fs.writeFile(path.join(output,fileName),b,{flag:'wx'});report.outputs.push({fileName,sizeBytes:b.length,sha256:sha(b)})}
  const trace=()=>evaluate(`window.__v1137Trace=[];window.__v1137Errors=[];for(const type of ['click','keydown','input'])document.addEventListener(type,e=>window.__v1137Trace.push({type,trusted:e.isTrusted}),true);window.addEventListener('error',e=>window.__v1137Errors.push(String(e.message)));window.addEventListener('unhandledrejection',e=>window.__v1137Errors.push(String(e.reason)))`)
  const collect=async()=>{report.inputTrace.push(...await evaluate('window.__v1137Trace'));report.runtimeErrors.push(...await evaluate('window.__v1137Errors'))}
  const open=async(extra='')=>{await navigate('#/library?path='+encodeURIComponent(pdf)+extra,'.pdf-view','owned PDF');await ready('document.querySelector(".pdf-view canvas")','rendered PDF');await ui.clickTarget(`[...document.querySelectorAll('.sidebar-switch button')].find(e=>e.textContent.trim().startsWith('批注'))`);await ready('document.querySelector(".annotation-card")','real sidecar annotations')}
- const leave=()=>navigate('#/library?path='+encodeURIComponent(note),'#vditor-lib','owned return note')
+ const leave=async()=>{
+  await navigate('#/library?path='+encodeURIComponent(note),'#vditor-lib','owned return note')
+  // The Markdown editor stays mounted, but hidden, while PDF is active. Its
+  // mere presence does not mean the PDF leave/save guard has completed.
+  await ready(`!document.querySelector('.pdf-view')&&document.querySelector('#vditor-lib')?.getClientRects().length&&document.querySelector('.document-breadcrumb span')?.textContent.trim()===${q(path.basename(note))}`,'PDF leave guard completed and requested note visible')
+ }
  const select=async(selector,index)=>{await ui.click(selector);await ui.key('Home','Home',36);for(let n=0;n<index;n++)await ui.key('ArrowDown','ArrowDown',40);await ui.key('Enter','Enter',13)}
  let failure
  try{

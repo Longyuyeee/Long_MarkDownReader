@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.2.9",
-  "runtimeBaseVersion": "1.2.8",
+  "runtimeBaseVersion": "1.2.9",
   "publicVersion": "1.2.8",
   "publicTag": "v1.2.8",
   "publicTagCommit": "f357739f598025fb166703693afa7c9b98a75b24",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-121-v1.2.8-published",
-  "binaryVersionTransition": "v1.2.8-public-release-published",
-  "displayLabel": "v1.2.8 已发布 · 下一目标 v1.2.9",
+  "currentStage": "M8-122-v1.2.9-toml-value-edit-candidate",
+  "binaryVersionTransition": "v1.2.9-release-ready",
+  "displayLabel": "v1.2.9 TOML 配置值编辑候选 · 当前公开 v1.2.8",
   "activeSlice": {
-    "id": "v1.2.8-json-node-copy",
-    "status": "published-and-remote-assets-verified",
-    "document": "docs/V1_2_8_Unsigned_Community_Release_Audit_2026-10-23.md"
+    "id": "v1.2.9-toml-value-edit",
+    "status": "installed-workflows-passed-ready-to-publish",
+    "document": "docs/V1_2_9_Unsigned_Community_Release_Audit_2026-10-23.md"
   }
 }

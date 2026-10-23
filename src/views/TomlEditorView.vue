@@ -1,5 +1,5 @@
 <template>
-  <div class="workspace toml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
+  <div class="workspace toml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading" :data-analysis-current="!analysisPending && analyzedSource === content">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
     <header class="workspace-document-header">
       <div class="identity">
@@ -55,6 +55,16 @@
     <footer><span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span><span>{{ encoding.toUpperCase() }}</span><span>{{ lines }} 行</span><span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span></footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
+    <n-modal v-model:show="valueEditVisible" preset="card" class="toml-value-edit-dialog" title="修改 TOML 值" :style="{width:'min(520px,94vw)'}"
+      :mask-closable="!valueEditPending" :closable="!valueEditPending" :close-on-esc="!valueEditPending"
+      @after-enter="valueInput?.select()" @after-leave="finishValueDialog">
+      <code>{{ valueEntry?.path }}</code>
+      <n-input ref="valueInput" v-model:value="valueText" type="textarea" :autosize="{minRows:3,maxRows:8}"
+        :disabled="valueEditPending" aria-label="TOML 字段值" :input-props="{'aria-label':'TOML 字段值'}" autofocus />
+      <p v-if="valueError" role="alert" class="error">{{ valueError }}</p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
+        <n-button type="primary" :loading="valueEditPending" @click="previewValueEdit">预览修改</n-button></div></template>
+    </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
@@ -72,7 +82,7 @@ import { openSearchPanel } from '@codemirror/search'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useRoute, useRouter } from 'vue-router'
-import { useDialog, useMessage } from 'naive-ui'
+import { useDialog, useMessage, type InputInst } from 'naive-ui'
 import { AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon, FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, KeyRound as KeyIcon, PanelRight as InspectorIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Search as SearchIcon, TableProperties as TableIcon, UnfoldVertical as UnfoldIcon } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextConflictDialog from '../components/TextConflictDialog.vue'
@@ -90,7 +100,7 @@ import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../u
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
 interface Range { start: number; end: number }
 interface Diagnostic extends Range { code: string; message: string; line: number; column: number }
-interface Entry extends Range { path: string; label: string; kind: string; depth: number; preview: string }
+interface Entry extends Range { path: string; label: string; kind: string; depth: number; preview: string; editable?: boolean; editUnavailableReason?: string }
 interface Analysis { valid: boolean; tableCount: number; arrayOfTablesCount: number; valueCount: number; maxDepth: number; outline: Entry[]; outlineTruncated: boolean; diagnostics: Diagnostic[] }
 
 const route = useRoute(), router = useRouter(), store = useAppStore(), dialog = useDialog(), message = useMessage()
@@ -112,7 +122,37 @@ const session = useStructuredSession({
   analyze: source => analyze(source), clearAnalysis: () => clearTimer(), scheduleAnalysis: () => schedule(),
   applySnapshot: snapshot => apply(snapshot), load: discard => load(discard),
 })
-const nodeMenu = useSourceNodeMenu<NonNullable<typeof analysis.value>['outline'][number]>(session, { fresh: () => analyzedSource.value === content.value, reveal: entry => reveal(entry) })
+const valueEditVisible = ref(false), valueEditPending = ref(false), valueText = ref(''), valueError = ref('')
+const valueInput = ref<InputInst | null>(null), valueEntry = ref<Entry | null>(null)
+let valueOwner: ReturnType<typeof session.capture>, pendingValuePreview: (() => void) | undefined
+const finishValueDialog = () => { const offer = pendingValuePreview; pendingValuePreview = undefined; offer?.() }
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
+const openValueEdit = (entry: Entry) => {
+  if (editDisabled.value) return
+  if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); reveal(entry); return }
+  valueOwner = session.capture()
+  if (!valueOwner) return
+  valueEntry.value = entry
+  valueText.value = new TextDecoder().decode(new TextEncoder().encode(valueOwner.source).slice(entry.start,entry.end))
+  valueError.value = ''; valueEditVisible.value = true
+}
+const previewValueEdit = async () => {
+  const owner = valueOwner, entry = valueEntry.value
+  if (!owner || !entry || valueEditPending.value) return
+  if (!session.unchanged(owner)) { valueError.value = '当前文件或草稿已变化，请重新选择字段；内容未被修改'; return }
+  valueEditPending.value = true; valueError.value = ''
+  try {
+    const target = await invoke<string>('replace_toml_value_source',{content:owner.source,start:entry.start,end:entry.end,replacement:valueText.value})
+    if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择字段'; return }
+    const anchor = new TextDecoder().decode(new TextEncoder().encode(target).slice(0,entry.start)).length
+    pendingValuePreview = () => session.offerChange(owner,'修改 TOML 值',target,anchor)
+    valueEditVisible.value = false
+  } catch (cause) { if (session.owns(owner)) valueError.value = errorText(cause) }
+  finally { if (session.owns(owner)) valueEditPending.value = false }
+}
+const nodeMenu = useSourceNodeMenu<Entry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === content.value, reveal: entry => reveal(entry),
+  extra: entry => entry.kind === 'value' ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [],
+  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry) } })
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerTab = () => session.bind()
 
@@ -140,7 +180,8 @@ const load = async (discardDraft = false) => {
   loadId++; analysisId++; clearTimer()
   const owner = session.capture()
   if (!owner) return
-  session.cancelChange(); session.closeConflict()
+  session.cancelChange(); session.closeConflict(); nodeMenu.close()
+  valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
 
@@ -175,6 +216,8 @@ onBeforeUnmount(() => { clearTimer(); syncTab(); editor?.destroy(); editor = nul
 </script>
 
 <style scoped>
+.value-edit-actions{display:flex;justify-content:flex-end;gap:10px}
+.toml-value-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px}
 .workspace{width:100%;height:100%;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--theme-bg);color:var(--theme-text)}header{min-height:54px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:var(--theme-border);background:var(--theme-surface)}.identity,.actions{display:flex;align-items:center;gap:8px;min-width:0}.identity>div,.heading>div{display:flex;flex-direction:column;min-width:0}.identity strong{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.identity span,.heading span{font-size:11px;color:var(--theme-text-secondary)}.accent{color:var(--theme-primary)}.error{color:var(--theme-danger,#d03050)}main{min-height:0;flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px)}.source{position:relative;min-width:0;min-height:0}.editor{width:100%;height:100%}.hidden{visibility:hidden}.state{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center}aside{min-height:0;padding:14px;display:flex;flex-direction:column;gap:12px;border-left:var(--theme-border);background:var(--theme-surface)}.heading{display:flex;align-items:center;justify-content:space-between}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.metrics div{padding:8px 3px;display:flex;flex-direction:column;align-items:center;border:var(--theme-border);border-radius:8px}.metrics span{font-size: var(--text-compact);color:var(--theme-text-secondary)}.diagnostic{padding:8px;display:flex;gap:8px;border:0;border-radius:7px;color:var(--theme-danger,#d03050);background:rgba(208,48,80,.08);text-align:left}.diagnostic span,.outline button span{min-width:0;display:flex;flex:1;flex-direction:column}.diagnostic small,.outline small{overflow:hidden;color:var(--theme-text-secondary);text-overflow:ellipsis;white-space:nowrap}.valid{padding:9px;display:flex;gap:8px;border-radius:8px;color:var(--theme-primary);background:rgba(var(--theme-primary-rgb),.08)}.outline{min-height:0;flex:1;overflow:auto}.outline button{width:100%;min-height:48px;padding-top:6px;padding-right:8px;padding-bottom:6px;display:flex;align-items:center;gap:7px;border:0;border-bottom:var(--theme-border);color:inherit;background:transparent;text-align:left;cursor:pointer}.outline button:hover{background:rgba(var(--theme-primary-rgb),.07)}.outline p{padding:14px 6px;color:var(--theme-text-secondary);font-size:12px;text-align:center}.outline .warning{color:var(--theme-warning,#f0a020)}footer{min-height:28px;padding:0 14px;display:flex;align-items:center;gap:14px;border-top:var(--theme-border);color:var(--theme-text-secondary);background:var(--theme-surface);font-size:11px}
 main.inspector-hidden{grid-template-columns:minmax(0,1fr)}main.inspector-hidden aside{display:none}
 .toml-workspace { container-type: inline-size; }

@@ -1,0 +1,44 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "exact-current-draft-value-prefilled-selected-and-isolated-history",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-value-keeps-input-and-corrects-without-extra-operation",
+      "status": "passed"
+    },
+    {
+      "id": "quoted-key-and-second-array-table-target-remain-distinct",
+      "status": "passed"
+    },
+    {
+      "id": "complex-value-fallback-remains-local-and-source-usable",
+      "status": "passed"
+    },
+    {
+      "id": "late-result-never-overwrites-newer-draft",
+      "status": "passed"
+    },
+    {
+      "id": "stale-preview-preserves-current-source",
+      "status": "passed"
+    },
+    {
+      "id": "source-switch-dismisses-dialog-preview-and-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-retains-raw-current-draft",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-and-narrow-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}
