@@ -113,6 +113,16 @@
     </footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
+    <n-modal v-model:show="textEditVisible" preset="card" class="xml-text-edit-dialog" title="修改 XML 文字" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
+      :mask-closable="!textEditPending" :closable="!textEditPending" :close-on-esc="!textEditPending"
+      @after-enter="textInput?.select()" @after-leave="finishTextDialog">
+      <code>{{ textEntry?.path }}</code>
+      <n-input ref="textInput" v-model:value="textValue" type="textarea" :autosize="{minRows:4,maxRows:10}" :disabled="textEditPending"
+        aria-label="XML 文字" :input-props="{'aria-label':'XML 文字'}" autofocus />
+      <p v-if="textError" role="alert" class="attribute-edit-error">{{ textError }}</p>
+      <template #footer><div class="attribute-edit-actions"><n-button :disabled="textEditPending" @click="textEditVisible=false">取消</n-button>
+        <n-button type="primary" :loading="textEditPending" @click="previewTextEdit">预览修改</n-button></div></template>
+    </n-modal>
     <n-modal v-model:show="attributeEditVisible" preset="card" class="xml-attribute-edit-dialog" title="修改 XML 属性" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
       :mask-closable="!attributeEditPending" :closable="!attributeEditPending" :close-on-esc="!attributeEditPending"
       @after-enter="attributeInput?.select()" @after-leave="finishAttributeDialog">
@@ -164,7 +174,8 @@ import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../u
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string; path: string }
 interface Diagnostic { severity: string; code: string; message: string; start: number; end: number; line: number; column: number; path?: string }
 interface AttributeEntry { name: string; value: string; start: number; end: number; editable: boolean; editUnavailableReason?: string }
-interface OutlineEntry { path: string; name: string; depth: number; attributeCount: number; start: number; end: number; line: number; column: number; preview: string; attributes?: AttributeEntry[]; attributesTruncated?: boolean }
+interface TextEntry { kind: 'text' | 'cdata'; value: string; start: number; end: number }
+interface OutlineEntry { path: string; name: string; depth: number; attributeCount: number; start: number; end: number; line: number; column: number; preview: string; attributes?: AttributeEntry[]; attributesTruncated?: boolean; text?: TextEntry; textEditUnavailableReason?: string }
 interface Analysis {
   valid: boolean; rootName?: string; elementCount: number; attributeCount: number; namespaceCount: number; maxDepth: number
   commentCount: number; cdataCount: number; processingInstructionCount: number; doctypeCount: number
@@ -229,13 +240,38 @@ const session = useStructuredSession({
   applySnapshot: snapshot => applySnapshot(snapshot), load: discard => load(discard),
 })
 const attributeEditVisible = ref(false), attributeEditPending = ref(false), attributeName = ref(''), attributeText = ref(''), attributeError = ref('')
+const textEditVisible = ref(false), textEditPending = ref(false), textValue = ref(''), textError = ref('')
+const textInput = ref<InputInst | null>(null), textEntry = ref<OutlineEntry | null>(null)
+let textOwner: ReturnType<typeof session.capture>, pendingTextPreview: (() => void) | undefined
+const finishTextDialog = () => { const offer = pendingTextPreview; pendingTextPreview = undefined; offer?.() }
 const attributeInput = ref<InputInst | null>(null), attributeEntry = ref<OutlineEntry | null>(null)
 const selectedAttribute = computed(() => attributeEntry.value?.attributes?.find(attribute => attribute.name === attributeName.value))
 const attributeOptions = computed(() => (attributeEntry.value?.attributes || []).map(attribute => ({value:attribute.name,label:attribute.editable ? attribute.name : `${attribute.name} · 源码修改`,disabled:!attribute.editable})))
 const attributeDrafts = new Map<string,string>()
 let attributeOwner: ReturnType<typeof session.capture>, pendingAttributePreview: (() => void) | undefined
 const finishAttributeDialog = () => { const offer = pendingAttributePreview; pendingAttributePreview = undefined; offer?.() }
-const editDisabled = computed(() => isSvg.value || loading.value || saving.value || readOnly.value || analysisPending.value || attributeEditPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const editDisabled = computed(() => isSvg.value || loading.value || saving.value || readOnly.value || analysisPending.value || attributeEditPending.value || textEditPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const openTextEdit = (entry: OutlineEntry) => {
+  if (editDisabled.value) return
+  if (!entry.text) { message.info(entry.textEditUnavailableReason || '此元素请在源码中修改文字'); reveal(entry); return }
+  textOwner = session.capture()
+  if (!textOwner) return
+  textEntry.value = entry; textValue.value = entry.text.value; textError.value = ''; textEditVisible.value = true
+}
+const previewTextEdit = async () => {
+  const owner = textOwner, text = textEntry.value?.text
+  if (!owner || !text || textEditPending.value) return
+  if (!session.unchanged(owner)) { textError.value = '当前文件或草稿已变化，请重新选择文字；内容未被修改'; return }
+  textEditPending.value = true; textError.value = ''
+  try {
+    const target = await invoke<string>('replace_xml_text_source',{content:owner.source,start:text.start,end:text.end,replacement:textValue.value})
+    if (!session.unchanged(owner)) { textError.value = '当前草稿已变化，请重新选择文字'; return }
+    const anchor = new TextDecoder().decode(new TextEncoder().encode(target).slice(0,text.start)).length
+    pendingTextPreview = () => session.offerChange(owner,'修改 XML 文字',target,anchor)
+    textEditVisible.value = false
+  } catch (cause) { if (session.owns(owner)) textError.value = errorText(cause) }
+  finally { if (session.owns(owner)) textEditPending.value = false }
+}
 const selectAttribute = async (name: string) => {
   if (attributeName.value) attributeDrafts.set(attributeName.value,attributeText.value)
   attributeName.value = name
@@ -266,8 +302,8 @@ const previewAttributeEdit = async () => {
   finally { if (session.owns(owner)) attributeEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<OutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => reveal(entry),
-  extra: entry => !isSvg.value && entry.attributeCount > 0 ? [{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value}] : [],
-  action: (key,entry) => { if(key==='edit-attribute')openAttributeEdit(entry) } })
+  extra: entry => isSvg.value ? [] : [...(entry.attributeCount > 0 ? [{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value}] : []),{key:'edit-text',label:'修改文字…',disabled:editDisabled.value}],
+  action: (key,entry) => { if(key==='edit-attribute')openAttributeEdit(entry); if(key==='edit-text')openTextEdit(entry) } })
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerTab = () => session.bind()
 
@@ -331,6 +367,7 @@ const load = async (discardDraft = false) => {
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
   attributeEditVisible.value = false; attributeEditPending.value = false; attributeOwner = undefined; attributeEntry.value = null; pendingAttributePreview = undefined; attributeDrafts.clear()
+  textEditVisible.value = false; textEditPending.value = false; textOwner = undefined; textEntry.value = null; pendingTextPreview = undefined
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
 
@@ -379,9 +416,9 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .attribute-edit-actions{display:flex;justify-content:flex-end;gap:10px}
-.xml-attribute-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px;max-height:72px;overflow:auto}
+.xml-attribute-edit-dialog code,.xml-text-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px;max-height:72px;overflow:auto}
 .xml-attribute-edit-dialog strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.xml-attribute-edit-dialog :deep(.n-card__content){min-height:0;overflow:auto}
+.xml-attribute-edit-dialog :deep(.n-card__content),.xml-text-edit-dialog :deep(.n-card__content){min-height:0;overflow:auto}
 .xml-attribute-edit-dialog :deep(.n-select){margin-bottom:10px}
 .xml-attribute-edit-dialog :deep(.n-input){margin-top:10px}
 .attribute-edit-error{color:var(--theme-danger,#d03050)}

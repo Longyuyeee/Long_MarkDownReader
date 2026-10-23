@@ -38,6 +38,17 @@ pub struct XmlOutlineEntry {
     pub preview: String,
     pub attributes: Vec<XmlAttributeEntry>,
     pub attributes_truncated: bool,
+    pub text: Option<XmlTextEntry>,
+    pub text_edit_unavailable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct XmlTextEntry {
+    pub kind: String,
+    pub value: String,
+    pub start: usize,
+    pub end: usize,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -73,6 +84,8 @@ struct ElementFrame {
     path: String,
     outline_index: Option<usize>,
     child_counts: HashMap<String, usize>,
+    content_start: usize,
+    text_segments: Vec<XmlTextEntry>,
 }
 
 #[derive(Default)]
@@ -162,6 +175,13 @@ pub fn analyze_xml_source(content: &str) -> XmlSourceAnalysis {
                 if let Some(frame) = stack.pop() {
                     if let Some(index) = frame.outline_index {
                         state.outline[index].end = event_end;
+                        finish_text(
+                            content,
+                            frame,
+                            event_start,
+                            xml_version,
+                            &mut state.outline[index],
+                        );
                     }
                 }
             }
@@ -178,6 +198,14 @@ pub fn analyze_xml_source(content: &str) -> XmlSourceAnalysis {
                     break;
                 }
                 state.cdata_count += 1;
+                record_text(
+                    &mut stack,
+                    content,
+                    event_start + 9,
+                    event_end - 3,
+                    "cdata",
+                    xml_version,
+                );
             }
             Event::PI(_) => state.processing_instruction_count += 1,
             Event::Decl(ref declaration) => {
@@ -198,6 +226,26 @@ pub fn analyze_xml_source(content: &str) -> XmlSourceAnalysis {
                     None,
                 ));
                 break;
+            }
+            Event::GeneralRef(_) if stack.is_empty() => {
+                state.diagnostics.push(diagnostic(
+                    content,
+                    "syntax-error",
+                    "根元素之外不能包含实体引用".into(),
+                    event_start,
+                    None,
+                ));
+                break;
+            }
+            Event::Text(_) | Event::GeneralRef(_) => {
+                record_text(
+                    &mut stack,
+                    content,
+                    event_start,
+                    event_end,
+                    "text",
+                    xml_version,
+                );
             }
             Event::DocType(_) => {
                 state.doctype_count += 1;
@@ -392,6 +440,8 @@ fn push_element(
             preview: preview_parts.join(" "),
             attributes_truncated: attributes.len() < attribute_count,
             attributes,
+            text: None,
+            text_edit_unavailable_reason: Some("自闭合元素请在源码中展开后修改文字".into()),
         });
         Some(state.outline.len() - 1)
     } else {
@@ -404,9 +454,192 @@ fn push_element(
             path,
             outline_index,
             child_counts: HashMap::new(),
+            content_start: event_end,
+            text_segments: Vec::new(),
         });
     }
     true
+}
+
+fn normalize_text_lines(raw: &str, version: XmlVersion) -> String {
+    let raw = if version == XmlVersion::Explicit1_1 {
+        raw.replace("\r\u{85}", "\n")
+    } else {
+        raw.into()
+    };
+    let raw = raw.replace("\r\n", "\n").replace('\r', "\n");
+    if version == XmlVersion::Explicit1_1 {
+        raw.replace(['\u{85}', '\u{2028}'], "\n")
+    } else {
+        raw
+    }
+}
+
+fn record_text(
+    stack: &mut [ElementFrame],
+    content: &str,
+    start: usize,
+    end: usize,
+    kind: &str,
+    version: XmlVersion,
+) {
+    let Some(frame) = stack.last_mut() else {
+        return;
+    };
+    if frame.outline_index.is_none() || frame.text_segments.len() > 1 {
+        return;
+    }
+    let value = if kind == "cdata" {
+        normalize_text_lines(&content[start..end], version)
+    } else {
+        String::new()
+    };
+    if let Some(previous) = frame.text_segments.last_mut() {
+        let adjacent = if kind == "cdata" {
+            previous.end.checked_add(3) == start.checked_sub(9)
+        } else {
+            previous.end == start
+        };
+        if previous.kind == kind && adjacent {
+            previous.end = end;
+            previous.value.push_str(&value);
+            return;
+        }
+    }
+    frame.text_segments.push(XmlTextEntry {
+        kind: kind.into(),
+        value,
+        start,
+        end,
+    });
+}
+
+fn finish_text(
+    content: &str,
+    frame: ElementFrame,
+    closing_start: usize,
+    version: XmlVersion,
+    entry: &mut XmlOutlineEntry,
+) {
+    let reason = if !frame.child_counts.is_empty() {
+        Some("此元素包含子元素，请在源码中修改文字")
+    } else if frame.text_segments.len() > 1 {
+        Some("此元素含多段或混合文字，请在源码中修改")
+    } else {
+        None
+    };
+    entry.text_edit_unavailable_reason = reason.map(str::to_owned);
+    if reason.is_some() {
+        return;
+    }
+    let mut text = frame
+        .text_segments
+        .into_iter()
+        .next()
+        .unwrap_or(XmlTextEntry {
+            kind: "text".into(),
+            value: String::new(),
+            start: closing_start,
+            end: closing_start,
+        });
+    if text.start < frame.content_start || text.end > closing_start {
+        entry.text_edit_unavailable_reason = Some("文字位置无法确认，请在源码中修改".into());
+        return;
+    }
+    if text.kind == "text" {
+        let normalized = normalize_text_lines(&content[text.start..text.end], version);
+        match quick_xml::escape::unescape(&normalized) {
+            Ok(value) => text.value = value.into_owned(),
+            Err(_) => {
+                entry.text_edit_unavailable_reason =
+                    Some("文字含未解析实体，请在源码中修改".into());
+                return;
+            }
+        }
+    }
+    if text.value.chars().any(|c| !attribute_input_char(c)) {
+        entry.text_edit_unavailable_reason = Some("文字含需特殊处理的字符，请在源码中修改".into());
+        return;
+    }
+    entry.text = Some(text);
+}
+
+pub fn replace_xml_text_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    replacement: &str,
+) -> Result<String, String> {
+    let analysis = analyze_xml_source(content);
+    if !analysis.valid {
+        return Err("XML 存在语法问题，请先在源码中修复；当前草稿未变".into());
+    }
+    let entry = analysis
+        .outline
+        .iter()
+        .find(|entry| {
+            entry
+                .text
+                .as_ref()
+                .is_some_and(|text| text.start == start && text.end == end)
+        })
+        .ok_or("文字位置已过期或不能直接修改，请重新选择；当前草稿未变")?;
+    let text = entry.text.as_ref().unwrap();
+    if replacement.len() > MAX_XML_SOURCE_BYTES {
+        return Err("文字超过编辑上限，请缩短输入；当前草稿未变".into());
+    }
+    if replacement.chars().any(|c| !attribute_input_char(c)) {
+        return Err("文字含 XML 不支持的字符，请删除后重试；输入与草稿仍保留".into());
+    }
+    if replacement == text.value {
+        return Ok(content.into());
+    }
+    let escaped = if text.kind == "cdata" {
+        if replacement.contains(['\r', '\u{85}', '\u{2028}']) {
+            return Err(
+                "CDATA 的特殊换行请使用普通换行或在源码中修改；输入仍保留"
+                    .into(),
+            );
+        }
+        // Adjacent CDATA sections retain the exact text, including the closing delimiter.
+        replacement.replace("]]>", "]]]]><![CDATA[>")
+    } else {
+        replacement
+            .chars()
+            .map(|c| match c {
+                '&' => "&amp;".into(),
+                '<' => "&lt;".into(),
+                '>' => "&gt;".into(),
+                '\r' => "&#xD;".into(),
+                c @ '\u{7f}'..='\u{9f}' => format!("&#x{:X};", c as u32),
+                '\u{2028}' => "&#x2028;".into(),
+                other => other.to_string(),
+            })
+            .collect::<String>()
+    };
+    if content.len() - (end - start) + escaped.len() > MAX_XML_SOURCE_BYTES {
+        return Err("修改后源码超过编辑上限，请缩短输入；当前草稿未变".into());
+    }
+    let candidate = format!("{}{}{}", &content[..start], escaped, &content[end..]);
+    let checked = analyze_xml_source(&candidate);
+    let changed = checked
+        .outline
+        .iter()
+        .find(|node| node.path == entry.path)
+        .and_then(|node| node.text.as_ref());
+    if !checked.valid
+        || checked.element_count != analysis.element_count
+        || checked.attribute_count != analysis.attribute_count
+        || !changed.is_some_and(|node| {
+            node.kind == text.kind
+                && node.value == replacement
+                && ((replacement.is_empty() && text.kind == "text")
+                    || (node.start == start && node.end == start + escaped.len()))
+        })
+    {
+        return Err("无法在当前位置完整保留这段文字，请调整输入或在源码中修改；当前草稿未变".into());
+    }
+    Ok(candidate)
 }
 
 fn attribute_input_char(c: char) -> bool {
@@ -548,6 +781,139 @@ fn failed_analysis(diagnostic: XmlDiagnostic) -> XmlSourceAnalysis {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn text(source: &str, path: &str) -> XmlTextEntry {
+        let a = analyze_xml_source(source);
+        assert!(a.valid, "{:?}", a.diagnostics);
+        a.outline
+            .iter()
+            .find(|e| e.path == path)
+            .unwrap()
+            .text
+            .clone()
+            .expect(path)
+    }
+    fn edit_text(source: &str, path: &str, value: &str) -> String {
+        let t = text(source, path);
+        replace_xml_text_source(source, t.start, t.end, value).unwrap()
+    }
+    #[test]
+    fn xml_text_unicode_bom_entities_and_exact_source_ranges() {
+        let s = "\u{feff}<?xml version=\"1.0\"?>\r\n<r><a x='long'>中文😀 &amp; &#x1F600;\r\ntext</a></r>";
+        let t = text(s, "/r[1]/a[1]");
+        assert_eq!(t.value, "中文😀 & 😀\ntext");
+        assert_eq!(&s[t.start..t.end], "中文😀 &amp; &#x1F600;\r\ntext");
+        assert_eq!(edit_text(s, "/r[1]/a[1]", &t.value), s);
+        assert_eq!(
+            edit_text(s, "/r[1]/a[1]", "新<&>"),
+            s.replace("中文😀 &amp; &#x1F600;\r\ntext", "新&lt;&amp;&gt;")
+        );
+    }
+    #[test]
+    fn xml_text_same_named_sibling_keeps_attributes_and_intentional_whitespace() {
+        let s="<r xmlns:d='urn:d'><d:a id='1'>same</d:a><d:a id=\"9007199254740993123456789\">same</d:a></r>";
+        let v = " first\nsecond\t\r ";
+        let got = edit_text(s, "/r[1]/d:a[2]", v);
+        assert_eq!(
+            got,
+            s.replace(">same</d:a></r>", "> first\nsecond\t&#xD; </d:a></r>")
+        );
+        assert_eq!(text(&got, "/r[1]/d:a[2]").value, v);
+    }
+    #[test]
+    fn xml_cdata_delimiter_splits_and_remains_editable_as_one_continuous_block() {
+        let s = "<r><a><![CDATA[原始 <&>😀]]></a></r>";
+        assert_eq!(text(s, "/r[1]/a[1]").kind, "cdata");
+        let v = "中文 ]]> & < > 😀\nline";
+        let got = edit_text(s, "/r[1]/a[1]", v);
+        assert_eq!(
+            got,
+            s.replace("原始 <&>😀", "中文 ]]]]><![CDATA[> & < > 😀\nline")
+        );
+        assert_eq!(text(&got, "/r[1]/a[1]").value, v);
+        let empty = edit_text(&got, "/r[1]/a[1]", "");
+        assert_eq!(empty, "<r><a><![CDATA[]]></a></r>");
+        assert_eq!(
+            edit_text(&empty, "/r[1]/a[1]", "again"),
+            "<r><a><![CDATA[again]]></a></r>"
+        );
+    }
+    #[test]
+    fn xml_paired_empty_text_can_be_filled_cleared_and_filled_again() {
+        let s = "<r><a ></a><b/></r>";
+        assert_eq!(text(s, "/r[1]/a[1]").value, "");
+        let filled = edit_text(s, "/r[1]/a[1]", "<&>");
+        assert_eq!(filled, "<r><a >&lt;&amp;&gt;</a><b/></r>");
+        assert_eq!(edit_text(&filled, "/r[1]/a[1]", ""), s);
+        let b = analyze_xml_source(s)
+            .outline
+            .into_iter()
+            .find(|e| e.name == "b")
+            .unwrap();
+        assert!(b.text.is_none());
+        assert!(b.text_edit_unavailable_reason.unwrap().contains("自闭合"));
+    }
+    #[test]
+    fn xml_text_neighbour_comments_and_instructions_stay_byte_exact() {
+        let s = "<a><!-- keep -->old<?keep value?></a>";
+        assert_eq!(
+            edit_text(s, "/a[1]", "new"),
+            "<a><!-- keep -->new<?keep value?></a>"
+        );
+        let empty = edit_text(s, "/a[1]", "");
+        assert_eq!(empty, "<a><!-- keep --><?keep value?></a>");
+        assert_eq!(
+            edit_text(&empty, "/a[1]", "next"),
+            "<a><!-- keep --><?keep value?>next</a>"
+        );
+    }
+    #[test]
+    fn xml_mixed_split_and_unresolved_text_keep_local_source_fallback() {
+        for s in [
+            "<a>before<b/>after</a>",
+            "<a>one<!--c-->two</a>",
+            "<a>one<![CDATA[two]]></a>",
+            "<a>&unknown;</a>",
+        ] {
+            let a = analyze_xml_source(s);
+            assert!(a.valid);
+            assert!(a.outline[0].text.is_none());
+            assert!(a.outline[0].text_edit_unavailable_reason.is_some());
+            assert!(replace_xml_text_source(s, 3, s.len() - 4, "x").is_err());
+        }
+        assert_eq!(text("<r><a>x</a></r>", "/r[1]/a[1]").value, "x");
+    }
+    #[test]
+    fn xml_text_invalid_input_stale_ranges_and_invalid_source_keep_drafts() {
+        let s = "<a>old</a>";
+        let t = text(s, "/a[1]");
+        for v in ["bad\0", "bad\u{fffe}", "bad\u{ffff}", "bad\u{b}"] {
+            assert!(replace_xml_text_source(s, t.start, t.end, v).is_err())
+        }
+        assert!(replace_xml_text_source(s, t.start + 1, t.end, "x").is_err());
+        assert!(replace_xml_text_source(s, usize::MAX, usize::MAX, "x").is_err());
+        for s in ["<a>old", "<a>old</a>&amp;", "<a><b></a>"] {
+            assert!(replace_xml_text_source(s, 3, 6, "x").is_err())
+        }
+        let c = "<a><![CDATA[x]]></a>";
+        let t = text(c, "/a[1]");
+        assert!(replace_xml_text_source(c, t.start, t.end, "\r").is_err());
+    }
+    #[test]
+    fn xml_text_versioned_line_normalization_and_edit_budgets() {
+        let s = "<?xml version='1.1'?><a>A\r\u{85}B\u{85}C\u{2028}D&#xD;&#x85;</a>";
+        assert_eq!(text(s, "/a[1]").value, "A\nB\nC\nD\r\u{85}");
+        let v = "A\r\u{85}\u{2028}";
+        assert_eq!(text(&edit_text(s, "/a[1]", v), "/a[1]").value, v);
+        let t = text("<a>x</a>", "/a[1]");
+        assert!(replace_xml_text_source(
+            "<a>x</a>",
+            t.start,
+            t.end,
+            &"<".repeat(MAX_XML_SOURCE_BYTES / 2)
+        )
+        .is_err());
+    }
 
     fn attribute(source: &str, path: &str, name: &str) -> XmlAttributeEntry {
         let analysis = analyze_xml_source(source);

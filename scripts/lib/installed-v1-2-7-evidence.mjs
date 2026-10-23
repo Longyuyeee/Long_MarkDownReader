@@ -5,7 +5,7 @@ export const jsonArraySource=String.raw`{"draft":"原稿","rows":[{"id":"甲","n
 export const jsonArrayDraft=jsonArraySource.replace('原稿','我的草稿')
 export const jsonArrayMoved=jsonArrayDraft.replace(String.raw`{"id":"甲","n":9007199254740993123456789,"text":"\u4e2d\\"},{"id":"乙","nested":[1,{"x":2}]}`,String.raw`{"id":"乙","nested":[1,{"x":2}]},{"id":"甲","n":9007199254740993123456789,"text":"\u4e2d\\"}`)
 export function validateInstalledJsonArray(r,m){
- assert.ok(['1.2.7','1.2.8', '1.2.9', '1.2.10', '1.2.11'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.7','1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-json-array-order-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  assert.equal(r.lockedBefore,r.lockedAfter);assert.equal(r.externalBefore,r.externalAfter)
