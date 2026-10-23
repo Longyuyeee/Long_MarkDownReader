@@ -38,6 +38,7 @@ pub struct XmlOutlineEntry {
     pub preview: String,
     pub attributes: Vec<XmlAttributeEntry>,
     pub attributes_truncated: bool,
+    pub attribute_insertion: Option<usize>,
     pub text: Option<XmlTextEntry>,
     pub text_edit_unavailable_reason: Option<String>,
     pub copy: Option<XmlElementCopy>,
@@ -100,6 +101,15 @@ pub struct XmlAttributeEntry {
     pub end: usize,
     pub editable: bool,
     pub edit_unavailable_reason: Option<String>,
+    pub syntax: Option<XmlAttributeSyntax>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct XmlAttributeSyntax {
+    pub start: usize,
+    pub end: usize,
+    pub separator_start: usize,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -392,6 +402,8 @@ fn push_element(
     let mut attribute_count = 0usize;
     let mut preview_parts = Vec::new();
     let mut attributes = Vec::new();
+    let mut attribute_cursor = event_start + 1 + start.name().as_ref().len();
+    let mut syntax_complete = true;
     for attribute in start.attributes() {
         let attribute = match attribute {
             Ok(attribute) => attribute,
@@ -439,6 +451,27 @@ fn push_element(
                 .then_some((from, to))
             });
             let decoded = attribute.normalized_value(xml_version);
+            let syntax = range.and_then(|(from, to)| {
+                let key_bytes = attribute.key.as_ref();
+                let key_offset = (key_bytes.as_ptr() as usize).checked_sub(tag.as_ptr() as usize)?;
+                let key_start = event_start.checked_add(1)?.checked_add(key_offset)?;
+                let key_end = key_start.checked_add(key_bytes.len())?;
+                let between = content.get(key_end..from.checked_sub(1)?)?;
+                let separator = content.get(attribute_cursor..key_start)?;
+                (content.as_bytes().get(key_start..key_end) == Some(key_bytes)
+                    && !separator.is_empty()
+                    && separator.bytes().all(xml_space)
+                    && between.trim_matches([' ', '\t', '\n', '\r']) == "=")
+                    .then_some(XmlAttributeSyntax {
+                        start: key_start,
+                        end: to + 1,
+                        separator_start: attribute_cursor,
+                    })
+            });
+            syntax_complete &= syntax.is_some();
+            if let Some(syntax) = &syntax {
+                attribute_cursor = syntax.end;
+            }
             let reason = if key == "xmlns" || key.starts_with("xmlns:") {
                 Some("命名空间声明请在源码中修改")
             } else if range.is_none() {
@@ -463,11 +496,19 @@ fn push_element(
                 end: to,
                 editable: reason.is_none(),
                 edit_unavailable_reason: reason.map(str::to_owned),
+                syntax,
             });
             state.attribute_details += 1;
         }
     }
     state.attribute_count += attribute_count;
+    let tag_end = event_start + 1 + start.len();
+    let attribute_insertion = (syntax_complete
+        && attributes.len() == attribute_count
+        && content
+            .get(attribute_cursor..tag_end)
+            .is_some_and(|s| s.bytes().all(xml_space)))
+    .then_some(attribute_cursor);
 
     let outline_index = if state.outline.len() < MAX_XML_OUTLINE_ENTRIES {
         let (line, column) = line_column(content, event_start);
@@ -482,6 +523,7 @@ fn push_element(
             column,
             preview: preview_parts.join(" "),
             attributes_truncated: attributes.len() < attribute_count,
+            attribute_insertion,
             attributes,
             text: None,
             text_edit_unavailable_reason: Some("自闭合元素请在源码中展开后修改文字".into()),
@@ -976,6 +1018,190 @@ fn attribute_input_char(c: char) -> bool {
     matches!(c, '\t' | '\n' | '\r' | '\u{20}'..='\u{d7ff}' | '\u{e000}'..='\u{fffd}' | '\u{10000}'..='\u{10ffff}')
 }
 
+fn xml_space(b: u8) -> bool {
+    matches!(b, b' ' | b'\t' | b'\r' | b'\n')
+}
+
+// XML 1.0 Fifth Edition NameStartChar / NameChar, excluding namespace colons.
+// https://www.w3.org/TR/xml/#NT-NameStartChar
+fn plain_attribute_name(name: &str) -> bool {
+    let start = |c: char| {
+        matches!(c, 'A'..='Z' | '_' | 'a'..='z' | '\u{c0}'..='\u{d6}'
+        | '\u{d8}'..='\u{f6}' | '\u{f8}'..='\u{2ff}' | '\u{370}'..='\u{37d}'
+        | '\u{37f}'..='\u{1fff}' | '\u{200c}'..='\u{200d}' | '\u{2070}'..='\u{218f}'
+        | '\u{2c00}'..='\u{2fef}' | '\u{3001}'..='\u{d7ff}' | '\u{f900}'..='\u{fdcf}'
+        | '\u{fdf0}'..='\u{fffd}' | '\u{10000}'..='\u{effff}')
+    };
+    let mut chars = name.chars();
+    chars.next().is_some_and(start) && chars.all(|c| start(c) || matches!(c, '-' | '.' | '0'..='9' | '\u{b7}' | '\u{300}'..='\u{36f}' | '\u{203f}'..='\u{2040}'))
+}
+
+fn escape_attribute(value: &str, quote: u8) -> String {
+    let mut escaped = String::new();
+    for c in value.chars() {
+        match c {
+            '&' => escaped.push_str("&amp;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            '\'' if quote == b'\'' => escaped.push_str("&apos;"),
+            '"' if quote == b'"' => escaped.push_str("&quot;"),
+            '\t' => escaped.push_str("&#x9;"),
+            '\n' => escaped.push_str("&#xA;"),
+            '\r' => escaped.push_str("&#xD;"),
+            c @ '\u{7f}'..='\u{9f}' => escaped.push_str(&format!("&#x{:X};", c as u32)),
+            '\u{2028}' => escaped.push_str("&#x2028;"),
+            other => escaped.push(other),
+        }
+    }
+    escaped
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct XmlAttributeChange {
+    pub content: String,
+    pub anchor: usize,
+}
+
+fn attribute_management_entry(
+    analysis: &XmlSourceAnalysis,
+    start: usize,
+    end: usize,
+) -> Result<&XmlOutlineEntry, String> {
+    if !analysis.valid || analysis.outline_truncated {
+        return Err("XML 存在语法问题或结构无法完整确认，请在源码中处理；当前草稿未变".into());
+    }
+    let entry = analysis
+        .outline
+        .iter()
+        .find(|e| e.start == start && e.end == end)
+        .ok_or("元素位置已变化，请重新选择；当前草稿未变")?;
+    if entry.attributes_truncated || entry.attribute_insertion.is_none() {
+        return Err("属性过多或原文位置无法完整确认，请在源码中处理；当前草稿未变".into());
+    }
+    Ok(entry)
+}
+
+pub fn add_xml_attribute_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    name: &str,
+    value: &str,
+) -> Result<XmlAttributeChange, String> {
+    let analysis = analyze_xml_source(content);
+    let entry = attribute_management_entry(&analysis, start, end)?;
+    if name == "xmlns" || name.contains(':') {
+        return Err("命名空间声明及带前缀属性请在源码中新增；当前草稿未变".into());
+    }
+    if !plain_attribute_name(name) {
+        return Err("请输入有效的 XML 属性名，不能含空格或以数字开头；输入仍保留".into());
+    }
+    if entry.attributes.iter().any(|a| a.name == name) {
+        return Err("此元素已有同名属性，请选择已有属性修改；输入仍保留".into());
+    }
+    if entry.attribute_count >= MAX_XML_ELEMENT_ATTRIBUTES {
+        return Err("此元素属性较多，请在源码中新增；当前草稿未变".into());
+    }
+    if name.len() > MAX_XML_SOURCE_BYTES
+        || value.len() > MAX_XML_SOURCE_BYTES
+        || value.chars().any(|c| !attribute_input_char(c))
+    {
+        return Err("属性名或值超过上限，或含 XML 不支持的字符；输入仍保留".into());
+    }
+    let insertion = entry.attribute_insertion.unwrap();
+    let last = entry.attributes.last();
+    let separator = last
+        .and_then(|a| a.syntax.as_ref())
+        .map(|r| &content[r.separator_start..r.start])
+        .unwrap_or(" ");
+    let quote = last
+        .map(|a| content.as_bytes()[a.start - 1])
+        .unwrap_or(b'"');
+    let literal = format!(
+        "{separator}{name}={q}{}{q}",
+        escape_attribute(value, quote),
+        q = quote as char
+    );
+    if content.len() + literal.len() > MAX_XML_SOURCE_BYTES {
+        return Err("新增后源码超过编辑上限，请缩短输入；当前草稿未变".into());
+    }
+    let candidate = format!(
+        "{}{}{}",
+        &content[..insertion],
+        literal,
+        &content[insertion..]
+    );
+    let checked = analyze_xml_source(&candidate);
+    let changed = checked.outline.iter().find(|e| e.path == entry.path);
+    if !checked.valid
+        || checked.outline_truncated
+        || checked.element_count != analysis.element_count
+        || checked.root_name != analysis.root_name
+        || checked.namespace_count != analysis.namespace_count
+        || checked.attribute_count != analysis.attribute_count + 1
+        || !changed.is_some_and(|e| {
+            !e.attributes_truncated
+                && e.attributes
+                    .last()
+                    .is_some_and(|a| a.name == name && a.value == value && a.editable)
+        })
+    {
+        return Err("无法完整保留这个属性，请在源码中新增；当前草稿未变".into());
+    }
+    Ok(XmlAttributeChange {
+        content: candidate,
+        anchor: insertion + separator.len(),
+    })
+}
+
+pub fn remove_xml_attribute_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    name: &str,
+) -> Result<XmlAttributeChange, String> {
+    let analysis = analyze_xml_source(content);
+    let entry = attribute_management_entry(&analysis, start, end)?;
+    if name == "xmlns" || name.contains(':') {
+        return Err("命名空间声明及带前缀属性请在源码中移除；当前草稿未变".into());
+    }
+    let attribute = entry
+        .attributes
+        .iter()
+        .find(|a| a.name == name)
+        .ok_or("此属性已变化，请重新选择；当前草稿未变")?;
+    let range = attribute
+        .syntax
+        .as_ref()
+        .ok_or("属性原文位置无法确认，请在源码中移除；当前草稿未变")?;
+    let candidate = format!(
+        "{}{}",
+        &content[..range.separator_start],
+        &content[range.end..]
+    );
+    let checked = analyze_xml_source(&candidate);
+    let changed = checked.outline.iter().find(|e| e.path == entry.path);
+    if !checked.valid
+        || checked.outline_truncated
+        || checked.element_count != analysis.element_count
+        || checked.root_name != analysis.root_name
+        || checked.namespace_count != analysis.namespace_count
+        || checked.attribute_count + 1 != analysis.attribute_count
+        || !changed.is_some_and(|e| {
+            !e.attributes_truncated
+                && e.attribute_count + 1 == entry.attribute_count
+                && !e.attributes.iter().any(|a| a.name == name)
+        })
+    {
+        return Err("无法完整保留其他属性，请在源码中移除；当前草稿未变".into());
+    }
+    Ok(XmlAttributeChange {
+        content: candidate,
+        anchor: entry.start,
+    })
+}
+
 pub fn replace_xml_attribute_source(
     content: &str,
     start: usize,
@@ -1009,23 +1235,7 @@ pub fn replace_xml_attribute_source(
         // the displayed value has not changed.
         return Ok(content.into());
     }
-    let quote = content.as_bytes()[start - 1];
-    let mut escaped = String::new();
-    for character in replacement.chars() {
-        match character {
-            '&' => escaped.push_str("&amp;"),
-            '<' => escaped.push_str("&lt;"),
-            '>' => escaped.push_str("&gt;"),
-            '\'' if quote == b'\'' => escaped.push_str("&apos;"),
-            '"' if quote == b'"' => escaped.push_str("&quot;"),
-            '\t' => escaped.push_str("&#x9;"),
-            '\n' => escaped.push_str("&#xA;"),
-            '\r' => escaped.push_str("&#xD;"),
-            c @ '\u{7f}'..='\u{9f}' => escaped.push_str(&format!("&#x{:X};", c as u32)),
-            '\u{2028}' => escaped.push_str("&#x2028;"),
-            other => escaped.push(other),
-        }
-    }
+    let escaped = escape_attribute(replacement, content.as_bytes()[start - 1]);
     if content.len() - (end - start) + escaped.len() > MAX_XML_SOURCE_BYTES {
         return Err("修改后源码超过编辑上限，请缩短输入；当前草稿未变".into());
     }
@@ -1594,6 +1804,185 @@ mod tests {
     fn edit(source: &str, path: &str, name: &str, value: &str) -> Result<String, String> {
         let attribute = attribute(source, path, name);
         replace_xml_attribute_source(source, attribute.start, attribute.end, value)
+    }
+
+    fn add(
+        source: &str,
+        path: &str,
+        name: &str,
+        value: &str,
+    ) -> Result<XmlAttributeChange, String> {
+        let entry = analyze_xml_source(source)
+            .outline
+            .into_iter()
+            .find(|e| e.path == path)
+            .unwrap();
+        add_xml_attribute_source(source, entry.start, entry.end, name, value)
+    }
+    fn remove(source: &str, path: &str, name: &str) -> Result<XmlAttributeChange, String> {
+        let entry = analyze_xml_source(source)
+            .outline
+            .into_iter()
+            .find(|e| e.path == path)
+            .unwrap();
+        remove_xml_attribute_source(source, entry.start, entry.end, name)
+    }
+
+    #[test]
+    fn attribute_management_ranges_cover_complete_literal_and_only_its_separator() {
+        let source = "\u{feff}<配置 \t标题 \n= \"\"\r\n  second='😀' />";
+        let analysis = analyze_xml_source(source);
+        for (a, raw, separator) in [(0, "标题 \n= \"\"", " \t"), (1, "second='😀'", "\r\n  ")] {
+            let syntax = analysis.outline[0].attributes[a].syntax.as_ref().unwrap();
+            assert_eq!(&source[syntax.start..syntax.end], raw);
+            assert_eq!(&source[syntax.separator_start..syntax.start], separator);
+        }
+        assert_eq!(
+            analysis.outline[0].attribute_insertion,
+            Some(source.find(" />").unwrap())
+        );
+    }
+
+    #[test]
+    fn attribute_add_keeps_bom_crlf_namespace_raw_values_and_other_nodes() {
+        let source = "\u{feff}<?xml version='1.0'?>\r\n<!-- 原文😀 -->\r\n<r xmlns:p='urn:p'><p:item id='9007199254740993123456789'>正文<![CDATA[keep]]></p:item><p:item/></r>\r\n";
+        let value = "'\" & < > \t\n\r 中文😀";
+        let changed = add(source, "/r[1]/p:item[1]", "标题", value).unwrap();
+        assert_eq!(
+            attribute(&changed.content, "/r[1]/p:item[1]", "标题").value,
+            value
+        );
+        assert_eq!(
+            &changed.content[changed.anchor..changed.anchor + "标题".len()],
+            "标题"
+        );
+        assert_eq!(
+            remove(&changed.content, "/r[1]/p:item[1]", "标题")
+                .unwrap()
+                .content,
+            source
+        );
+    }
+
+    #[test]
+    fn attribute_add_follows_multiline_separator_and_last_quote_without_reformatting() {
+        let source = "<r\r\n  a = 'A&amp;B'\r\n\tb=\"B\"\r\n />";
+        let changed = add(source, "/r[1]", "new", "\"value\"").unwrap();
+        assert_eq!(
+            changed.content,
+            "<r\r\n  a = 'A&amp;B'\r\n\tb=\"B\"\r\n\tnew=\"&quot;value&quot;\"\r\n />"
+        );
+        assert_eq!(
+            remove(&changed.content, "/r[1]", "new").unwrap().content,
+            source
+        );
+    }
+
+    #[test]
+    fn attribute_add_supports_attribute_free_self_closing_paired_and_root_elements() {
+        for source in [
+            "<r/>",
+            "<r />",
+            "<r></r>",
+            "<r\n></r>",
+            "<r>正文<!--keep--></r>",
+        ] {
+            let changed = add(source, "/r[1]", "empty", "").unwrap();
+            assert_eq!(changed.content, source.replacen("<r", "<r empty=\"\"", 1));
+            assert_eq!(
+                remove(&changed.content, "/r[1]", "empty").unwrap().content,
+                source
+            );
+        }
+    }
+
+    #[test]
+    fn attribute_remove_first_middle_last_and_only_retains_remaining_raw_bytes() {
+        let source = "<r \ta='1'\r\n  b = \"B&amp;C\"   c='3'\r\n />";
+        for (name, expected) in [
+            ("a", "<r\r\n  b = \"B&amp;C\"   c='3'\r\n />"),
+            ("b", "<r \ta='1'   c='3'\r\n />"),
+            ("c", "<r \ta='1'\r\n  b = \"B&amp;C\"\r\n />"),
+        ] {
+            assert_eq!(remove(source, "/r[1]", name).unwrap().content, expected);
+        }
+        assert_eq!(
+            remove("<r\r\n  only = ''\r\n />", "/r[1]", "only")
+                .unwrap()
+                .content,
+            "<r\r\n />"
+        );
+    }
+
+    #[test]
+    fn attribute_management_names_duplicates_namespace_and_input_errors_stay_local() {
+        let source = "<r xmlns:p='urn:p' p:label='yes' id='old'/>";
+        for name in [
+            "",
+            "1id",
+            "has space",
+            "x=",
+            "x\"",
+            "x\0",
+            "xmlns",
+            "xmlns:p",
+            "p:new",
+            "id",
+        ] {
+            assert!(add(source, "/r[1]", name, "value").is_err(), "{name:?}");
+        }
+        for name in ["_id", "版本号", "😀", "a-b.c", "a\u{301}"] {
+            assert!(add(source, "/r[1]", name, "").is_ok(), "{name}");
+        }
+        for value in ["\0", "\u{b}", "\u{fffe}"] {
+            assert!(add(source, "/r[1]", "new", value).is_err());
+        }
+        for name in ["xmlns:p", "p:label", "missing"] {
+            assert!(remove(source, "/r[1]", name).is_err());
+        }
+        assert_eq!(
+            edit(source, "/r[1]", "p:label", "still editable").unwrap(),
+            source.replace("label='yes'", "label='still editable'")
+        );
+    }
+
+    #[test]
+    fn attribute_management_rejects_stale_invalid_partial_and_oversized_candidates() {
+        for (start, end) in [(0, 3), (usize::MAX, 0), (1, 4)] {
+            assert!(add_xml_attribute_source("<r/>", start, end, "x", "v").is_err());
+            assert!(remove_xml_attribute_source("<r a='v'/>", start, end, "a").is_err());
+        }
+        assert!(add_xml_attribute_source("<r>", 0, 3, "x", "v").is_err());
+        let source = format!(
+            "<r {}/>",
+            (0..300)
+                .map(|i| format!("a{i}='{i}'"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
+        assert!(add(&source, "/r[1]", "new", "v").is_err());
+        assert!(remove(&source, "/r[1]", "a0").is_err());
+        assert!(add(
+            "<r/>",
+            "/r[1]",
+            "new",
+            &"&".repeat(MAX_XML_SOURCE_BYTES / 2)
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn attribute_management_consecutive_operations_refresh_repeated_element_ranges() {
+        let source = "<r><item id='first'/><item id='second' keep='&amp;'/></r>";
+        let added = add(source, "/r[1]/item[2]", "new", "first value").unwrap();
+        let added_twice = add(&added.content, "/r[1]/item[2]", "other", "two").unwrap();
+        let changed = edit(&added_twice.content, "/r[1]/item[2]", "new", "changed").unwrap();
+        let removed = remove(&changed, "/r[1]/item[2]", "id").unwrap();
+        assert_eq!(
+            removed.content,
+            "<r><item id='first'/><item keep='&amp;' new='changed' other='two'/></r>"
+        );
+        assert_eq!(removed.anchor, source.find("<item id='second'").unwrap());
     }
 
     #[test]

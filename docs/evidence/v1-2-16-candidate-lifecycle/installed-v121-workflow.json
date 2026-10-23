@@ -1,0 +1,99 @@
+{
+  "appVersion": "1.2.16",
+  "sourceCommit": "e7ca2d0598df0c0ff897241a0414d65cf77a5e45",
+  "installerSha256": "20aa087f387a1fe73a32ce97fd8f8d6ca413d4c3cc0391fa222f643703c36863",
+  "harnessSourceCommit": "e7ca2d0598df0c0ff897241a0414d65cf77a5e45",
+  "executableSha256": "094594c046c030ad699cbd5fc19de8eeeb1e5eb8356ddfb479d6e5badaca5ee2",
+  "status": "passed",
+  "evidenceLevel": "installed-reading-continuity-native-receipts-and-trusted-input",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "live-pdf-follows-folder-move-with-original-signature",
+      "status": "passed"
+    },
+    {
+      "id": "named-scene-and-staged-descendants-follow-success",
+      "status": "passed"
+    },
+    {
+      "id": "partial-batch-only-successful-paths-continue",
+      "status": "passed"
+    },
+    {
+      "id": "retry-continues-remaining-record-once",
+      "status": "passed"
+    },
+    {
+      "id": "copy-keeps-source-reading-record",
+      "status": "passed"
+    },
+    {
+      "id": "destination-record-is-not-overwritten",
+      "status": "passed"
+    },
+    {
+      "id": "dirty-markdown-follows-without-implicit-save",
+      "status": "passed"
+    },
+    {
+      "id": "file-bytes-preserved-and-interface-usable",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v121-observations.json",
+      "sizeBytes": 1014,
+      "sha256": "64c9e3254b8c27405fc45d3cf81f88677b5ea2a3206f36f8f4c52489c8956d56"
+    }
+  ],
+  "runtimeErrors": [],
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    }
+  ],
+  "pdfBefore": "bf525a3724b5c5ccfc0a8b402f452c6fe8c3b794258d84d7b068d7d8f624d42d",
+  "pdfAfter": "bf525a3724b5c5ccfc0a8b402f452c6fe8c3b794258d84d7b068d7d8f624d42d",
+  "errorOverlay": false
+}
