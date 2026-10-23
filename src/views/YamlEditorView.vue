@@ -1,5 +1,5 @@
 <template>
-  <div class="yaml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
+  <div class="yaml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading" :data-analysis-current="!analysisPending && analyzedSource === sourceContent">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
 
     <header class="workspace-document-header yaml-toolbar">
@@ -159,6 +159,16 @@
     </footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
+    <n-modal v-model:show="valueEditVisible" preset="card" class="yaml-value-edit-dialog" title="修改 YAML 值" :style="{width:'min(520px,94vw)'}"
+      :mask-closable="!valueEditPending" :closable="!valueEditPending" :close-on-esc="!valueEditPending"
+      @after-enter="valueInput?.select()" @after-leave="finishValueDialog">
+      <code>{{ valueEntry?.path }}</code>
+      <n-input ref="valueInput" v-model:value="valueText" type="textarea" :autosize="{minRows:3,maxRows:8}"
+        :disabled="valueEditPending" aria-label="YAML 字段值" :input-props="{'aria-label':'YAML 字段值'}" autofocus />
+      <p v-if="valueError" role="alert" class="value-edit-error">{{ valueError }}</p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
+        <n-button type="primary" :loading="valueEditPending" @click="previewValueEdit">预览修改</n-button></div></template>
+    </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
@@ -175,7 +185,7 @@ import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { useRoute, useRouter } from 'vue-router'
-import { useDialog, useMessage } from 'naive-ui'
+import { useDialog, useMessage, type InputInst } from 'naive-ui'
 import {
   AlertTriangle as AlertIcon,
   ArrowLeft as ArrowLeftIcon,
@@ -225,6 +235,8 @@ interface YamlDiagnostic {
 }
 
 interface YamlOutlineEntry {
+  editable?: boolean
+  editUnavailableReason?: string
   documentIndex: number
   path: string
   label: string
@@ -338,7 +350,37 @@ const session = useStructuredSession({
   analyze: source => analyzeContent(source), clearAnalysis: () => clearAnalysisTimer(), scheduleAnalysis: () => scheduleAnalysis(),
   applySnapshot: snapshot => applySnapshot(snapshot), load: discard => load(discard),
 })
-const nodeMenu = useSourceNodeMenu<NonNullable<typeof analysis.value>['outline'][number]>(session, { fresh: () => analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry) })
+const valueEditVisible = ref(false), valueEditPending = ref(false), valueText = ref(''), valueError = ref('')
+const valueInput = ref<InputInst | null>(null), valueEntry = ref<YamlOutlineEntry | null>(null)
+let valueOwner: ReturnType<typeof session.capture>, pendingValuePreview: (() => void) | undefined
+const finishValueDialog = () => { const offer = pendingValuePreview; pendingValuePreview = undefined; offer?.() }
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const openValueEdit = (entry: YamlOutlineEntry) => {
+  if (editDisabled.value) return
+  if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); revealRange(entry); return }
+  valueOwner = session.capture()
+  if (!valueOwner) return
+  valueEntry.value = entry
+  valueText.value = new TextDecoder().decode(new TextEncoder().encode(valueOwner.source).slice(entry.start,entry.end))
+  valueError.value = ''; valueEditVisible.value = true
+}
+const previewValueEdit = async () => {
+  const owner = valueOwner, entry = valueEntry.value
+  if (!owner || !entry || valueEditPending.value) return
+  if (!session.unchanged(owner)) { valueError.value = '当前文件或草稿已变化，请重新选择字段；内容未被修改'; return }
+  valueEditPending.value = true; valueError.value = ''
+  try {
+    const target = await invoke<string>('replace_yaml_value_source',{content:owner.source,start:entry.start,end:entry.end,replacement:valueText.value})
+    if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择字段'; return }
+    const anchor = new TextDecoder().decode(new TextEncoder().encode(target).slice(0,entry.start)).length
+    pendingValuePreview = () => session.offerChange(owner,'修改 YAML 值',target,anchor)
+    valueEditVisible.value = false
+  } catch (cause) { if (session.owns(owner)) valueError.value = errorMessage(cause) }
+  finally { if (session.owns(owner)) valueEditPending.value = false }
+}
+const nodeMenu = useSourceNodeMenu<YamlOutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry),
+  extra: entry => ['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [],
+  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry) } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerCurrentTab = () => session.bind()
 
@@ -449,7 +491,8 @@ const load = async (discardDraft = false) => {
   loadGeneration++; analysisGeneration++; clearAnalysisTimer()
   const owner = session.capture()
   if (!owner) return
-  session.cancelChange(); session.closeConflict()
+  session.cancelChange(); session.closeConflict(); nodeMenu.close()
+  valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
 
@@ -516,6 +559,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.value-edit-actions{display:flex;justify-content:flex-end;gap:10px}
+.yaml-value-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px}
+.value-edit-error{color:var(--theme-danger,#d03050)}
 .yaml-workspace {
   container-type: inline-size;
   width: 100%;
