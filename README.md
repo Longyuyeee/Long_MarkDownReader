@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.2.9 已发布：TOML 右键改值、准确定位与草稿保护已完成；[既定路线](docs/Foundation_Deepening_Roadmap_1_2_9_to_1_2_10_2026-10-23.md) 中的 1.2.10 YAML 简单值编辑尚未实施。
+v1.2.9 已发布；v1.2.10 正在完成 YAML 简单值编辑及检查，尚未发布。见[开发记录](docs/V1_2_10_Unsigned_Community_Release_Audit_2026-10-23.md)。
 
 ## 不只是打开文件，更是接续你的工作
 
