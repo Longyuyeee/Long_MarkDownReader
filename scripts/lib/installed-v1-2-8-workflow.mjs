@@ -32,12 +32,13 @@ export async function runInstalledV128JsonNodeCopyWorkflow({send,evaluate,naviga
   const discardOwnedDraft=async()=>{
    const reload='.json-workspace header button[title="重新从磁盘读取"],.json-workspace header button[data-app-tooltip="重新从磁盘读取"]'
    if(!await evaluate(`!!document.querySelector(${q(reload)})?.getClientRects().length`))await ui.clickText('.json-workspace header button','编辑工具')
-   await ui.click(reload);await ready(`document.querySelector('.n-dialog')`,'owned JSON discard confirmation');await ui.clickText('.n-dialog button','放弃修改并重新读取');await saved()
+   await ready(`document.querySelector('.json-workspace')?.dataset.loading==='false'&&document.querySelector('.json-workspace')?.dataset.saving==='false'&&document.querySelector('.json-workspace')?.dataset.dirty==='true'`,'owned JSON draft ready for explicit discard')
+   await ui.tabTo(reload);await ui.key('Enter','Enter',13);await ready(`document.querySelector('.n-dialog')`,'owned JSON discard confirmation');await ui.clickText('.n-dialog button','放弃修改并重新读取');await saved()
   }
   await discardOwnedDraft();await open(commented);await discardOwnedDraft();await open(other);r.disposableDraftsExplicitlyDiscarded=true
   r.inputTrace=await evaluate('window.__v128Trace');r.runtimeErrors=await evaluate('window.__v128Errors');r.errorOverlay=await evaluate('!!document.querySelector("#crash-screen,.global-error-overlay,.startup-fatal-screen,.route-error-fallback")')
   const outputs=[['installed-v128-copy-observations.json',Buffer.from(JSON.stringify(obs,null,2))],['installed-v128-copy-saved.json',savedBytes],['installed-v128-copy-copy.json',copyBytes],['installed-v128-copy-external.json',await fs.readFile(file)]];for(const[fileName,b]of outputs){await fs.writeFile(path.join(output,fileName),b,{flag:'wx'});r.outputs.push({fileName,sizeBytes:b.length,sha256:sha(b)})}r.status='passed';validateInstalledJsonNodeCopy(r,{appVersion,sourceCommit,artifacts:[{target:'nsis',sha256:installerSha256}]});assertJsonNodeCopyOutputBytes(r,n=>outputs.find(([name])=>name===n)[1])
- }catch(error){failure=error;r.status='failed';r.failure=String(error.stack||error);r.failureUI=await evaluate('({hash:location.hash,body:document.body.innerText.slice(-6000)})').catch(()=>null);await capture('installed-v128-copy-failure.jpg').catch(()=>{})}
+ }catch(error){failure=error;r.status='failed';r.failure=String(error.stack||error);r.inputTrace=await evaluate('window.__v128Trace').catch(()=>[]);r.runtimeErrors=await evaluate('window.__v128Errors').catch(()=>[]);r.failureUI=await evaluate('({hash:location.hash,state:{...document.querySelector(".json-workspace")?.dataset},active:document.activeElement?.outerHTML?.slice(0,1000),body:document.body.innerText.slice(-6000)})').catch(()=>null);await capture('installed-v128-copy-failure.jpg').catch(()=>{})}
  finally{if(lock){lock.stdin.end('\n');lock.kill()}await fs.writeFile(path.join(output,'installed-v128-copy-workflow.json'),JSON.stringify(r,null,2)+'\n')}
  if(failure)throw failure
 }
