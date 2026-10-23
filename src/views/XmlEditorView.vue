@@ -175,7 +175,8 @@ interface Snapshot { content: string; encoding: string; signature: string; size:
 interface Diagnostic { severity: string; code: string; message: string; start: number; end: number; line: number; column: number; path?: string }
 interface AttributeEntry { name: string; value: string; start: number; end: number; editable: boolean; editUnavailableReason?: string }
 interface TextEntry { kind: 'text' | 'cdata'; value: string; start: number; end: number }
-interface OutlineEntry { path: string; name: string; depth: number; attributeCount: number; start: number; end: number; line: number; column: number; preview: string; attributes?: AttributeEntry[]; attributesTruncated?: boolean; text?: TextEntry; textEditUnavailableReason?: string; copy?: {separatorStart:number;separatorEnd:number}; copyUnavailableReason?: string }
+interface ElementRange { start:number; end:number }
+interface OutlineEntry { path: string; name: string; depth: number; attributeCount: number; start: number; end: number; line: number; column: number; preview: string; attributes?: AttributeEntry[]; attributesTruncated?: boolean; text?: TextEntry; textEditUnavailableReason?: string; copy?: {separatorStart:number;separatorEnd:number}; copyUnavailableReason?: string; order?: {previous?:ElementRange;next?:ElementRange}; moveUnavailableReason?:string }
 interface Analysis {
   valid: boolean; rootName?: string; elementCount: number; attributeCount: number; namespaceCount: number; maxDepth: number
   commentCount: number; cdataCount: number; processingInstructionCount: number; doctypeCount: number
@@ -302,8 +303,22 @@ const previewAttributeEdit = async () => {
   finally { if (session.owns(owner)) attributeEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<OutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => reveal(entry),
-  extra: entry => isSvg.value ? [] : [...(entry.attributeCount > 0 ? [{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value}] : []),{key:'edit-text',label:'修改文字…',disabled:editDisabled.value},{key:'copy-element',label:'复制元素',disabled:editDisabled.value}],
-  action: (key,entry) => { if(key==='edit-attribute')openAttributeEdit(entry); if(key==='edit-text')openTextEdit(entry); if(key==='copy-element')void copyElement(entry) } })
+  extra: entry => isSvg.value ? [] : [...(entry.attributeCount > 0 ? [{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value}] : []),{key:'edit-text',label:'修改文字…',disabled:editDisabled.value},{key:'copy-element',label:'复制元素',disabled:editDisabled.value},
+    {key:'move-up',label:'上移',disabled:editDisabled.value || Boolean(entry.order && !entry.order.previous)},
+    {key:'move-down',label:'下移',disabled:editDisabled.value || Boolean(entry.order && !entry.order.next)}],
+  action: (key,entry) => { if(key==='edit-attribute')openAttributeEdit(entry); if(key==='edit-text')openTextEdit(entry); if(key==='copy-element')void copyElement(entry); if(key==='move-up'||key==='move-down')void moveElement(entry,key==='move-up'?'up':'down') } })
+const moveElement = async (entry: OutlineEntry, direction:'up'|'down') => {
+  if (editDisabled.value) return
+  if (!entry.order) { message.info(entry.moveUnavailableReason || '此元素请在源码中调整顺序'); reveal(entry); return }
+  const owner = session.capture()
+  if (!owner) return
+  try {
+    const result = await invoke<{content:string;start:number;end:number}>('move_xml_element_source',{content:owner.source,start:entry.start,end:entry.end,direction})
+    if (!session.unchanged(owner)) return
+    const anchor = new TextDecoder().decode(new TextEncoder().encode(result.content).slice(0,result.start)).length
+    session.offerChange(owner,direction==='up'?'上移 XML 元素':'下移 XML 元素',result.content,anchor)
+  } catch (cause) { if (session.owns(owner)) message.error(errorText(cause)) }
+}
 const copyElement = async (entry: OutlineEntry) => {
   if (editDisabled.value) return
   if (!entry.copy) { message.info(entry.copyUnavailableReason || '此元素请在源码中复制'); reveal(entry); return }

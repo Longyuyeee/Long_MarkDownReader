@@ -14,7 +14,7 @@ export const xmlAttributeEdited=xmlAttributeDraft.replace("title='原稿 &amp; �
 export const xmlAttributeConflict=xmlAttributeEdited.replace('doc:code="same" count=', 'doc:code="changed" count=')
 export const yamlNumericSource='n: 9007199254740993123456789\nnegative: -9007199254740993123456789\nprecise: 1.234567890123456789e100\n'
 export function validateInstalledXmlAttribute(r,m){
- assert.ok(['1.2.11','1.2.12', '1.2.13'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.11','1.2.12', '1.2.13', '1.2.14'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-xml-attribute-edit-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64],['yamlBefore',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  assert.equal(r.lockedBefore,r.lockedAfter);assert.equal(r.externalBefore,r.externalAfter);assert.equal(r.yamlBefore,r.yamlAfter)

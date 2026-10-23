@@ -3,7 +3,7 @@ import crypto from 'node:crypto'
 export const readingMoveChecks=['live-pdf-follows-folder-move-with-original-signature','named-scene-and-staged-descendants-follow-success','partial-batch-only-successful-paths-continue','retry-continues-remaining-record-once','copy-keeps-source-reading-record','destination-record-is-not-overwritten','dirty-markdown-follows-without-implicit-save','file-bytes-preserved-and-interface-usable']
 export const readingMoveOutputNames=['installed-v121-observations.json']
 export function validateInstalledReadingMove(report,manifest){
- assert.ok(['1.2.1','1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13'].includes(manifest.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.1','1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14'].includes(manifest.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-reading-continuity-native-receipts-and-trusted-input')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64],['pdfBefore',64]])assert.match(report[k],new RegExp('^[a-f0-9]{'+n+'}$'));assert.equal(report.pdfAfter,report.pdfBefore)
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[k],false)
