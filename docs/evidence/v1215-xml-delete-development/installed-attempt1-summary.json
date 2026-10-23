@@ -1,0 +1,39 @@
+{
+  "status": "failed-owned-fixture-cleanup-before-inherited-reading-flow",
+  "runId": 39992635202,
+  "sourceCommit": "a3ca1702466df38b3ce2e1eae2ffb34bf5c1823f",
+  "harnessSourceCommit": "a3ca1702466df38b3ce2e1eae2ffb34bf5c1823f",
+  "installerSha256": "ee5c701450fc12e0ce8f206580d447544ce4be4fe2c6647f157cbce1c9b77e30",
+  "newXmlChecks": [
+    {
+      "id": "exact-subtree-delete-current-draft-preview-selection-and-history",
+      "status": "passed"
+    },
+    {
+      "id": "first-last-only-empty-and-repeated-sibling-delete",
+      "status": "passed"
+    },
+    {
+      "id": "root-mixed-and-ambiguous-comment-fallback-stays-local",
+      "status": "passed"
+    },
+    {
+      "id": "source-switch-clears-delete-preview-and-menu-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "real-locked-delete-save-retry-reopen-preserves-bom-crlf",
+      "status": "passed"
+    },
+    {
+      "id": "external-conflict-keeps-deleted-draft-and-original",
+      "status": "passed"
+    }
+  ],
+  "runtimeErrors": [],
+  "failedWorkflow": "installed-v121-workflow.json",
+  "failedChecks": [],
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at runInstalledV121Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-2-1-workflow.mjs:21:10)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:987:3",
+  "resolution": "Reload the owned other.xml fixture through the real discard confirmation after undo, verify original disk bytes and assert all owned XML tabs clean; keep the inherited global dirty-tab precondition unchanged.",
+  "sourceUserContentIncluded": false
+}
