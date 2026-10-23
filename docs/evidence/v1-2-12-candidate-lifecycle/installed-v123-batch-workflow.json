@@ -1,0 +1,284 @@
+{
+  "appVersion": "1.2.12",
+  "sourceCommit": "5202aea069cddb2ed53251b4e1a84aa62c50585e",
+  "installerSha256": "545f4f8b39ba16aa091d7caf7f78246ec0fbe43f1c8b5d6845f6e4906c8007f1",
+  "harnessSourceCommit": "440848bc8c313d44f7a4667418f1b76b9c045e69",
+  "executableSha256": "47c329f3334acd3ef540f2388240191d6da4bdeb8d19a4bee21493e878afdefe",
+  "status": "passed",
+  "evidenceLevel": "installed-pdf-annotation-batch-trusted-input-and-sidecar-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "unselected-card-menu-keeps-single-scope",
+      "status": "passed"
+    },
+    {
+      "id": "batch-recolor-one-undo-redo-and-disk-state",
+      "status": "passed"
+    },
+    {
+      "id": "hidden-selection-delete-cancel-and-restore",
+      "status": "passed"
+    },
+    {
+      "id": "real-batch-save-failure-retains-and-retries",
+      "status": "passed"
+    },
+    {
+      "id": "batch-external-conflict-keeps-both-versions",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v123-batch-observations.json",
+      "sizeBytes": 271,
+      "sha256": "a405a1e261cd6b35413313d37306192f8e9e62d0bd2b2ba15adab6503bdfcc9d"
+    },
+    {
+      "fileName": "installed-v123-batch-final-sidecar.json",
+      "sizeBytes": 1059,
+      "sha256": "97fc5dadd341a05f029629ec9e0ee4ef3534a4130b85aca5d1e1e171c43de5bf"
+    }
+  ],
+  "runtimeErrors": [],
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "pdfBefore": "e48f37c1a02de01eb66622334e83c0f3dd92f58d13da14a8f67f91702e03d366",
+  "pdfAfter": "e48f37c1a02de01eb66622334e83c0f3dd92f58d13da14a8f67f91702e03d366",
+  "errorOverlay": false
+}

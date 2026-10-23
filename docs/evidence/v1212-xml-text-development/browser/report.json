@@ -1,0 +1,48 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "decoded-text-prefill-exact-current-draft-and-isolated-history",
+      "status": "passed"
+    },
+    {
+      "id": "cdata-delimiter-keeps-text-and-can-be-edited-again",
+      "status": "passed"
+    },
+    {
+      "id": "paired-empty-multiline-and-neighbour-markup-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-text-input-retained-and-corrected",
+      "status": "passed"
+    },
+    {
+      "id": "mixed-split-self-closing-fallback-stays-local",
+      "status": "passed"
+    },
+    {
+      "id": "late-text-result-never-overwrites-newer-source",
+      "status": "passed"
+    },
+    {
+      "id": "stale-text-preview-preserves-current-draft",
+      "status": "passed"
+    },
+    {
+      "id": "source-switch-clears-text-parameters-and-preview-and-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-retains-text-edit",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-narrow-and-long-path-with-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

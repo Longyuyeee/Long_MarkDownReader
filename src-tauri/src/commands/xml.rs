@@ -4,7 +4,7 @@ use crate::commands::formats::{
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
 use crate::formats::xml::{
     analyze_xml_source as analyze_source, replace_xml_attribute_source as replace_attribute,
-    XmlSourceAnalysis,
+    replace_xml_text_source as replace_text, XmlSourceAnalysis,
 };
 use crate::services::external_file_access::ExternalFileAccess;
 use tauri::State;
@@ -40,6 +40,22 @@ pub fn replace_xml_attribute_source(
     replace_attribute(&content, start, end, &replacement).map_err(|message| {
         TextDocumentError::recoverable(
             "xml-attribute-edit-rejected",
+            message,
+            "调整当前输入后重试，或继续在源码中修改；当前草稿未变",
+        )
+    })
+}
+
+#[tauri::command]
+pub fn replace_xml_text_source(
+    content: String,
+    start: usize,
+    end: usize,
+    replacement: String,
+) -> Result<String, TextDocumentError> {
+    replace_text(&content, start, end, &replacement).map_err(|message| {
+        TextDocumentError::recoverable(
+            "xml-text-edit-rejected",
             message,
             "调整当前输入后重试，或继续在源码中修改；当前草稿未变",
         )
