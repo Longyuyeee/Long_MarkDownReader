@@ -217,7 +217,17 @@ fn inspect_node(
             end,
             line: node.span.start.line().max(1),
             column: node.span.start.col().saturating_add(1),
-            preview: node_preview(node),
+            preview: if matches!(
+                &node.data,
+                YamlDataOwned::Value(ScalarOwned::Integer(_) | ScalarOwned::FloatingPoint(_))
+            ) {
+                content
+                    .get(start..end)
+                    .map(truncate)
+                    .unwrap_or_else(|| node_preview(node))
+            } else {
+                node_preview(node)
+            },
             editable,
             edit_unavailable_reason: (!editable).then(|| {
                 if !editable_context {
@@ -589,6 +599,30 @@ fn truncate(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn yaml_numeric_outline_keeps_original_digits_and_notation() {
+        let source = "# 中文😀\nlarge: 9007199254740993123456789\nnegative: -9007199254740993123456789\nprecise: 1.234567890123456789e100\nhex: 0xFF\nquoted: '9007199254740993123456789'\n";
+        let analysis = analyze_yaml_source(source);
+        assert!(analysis.valid);
+        for (path, expected) in [
+            ("$.large", "9007199254740993123456789"),
+            ("$.negative", "-9007199254740993123456789"),
+            ("$.precise", "1.234567890123456789e100"),
+            ("$.hex", "0xFF"),
+            ("$.quoted", "9007199254740993123456789"),
+        ] {
+            assert_eq!(
+                analysis
+                    .outline
+                    .iter()
+                    .find(|e| e.path == path)
+                    .unwrap()
+                    .preview,
+                expected
+            );
+        }
+    }
 
     fn entry(source: &str, path: &str) -> YamlOutlineEntry {
         analyze_yaml_source(source)

@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.2.10 已发布：YAML 右键改值、准确定位与草稿保护已完成；TOML/YAML 路线已交付 2/2。下一轮 [1.2.11—1.2.12](docs/Foundation_Deepening_Roadmap_1_2_11_to_1_2_12_2026-10-23.md) 规划 XML 属性与叶节点文字编辑，尚未实施。
+v1.2.10 已发布；v1.2.11 正在完成 XML 属性值编辑和 YAML 准确数字预览，尚未发布。见[开发记录](docs/V1_2_11_Unsigned_Community_Release_Audit_2026-10-23.md)。
 
 ## 不只是打开文件，更是接续你的工作
 

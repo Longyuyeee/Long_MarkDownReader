@@ -1,5 +1,5 @@
 <template>
-  <div class="xml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
+  <div class="xml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading" :data-analysis-current="!analysisPending && analyzedSource === sourceContent">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
     <header class="workspace-document-header toolbar">
       <div class="identity">
@@ -113,6 +113,19 @@
     </footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
+    <n-modal v-model:show="attributeEditVisible" preset="card" class="xml-attribute-edit-dialog" title="修改 XML 属性" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
+      :mask-closable="!attributeEditPending" :closable="!attributeEditPending" :close-on-esc="!attributeEditPending"
+      @after-enter="attributeInput?.select()" @after-leave="finishAttributeDialog">
+      <code>{{ attributeEntry?.path }}</code>
+      <n-select v-if="attributeOptions.length > 1" :value="attributeName" :options="attributeOptions" :disabled="attributeEditPending" filterable aria-label="XML 属性" @update:value="selectAttribute" />
+      <strong v-else>{{ attributeName }}</strong>
+      <WorkspaceHelp v-if="attributeEntry?.attributesTruncated" label="说明：只列出当前可定位属性" text="属性较多，只列出当前可定位的部分；其他属性仍可在源码中修改。" />
+      <n-input ref="attributeInput" v-model:value="attributeText" type="textarea" :autosize="{minRows:3,maxRows:8}" :disabled="attributeEditPending"
+        aria-label="XML 属性值" :input-props="{'aria-label':'XML 属性值'}" autofocus />
+      <p v-if="attributeError" role="alert" class="attribute-edit-error">{{ attributeError }}</p>
+      <template #footer><div class="attribute-edit-actions"><n-button :disabled="attributeEditPending" @click="attributeEditVisible=false">取消</n-button>
+        <n-button type="primary" :loading="attributeEditPending" @click="previewAttributeEdit">预览修改</n-button></div></template>
+    </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
@@ -129,7 +142,7 @@ import { openSearchPanel } from '@codemirror/search'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useRoute, useRouter } from 'vue-router'
-import { useDialog, useMessage } from 'naive-ui'
+import { useDialog, useMessage, type InputInst } from 'naive-ui'
 import {
   AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon, Image as ImageIcon,
   FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, PanelRight as InspectorIcon, RefreshCw as RefreshIcon,
@@ -150,7 +163,8 @@ import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../u
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string; path: string }
 interface Diagnostic { severity: string; code: string; message: string; start: number; end: number; line: number; column: number; path?: string }
-interface OutlineEntry { path: string; name: string; depth: number; attributeCount: number; start: number; end: number; line: number; column: number; preview: string }
+interface AttributeEntry { name: string; value: string; start: number; end: number; editable: boolean; editUnavailableReason?: string }
+interface OutlineEntry { path: string; name: string; depth: number; attributeCount: number; start: number; end: number; line: number; column: number; preview: string; attributes?: AttributeEntry[]; attributesTruncated?: boolean }
 interface Analysis {
   valid: boolean; rootName?: string; elementCount: number; attributeCount: number; namespaceCount: number; maxDepth: number
   commentCount: number; cdataCount: number; processingInstructionCount: number; doctypeCount: number
@@ -214,7 +228,46 @@ const session = useStructuredSession({
   analyze: source => analyze(source), clearAnalysis: () => clearTimer(), scheduleAnalysis: () => scheduleAnalysis(),
   applySnapshot: snapshot => applySnapshot(snapshot), load: discard => load(discard),
 })
-const nodeMenu = useSourceNodeMenu<NonNullable<typeof analysis.value>['outline'][number]>(session, { fresh: () => analyzedSource.value === sourceContent.value, reveal: entry => reveal(entry) })
+const attributeEditVisible = ref(false), attributeEditPending = ref(false), attributeName = ref(''), attributeText = ref(''), attributeError = ref('')
+const attributeInput = ref<InputInst | null>(null), attributeEntry = ref<OutlineEntry | null>(null)
+const selectedAttribute = computed(() => attributeEntry.value?.attributes?.find(attribute => attribute.name === attributeName.value))
+const attributeOptions = computed(() => (attributeEntry.value?.attributes || []).map(attribute => ({value:attribute.name,label:attribute.editable ? attribute.name : `${attribute.name} · 源码修改`,disabled:!attribute.editable})))
+const attributeDrafts = new Map<string,string>()
+let attributeOwner: ReturnType<typeof session.capture>, pendingAttributePreview: (() => void) | undefined
+const finishAttributeDialog = () => { const offer = pendingAttributePreview; pendingAttributePreview = undefined; offer?.() }
+const editDisabled = computed(() => isSvg.value || loading.value || saving.value || readOnly.value || analysisPending.value || attributeEditPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const selectAttribute = async (name: string) => {
+  if (attributeName.value) attributeDrafts.set(attributeName.value,attributeText.value)
+  attributeName.value = name
+  attributeText.value = attributeDrafts.get(name) ?? selectedAttribute.value?.value ?? ''
+  attributeError.value = ''; await nextTick(); attributeInput.value?.select()
+}
+const openAttributeEdit = (entry: OutlineEntry) => {
+  if (editDisabled.value) return
+  const first = entry.attributes?.find(attribute => attribute.editable)
+  if (!first) { message.info(entry.attributes?.[0]?.editUnavailableReason || (entry.attributesTruncated ? '属性较多，请在源码中修改此元素的属性' : '此元素没有可直接修改的属性')); reveal(entry); return }
+  attributeOwner = session.capture()
+  if (!attributeOwner) return
+  attributeDrafts.clear(); attributeEntry.value = entry; attributeName.value = first.name
+  attributeText.value = first.value; attributeError.value = ''; attributeEditVisible.value = true
+}
+const previewAttributeEdit = async () => {
+  const owner = attributeOwner, attribute = selectedAttribute.value
+  if (!owner || !attribute?.editable || attributeEditPending.value) return
+  if (!session.unchanged(owner)) { attributeError.value = '当前文件或草稿已变化，请重新选择属性；内容未被修改'; return }
+  attributeEditPending.value = true; attributeError.value = ''
+  try {
+    const target = await invoke<string>('replace_xml_attribute_source',{content:owner.source,start:attribute.start,end:attribute.end,replacement:attributeText.value})
+    if (!session.unchanged(owner)) { attributeError.value = '当前草稿已变化，请重新选择属性'; return }
+    const anchor = new TextDecoder().decode(new TextEncoder().encode(target).slice(0,attribute.start)).length
+    pendingAttributePreview = () => session.offerChange(owner,`修改 XML 属性 · ${attribute.name}`,target,anchor)
+    attributeEditVisible.value = false
+  } catch (cause) { if (session.owns(owner)) attributeError.value = errorText(cause) }
+  finally { if (session.owns(owner)) attributeEditPending.value = false }
+}
+const nodeMenu = useSourceNodeMenu<OutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => reveal(entry),
+  extra: entry => !isSvg.value && entry.attributeCount > 0 ? [{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value}] : [],
+  action: (key,entry) => { if(key==='edit-attribute')openAttributeEdit(entry) } })
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerTab = () => session.bind()
 
@@ -276,7 +329,8 @@ const load = async (discardDraft = false) => {
   loadGeneration++; analysisGeneration++; clearTimer()
   const owner = session.capture()
   if (!owner) return
-  session.cancelChange(); session.closeConflict()
+  session.cancelChange(); session.closeConflict(); nodeMenu.close()
+  attributeEditVisible.value = false; attributeEditPending.value = false; attributeOwner = undefined; attributeEntry.value = null; pendingAttributePreview = undefined; attributeDrafts.clear()
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
 
@@ -324,6 +378,13 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.attribute-edit-actions{display:flex;justify-content:flex-end;gap:10px}
+.xml-attribute-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px;max-height:72px;overflow:auto}
+.xml-attribute-edit-dialog strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xml-attribute-edit-dialog :deep(.n-card__content){min-height:0;overflow:auto}
+.xml-attribute-edit-dialog :deep(.n-select){margin-bottom:10px}
+.xml-attribute-edit-dialog :deep(.n-input){margin-top:10px}
+.attribute-edit-error{color:var(--theme-danger,#d03050)}
 .xml-workspace { width: 100%; height: 100%; min-width: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
 .toolbar { min-height: 54px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: var(--theme-border); background: var(--theme-surface); }
 .identity, .actions { min-width: 0; display: flex; align-items: center; gap: 8px; }
