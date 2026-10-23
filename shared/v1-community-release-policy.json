@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.2.10",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-23",
-  "currentStatus": "v1.2.10-community-release-quality-gate-pending",
+  "currentStatus": "v1.2.10-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,22 +24,22 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": false,
-    "rustLockedCheckPassed": false,
-    "productionDependencyAuditPassed": false,
-    "msiBuilt": false,
-    "nsisBuilt": false,
-    "artifactHashesVerified": false,
-    "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": false,
-    "qualityGatePassed": false,
+    "frontendBuildPassed": true,
+    "rustLockedCheckPassed": true,
+    "productionDependencyAuditPassed": true,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "artifactHashesVerified": true,
+    "localRuntimeSmokePassed": true,
+    "installedLifecyclePassed": true,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
     "previousPublicVersion": "1.2.9",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": false,
+    "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
     "managedUpdaterUpgradePath": "1.2.9-to-1.2.10-pending",
@@ -50,7 +50,30 @@
     "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.10",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": null,
+  "candidate": {
+    "artifactSourceCommit": "9343465f8d2ba4d4f8cc6b02e1885dab03fd2ffc",
+    "qualityGateCommand": "npm run ci:patch-release",
+    "artifactBuildRunId": 39898692066,
+    "hostedInstalledLifecycleRunId": 39902889737,
+    "artifacts": [
+      {
+        "target": "msi",
+        "fileName": "LongEdit_1.2.10_x64_zh-CN.msi",
+        "sizeBytes": 77983744,
+        "sha256": "5cfc59cea7449bf9d70a7924ccb5d28573c2d35900543d97e5669b54ef1e1ddd",
+        "authenticodeStatus": "NotSigned",
+        "sourceFileName": "Long编辑_1.2.10_x64_zh-CN.msi"
+      },
+      {
+        "target": "nsis",
+        "fileName": "LongEdit_1.2.10_x64-setup.exe",
+        "sizeBytes": 68645742,
+        "sha256": "1f2e631480bf345f1428065d05eec56eb92ba8172e520eabc2ccca14aa5bcec1",
+        "authenticodeStatus": "NotSigned",
+        "sourceFileName": "Long编辑_1.2.10_x64-setup.exe"
+      }
+    ]
+  },
   "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -103,5 +126,5 @@
     "v1.2.8-to-v1.2.9-managed-update-observation-pending",
     "v1.2.9-to-v1.2.10-managed-update-observation-pending"
   ],
-  "nextAction": "validate-and-build-v1.2.10-installers"
+  "nextAction": "publish-verified-v1.2.10"
 }
