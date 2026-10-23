@@ -40,6 +40,15 @@ pub struct XmlOutlineEntry {
     pub attributes_truncated: bool,
     pub text: Option<XmlTextEntry>,
     pub text_edit_unavailable_reason: Option<String>,
+    pub copy: Option<XmlElementCopy>,
+    pub copy_unavailable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct XmlElementCopy {
+    pub separator_start: usize,
+    pub separator_end: usize,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -86,6 +95,8 @@ struct ElementFrame {
     child_counts: HashMap<String, usize>,
     content_start: usize,
     text_segments: Vec<XmlTextEntry>,
+    children: Vec<usize>,
+    children_truncated: bool,
 }
 
 #[derive(Default)]
@@ -175,6 +186,7 @@ pub fn analyze_xml_source(content: &str) -> XmlSourceAnalysis {
                 if let Some(frame) = stack.pop() {
                     if let Some(index) = frame.outline_index {
                         state.outline[index].end = event_end;
+                        finish_element_copy(content, &frame, event_start, &mut state.outline);
                         finish_text(
                             content,
                             frame,
@@ -442,6 +454,12 @@ fn push_element(
             attributes,
             text: None,
             text_edit_unavailable_reason: Some("自闭合元素请在源码中展开后修改文字".into()),
+            copy: None,
+            copy_unavailable_reason: Some(if depth == 0 {
+                "根元素不能在同一文档中复制，请在源码中编辑".into()
+            } else {
+                "父元素结构无法完整确认，请在源码中复制".into()
+            }),
         });
         Some(state.outline.len() - 1)
     } else {
@@ -449,6 +467,13 @@ fn push_element(
         None
     };
 
+    if let Some(parent) = stack.last_mut() {
+        if let Some(index) = outline_index {
+            parent.children.push(index);
+        } else {
+            parent.children_truncated = true;
+        }
+    }
     if !empty {
         stack.push(ElementFrame {
             path,
@@ -456,9 +481,106 @@ fn push_element(
             child_counts: HashMap::new(),
             content_start: event_end,
             text_segments: Vec::new(),
+            children: Vec::new(),
+            children_truncated: false,
         });
     }
     true
+}
+
+fn finish_element_copy(
+    content: &str,
+    parent: &ElementFrame,
+    closing_start: usize,
+    outline: &mut [XmlOutlineEntry],
+) {
+    if parent.children_truncated || parent.children.is_empty() {
+        return;
+    }
+    // A child owns its complete source, including internal comments. Only XML
+    // whitespace may separate siblings: outer comments, PIs and mixed prose
+    // have no unambiguous owner and must never be silently duplicated.
+    let mut previous_end = parent.content_start;
+    let mut separators = Vec::new();
+    for &index in &parent.children {
+        let child = &outline[index];
+        if !content[previous_end..child.start]
+            .bytes()
+            .all(|b| matches!(b, b' ' | b'\t' | b'\r' | b'\n'))
+        {
+            break;
+        }
+        separators.push((previous_end, child.start));
+        previous_end = child.end;
+    }
+    let unambiguous = separators.len() == parent.children.len()
+        && content[previous_end..closing_start]
+            .bytes()
+            .all(|b| matches!(b, b' ' | b'\t' | b'\r' | b'\n'));
+    for (position, &index) in parent.children.iter().enumerate() {
+        let child = &mut outline[index];
+        if unambiguous {
+            child.copy = Some(XmlElementCopy {
+                separator_start: separators[position].0,
+                separator_end: separators[position].1,
+            });
+            child.copy_unavailable_reason = None;
+        } else {
+            child.copy_unavailable_reason =
+                Some("同级内容含正文、注释或处理指令，请在源码中确认要复制的范围".into());
+        }
+    }
+}
+
+pub fn copy_xml_element_source(content: &str, start: usize, end: usize) -> Result<String, String> {
+    let analysis = analyze_xml_source(content);
+    if !analysis.valid || analysis.outline_truncated {
+        return Err("XML 结构尚未完整确认，请先在源码中检查；当前草稿未变".into());
+    }
+    let entry = analysis
+        .outline
+        .iter()
+        .find(|e| e.start == start && e.end == end)
+        .ok_or("元素位置已过期，请重新选择；当前草稿未变")?;
+    let copy = entry.copy.as_ref().ok_or_else(|| {
+        entry
+            .copy_unavailable_reason
+            .clone()
+            .unwrap_or_else(|| "此元素请在源码中复制；当前草稿未变".into())
+    })?;
+    let separator = &content[copy.separator_start..copy.separator_end];
+    let fragment = &content[start..end];
+    if content.len() + separator.len() + fragment.len() > MAX_XML_SOURCE_BYTES {
+        return Err("复制后源码超过编辑上限；当前草稿未变".into());
+    }
+    let candidate = format!(
+        "{}{}{}{}",
+        &content[..end],
+        separator,
+        fragment,
+        &content[end..]
+    );
+    let checked = analyze_xml_source(&candidate);
+    let subtree: Vec<_> = analysis
+        .outline
+        .iter()
+        .filter(|e| e.start >= start && e.end <= end)
+        .collect();
+    let cloned_start = end + separator.len();
+    if !checked.valid
+        || checked.outline_truncated
+        || checked.element_count != analysis.element_count + subtree.len()
+        || checked.attribute_count
+            != analysis.attribute_count + subtree.iter().map(|e| e.attribute_count).sum::<usize>()
+        || !checked.outline.iter().any(|e| {
+            e.start == cloned_start
+                && e.end == cloned_start + fragment.len()
+                && e.name == entry.name
+        })
+    {
+        return Err("无法完整保留这个元素，请在源码中复制；当前草稿未变".into());
+    }
+    Ok(candidate)
 }
 
 fn normalize_text_lines(raw: &str, version: XmlVersion) -> String {
@@ -596,10 +718,7 @@ pub fn replace_xml_text_source(
     }
     let escaped = if text.kind == "cdata" {
         if replacement.contains(['\r', '\u{85}', '\u{2028}']) {
-            return Err(
-                "CDATA 的特殊换行请使用普通换行或在源码中修改；输入仍保留"
-                    .into(),
-            );
+            return Err("CDATA 的特殊换行请使用普通换行或在源码中修改；输入仍保留".into());
         }
         // Adjacent CDATA sections retain the exact text, including the closing delimiter.
         replacement.replace("]]>", "]]]]><![CDATA[>")
@@ -637,7 +756,9 @@ pub fn replace_xml_text_source(
                     || (node.start == start && node.end == start + escaped.len()))
         })
     {
-        return Err("无法在当前位置完整保留这段文字，请调整输入或在源码中修改；当前草稿未变".into());
+        return Err(
+            "无法在当前位置完整保留这段文字，请调整输入或在源码中修改；当前草稿未变".into(),
+        );
     }
     Ok(candidate)
 }
@@ -781,6 +902,93 @@ fn failed_analysis(diagnostic: XmlDiagnostic) -> XmlSourceAnalysis {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn copy_at(source: &str, path: &str) -> Result<String, String> {
+        let analysis = analyze_xml_source(source);
+        let entry = analysis.outline.iter().find(|e| e.path == path).unwrap();
+        copy_xml_element_source(source, entry.start, entry.end)
+    }
+
+    #[test]
+    fn element_copy_retains_exact_bom_crlf_unicode_and_entire_subtree() {
+        let source = "\u{feff}<?xml version='1.0'?>\r\n<!-- outer -->\r\n<root xmlns:x='urn:x'>\r\n\t<x:item id='900719925474099312345'>😀 &amp; 文字<!-- 内部 --><?keep value?><nested><![CDATA[< > &]]></nested></x:item>\r\n\t<other/>\r\n</root>\r\n";
+        let fragment = "<x:item id='900719925474099312345'>😀 &amp; 文字<!-- 内部 --><?keep value?><nested><![CDATA[< > &]]></nested></x:item>";
+        let expected = source.replacen(fragment, &format!("{fragment}\r\n\t{fragment}"), 1);
+        let copied = copy_at(source, "/root[1]/x:item[1]").unwrap();
+        assert_eq!(copied, expected);
+        let a = analyze_xml_source(&copied);
+        assert!(a.valid);
+        assert_eq!(a.element_count, 6);
+        assert_eq!(a.namespace_count, 1);
+        assert_eq!(a.comment_count, 3);
+        assert!(a
+            .outline
+            .iter()
+            .any(|e| e.path == "/root[1]/x:item[2]/nested[1]"));
+    }
+
+    #[test]
+    fn element_copy_targets_exact_same_named_sibling_and_preserves_spacing() {
+        let source = "<r><a id='first'/>\n  <a id=\"second\">two</a>\n\t<b/></r>";
+        assert_eq!(copy_at(source, "/r[1]/a[2]").unwrap(), "<r><a id='first'/>\n  <a id=\"second\">two</a>\n  <a id=\"second\">two</a>\n\t<b/></r>");
+        assert_eq!(
+            copy_at("<r><a/><b/></r>", "/r[1]/a[1]").unwrap(),
+            "<r><a/><a/><b/></r>"
+        );
+    }
+
+    #[test]
+    fn element_copy_supports_empty_and_local_namespace_and_can_repeat() {
+        let source = "<r>\n  <x:e xmlns:x='urn:local'></x:e>\n</r>";
+        let first = copy_at(source, "/r[1]/x:e[1]").unwrap();
+        let second = copy_at(&first, "/r[1]/x:e[2]").unwrap();
+        assert_eq!(second.matches("<x:e xmlns:x='urn:local'></x:e>").count(), 3);
+        assert_eq!(analyze_xml_source(&second).namespace_count, 3);
+    }
+
+    #[test]
+    fn element_copy_rejects_root_and_ambiguous_outer_content_but_not_internal_markup() {
+        for source in [
+            "<r>before<a/>after</r>",
+            "<r><!-- owner? --><a/></r>",
+            "<r><a/><!-- owner? --></r>",
+            "<r><a/><?keep v?><b/></r>",
+            "<r><![CDATA[ ]]><a/></r>",
+            "<r>&#32;<a/></r>",
+        ] {
+            let a = analyze_xml_source(source);
+            assert!(a.valid);
+            assert!(a.outline[1].copy.is_none(), "{source}");
+            assert!(copy_at(source, "/r[1]/a[1]").is_err());
+        }
+        assert!(copy_at("<r><a/></r>", "/r[1]")
+            .unwrap_err()
+            .contains("根元素"));
+        let source = "<r><a><!-- inside -->before<c/>after</a></r>";
+        assert_eq!(
+            copy_at(source, "/r[1]/a[1]").unwrap(),
+            "<r><a><!-- inside -->before<c/>after</a><a><!-- inside -->before<c/>after</a></r>"
+        );
+    }
+
+    #[test]
+    fn element_copy_rejects_invalid_and_stale_ranges_without_panicking() {
+        assert!(copy_xml_element_source("<r><a></r>", 3, 10).is_err());
+        for (start, end) in [(0, 0), (4, 7), (usize::MAX, usize::MAX), (10, 3)] {
+            assert!(copy_xml_element_source("<r>😀<a/></r>", start, end).is_err());
+        }
+    }
+
+    #[test]
+    fn element_copy_obeys_result_byte_and_outline_budgets() {
+        let source = format!("<r><a>{}</a></r>", "a".repeat(MAX_XML_SOURCE_BYTES / 2));
+        assert!(copy_at(&source, "/r[1]/a[1]").unwrap_err().contains("上限"));
+        let source = format!("<r>{}</r>", "<a/>".repeat(MAX_XML_OUTLINE_ENTRIES));
+        let a = analyze_xml_source(&source);
+        assert!(a.valid && a.outline_truncated);
+        assert!(a.outline[1].copy.is_none());
+        assert!(copy_xml_element_source(&source, 3, 7).is_err());
+    }
 
     fn text(source: &str, path: &str) -> XmlTextEntry {
         let a = analyze_xml_source(source);
