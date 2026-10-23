@@ -44,6 +44,20 @@ test('confirmed external modification invalidates the old read baseline',async()
 test('history restoration to the trusted original source clears the dirty tab',()=>{
  const h=harness(),original=h.text();h.session.bind({content:original,signature:'A-1',encoding:'utf-8'});h.edit('changed draft');h.session.openHistory();h.session.applyHistoryDraft(original,false,h.text());assert.equal(h.opts.dirty.value,false);assert.equal(h.opts.store.tabs[0].isDirty,false)
 })
+test('trusted read-only range snapshot stays clean without claiming an editable savepoint',()=>{
+ const h=harness();h.opts.signature.value='';h.opts.readOnlyReason.value='large-file-range';h.opts.dirty.value=false
+ h.session.bind({content:h.text(),signature:'',encoding:'utf-8',readOnlyReason:'large-file-range'});assert.equal(h.opts.dirty.value,false);assert.equal(h.opts.store.tabs[0].isDirty,false)
+ h.opts.readOnlyReason.value='';h.edit('unknown draft');h.edit('{"value":"保存的内容"}');assert.equal(h.opts.dirty.value,true)
+})
+test('input in the previous visible editor stays dirty while the requested target is loading',async()=>{
+ const h=harness(),original=h.text();h.session.bind({content:original,signature:'A-1',encoding:'utf-8'});h.opts.file='C:/ui/B.json';h.opts.epoch++;h.opts.loading.value=true;h.edit('typed during target read')
+ assert.equal(h.opts.store.tabs[0].content,'typed during target read');assert.equal(h.opts.store.tabs[0].isDirty,true);assert.equal(h.opts.dirty.value,true);h.opts.loading.value=false;await h.session.save();assert.equal(h.calls.length,0)
+})
+test('continued input in a previous editor cannot replace its detached save receipt metadata',async()=>{
+ const h=harness(),original=h.text();h.session.bind({content:original,signature:'A-1',encoding:'utf-8'});h.edit('submitted');const run=h.session.save();h.analysis.resolve({valid:true});await new Promise(resolve=>setImmediate(resolve));h.opts.file='C:/ui/B.json';h.opts.epoch++;h.opts.loading.value=true;h.edit('later input')
+ h.write.resolve({content:'submitted',signature:'A-2',encoding:'utf-8'});await run;h.edit('still typing');assert.equal(h.opts.store.tabs[0].content,'still typing');assert.equal(h.opts.store.tabs[0].textSignature,'A-2');assert.equal(h.opts.store.tabs[0].isDirty,true)
+ h.edit('submitted');assert.equal(h.opts.store.tabs[0].isDirty,false);assert.equal(h.opts.store.tabs[0].textSignature,'A-2')
+})
 test('save analysis cannot submit old source to a replacement path/root',async()=>{const h=harness(),run=h.session.save();h.opts.file='C:/other/B.json';h.opts.store.libraryPath='C:/other';h.opts.epoch++;h.analysis.resolve({valid:true});await run;assert.equal(h.calls.length,0);assert.equal(h.pending(),0)})
 test('save captures immutable source and keeps later input dirty without resetting editor',async()=>{const h=harness(),run=h.session.save();h.analysis.resolve({valid:true});await new Promise(resolve=>setImmediate(resolve));assert.equal(h.calls.length,1);h.edit('{"value":"新增输入"}');h.write.resolve({content:'{"value":"保存的内容"}',signature:'A-2',encoding:'utf-8',size:50,modified:2});await run;assert.equal(h.text(),'{"value":"新增输入"}');assert.equal(h.opts.dirty.value,true);assert.equal(h.opts.signature.value,'A-2');assert.equal(h.pending(),0)})
 test('pending native save protects window until it settles after unmount',async()=>{const h=harness(),run=h.session.save();h.analysis.resolve({valid:true});await new Promise(resolve=>setImmediate(resolve));h.dispose();assert.equal(h.pending(),1);h.write.resolve({content:'{"value":"保存的内容"}',signature:'A-2'});await run;assert.equal(h.pending(),0);assert.equal(h.opts.store.tabs[0].textSignature,'A-2')})

@@ -1344,7 +1344,9 @@ const applyRangeSnapshot = (loaded: TextDocumentRangeSnapshot, history: 'reset' 
     const existingIndex = rangeHistory.value.indexOf(loaded.offset)
     if (existingIndex >= 0) rangeHistoryIndex.value = existingIndex
   }
-  registerCurrentTab()
+  // This is a genuine disk read, although a bounded read-only range has no
+  // full-document signature and must never become an editable savepoint.
+  registerCurrentTab({ ...loaded, signature: '' })
 }
 
 const restoreTabDraft = async (tab: TabInfo) => {

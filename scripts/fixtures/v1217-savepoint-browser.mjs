@@ -11,7 +11,7 @@ import {installHorizontalWheelNavigation} from '/src/services/horizontalWheel.ts
 import {installContextMenuPolicy} from '/src/services/contextMenuPolicy.ts'
 import '/src/styles/tokens.scss'
 import '/src/styles/themes.scss'
-const mode=new URLSearchParams(location.search).get('mode')||'json'
+const params=new URLSearchParams(location.search),mode=params.get('mode')||'json',large=params.has('large')
 const modules={json:()=>import('/src/views/JsonEditorView.vue'),yaml:()=>import('/src/views/YamlEditorView.vue'),toml:()=>import('/src/views/TomlEditorView.vue'),xml:()=>import('/src/views/XmlEditorView.vue')}
 const component=(await modules[mode==='svg'?'xml':mode]()).default
 const sources={svg:'<svg xmlns="http://www.w3.org/2000/svg"><text>原稿</text></svg>\n',json:'{"value":"原稿","a/b~c":[1]}',yaml:'value: 原稿\n',xml:'<root><value>原稿</value></root>\n',toml:'value = "原稿"\n'}
@@ -19,6 +19,7 @@ const other={svg:'<svg xmlns="http://www.w3.org/2000/svg"><text>另一份资料<
 const files={},calls=[],pending=[],listeners={};let counter=0
 const snapshot=(path,content,signature)=>({path,content,signature,encoding:'utf-8',size:new TextEncoder().encode(content).length,modified:1,readOnlyReason:undefined})
 for(const [label,source]of [['A',sources[mode]],['B',other[mode]]])files[`C:/ui/${label}.${mode}`]=snapshot(`C:/ui/${label}.${mode}`,source,label+'-1')
+if(large)files[`C:/ui/A.${mode}`].size=4*1024*1024+100
 const histories={}
 for(const path of Object.keys(files))histories[path]=[[10,files[path].content.replaceAll('原稿','初稿')]]
 const state=window.structuredAudit={mode,files,histories,calls,pending,sources,other,sourceText(){return EditorView.findFromDOM(document.querySelector('.cm-editor')).state.doc.toString()},replaceSource(text){const view=EditorView.findFromDOM(document.querySelector('.cm-editor'));view.dispatch({changes:{from:0,to:view.state.doc.length,insert:text}})},holdHistoryCompare:false,holdHistoryRestore:false,holdAnalysis:false,holdRead:false,holdWrite:false,holdTransform:false,failRead:false,failWrite:false,failCopy:false,
@@ -39,7 +40,7 @@ window.__TAURI_INTERNALS__={transformCallback:()=>++counter,metadata:{currentWin
  if(command==='validate_local_json_schema')return{status:'no-schema',schemaApplied:false,diagnostics:[],diagnosticsTruncated:false}
  if(command.startsWith('read_')&&command.includes('text_document')){
   if(state.failRead){state.failRead=false;throw Error('模拟读取失败')}
-  const result=JSON.parse(JSON.stringify(files[args.path]));await pause('holdRead');return command.endsWith('_range')?{...result,offset:0,nextOffset:result.size,eof:true,readOnlyReason:''}:result
+  const result=JSON.parse(JSON.stringify(files[args.path]));await pause('holdRead');return command.endsWith('_range')?{...result,offset:args.offset||0,nextOffset:large?(args.offset||0)+new TextEncoder().encode(result.content).length:result.size,eof:!large,readOnlyReason:large?'large-file-range':''}:result
  }
  if(command.startsWith('write_')&&command.endsWith('_source_document')){
   if(state.failWrite){state.failWrite=false;throw Error('模拟写入失败')}

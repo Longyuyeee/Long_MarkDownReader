@@ -3,6 +3,18 @@
   "desktopInputUsed": false,
   "checks": [
     {
+      "id": "trusted-large-json-readonly-first-and-next-range-remain-clean",
+      "status": "passed"
+    },
+    {
+      "id": "input-in-previous-visible-editor-during-target-read-keeps-original-draft",
+      "status": "passed"
+    },
+    {
+      "id": "typing-during-target-read-retains-detached-save-receipt-and-later-input",
+      "status": "passed"
+    },
+    {
       "id": "json-undo-redo-and-manual-original-restoration",
       "status": "passed"
     },

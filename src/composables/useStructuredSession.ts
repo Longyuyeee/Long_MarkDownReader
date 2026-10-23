@@ -46,10 +46,12 @@ export function useStructuredSession(options: Options) {
   const capture = (): Owner | undefined => {
     const editor = options.editor()
     if (!editor) return
+    const tab = options.store.tabs.find(tab => tab.path === options.path())
     return {
       root: options.store.libraryPath, path: options.path(), external: options.external(), format: options.format(),
-      generation: options.generation(), editor, source: editor.state.doc.toString(), signature: options.signature.value,
-      tab: options.store.tabs.find(tab => tab.path === options.path()),
+      generation: options.generation(), editor, source: editor.state.doc.toString(),
+      signature: bound && owns(bound) ? options.signature.value : tab?.textSignature ?? options.signature.value,
+      tab,
     }
   }
   const owns = (owner?: Owner): boolean => Boolean(owner && !disposed
@@ -60,16 +62,23 @@ export function useStructuredSession(options: Options) {
   const sync = (isDirty = options.dirty.value) => {
     if (!bound || options.editor() !== bound.editor || !bound.tab || !options.store.tabs.includes(bound.tab)) return
     const content = bound.editor.state.doc.toString(), changed = bound.tab.content !== content
-    Object.assign(bound.tab, {
-      content, isDirty, textSignature: options.signature.value,
-      textEncoding: options.encoding.value, textSize: options.fileSize.value,
-      textModified: options.modified.value, textReadOnlyReason: options.readOnlyReason.value,
-    })
+    // Typing in a still-visible previous editor must not overwrite metadata
+    // from its newer, detached save receipt. Only actual snapshots set it.
+    Object.assign(bound.tab, { content, isDirty })
     if (changed) recordWindowDraftActivity()
   }
-  const identity = (owner: Owner) => ({ ...owner, signature: options.signature.value, encoding: options.encoding.value })
+  const identity = (owner: Owner) => ({ ...owner,
+    signature: bound && owns(bound) ? options.signature.value : owner.tab?.textSignature ?? options.signature.value,
+    encoding: bound && owns(bound) ? options.encoding.value : owner.tab?.textEncoding ?? options.encoding.value,
+  })
+  const cacheSnapshot = (tab: TabInfo, snapshot: Snapshot) => Object.assign(tab, {
+    textSignature: snapshot.signature, textEncoding: snapshot.encoding, textSize: snapshot.size,
+    textModified: snapshot.modified, textReadOnlyReason: snapshot.readOnlyReason || '',
+  })
   const refreshDirty = () => {
-    if (!bound || !hasDocument() || !bound.tab) return
+    // A requested route can change before its read finishes. Keep subsequent
+    // input with the editor's bound tab; hasDocument still guards all writes.
+    if (!bound || bound.editor !== options.editor() || !bound.tab || !options.store.tabs.includes(bound.tab)) return
     options.dirty.value = writes.has(key(bound)) || !matchesStructuredSavepoint(bound.tab, identity(bound), bound.editor.state.doc)
     sync()
   }
@@ -80,7 +89,10 @@ export function useStructuredSession(options: Options) {
       path: owner.path, external: owner.external, isDirty: options.dirty.value })
     owner.tab = options.store.tabs.find(tab => tab.path === owner.path)
     bound = owner
-    if (snapshot) recordStructuredSavepoint(owner.tab!, { ...owner, signature: snapshot.signature, encoding: snapshot.encoding }, snapshot.content)
+    if (snapshot && owner.tab) {
+      cacheSnapshot(owner.tab, snapshot)
+      recordStructuredSavepoint(owner.tab, { ...owner, signature: snapshot.signature, encoding: snapshot.encoding }, snapshot.content)
+    }
     // A draft with no verified session baseline remains conservatively dirty.
     if (snapshot && !snapshot.signature) sync()
     else refreshDirty()
@@ -122,7 +134,7 @@ export function useStructuredSession(options: Options) {
         && typeof options.store.maxHistoryCount === 'number'
       const historyArgs = { libraryRoot: owner.root, path: owner.path, maxCount: options.store.maxHistoryCount }
       if (keepHistory) {
-        const previous = await invoke<Snapshot>('read_text_document', { libraryRoot: owner.root, path: owner.path, formatId: owner.format, readOptions: { encoding: options.encoding.value } })
+        const previous = await invoke<Snapshot>('read_text_document', { libraryRoot: owner.root, path: owner.path, formatId: owner.format, readOptions: { encoding: identity(owner).encoding } })
         if (!owns(owner)) return
         if (previous.signature !== owner.signature) throw { code: 'external-modified' }
         await invoke('save_history_version', { ...historyArgs, content: previous.content })
@@ -142,14 +154,16 @@ export function useStructuredSession(options: Options) {
         // receipt; the old cached draft keeps any input made after submission.
         if (owner.tab && options.store.tabs.includes(owner.tab) && owner.tab.path === owner.path && Boolean(owner.tab.external) === owner.external) {
           recordStructuredSavepoint(owner.tab, { ...owner, signature: snapshot.signature, encoding: snapshot.encoding }, snapshot.content)
-          Object.assign(owner.tab, { textSignature: snapshot.signature, textEncoding: snapshot.encoding,
-            textSize: snapshot.size, textModified: snapshot.modified })
+          cacheSnapshot(owner.tab, snapshot)
           owner.tab.isDirty = owner.tab.content !== editorText(snapshot.content)
         }
         return
       }
       metadata(snapshot)
-      if (owner.tab) recordStructuredSavepoint(owner.tab, identity(owner), snapshot.content)
+      if (owner.tab && options.store.tabs.includes(owner.tab)) {
+        cacheSnapshot(owner.tab, snapshot)
+        recordStructuredSavepoint(owner.tab, identity(owner), snapshot.content)
+      }
       options.dirty.value = owner.editor.state.doc.toString() !== editorText(snapshot.content)
       sync()
       options.message.success(options.dirty.value ? '已保存本次内容，后续输入仍未保存' : '已保存')
@@ -213,7 +227,7 @@ export function useStructuredSession(options: Options) {
     history.value = capture()
   }
   const closeHistory = () => { history.value = undefined }
-  const historyCurrent = () => owns(history.value) && history.value?.signature === options.signature.value
+  const historyCurrent = () => owns(history.value) && history.value?.signature === capture()?.signature
   const applyHistoryDraft = (content: string, _partial = false, expectedDraft?: string) => {
     const owner = history.value
     if (!owner || !historyCurrent() || !hasDocument() || options.readOnlyReason.value || options.loading.value || options.saving.value

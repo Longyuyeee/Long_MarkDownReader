@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 export const savepointModes=['json','yaml','toml','xml','svg']
-export const savepointChecks=[...savepointModes.map(m=>m+'-read-undo-redo-and-tab-baseline'),...savepointModes.map(m=>m+'-save-receipt-undo-redo-and-exact-source'), 'xml-structural-inverse-restores-clean-baseline','real-locked-save-retry-keeps-draft-and-source','external-conflict-copy-keeps-original-and-unsaved-draft']
+export const savepointChecks=[...savepointModes.map(m=>m+'-read-undo-redo-and-tab-baseline'),...savepointModes.map(m=>m+'-save-receipt-undo-redo-and-exact-source'), 'xml-structural-inverse-restores-clean-baseline','real-locked-save-retry-keeps-draft-and-source','external-conflict-copy-keeps-original-and-unsaved-draft','large-json-readonly-range-and-next-page-remain-clean']
 export const savepointSources={json:'{ "n": 9007199254740993123456789, "value": "原稿 中文😀" }\n',yaml:'# 保留排版\nvalue: "原稿 中文😀"\nn: 9007199254740993123456789\n',toml:'# 保留排版\nvalue = "原稿 中文😀"\nn = 42\n',xml:'<root keep=\'&amp;\'><value>原稿 中文😀</value></root>\n',svg:'<svg xmlns="http://www.w3.org/2000/svg"><text>原稿 中文😀</text></svg>\n'}
 export const savepointSaved=m=>savepointSources[m].replace('原稿','已保存')
 export function validateInstalledSavepoint(r,m){
  assert.equal(m.appVersion,'1.2.17');for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-structured-savepoint-trusted-input-and-file-bytes')
- for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
+ for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64],['rangeBefore',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  assert.equal(r.lockedBefore,r.lockedAfter);assert.equal(r.externalBefore,r.externalAfter)
+ assert.equal(r.rangeBefore,r.rangeAfter)
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(r[k],false)
  assert.deepEqual(r.checks.map(c=>[c.id,c.status]),savepointChecks.map(id=>[id,'passed']));assert.deepEqual(r.runtimeErrors,[])
  assert.ok(r.inputTrace.length>10&&r.inputTrace.every(e=>e.trusted));assert.ok(r.inputTrace.some(e=>e.type==='input'));assert.equal(r.disposableDraftsExplicitlyDiscarded,true)
