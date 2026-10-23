@@ -125,16 +125,22 @@
     </n-modal>
     <n-modal v-model:show="attributeEditVisible" preset="card" class="xml-attribute-edit-dialog" title="修改 XML 属性" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
       :mask-closable="!attributeEditPending" :closable="!attributeEditPending" :close-on-esc="!attributeEditPending"
-      @after-enter="attributeInput?.select()" @after-leave="finishAttributeDialog">
+      @after-enter="focusAttributeInput" @after-leave="finishAttributeDialog">
       <code>{{ attributeEntry?.path }}</code>
-      <n-select v-if="attributeOptions.length > 1" :value="attributeName" :options="attributeOptions" :disabled="attributeEditPending" filterable aria-label="XML 属性" @update:value="selectAttribute" />
-      <strong v-else>{{ attributeName }}</strong>
+      <div class="attribute-edit-heading">
+        <n-select v-if="!attributeAdding && attributeOptions.length > 1" :value="attributeName" :options="attributeOptions" :disabled="attributeEditPending" filterable aria-label="XML 属性" @update:value="selectAttribute" />
+        <strong v-else>{{ attributeAdding ? '新增属性' : attributeName }}</strong>
+        <n-button v-if="!attributeAdding" :disabled="attributeEditPending" @click="beginAttributeAdd">新增属性</n-button>
+        <n-button v-else-if="attributeOptions.some(option => !option.disabled)" :disabled="attributeEditPending" @click="selectAttribute(attributeName)">返回已有属性</n-button>
+      </div>
+      <n-input v-if="attributeAdding" ref="attributeNameInput" v-model:value="newAttributeName" :disabled="attributeEditPending" placeholder="属性名" :input-props="{'aria-label':'新增 XML 属性名'}" />
       <WorkspaceHelp v-if="attributeEntry?.attributesTruncated" label="说明：只列出当前可定位属性" text="属性较多，只列出当前可定位的部分；其他属性仍可在源码中修改。" />
       <n-input ref="attributeInput" v-model:value="attributeText" type="textarea" :autosize="{minRows:3,maxRows:8}" :disabled="attributeEditPending"
         aria-label="XML 属性值" :input-props="{'aria-label':'XML 属性值'}" autofocus />
-      <p v-if="attributeError" role="alert" class="attribute-edit-error">{{ attributeError }}</p>
+      <p v-if="attributeError" role="alert" class="attribute-edit-error">{{ attributeError }} <n-button text :disabled="attributeEditPending" @click="revealAttributeSource">定位源码</n-button></p>
       <template #footer><div class="attribute-edit-actions"><n-button :disabled="attributeEditPending" @click="attributeEditVisible=false">取消</n-button>
-        <n-button type="primary" :loading="attributeEditPending" @click="previewAttributeEdit">预览修改</n-button></div></template>
+        <n-button v-if="!attributeAdding && selectedAttribute" type="error" secondary :disabled="attributeEditPending" @click="previewAttributeEdit('remove')">移除此属性</n-button>
+        <n-button type="primary" :loading="attributeEditPending" @click="previewAttributeEdit()">{{ attributeAdding ? '预览新增' : '预览修改' }}</n-button></div></template>
     </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
@@ -241,6 +247,7 @@ const session = useStructuredSession({
   applySnapshot: snapshot => applySnapshot(snapshot), load: discard => load(discard),
 })
 const attributeEditVisible = ref(false), attributeEditPending = ref(false), attributeName = ref(''), attributeText = ref(''), attributeError = ref('')
+const attributeAdding = ref(false), newAttributeName = ref(''), attributeNameInput = ref<InputInst | null>(null)
 const textEditVisible = ref(false), textEditPending = ref(false), textValue = ref(''), textError = ref('')
 const textInput = ref<InputInst | null>(null), textEntry = ref<OutlineEntry | null>(null)
 let textOwner: ReturnType<typeof session.capture>, pendingTextPreview: (() => void) | undefined
@@ -251,6 +258,13 @@ const attributeOptions = computed(() => (attributeEntry.value?.attributes || [])
 const attributeDrafts = new Map<string,string>()
 let attributeOwner: ReturnType<typeof session.capture>, pendingAttributePreview: (() => void) | undefined
 const finishAttributeDialog = () => { const offer = pendingAttributePreview; pendingAttributePreview = undefined; offer?.() }
+const focusAttributeInput = () => (attributeAdding.value ? attributeNameInput.value : attributeInput.value)?.select()
+const revealAttributeSource = () => {
+  const owner = attributeOwner, entry = attributeEntry.value
+  if (!owner || !entry || attributeEditPending.value) return
+  pendingAttributePreview = () => { if (session.unchanged(owner)) reveal(entry) }
+  attributeEditVisible.value = false
+}
 const editDisabled = computed(() => isSvg.value || loading.value || saving.value || readOnly.value || analysisPending.value || attributeEditPending.value || textEditPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
 const openTextEdit = (entry: OutlineEntry) => {
   if (editDisabled.value) return
@@ -274,36 +288,51 @@ const previewTextEdit = async () => {
   finally { if (session.owns(owner)) textEditPending.value = false }
 }
 const selectAttribute = async (name: string) => {
-  if (attributeName.value) attributeDrafts.set(attributeName.value,attributeText.value)
+  attributeDrafts.set(attributeAdding.value ? '' : attributeName.value,attributeText.value)
+  attributeAdding.value = false
   attributeName.value = name
   attributeText.value = attributeDrafts.get(name) ?? selectedAttribute.value?.value ?? ''
   attributeError.value = ''; await nextTick(); attributeInput.value?.select()
 }
+const beginAttributeAdd = async () => {
+  attributeDrafts.set(attributeName.value,attributeText.value)
+  attributeAdding.value = true; attributeText.value = attributeDrafts.get('') ?? ''; attributeError.value = ''
+  await nextTick(); focusAttributeInput()
+}
 const openAttributeEdit = (entry: OutlineEntry) => {
   if (editDisabled.value) return
   const first = entry.attributes?.find(attribute => attribute.editable)
-  if (!first) { message.info(entry.attributes?.[0]?.editUnavailableReason || (entry.attributesTruncated ? '属性较多，请在源码中修改此元素的属性' : '此元素没有可直接修改的属性')); reveal(entry); return }
   attributeOwner = session.capture()
   if (!attributeOwner) return
-  attributeDrafts.clear(); attributeEntry.value = entry; attributeName.value = first.name
-  attributeText.value = first.value; attributeError.value = ''; attributeEditVisible.value = true
+  attributeDrafts.clear(); attributeEntry.value = entry; attributeName.value = first?.name ?? ''
+  attributeAdding.value = !first; newAttributeName.value = ''
+  attributeText.value = first?.value ?? ''; attributeError.value = ''; attributeEditVisible.value = true
 }
-const previewAttributeEdit = async () => {
-  const owner = attributeOwner, attribute = selectedAttribute.value
-  if (!owner || !attribute?.editable || attributeEditPending.value) return
+const previewAttributeEdit = async (action: 'edit' | 'remove' = 'edit') => {
+  const owner = attributeOwner, attribute = selectedAttribute.value, entry = attributeEntry.value
+  const adding = attributeAdding.value, name = adding ? newAttributeName.value : attributeName.value
+  if (!owner || !entry || (!adding && !attribute?.editable) || attributeEditPending.value) return
   if (!session.unchanged(owner)) { attributeError.value = '当前文件或草稿已变化，请重新选择属性；内容未被修改'; return }
   attributeEditPending.value = true; attributeError.value = ''
   try {
-    const target = await invoke<string>('replace_xml_attribute_source',{content:owner.source,start:attribute.start,end:attribute.end,replacement:attributeText.value})
+    let target: string, byteAnchor: number
+    if (adding || action === 'remove') {
+      const result = await invoke<{content:string;anchor:number}>(adding ? 'add_xml_attribute_source' : 'remove_xml_attribute_source', {content:owner.source,start:entry.start,end:entry.end,name,...(adding ? {value:attributeText.value} : {})})
+      target = result.content; byteAnchor = result.anchor
+    } else {
+      target = await invoke<string>('replace_xml_attribute_source',{content:owner.source,start:attribute!.start,end:attribute!.end,replacement:attributeText.value})
+      byteAnchor = attribute!.start
+    }
+    if (attributeOwner !== owner) return
     if (!session.unchanged(owner)) { attributeError.value = '当前草稿已变化，请重新选择属性'; return }
-    const anchor = new TextDecoder().decode(new TextEncoder().encode(target).slice(0,attribute.start)).length
-    pendingAttributePreview = () => session.offerChange(owner,`修改 XML 属性 · ${attribute.name}`,target,anchor)
+    const anchor = new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(target).slice(0,byteAnchor)).length
+    pendingAttributePreview = () => session.offerChange(owner,`${adding ? '新增' : action === 'remove' ? '移除' : '修改'} XML 属性 · ${name}`,target,anchor)
     attributeEditVisible.value = false
-  } catch (cause) { if (session.owns(owner)) attributeError.value = errorText(cause) }
-  finally { if (session.owns(owner)) attributeEditPending.value = false }
+  } catch (cause) { if (attributeOwner === owner && session.owns(owner)) attributeError.value = errorText(cause) }
+  finally { if (attributeOwner === owner && session.owns(owner)) attributeEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<OutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => reveal(entry),
-  extra: entry => isSvg.value ? [] : [...(entry.attributeCount > 0 ? [{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value}] : []),{key:'edit-text',label:'修改文字…',disabled:editDisabled.value},{key:'copy-element',label:'复制元素',disabled:editDisabled.value},
+  extra: entry => isSvg.value ? [] : [{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value},{key:'edit-text',label:'修改文字…',disabled:editDisabled.value},{key:'copy-element',label:'复制元素',disabled:editDisabled.value},
     {key:'move-up',label:'上移',disabled:editDisabled.value || Boolean(entry.order && !entry.order.previous)},
     {key:'move-down',label:'下移',disabled:editDisabled.value || Boolean(entry.order && !entry.order.next)},
     {key:'delete-element',label:'删除元素…',disabled:editDisabled.value}],
@@ -458,7 +487,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.attribute-edit-actions{display:flex;justify-content:flex-end;gap:10px}
+.attribute-edit-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px}
+.attribute-edit-heading{display:flex;align-items:center;gap:10px}
+.attribute-edit-heading :deep(.n-select),.attribute-edit-heading strong{flex:1;min-width:0}
 .xml-attribute-edit-dialog code,.xml-text-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px;max-height:72px;overflow:auto}
 .xml-attribute-edit-dialog strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .xml-attribute-edit-dialog :deep(.n-card__content),.xml-text-edit-dialog :deep(.n-card__content){min-height:0;overflow:auto}

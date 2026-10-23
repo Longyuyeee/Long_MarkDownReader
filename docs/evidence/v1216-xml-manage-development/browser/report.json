@@ -1,0 +1,40 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "current-draft-add-remove-exact-source-preview-independent-history",
+      "status": "passed"
+    },
+    {
+      "id": "attribute-free-and-multiline-add-remove-plus-existing-value-edit",
+      "status": "passed"
+    },
+    {
+      "id": "validation-and-mode-switch-retain-entered-values-with-local-feedback",
+      "status": "passed"
+    },
+    {
+      "id": "late-add-and-old-source-remove-results-never-replace-or-contaminate-current-draft",
+      "status": "passed"
+    },
+    {
+      "id": "stale-attribute-preview-keeps-subsequent-source-input",
+      "status": "passed"
+    },
+    {
+      "id": "source-switch-closes-form-preview-menu-and-restores-draft",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-failure-and-retry-retain-managed-attribute-draft",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-and-narrow-attribute-form-and-preview-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

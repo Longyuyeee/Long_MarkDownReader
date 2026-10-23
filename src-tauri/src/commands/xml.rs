@@ -3,10 +3,11 @@ use crate::commands::formats::{
 };
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
 use crate::formats::xml::{
-    analyze_xml_source as analyze_source, copy_xml_element_source as copy_element,
-    delete_xml_element_source as delete_element, move_xml_element_source as move_element,
+    add_xml_attribute_source as add_attribute, analyze_xml_source as analyze_source,
+    copy_xml_element_source as copy_element, delete_xml_element_source as delete_element,
+    move_xml_element_source as move_element, remove_xml_attribute_source as remove_attribute,
     replace_xml_attribute_source as replace_attribute, replace_xml_text_source as replace_text,
-    XmlElementDeletion, XmlElementMove, XmlSourceAnalysis,
+    XmlAttributeChange, XmlElementDeletion, XmlElementMove, XmlSourceAnalysis,
 };
 use crate::services::external_file_access::ExternalFileAccess;
 use tauri::State;
@@ -44,6 +45,39 @@ pub fn replace_xml_attribute_source(
             "xml-attribute-edit-rejected",
             message,
             "调整当前输入后重试，或继续在源码中修改；当前草稿未变",
+        )
+    })
+}
+
+#[tauri::command]
+pub fn add_xml_attribute_source(
+    content: String,
+    start: usize,
+    end: usize,
+    name: String,
+    value: String,
+) -> Result<XmlAttributeChange, TextDocumentError> {
+    add_attribute(&content, start, end, &name, &value).map_err(|message| {
+        TextDocumentError::recoverable(
+            "xml-attribute-add-rejected",
+            message,
+            "请调整输入或在源码中处理；当前草稿保留",
+        )
+    })
+}
+
+#[tauri::command]
+pub fn remove_xml_attribute_source(
+    content: String,
+    start: usize,
+    end: usize,
+    name: String,
+) -> Result<XmlAttributeChange, TextDocumentError> {
+    remove_attribute(&content, start, end, &name).map_err(|message| {
+        TextDocumentError::recoverable(
+            "xml-attribute-remove-rejected",
+            message,
+            "请重新选择或在源码中处理；当前草稿保留",
         )
     })
 }

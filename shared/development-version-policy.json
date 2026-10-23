@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.2.16",
-  "runtimeBaseVersion": "1.2.15",
+  "runtimeBaseVersion": "1.2.16",
   "publicVersion": "1.2.15",
   "publicTag": "v1.2.15",
   "publicTagCommit": "a3ca1702466df38b3ce2e1eae2ffb34bf5c1823f",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-135-v1.2.15-published",
-  "binaryVersionTransition": "v1.2.15-public-release-published",
-  "displayLabel": "v1.2.15 已发布 · 下一目标 v1.2.16",
+  "currentStage": "M8-136-v1.2.16-xml-attribute-management-candidate",
+  "binaryVersionTransition": "v1.2.16-quality-gate-pending",
+  "displayLabel": "v1.2.16 XML 属性管理候选 · 当前公开 v1.2.15",
   "activeSlice": {
-    "id": "v1.2.15-xml-element-delete",
-    "status": "published-and-remote-assets-verified",
-    "document": "docs/V1_2_15_Unsigned_Community_Release_Audit_2026-10-24.md"
+    "id": "v1.2.16-xml-attribute-management",
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_2_16_Unsigned_Community_Release_Audit_2026-10-24.md"
   }
 }
