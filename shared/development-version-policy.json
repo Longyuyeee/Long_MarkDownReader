@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-120-v1.2.8-json-node-copy-candidate",
-  "binaryVersionTransition": "v1.2.8-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.8-release-ready",
   "displayLabel": "v1.2.8 JSON 字段与数组项复用候选 · 当前公开 v1.2.7",
   "activeSlice": {
     "id": "v1.2.8-json-node-copy",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_8_Unsigned_Community_Release_Audit_2026-10-23.md"
   }
 }
