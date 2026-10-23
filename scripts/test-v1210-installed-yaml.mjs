@@ -4,7 +4,10 @@ import {test} from 'node:test'
 import vm from 'node:vm'
 import ts from 'typescript'
 import {yamlValueChecks,validateInstalledYamlValue} from './lib/installed-v1-2-10-evidence.mjs'
+import {runInstalledV1210YamlValueWorkflow} from './lib/installed-v1-2-10-workflow.mjs'
 test('installed YAML driver uses real input and all read-only expressions parse',()=>{
+ assert.equal(typeof runInstalledV1210YamlValueWorkflow,'function')
+ assert.ok(fs.readFileSync('scripts/capture-r5j-installed-artifact-smoke.mjs','utf8').includes('await runInstalledV1210YamlValueWorkflow('))
  const source=fs.readFileSync('scripts/lib/installed-v1-2-10-workflow.mjs','utf8');assert.ok(source.includes('nativeUserInput'));assert.ok(source.includes('FileShare]::Read'));assert.ok(!/dispatchEvent|__TAURI|\.force\(/.test(source))
  const tree=ts.createSourceFile('driver.mjs',source,ts.ScriptTarget.ESNext,true,ts.ScriptKind.JS);let count=0
  const visit=node=>{if(ts.isCallExpression(node)&&/^(?:evaluate|ready)$/.test(node.expression.getText(tree))){const a=node.arguments[0];if(a&&(ts.isStringLiteral(a)||ts.isNoSubstitutionTemplateLiteral(a)||ts.isTemplateExpression(a))){const expr=ts.isTemplateExpression(a)?a.head.text+a.templateSpans.map(s=>'__fixture__'+s.literal.text).join(''):a.text;assert.doesNotThrow(()=>new vm.Script(expr),expr);count++}}ts.forEachChild(node,visit)};visit(tree);assert.ok(count>=10)
