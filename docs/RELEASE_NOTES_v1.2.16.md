@@ -4,4 +4,6 @@ XML 元素提纲右键“修改属性…”，可在原弹窗新增普通属性�
 
 支持空值、Unicode、特殊字符、多行属性、自闭合与成对元素以及连续操作；重复名称与无效输入留在弹窗纠正。命名空间声明与带前缀属性的增删局部提示使用源码；原有前缀属性值编辑保留。沿独立撤销重做、草稿接续、显式保存、失败重试和冲突副本保护未保存内容，保留全部功能、风格和正常动效。
 
-未签名 Windows 社区版，完整发布检查与 515 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
+未签名 Windows 社区版，完整发布检查与 515 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件已重新下载核对通过。应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.16) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_16_Unsigned_Community_Release_Audit_2026-10-24.md)。
