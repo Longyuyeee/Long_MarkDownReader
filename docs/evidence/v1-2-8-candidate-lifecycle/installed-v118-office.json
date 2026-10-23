@@ -1,0 +1,313 @@
+{
+  "installed": true,
+  "productCommit": "f357739f598025fb166703693afa7c9b98a75b24",
+  "runtimeBaseVersion": "1.2.8",
+  "appVersion": "1.2.8",
+  "sourceCommit": "f357739f598025fb166703693afa7c9b98a75b24",
+  "installerSha256": "a1f9c6b826faa2633d7080cb457f9c498c657e35ff6480e92b04764bac7dd2e9",
+  "harnessSourceCommit": "098e7c746f7cf077825cdc5a4dce69ee2a012c05",
+  "endpoint": "http://127.0.0.1:9343",
+  "targetId": "440D8125294EC58A6BBCEAC8F448C2C6",
+  "harnessCommit": "098e7c746f7cf077825cdc5a4dce69ee2a012c05",
+  "executableSha256": "47e7200a88472b354b8f46d46e61d33ff66a055c48e2211e9a112a3cacb75880",
+  "runtimeErrors": [],
+  "schemaVersion": 1,
+  "phase": "office",
+  "status": "passed",
+  "evidenceLevel": "installed-webview-input-events-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    "trusted-search-docx-block-visible-and-draft-preserved",
+    "trusted-search-pptx-object-highlight-and-draft-preserved",
+    "trusted-search-same-pptx-notes-page-and-details",
+    "trusted-search-same-workbook-sheet-repeat-intent"
+  ],
+  "sourceFiles": [
+    {
+      "name": "原文定位.docx",
+      "source": "fixtures/docx/producers/libreoffice-writer.docx",
+      "before": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3",
+      "after": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3"
+    },
+    {
+      "name": "演示定位.pptx",
+      "source": "fixtures/pptx/producers/libreoffice-impress.pptx",
+      "before": "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140",
+      "after": "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140"
+    },
+    {
+      "name": "工作表定位.xlsx",
+      "source": "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx",
+      "before": "52410b394655fbcc20850c17397d671d5947540cc5bca1f1dfb1f69434f5486c",
+      "after": "52410b394655fbcc20850c17397d671d5947540cc5bca1f1dfb1f69434f5486c"
+    }
+  ],
+  "observations": {
+    "docx": {
+      "locator": "docx-block-8",
+      "locatorToken": "1792714224560-2",
+      "path": "\\\\?\\C:\\Users\\runneradmin\\AppData\\Local\\Temp\\longedit-v118-native-installed-177160cd-ad9c-489f-9352-7e3a1bf47a3c\\项目 & 资料\\定位资料\\原文定位.docx",
+      "targetText": "After explicit page break.",
+      "visible": true
+    },
+    "pptxObject": {
+      "slide": "1",
+      "locatorKind": "pptx-object",
+      "locator": "16",
+      "locationLabel": "幻灯片 1 · Body 1",
+      "matchKind": "object",
+      "locatorToken": "1792714227887-3",
+      "path": "\\\\?\\C:\\Users\\runneradmin\\AppData\\Local\\Temp\\longedit-v118-native-installed-177160cd-ad9c-489f-9352-7e3a1bf47a3c\\项目 & 资料\\定位资料\\演示定位.pptx",
+      "objectId": "16",
+      "text": "Structured slide reading\nSearch and notes evidence\nRead-only fidelity boundary"
+    },
+    "pptxNotes": {
+      "slide": "2",
+      "locatorKind": "pptx-slide",
+      "locator": "257",
+      "locationLabel": "幻灯片 2 · 备注",
+      "matchKind": "notes",
+      "locatorToken": "1792714231479-4",
+      "path": "\\\\?\\C:\\Users\\runneradmin\\AppData\\Local\\Temp\\longedit-v118-native-installed-177160cd-ad9c-489f-9352-7e3a1bf47a3c\\项目 & 资料\\定位资料\\演示定位.pptx",
+      "activeSlide": 2,
+      "notes": "LibreOffice image relationship evidence."
+    },
+    "workbook": [
+      {
+        "sheet": "Inventory",
+        "locatorToken": "1792714235094-5",
+        "path": "\\\\?\\C:\\Users\\runneradmin\\AppData\\Local\\Temp\\longedit-v118-native-installed-177160cd-ad9c-489f-9352-7e3a1bf47a3c\\项目 & 资料\\定位资料\\工作表定位.xlsx",
+        "activeSheet": "Inventory",
+        "visibleCellText": "Keyboard",
+        "matchingFiles": 1,
+        "otherTitleMatches": 0
+      },
+      {
+        "sheet": "Details",
+        "locatorToken": "1792714238556-6",
+        "path": "\\\\?\\C:\\Users\\runneradmin\\AppData\\Local\\Temp\\longedit-v118-native-installed-177160cd-ad9c-489f-9352-7e3a1bf47a3c\\项目 & 资料\\定位资料\\工作表定位.xlsx",
+        "activeSheet": "Details",
+        "visibleCellText": "A-001",
+        "matchingFiles": 11,
+        "otherTitleMatches": 10
+      }
+    ]
+  },
+  "inputTrace": [
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 原文定位.docx · 段落 8"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 演示定位.pptx · 幻灯片 1 · Body 1"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 演示定位.pptx · 幻灯片 2 · 备注"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 工作表定位.xlsx · 工作表：Inventory"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 工作表定位.xlsx · 工作表：Details"
+    }
+  ],
+  "uiObservation": {
+    "errorOverlay": false
+  }
+}

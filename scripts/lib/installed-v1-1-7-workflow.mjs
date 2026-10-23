@@ -20,7 +20,7 @@ export const saveHistoryChecks = [
 ]
 
 export async function runInstalledV117Workflow({send,evaluate,navigate,waitFor,capture,library,output,sourceCommit,installerSha256,appVersion}) {
-  assert.ok(['1.1.7','1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7'].includes(appVersion))
+  assert.ok(['1.1.7','1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8'].includes(appVersion))
   if(process.env.LONGEDIT_R5I_DISPOSABLE!=='1'||path.resolve(library).toLowerCase()!=='c:\\longeditr5ilibrary')throw Error('Disposable installer fixture required')
   const report={appVersion,sourceCommit,installerSha256,evidenceLevel:'installed-tauri-ipc-and-disk',sourceUserContentIncluded:false,status:'running',checks:[]}
   const check=id=>report.checks.push({id,status:'passed'})

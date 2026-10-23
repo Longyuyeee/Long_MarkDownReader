@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 export const tableRowChecks=['stable-row-insert-one-undo-preserves-other-draft','duplicate-multiline-current-draft-independent-history','sorted-menu-refuses-position-and-copies-exact-row','filtered-insert-reveals-new-row-keeps-hidden-records','row-delete-confirm-cancel-and-undo','real-locked-save-retains-rows-retries-and-reopens','csv-tsv-row-copy-preserves-original-text-and-encoding','external-conflict-keeps-file-and-new-row-draft']
 export function validateInstalledTableRows(r,m){
- assert.ok(['1.2.5','1.2.6', '1.2.7'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.5','1.2.6', '1.2.7', '1.2.8'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-table-row-actions-trusted-input-and-file-bytes')
  for(const[key,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64]])assert.match(r[key],new RegExp('^[a-f0-9]{'+n+'}$'))
  assert.equal(r.lockedBefore,r.lockedAfter);assert.equal(r.externalBefore,r.externalAfter)

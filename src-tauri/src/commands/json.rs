@@ -5,12 +5,13 @@ use crate::formats::json::{
     analyze_json_source as analyze_source,
     append_json_array_item_source as append_array_item_source,
     append_json_object_property_source as append_object_property_source,
+    copy_json_node_source as copy_node_source,
     move_json_array_item_source as move_array_item_source,
     remove_json_array_item_source as remove_array_item_source,
     remove_json_object_property_source as remove_object_property_source,
     rename_json_object_key_source as rename_object_key_source,
     replace_json_scalar_source as replace_scalar_source, transform_json_source as transform_source,
-    JsonArrayMove, JsonSourceAnalysis,
+    JsonArrayMove, JsonNodeCopy, JsonSourceAnalysis,
 };
 use crate::formats::json_schema::{
     local_schema_sidecar_path, validate_with_local_schema, JsonSchemaValidation,
@@ -177,6 +178,18 @@ pub fn move_json_array_item_source(
 ) -> Result<JsonArrayMove, TextDocumentError> {
     move_array_item_source(&content, jsonc, start, end, direction)
         .map_err(|message| TextDocumentError::simple("json-array-move-rejected", message))
+}
+
+#[tauri::command]
+pub fn copy_json_node_source(
+    content: String,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    new_key: Option<String>,
+) -> Result<JsonNodeCopy, TextDocumentError> {
+    copy_node_source(&content, jsonc, start, end, new_key.as_deref())
+        .map_err(|message| TextDocumentError::simple("json-node-copy-rejected", message))
 }
 
 #[tauri::command]
