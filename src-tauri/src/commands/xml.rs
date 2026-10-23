@@ -4,8 +4,9 @@ use crate::commands::formats::{
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
 use crate::formats::xml::{
     analyze_xml_source as analyze_source, copy_xml_element_source as copy_element,
-    move_xml_element_source as move_element, replace_xml_attribute_source as replace_attribute,
-    replace_xml_text_source as replace_text, XmlElementMove, XmlSourceAnalysis,
+    delete_xml_element_source as delete_element, move_xml_element_source as move_element,
+    replace_xml_attribute_source as replace_attribute, replace_xml_text_source as replace_text,
+    XmlElementDeletion, XmlElementMove, XmlSourceAnalysis,
 };
 use crate::services::external_file_access::ExternalFileAccess;
 use tauri::State;
@@ -74,6 +75,21 @@ pub fn copy_xml_element_source(
             "xml-element-copy-rejected",
             message,
             "重新选择元素或在源码中复制；当前草稿未变",
+        )
+    })
+}
+
+#[tauri::command]
+pub fn delete_xml_element_source(
+    content: String,
+    start: usize,
+    end: usize,
+) -> Result<XmlElementDeletion, TextDocumentError> {
+    delete_element(&content, start, end).map_err(|message| {
+        TextDocumentError::recoverable(
+            "xml-element-delete-rejected",
+            message,
+            "重新选择元素或在源码中删除；当前草稿未变",
         )
     })
 }

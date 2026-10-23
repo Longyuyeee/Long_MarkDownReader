@@ -7,7 +7,7 @@ export const jsonNodeField=jsonNodeDraft.replace(',"record_copy":',String.raw`,"
 export const jsonNodeCopied=jsonNodeField.replace('{"id":"甲","nested":[1,{"x":2}]}','{"id":"甲","nested":[1,{"x":2}]},{"id":"甲","nested":[1,{"x":2}]}')
 export const jsonNodeConflict=jsonNodeCopied.replace('{"id":"甲","nested":[1,{"x":2}]}','{"id":"甲","nested":[1,{"x":2}]},{"id":"甲","nested":[1,{"x":2}]}')
 export function validateInstalledJsonNodeCopy(r,m){
- assert.ok(['1.2.8','1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.8','1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-json-node-copy-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  assert.equal(r.lockedBefore,r.lockedAfter);assert.equal(r.externalBefore,r.externalAfter)

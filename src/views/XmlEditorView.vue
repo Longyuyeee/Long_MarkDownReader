@@ -305,8 +305,24 @@ const previewAttributeEdit = async () => {
 const nodeMenu = useSourceNodeMenu<OutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => reveal(entry),
   extra: entry => isSvg.value ? [] : [...(entry.attributeCount > 0 ? [{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value}] : []),{key:'edit-text',label:'修改文字…',disabled:editDisabled.value},{key:'copy-element',label:'复制元素',disabled:editDisabled.value},
     {key:'move-up',label:'上移',disabled:editDisabled.value || Boolean(entry.order && !entry.order.previous)},
-    {key:'move-down',label:'下移',disabled:editDisabled.value || Boolean(entry.order && !entry.order.next)}],
-  action: (key,entry) => { if(key==='edit-attribute')openAttributeEdit(entry); if(key==='edit-text')openTextEdit(entry); if(key==='copy-element')void copyElement(entry); if(key==='move-up'||key==='move-down')void moveElement(entry,key==='move-up'?'up':'down') } })
+    {key:'move-down',label:'下移',disabled:editDisabled.value || Boolean(entry.order && !entry.order.next)},
+    {key:'delete-element',label:'删除元素…',disabled:editDisabled.value}],
+  action: (key,entry) => { if(key==='edit-attribute')openAttributeEdit(entry); if(key==='edit-text')openTextEdit(entry); if(key==='copy-element')void copyElement(entry); if(key==='move-up'||key==='move-down')void moveElement(entry,key==='move-up'?'up':'down'); if(key==='delete-element')void deleteElement(entry) } })
+const deleteElement = async (entry: OutlineEntry) => {
+  if (editDisabled.value) return
+  if (!entry.copy || !entry.order) {
+    message.info(entry.depth === 0 ? '根元素不能删除，请在源码中编辑' : '同级内容含正文、注释或处理指令，请在源码中确认要删除的范围')
+    reveal(entry); return
+  }
+  const owner = session.capture()
+  if (!owner) return
+  try {
+    const result = await invoke<{content:string;anchor:number}>('delete_xml_element_source',{content:owner.source,start:entry.start,end:entry.end})
+    if (!session.unchanged(owner)) return
+    const anchor = new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(result.content).slice(0,result.anchor)).length
+    session.offerChange(owner,'删除 XML 元素',result.content,anchor)
+  } catch (cause) { if (session.owns(owner)) message.error(errorText(cause)) }
+}
 const moveElement = async (entry: OutlineEntry, direction:'up'|'down') => {
   if (editDisabled.value) return
   if (!entry.order) { message.info(entry.moveUnavailableReason || '此元素请在源码中调整顺序'); reveal(entry); return }

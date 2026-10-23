@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.2.14 已发布：XML 同级元素排序已完成；[1.2.13—1.2.14](docs/Foundation_Deepening_Roadmap_1_2_13_to_1_2_14_2026-10-23.md) 已交付 2/2。下一轮 [1.2.15—1.2.16](docs/Foundation_Deepening_Roadmap_1_2_15_to_1_2_16_2026-10-23.md) 补齐元素删除和属性管理，尚未实施。
+v1.2.14 已发布；v1.2.15 正在完成 XML 元素删除，尚未发布。见[开发记录](docs/V1_2_15_Unsigned_Community_Release_Audit_2026-10-24.md)。
 
 ## 不只是打开文件，更是接续你的工作
 
