@@ -29,6 +29,17 @@ pub fn analyze_toml_source(content: String) -> TomlSourceAnalysis {
 }
 
 #[tauri::command]
+pub fn replace_toml_value_source(
+    content: String,
+    start: usize,
+    end: usize,
+    replacement: String,
+) -> Result<String, TextDocumentError> {
+    crate::formats::toml::replace_toml_value_source(&content, start, end, &replacement)
+        .map_err(|message| TextDocumentError::simple("toml-value-edit-rejected", message))
+}
+
+#[tauri::command]
 pub async fn write_toml_source_document(
     library_root: String,
     path: String,
