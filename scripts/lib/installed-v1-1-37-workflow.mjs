@@ -16,7 +16,12 @@ export async function runInstalledV1137Workflow({send,evaluate,navigate,capture,
  const trace=()=>evaluate(`window.__v1137Trace=[];window.__v1137Errors=[];for(const type of ['click','keydown','input'])document.addEventListener(type,e=>window.__v1137Trace.push({type,trusted:e.isTrusted}),true);window.addEventListener('error',e=>window.__v1137Errors.push(String(e.message)));window.addEventListener('unhandledrejection',e=>window.__v1137Errors.push(String(e.reason)))`)
  const collect=async()=>{report.inputTrace.push(...await evaluate('window.__v1137Trace'));report.runtimeErrors.push(...await evaluate('window.__v1137Errors'))}
  const open=async(extra='')=>{await navigate('#/library?path='+encodeURIComponent(pdf)+extra,'.pdf-view','owned PDF');await ready('document.querySelector(".pdf-view canvas")','rendered PDF');await ui.clickTarget(`[...document.querySelectorAll('.sidebar-switch button')].find(e=>e.textContent.trim().startsWith('批注'))`);await ready('document.querySelector(".annotation-card")','real sidecar annotations')}
- const leave=()=>navigate('#/library?path='+encodeURIComponent(note),'#vditor-lib','owned return note')
+ const leave=async()=>{
+  await navigate('#/library?path='+encodeURIComponent(note),'#vditor-lib','owned return note')
+  // The Markdown editor stays mounted, but hidden, while PDF is active. Its
+  // mere presence does not mean the PDF leave/save guard has completed.
+  await ready(`!document.querySelector('.pdf-view')&&document.querySelector('#vditor-lib')?.getClientRects().length&&document.querySelector('.workspace-file-name')?.textContent===${q(path.basename(note))}`,'PDF leave guard completed and requested note visible')
+ }
  const select=async(selector,index)=>{await ui.click(selector);await ui.key('Home','Home',36);for(let n=0;n<index;n++)await ui.key('ArrowDown','ArrowDown',40);await ui.key('Enter','Enter',13)}
  let failure
  try{
