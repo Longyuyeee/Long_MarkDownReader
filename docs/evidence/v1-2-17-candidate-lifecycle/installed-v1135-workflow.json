@@ -1,0 +1,249 @@
+{
+  "appVersion": "1.2.17",
+  "sourceCommit": "296dc855f440c376ab07ed8364c0456f18cb3226",
+  "installerSha256": "c48a94bd492465dd37f5b59570298b9cca4468e9daee075c6dccdb75e289d202",
+  "harnessSourceCommit": "8a6086496eed5a9b382880d3c7b2e2e9b846383c",
+  "executableSha256": "64bb3e89af2b7202086534afdbf2f27be1c7a1f056450ad83bdf08b47750675c",
+  "status": "passed",
+  "evidenceLevel": "installed-attachment-drafts-trusted-ui-and-output-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "current-window-drafts-replace-disk-uses",
+      "status": "passed"
+    },
+    {
+      "id": "saved-and-unsaved-sources-visible",
+      "status": "passed"
+    },
+    {
+      "id": "open-result-preserves-both-current-drafts",
+      "status": "passed"
+    },
+    {
+      "id": "new-edit-removes-stale-reference",
+      "status": "passed"
+    },
+    {
+      "id": "read-failure-local-with-working-refresh",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-and-predecessor-drafts-preserved",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1135-added-before.md",
+      "sizeBytes": 38,
+      "sha256": "992f076a8ee4c4f01f5b400930694fa983cb39460053eae63edf9952c3be8058"
+    },
+    {
+      "fileName": "installed-v1135-removed-before.md",
+      "sizeBytes": 44,
+      "sha256": "2c2836b86e0ec56247a317c04a857419a0912ba47038ef5815a822ec80b329f0"
+    },
+    {
+      "fileName": "installed-v1135-added-saved.md",
+      "sizeBytes": 41,
+      "sha256": "8376f214b39423bdba6d2c7627323fb82cad6ca2b117315a73c35a586582ba20"
+    },
+    {
+      "fileName": "installed-v1135-removed-saved.md",
+      "sizeBytes": 44,
+      "sha256": "20b647259ae73e2db1dc377f1337e99a3a1498b57f16cc7562c30a75c81ec32d"
+    },
+    {
+      "fileName": "installed-v1135-saved.md",
+      "sizeBytes": 44,
+      "sha256": "4f3dfdd81616ed4d8fb686ab58f331fb9db45238eee2fa9c4e427d29468ba968"
+    },
+    {
+      "fileName": "installed-v1135-attachment.txt",
+      "sizeBytes": 14,
+      "sha256": "559c26457eae29834efe28a58efe4a8ca930d110697c9dfe4c4467baba073f0c"
+    },
+    {
+      "fileName": "installed-v1135-observations.json",
+      "sizeBytes": 518,
+      "sha256": "8d37e5fdd0cb6a7caee92bff9ec2ffefa96ba6fe8151bef8c7d54a290cc5be91"
+    }
+  ],
+  "editorModeBefore": "sv",
+  "editorModeAfter": "sv",
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}

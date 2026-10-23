@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-138-v1.2.17-structured-savepoint-continuity-candidate",
-  "binaryVersionTransition": "v1.2.17-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.17-release-ready",
   "displayLabel": "v1.2.17 准确保存状态候选 · 当前公开 v1.2.16",
   "activeSlice": {
     "id": "v1.2.17-structured-savepoint-continuity",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_17_Unsigned_Community_Release_Audit_2026-10-24.md"
   }
 }
