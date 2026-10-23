@@ -1,0 +1,48 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "decoded-prefill-current-draft-exact-range-and-isolated-history",
+      "status": "passed"
+    },
+    {
+      "id": "picker-prefixed-attribute-and-sibling-target-with-local-input-retention",
+      "status": "passed"
+    },
+    {
+      "id": "empty-and-multiline-values-retain-intentional-whitespace",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-input-keeps-value-and-corrects-in-place",
+      "status": "passed"
+    },
+    {
+      "id": "namespace-fallback-is-local-and-source-remains-usable",
+      "status": "passed"
+    },
+    {
+      "id": "late-result-never-overwrites-newer-source",
+      "status": "passed"
+    },
+    {
+      "id": "stale-preview-preserves-current-draft",
+      "status": "passed"
+    },
+    {
+      "id": "source-switch-clears-parameter-dialog-and-preview-with-draft-retained",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-retains-the-current-source",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-narrow-and-long-path-with-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}
