@@ -377,7 +377,7 @@ const copyElement = async (entry: OutlineEntry) => {
   } catch (cause) { if (session.owns(owner)) message.error(errorText(cause)) }
 }
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
-const registerTab = () => session.bind()
+const registerTab = (snapshot?: Snapshot) => session.bind(snapshot)
 
 const analyze = async (content: string) => { const analysisOwner = session.capture();
   const generation = ++analysisGeneration
@@ -408,7 +408,7 @@ const extensions = (locked: boolean) => [
   EditorView.updateListener.of(update => {
     if (update.docChanged) {
       sourceContent.value = update.state.doc.toString(); lineCount.value = update.state.doc.lines
-      if (!applying) { dirty.value = true; syncTab(true); scheduleAnalysis() }
+      if (!applying) { session.refreshDirty(); scheduleAnalysis() }
     }
     if (update.docChanged || update.selectionSet) {
       const position = update.state.selection.main.head, line = update.state.doc.lineAt(position)
@@ -424,7 +424,7 @@ const replaceDocument = (content: string, locked: boolean) => {
 }
 const applySnapshot = async (value: Snapshot) => {
   signature.value = value.signature; encoding.value = value.encoding; fileSize.value = value.size; modified.value = value.modified
-  readOnlyReason.value = value.readOnlyReason || ''; dirty.value = false; replaceDocument(value.content, Boolean(value.readOnlyReason)); registerTab()
+  readOnlyReason.value = value.readOnlyReason || ''; dirty.value = false; replaceDocument(value.content, Boolean(value.readOnlyReason)); registerTab(value)
   await analyze(editor?.state.doc.toString() || '')
 }
 const restoreDraft = async (tab: TabInfo) => {

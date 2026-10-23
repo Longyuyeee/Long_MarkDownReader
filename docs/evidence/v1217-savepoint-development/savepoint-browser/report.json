@@ -1,0 +1,151 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "trusted-large-json-readonly-first-and-next-range-remain-clean",
+      "status": "passed"
+    },
+    {
+      "id": "input-in-previous-visible-editor-during-target-read-keeps-original-draft",
+      "status": "passed"
+    },
+    {
+      "id": "typing-during-target-read-retains-detached-save-receipt-and-later-input",
+      "status": "passed"
+    },
+    {
+      "id": "json-undo-redo-and-manual-original-restoration",
+      "status": "passed"
+    },
+    {
+      "id": "json-successful-save-advances-baseline-without-extra-write",
+      "status": "passed"
+    },
+    {
+      "id": "json-in-flight-old-baseline-keeps-draft-and-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "json-detached-receipt-keeps-later-input-and-correct-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "json-failed-retry-and-conflict-copy-never-acknowledge-unsaved-input",
+      "status": "passed"
+    },
+    {
+      "id": "json-component-remount-retains-verified-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-undo-redo-and-manual-original-restoration",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-successful-save-advances-baseline-without-extra-write",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-in-flight-old-baseline-keeps-draft-and-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-detached-receipt-keeps-later-input-and-correct-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-failed-retry-and-conflict-copy-never-acknowledge-unsaved-input",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-component-remount-retains-verified-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "toml-undo-redo-and-manual-original-restoration",
+      "status": "passed"
+    },
+    {
+      "id": "toml-successful-save-advances-baseline-without-extra-write",
+      "status": "passed"
+    },
+    {
+      "id": "toml-in-flight-old-baseline-keeps-draft-and-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "toml-detached-receipt-keeps-later-input-and-correct-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "toml-failed-retry-and-conflict-copy-never-acknowledge-unsaved-input",
+      "status": "passed"
+    },
+    {
+      "id": "toml-component-remount-retains-verified-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "xml-undo-redo-and-manual-original-restoration",
+      "status": "passed"
+    },
+    {
+      "id": "xml-successful-save-advances-baseline-without-extra-write",
+      "status": "passed"
+    },
+    {
+      "id": "xml-in-flight-old-baseline-keeps-draft-and-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "xml-detached-receipt-keeps-later-input-and-correct-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "xml-failed-retry-and-conflict-copy-never-acknowledge-unsaved-input",
+      "status": "passed"
+    },
+    {
+      "id": "xml-component-remount-retains-verified-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "svg-undo-redo-and-manual-original-restoration",
+      "status": "passed"
+    },
+    {
+      "id": "svg-successful-save-advances-baseline-without-extra-write",
+      "status": "passed"
+    },
+    {
+      "id": "svg-in-flight-old-baseline-keeps-draft-and-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "svg-detached-receipt-keeps-later-input-and-correct-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "svg-failed-retry-and-conflict-copy-never-acknowledge-unsaved-input",
+      "status": "passed"
+    },
+    {
+      "id": "svg-component-remount-retains-verified-tab-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "unknown-transported-draft-never-guessed-clean",
+      "status": "passed"
+    },
+    {
+      "id": "renamed-owner-requires-new-trusted-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-small-normal-motion-full-editor-and-save-status",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

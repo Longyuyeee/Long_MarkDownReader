@@ -1,0 +1,15 @@
+﻿# 外部保留
+title: '原稿' # 保留
+n: 9007199254740993123456789
+enabled: true
+items: [one, two]
+block: |
+  multiline
+'a.b': 'literal'
+a:
+  port: 8080
+b:
+  port: 9090
+rows:
+  - name: 'first'
+  - name: 'second'

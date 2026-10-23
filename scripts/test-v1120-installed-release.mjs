@@ -14,6 +14,9 @@ test('structured native evidence binds all tasks, source, installer, inputs and 
  assert.doesNotThrow(()=>validateInstalledStructured(report,manifest));assertStructuredOutputBytes(report,()=>bytes)
  for(const mutate of [r=>r.checks.pop(),r=>r.sourceCommit='0'.repeat(40),r=>r.nativeBridgeMocked=true,r=>r.copyExact.toml=false,r=>r.inputTrace[0].trusted=false,r=>r.runtimeErrors.push('error')]){const broken=structuredClone(report);mutate(broken);assert.throws(()=>validateInstalledStructured(broken,manifest))}
  assert.throws(()=>assertStructuredOutputBytes(report,()=>Buffer.from('different')))
+ const currentManifest={...manifest,appVersion:'1.2.17'},current={...report,appVersion:'1.2.17',formatUndoCleanExact:true,cleanReloadWithoutConfirmation:true,formatUndoDiskBefore:sha(bytes),formatUndoDiskAfter:sha(bytes)}
+ assert.doesNotThrow(()=>validateInstalledStructured(current,currentManifest))
+ for(const change of [{formatUndoCleanExact:false},{cleanReloadWithoutConfirmation:false},{formatUndoDiskAfter:'0'.repeat(64)}])assert.throws(()=>validateInstalledStructured({...current,...change},currentManifest))
 })
 test('installed structured workflow uses actual input and parses its literal browser expressions',()=>{
  const driver=fs.readFileSync('scripts/lib/installed-v1-1-20-workflow.mjs','utf8')
