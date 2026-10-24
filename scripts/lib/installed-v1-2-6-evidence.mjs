@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 export const tableColumnChecks=['move-current-draft-whole-column-and-one-undo','boundary-sort-filter-and-frozen-prefix-follow-field','add-edit-move-and-row-history-stay-on-stable-fields','saved-views-widths-rules-and-field-references-match','real-locked-save-keeps-column-draft-retries-reopens','csv-tsv-column-order-preserves-original-text-and-encoding','column-rule-entry-and-source-switch-clear-old-menu','external-conflict-keeps-file-and-reordered-draft']
 export function validateInstalledTableColumns(r,m){
- assert.ok(['1.2.6','1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.6','1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-table-column-order-trusted-input-and-file-bytes')
  for(const[key,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64]])assert.match(r[key],new RegExp('^[a-f0-9]{'+n+'}$'))
  assert.equal(r.lockedBefore,r.lockedAfter);assert.equal(r.externalBefore,r.externalAfter)

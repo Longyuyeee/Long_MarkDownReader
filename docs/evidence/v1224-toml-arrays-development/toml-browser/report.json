@@ -1,0 +1,57 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "syntheticCompositionProbe": true,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "lazy-array-expand-locate-append-type-and-independent-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "item-insert-delete-keeps-expanded-and-empty-array-datetime-roundtrip-with-no-disk-write",
+      "status": "passed"
+    },
+    {
+      "id": "collection-local-error-retains-input-and-source-location",
+      "status": "passed"
+    },
+    {
+      "id": "late-result-keeps-subsequent-input",
+      "status": "passed"
+    },
+    {
+      "id": "stale-preview-does-not-overwrite-draft",
+      "status": "passed"
+    },
+    {
+      "id": "old-file-result-does-not-contaminate-new-dialog",
+      "status": "passed"
+    },
+    {
+      "id": "source-switch-clears-form-menu-delete-preview-and-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "save-failure-retry-and-trusted-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "composition-229-single-input-and-ordinary-enter-preview",
+      "status": "passed"
+    },
+    {
+      "id": "old-file-array-inspection-does-not-replace-current-items",
+      "status": "passed"
+    },
+    {
+      "id": "superseded-array-inspection-keeps-subsequent-source-and-new-request",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-narrow-full-page-form-diff-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

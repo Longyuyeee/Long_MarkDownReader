@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.23",
-  "releaseCandidate": true,
+  "appVersion": "1.2.24",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-24",
-  "currentStatus": "v1.2.23-community-release-published",
+  "currentStatus": "v1.2.24-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.22",
+    "previousPublicVersion": "1.2.23",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.22-to-1.2.23-pending",
-    "scope": "yaml-sequence-items"
+    "managedUpdaterUpgradePath": "1.2.23-to-1.2.24-pending",
+    "scope": "toml-array-items"
   },
   "targetRelease": {
-    "tag": "v1.2.23",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.23",
+    "tag": "v1.2.24",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.24",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "328b4a3e5981c2bbf7cbd0b9bf505ee4ad6d494a",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40077842537,
-    "hostedInstalledLifecycleRunId": 40080839459,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.2.23_x64_zh-CN.msi",
-        "sizeBytes": 78065664,
-        "sha256": "46daf8858176a94fad04ebc9afc0a261b97a9c4168ebb16a963ca7a09c0287fb",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.23_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.2.23_x64-setup.exe",
-        "sizeBytes": 68713640,
-        "sha256": "944b536f7e7f578c97922f8f2a7e195d1746f619e0f76a59ffaf1dc4f34d87f4",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.23_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.2.23",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.23",
-    "databaseId": 422641067,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "328b4a3e5981c2bbf7cbd0b9bf505ee4ad6d494a",
-    "publishedAt": "2026-10-24T09:40:59Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -145,7 +114,8 @@
     "v1.2.19-to-v1.2.20-managed-update-observation-pending",
     "v1.2.20-to-v1.2.21-managed-update-observation-pending",
     "v1.2.21-to-v1.2.22-managed-update-observation-pending",
-    "v1.2.22-to-v1.2.23-managed-update-observation-pending"
+    "v1.2.22-to-v1.2.23-managed-update-observation-pending",
+    "v1.2.23-to-v1.2.24-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.24-toml-array-items-planned"
+  "nextAction": "validate-and-build-v1.2.24-installers"
 }
