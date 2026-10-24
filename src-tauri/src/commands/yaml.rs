@@ -63,6 +63,40 @@ pub fn replace_yaml_value_source(
 }
 
 #[tauri::command]
+pub fn add_yaml_field_source(
+    content: String,
+    start: usize,
+    end: usize,
+    inside: bool,
+    name: String,
+    value: String,
+) -> Result<YamlKeyChange, TextDocumentError> {
+    crate::formats::yaml::add_yaml_field_source(&content, start, end, inside, &name, &value)
+        .map_err(|message| {
+            TextDocumentError::recoverable(
+                "yaml-field-add-rejected",
+                message,
+                "调整输入后重试，或定位源码；当前输入与草稿仍保留",
+            )
+        })
+}
+
+#[tauri::command]
+pub fn remove_yaml_field_source(
+    content: String,
+    start: usize,
+    end: usize,
+) -> Result<YamlKeyChange, TextDocumentError> {
+    crate::formats::yaml::remove_yaml_field_source(&content, start, end).map_err(|message| {
+        TextDocumentError::recoverable(
+            "yaml-field-remove-rejected",
+            message,
+            "定位源码后继续修改；当前草稿仍保留",
+        )
+    })
+}
+
+#[tauri::command]
 pub async fn write_yaml_source_document(
     library_root: String,
     path: String,
