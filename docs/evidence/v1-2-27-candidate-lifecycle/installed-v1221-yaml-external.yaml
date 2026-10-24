@@ -1,0 +1,9 @@
+﻿# 配置 中文😀
+base: &defaults {keep: 0xFF}
+ref: *defaults
+root:
+  old: 8_080 # 保留
+  label: 外部保留
+  flow: {first: 1,  keep: 3}
+  added: true
+other: 2
