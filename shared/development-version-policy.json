@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.2.18",
+  "developmentTargetVersion": "1.2.19",
   "runtimeBaseVersion": "1.2.18",
-  "publicVersion": "1.2.17",
-  "publicTag": "v1.2.17",
-  "publicTagCommit": "296dc855f440c376ab07ed8364c0456f18cb3226",
+  "publicVersion": "1.2.18",
+  "publicTag": "v1.2.18",
+  "publicTagCommit": "935250df414c46010f73dff61a0eb726d1af3e9a",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-140-v1.2.18-xml-create-rename-candidate",
-  "binaryVersionTransition": "v1.2.18-release-ready",
-  "displayLabel": "v1.2.18 XML 创建与重命名候选 · 当前公开 v1.2.17",
+  "currentStage": "M8-141-v1.2.18-published",
+  "binaryVersionTransition": "v1.2.18-public-release-published",
+  "displayLabel": "v1.2.18 已发布 · 下一目标 v1.2.19",
   "activeSlice": {
     "id": "v1.2.18-xml-create-rename",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-and-remote-assets-verified",
     "document": "docs/V1_2_18_Unsigned_Community_Release_Audit_2026-10-24.md"
   }
 }
