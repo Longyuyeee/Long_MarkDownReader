@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!-- 我的草稿 -->
+<catalog xmlns:doc="urn:docs">
+  <empty></empty>
+  <selfClosing/>
+  <mixed>before<child/>after</mixed>
+  <annotated><!-- belongs? --><child/></annotated>
+</catalog>
