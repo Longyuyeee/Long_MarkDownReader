@@ -1,5 +1,5 @@
 use serde::Serialize;
-use toml_edit::{Document, Item, Value};
+use toml_edit::{Document, Item, Key, Table, Value};
 
 const MAX_TOML_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_TOML_NODES: usize = 100_000;
@@ -23,6 +23,7 @@ pub struct TomlDiagnostic {
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct TomlOutlineEntry {
+    pub field: Option<TomlField>,
     pub path: String,
     pub label: String,
     pub kind: String,
@@ -35,6 +36,23 @@ pub struct TomlOutlineEntry {
     pub preview: String,
     pub editable: bool,
     pub edit_unavailable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct TomlField {
+    pub name: String,
+    pub start: usize,
+    pub end: usize,
+    pub rename_unavailable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct TomlKeyChange {
+    pub content: String,
+    pub start: usize,
+    pub end: usize,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -91,7 +109,16 @@ pub fn analyze_toml_source(content: &str) -> TomlSourceAnalysis {
 
     let mut state = AnalysisState::default();
     for (key, item) in document.iter() {
-        inspect_item(content, item, &key_path("", key), key, 0, &mut state);
+        inspect_item(
+            content,
+            item,
+            &key_path("", key),
+            key,
+            0,
+            document.as_table(),
+            false,
+            &mut state,
+        );
         if state.exceeded {
             break;
         }
@@ -127,6 +154,8 @@ fn inspect_item(
     path: &str,
     label: &str,
     depth: usize,
+    parent: &Table,
+    in_array_table: bool,
     state: &mut AnalysisState,
 ) {
     state.nodes += 1;
@@ -162,6 +191,9 @@ fn inspect_item(
     if state.outline.len() < MAX_TOML_OUTLINE_ENTRIES {
         let (line, column) = line_column(content, span.start);
         state.outline.push(TomlOutlineEntry {
+            field: parent.key(label).and_then(|key| {
+                field_info(content, key, item, parent.is_dotted() || in_array_table)
+            }),
             path: path.into(),
             label: label.into(),
             kind: kind.into(),
@@ -185,7 +217,16 @@ fn inspect_item(
     match item {
         Item::Table(table) => {
             for (key, child) in table.iter() {
-                inspect_item(content, child, &key_path(path, key), key, depth + 1, state);
+                inspect_item(
+                    content,
+                    child,
+                    &key_path(path, key),
+                    key,
+                    depth + 1,
+                    table,
+                    in_array_table,
+                    state,
+                );
                 if state.exceeded {
                     return;
                 }
@@ -200,6 +241,8 @@ fn inspect_item(
                         &key_path(&format!("{path}[{index}]"), key),
                         key,
                         depth + 1,
+                        table,
+                        true,
                         state,
                     );
                     if state.exceeded {
@@ -210,6 +253,136 @@ fn inspect_item(
         }
         _ => {}
     }
+}
+
+// A key's parser span is distinct from its value/table span. Only an entire
+// single-key assignment can be changed without rewriting table ownership.
+fn field_info(content: &str, key: &Key, item: &Item, restricted: bool) -> Option<TomlField> {
+    let span = key.span()?;
+    let raw = content.get(span.clone())?;
+    let line_prefix = content[..span.start]
+        .rsplit('\n')
+        .next()?
+        .trim_start_matches('\u{feff}');
+    let assignment = item
+        .as_value()
+        .and_then(Value::span)
+        .and_then(|value| content.get(span.end..value.start))
+        .is_some_and(|between| between.trim() == "=");
+    let standalone = line_prefix.chars().all(|c| c == ' ' || c == '\t');
+    let reason = if restricted || !assignment || !standalone || raw.is_empty() {
+        Some("点键、表头和数组表请在源码中修改；当前字段名输入与草稿仍保留".into())
+    } else {
+        None
+    };
+    Some(TomlField {
+        name: key.get().into(),
+        start: span.start,
+        end: span.end,
+        rename_unavailable_reason: reason,
+    })
+}
+
+// Compare the complete parser-owned tree, with precisely one renamed key.
+// Values use their exact source bytes, including arrays, inline tables and dates.
+// This representation is validation only; output is never re-serialized.
+fn source_tree(
+    content: &str,
+    item: &Item,
+    rename: Option<(usize, usize, &str)>,
+) -> Option<serde_json::Value> {
+    Some(match item {
+        Item::Value(value) => serde_json::json!(["value", content.get(value.span()?)?]),
+        Item::Table(table) => {
+            let mut fields = serde_json::Map::new();
+            for (name, child) in table.iter() {
+                let key = table.key(name)?;
+                let name = match (rename, key.span()) {
+                    (Some((start, end, name)), Some(span)) if span == (start..end) => name,
+                    _ => name,
+                };
+                if fields
+                    .insert(name.into(), source_tree(content, child, rename)?)
+                    .is_some()
+                {
+                    return None;
+                }
+            }
+            serde_json::json!(["table", fields])
+        }
+        Item::ArrayOfTables(array) => serde_json::json!([
+            "array-of-tables",
+            array
+                .iter()
+                .map(|table| source_tree(content, &Item::Table(table.clone()), rename))
+                .collect::<Option<Vec<_>>>()?
+        ]),
+        Item::None => serde_json::Value::Null,
+    })
+}
+
+pub fn rename_toml_key_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    name: &str,
+) -> Result<TomlKeyChange, String> {
+    let analysis = analyze_toml_source(content);
+    if !analysis.valid {
+        return Err("TOML 语法存在错误，请先在源码中修复；草稿仍保留".into());
+    }
+    let field = analysis
+        .outline
+        .iter()
+        .filter_map(|entry| entry.field.as_ref())
+        .find(|field| field.start == start && field.end == end)
+        .ok_or_else(|| "字段名位置已过期，请重新选择字段".to_string())?;
+    if let Some(reason) = &field.rename_unavailable_reason {
+        return Err(reason.clone());
+    }
+    if name.is_empty() {
+        return Err("请输入字段名；当前草稿未变".into());
+    }
+    if name.len() > MAX_TOML_SOURCE_BYTES {
+        return Err("字段名超过编辑大小上限".into());
+    }
+    let raw = &content[start..end];
+    if name == field.name {
+        return Ok(TomlKeyChange {
+            content: content.into(),
+            start,
+            end,
+        });
+    }
+    let bare = name
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-');
+    let quoted = || serde_json::to_string(name).expect("string encoding");
+    let replacement =
+        if raw.starts_with('\'') && !name.contains('\'') && !name.chars().any(char::is_control) {
+            format!("'{name}'")
+        } else if raw.starts_with('"') || raw.starts_with('\'') || !bare {
+            quoted()
+        } else {
+            name.into()
+        };
+    let candidate = format!("{}{}{}", &content[..start], replacement, &content[end..]);
+    if candidate.len() > MAX_TOML_SOURCE_BYTES {
+        return Err("修改后源码超过分析大小上限；草稿仍保留".into());
+    }
+    let before = Document::parse(content).map_err(|_| "当前 TOML 已变化，请重新选择字段")?;
+    let after = Document::parse(candidate.as_str())
+        .map_err(|_| "字段名已存在或与表路径冲突，请调整名称；输入与草稿仍保留")?;
+    let expected = source_tree(content, before.as_item(), Some((start, end, name)))
+        .ok_or("字段名与同级字段或表路径冲突；输入与草稿仍保留")?;
+    if source_tree(&candidate, after.as_item(), None).as_ref() != Some(&expected) {
+        return Err("无法确认只改变当前字段，请定位源码修改；输入与草稿仍保留".into());
+    }
+    Ok(TomlKeyChange {
+        content: candidate,
+        start,
+        end: start + replacement.len(),
+    })
 }
 
 fn value_child_count(value: &Value) -> usize {
@@ -518,5 +691,145 @@ mod tests {
         let analysis = analyze_toml_source(&"x = 1\n".repeat(MAX_TOML_SOURCE_BYTES));
         assert!(!analysis.valid);
         assert_eq!(analysis.diagnostics[0].code, "source-too-large");
+    }
+
+    fn rename(source: &str, path: &str, name: &str) -> Result<TomlKeyChange, String> {
+        let field = analyze_toml_source(source)
+            .outline
+            .into_iter()
+            .find(|e| e.path == path)
+            .unwrap()
+            .field
+            .unwrap();
+        rename_toml_key_source(source, field.start, field.end, name)
+    }
+
+    #[test]
+    fn rename_exact_key_span_preserves_bom_crlf_comments_values_and_other_tables() {
+        let source = "\u{feff}# 中文😀\r\nold = 0xFF # old unchanged\r\ndate=1979-05-27T07:32:00Z\r\n[server]\r\n  old = '我的草稿'\r\n[other]\r\nold = 1_024\r\n";
+        let a = analyze_toml_source(source);
+        assert!(a.valid, "{:?}", a.diagnostics);
+        for e in a.outline.iter().filter(|e| e.kind == "value") {
+            let f = e.field.as_ref().unwrap();
+            assert_eq!(&source[f.start..f.end], f.name);
+            assert!(f.end <= e.start);
+            assert!(f.rename_unavailable_reason.is_none());
+        }
+        let changed = rename(source, "server.old", "字段").unwrap();
+        assert_eq!(
+            changed.content,
+            source.replacen("  old =", "  \"字段\" =", 1)
+        );
+        assert_eq!(&changed.content[changed.start..changed.end], "\"字段\"");
+        assert_eq!(
+            rename(source, "old", "new").unwrap().content,
+            source.replacen("old =", "new =", 1)
+        );
+    }
+
+    #[test]
+    fn rename_preserves_quote_style_and_quotes_literal_names_without_new_paths() {
+        let source = "bare = true\n'single' = 1\n\"double\" = 2\n";
+        for (path, name, expected) in [
+            ("bare", "a.b", "\"a.b\" = true"),
+            ("bare", "true", "true = true"),
+            ("bare", " spaced ", "\" spaced \" = true"),
+            ("single", "next", "'next' = 1"),
+            ("single", "it's new", "\"it's new\" = 1"),
+            ("double", "next", "\"next\" = 2"),
+            ("double", "引号\"\\\n", "\"引号\\\"\\\\\\n\" = 2"),
+        ] {
+            let changed = rename(source, path, name).unwrap();
+            assert!(changed.content.contains(expected), "{changed:?}");
+            assert!(analyze_toml_source(&changed.content).valid);
+        }
+    }
+
+    #[test]
+    fn rename_rejects_sibling_duplicates_and_table_conflicts_but_other_tables_are_independent() {
+        for source in [
+            "old=1\nother=2\n",
+            "old=1\n[other]\nx=2\n",
+            "old=1\nother.x=2\n",
+            "old=1\n[[other]]\nx=2\n",
+        ] {
+            assert!(rename(source, "old", "other").is_err(), "{source}");
+        }
+        let source = "[one]\nold=1\n[two]\nother=2\n";
+        assert_eq!(
+            rename(source, "one.old", "other").unwrap().content,
+            "[one]\nother=1\n[two]\nother=2\n"
+        );
+    }
+
+    #[test]
+    fn rename_complex_value_outer_keys_without_rewriting_contents_and_fallback_for_ownership() {
+        let source="array=[1, 0xFF, {keep='old'}]\ninline={ old=1, next=2 }\ndate=1979-05-27\na.b=3\n[table]\nold=4\n[[servers]]\nold=5\n[servers.nested]\nold=6\n";
+        for path in ["array", "inline", "date"] {
+            assert_eq!(
+                rename(source, path, "next").unwrap().content,
+                source.replacen(&format!("{path}="), "next=", 1)
+            );
+        }
+        for path in [
+            "a.b",
+            "table",
+            "servers",
+            "servers[0].old",
+            "servers[0].nested.old",
+        ] {
+            let e = analyze_toml_source(source)
+                .outline
+                .into_iter()
+                .find(|e| e.path == path)
+                .unwrap();
+            if let Some(f) = e.field {
+                assert!(f.rename_unavailable_reason.is_some(), "{path}");
+                assert!(rename_toml_key_source(source, f.start, f.end, "next").is_err());
+            }
+        }
+        assert!(rename(source, "table.old", "next").is_ok());
+        assert_eq!(
+            edit(source, "a.b", "9").unwrap(),
+            source.replace("a.b=3", "a.b=9")
+        );
+    }
+
+    #[test]
+    fn rename_rejects_value_offsets_stale_keys_invalid_source_and_empty_names() {
+        let source = "\"中文😀\" = 1\n";
+        let e = analyze_toml_source(source).outline.remove(0);
+        let f = e.field.unwrap();
+        for (start, end) in [
+            (e.start, e.end),
+            (f.start + 1, f.end),
+            (usize::MAX, usize::MAX),
+        ] {
+            assert!(rename_toml_key_source(source, start, end, "next").is_err());
+        }
+        assert!(rename_toml_key_source(source, f.start, f.end, "").is_err());
+        assert!(rename_toml_key_source("old=\n", 0, 3, "next").is_err());
+        assert_eq!(
+            rename_toml_key_source(source, f.start, f.end, &f.name)
+                .unwrap()
+                .content,
+            source
+        );
+    }
+
+    #[test]
+    fn rename_refreshes_path_and_value_editing_for_consecutive_draft_changes() {
+        let source = "[server]\nold=8_080 # keep\n\"a.b\"={x=1}\n";
+        let first = rename(source, "server.old", "字段").unwrap();
+        let second = rename(&first.content, "server[\"字段\"]", "port").unwrap();
+        assert_eq!(second.content, source.replace("old=", "\"port\"="));
+        assert_eq!(
+            edit(&second.content, "server.port", "9_090").unwrap(),
+            source.replace("old=8_080", "\"port\"=9_090")
+        );
+        assert_eq!(
+            rename(source, "server[\"a.b\"]", "c.d").unwrap().content,
+            source.replace("\"a.b\"=", "\"c.d\"=")
+        );
     }
 }
