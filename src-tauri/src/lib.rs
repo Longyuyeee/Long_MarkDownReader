@@ -179,7 +179,7 @@ use commands::xml::{
     write_xml_source_document,
 };
 use commands::yaml::{
-    analyze_yaml_source, replace_yaml_value_source, write_external_yaml_source_document,
+    analyze_yaml_source, rename_yaml_key_source, replace_yaml_value_source, write_external_yaml_source_document,
     write_yaml_source_document,
 };
 use services::data_migration::check_and_migrate_data;
@@ -392,6 +392,7 @@ pub fn run() {
             write_external_json_source_document,
             analyze_yaml_source,
             replace_yaml_value_source,
+            rename_yaml_key_source,
             write_yaml_source_document,
             write_external_yaml_source_document,
             analyze_xml_source,

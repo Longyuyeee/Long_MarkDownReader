@@ -6,7 +6,7 @@ export const tomlValueDraft=tomlValueSource.replace('# 原稿','# 我的草稿')
 export const tomlValueEdited=tomlValueDraft.replace('[b]\nport = 8_080','[b]\nport = 9_090')
 export const tomlValueConflict=tomlValueEdited.replace('enabled = true','enabled = false')
 export function validateInstalledTomlValue(r,m){
- assert.ok(['1.2.9','1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.9','1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-toml-value-edit-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  assert.equal(r.lockedBefore,r.lockedAfter);assert.equal(r.externalBefore,r.externalAfter)

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.18",
-  "releaseCandidate": true,
+  "appVersion": "1.2.19",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-24",
-  "currentStatus": "v1.2.18-community-release-published",
+  "currentStatus": "v1.2.19-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.17",
+    "previousPublicVersion": "1.2.18",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.17-to-1.2.18-pending",
-    "scope": "xml-create-rename"
+    "managedUpdaterUpgradePath": "1.2.18-to-1.2.19-pending",
+    "scope": "yaml-key-rename"
   },
   "targetRelease": {
-    "tag": "v1.2.18",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.18",
+    "tag": "v1.2.19",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.19",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "935250df414c46010f73dff61a0eb726d1af3e9a",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40045488810,
-    "hostedInstalledLifecycleRunId": 40047301860,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.2.18_x64_zh-CN.msi",
-        "sizeBytes": 78020608,
-        "sha256": "d4412740f367e446fd751a3f301fd18d0de90e900ea099fd2ea0c48dfb0e2ea7",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.18_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.2.18_x64-setup.exe",
-        "sizeBytes": 68674512,
-        "sha256": "1e923d3b6b68f197a555ed51c84b32f367b8da835766e0baead93920c9ae408d",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.18_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.2.18",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.18",
-    "databaseId": 422442063,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "935250df414c46010f73dff61a0eb726d1af3e9a",
-    "publishedAt": "2026-10-24T01:27:59Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -140,7 +109,8 @@
     "v1.2.14-to-v1.2.15-managed-update-observation-pending",
     "v1.2.15-to-v1.2.16-managed-update-observation-pending",
     "v1.2.16-to-v1.2.17-managed-update-observation-pending",
-    "v1.2.17-to-v1.2.18-managed-update-observation-pending"
+    "v1.2.17-to-v1.2.18-managed-update-observation-pending",
+    "v1.2.18-to-v1.2.19-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.19-yaml-field-rename-planned"
+  "nextAction": "validate-and-build-v1.2.19-installers"
 }

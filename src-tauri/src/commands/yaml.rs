@@ -3,8 +3,8 @@ use crate::commands::formats::{
 };
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
 use crate::formats::yaml::{
-    analyze_yaml_source as analyze_source, replace_yaml_value_source as replace_value,
-    YamlSourceAnalysis,
+    analyze_yaml_source as analyze_source, rename_yaml_key_source as rename_key,
+    replace_yaml_value_source as replace_value, YamlKeyChange, YamlSourceAnalysis,
 };
 use crate::services::external_file_access::ExternalFileAccess;
 use tauri::State;
@@ -28,6 +28,22 @@ fn validate_save(content: &str, allow_invalid: bool) -> Result<(), TextDocumentE
 #[tauri::command]
 pub fn analyze_yaml_source(content: String) -> YamlSourceAnalysis {
     analyze_source(&content)
+}
+
+#[tauri::command]
+pub fn rename_yaml_key_source(
+    content: String,
+    start: usize,
+    end: usize,
+    name: String,
+) -> Result<YamlKeyChange, TextDocumentError> {
+    rename_key(&content, start, end, &name).map_err(|message| {
+        TextDocumentError::recoverable(
+            "yaml-key-rename-rejected",
+            message,
+            "调整字段名后重试，或定位源码修改；当前输入和草稿仍保留",
+        )
+    })
 }
 
 #[tauri::command]
