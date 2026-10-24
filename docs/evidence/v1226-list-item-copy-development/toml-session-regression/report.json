@@ -1,0 +1,55 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "toml-analysis-route-switch-never-writes-other-file",
+      "status": "passed"
+    },
+    {
+      "id": "toml-save-retains-later-input-and-pending-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "toml-second-shortcut-saves-later-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-reload-cancel-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-reload-read-failure-keeps-draft-and-outline",
+      "status": "passed"
+    },
+    {
+      "id": "toml-late-read-never-overwrites-newer-document",
+      "status": "passed"
+    },
+    {
+      "id": "toml-stale-invalid-confirmation-never-saves-replacement",
+      "status": "passed"
+    },
+    {
+      "id": "toml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-conflict-reload-protects-draft-in-sibling-copy",
+      "status": "passed"
+    },
+    {
+      "id": "toml-enter-navigates-without-replacing-source",
+      "status": "passed"
+    },
+    {
+      "id": "toml-context-locate-preserves-source-selection-and-focus",
+      "status": "passed"
+    },
+    {
+      "id": "toml-failed-new-target-save-blocked-and-retry-keeps-original-draft",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

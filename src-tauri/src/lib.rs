@@ -144,7 +144,7 @@ use commands::table::{
     read_table_file, write_external_table_file, write_table_file,
 };
 use commands::toml::{
-    inspect_toml_array_items_source, add_toml_array_item_source, remove_toml_array_item_source, replace_toml_array_item_source, add_toml_field_source, remove_toml_field_source, analyze_toml_source, rename_toml_key_source, replace_toml_value_source, write_external_toml_source_document,
+    inspect_toml_array_items_source, add_toml_array_item_source, remove_toml_array_item_source, copy_toml_array_item_source, replace_toml_array_item_source, add_toml_field_source, remove_toml_field_source, analyze_toml_source, rename_toml_key_source, replace_toml_value_source, write_external_toml_source_document,
     write_toml_source_document,
 };
 use commands::updater::{check_community_update, install_community_update};
@@ -179,7 +179,7 @@ use commands::xml::{
     write_xml_source_document,
 };
 use commands::yaml::{
-    add_yaml_sequence_item_source, remove_yaml_sequence_item_source, add_yaml_field_source, remove_yaml_field_source, analyze_yaml_source, rename_yaml_key_source, replace_yaml_value_source, write_external_yaml_source_document,
+    add_yaml_sequence_item_source, remove_yaml_sequence_item_source, copy_yaml_sequence_item_source, add_yaml_field_source, remove_yaml_field_source, analyze_yaml_source, rename_yaml_key_source, replace_yaml_value_source, write_external_yaml_source_document,
     write_yaml_source_document,
 };
 use services::data_migration::check_and_migrate_data;
@@ -396,6 +396,7 @@ pub fn run() {
             add_yaml_field_source,
             add_yaml_sequence_item_source,
             remove_yaml_sequence_item_source,
+            copy_yaml_sequence_item_source,
             remove_yaml_field_source,
             write_yaml_source_document,
             write_external_yaml_source_document,
@@ -425,6 +426,7 @@ pub fn run() {
             inspect_toml_array_items_source,
             add_toml_array_item_source,
             remove_toml_array_item_source,
+            copy_toml_array_item_source,
             replace_toml_array_item_source,
             remove_toml_field_source,
             write_toml_source_document,

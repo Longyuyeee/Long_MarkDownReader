@@ -332,6 +332,19 @@ pub fn remove_yaml_sequence_item_source(
     change(content, start, end, true, None)
 }
 
+pub fn copy_yaml_sequence_item_source(
+    content: &str,
+    start: usize,
+    end: usize,
+) -> Result<YamlKeyChange, String> {
+    let literal = content
+        .get(start..end)
+        .ok_or("条目位置已变化，请重新选择；草稿仍保留")?;
+    // Existing insertion checks prove this is one ordinary scalar sequence
+    // item and keep independent comments in place, without copying comments.
+    change(content, start, end, true, Some(literal))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -466,5 +479,92 @@ mod tests {
             Some("1")
         )
         .is_err());
+    }
+
+    fn copy_item(s: &str, p: &str) -> Result<YamlKeyChange, String> {
+        let e = analyze_yaml_source(s)
+            .outline
+            .into_iter()
+            .find(|e| e.path == p)
+            .unwrap();
+        copy_yaml_sequence_item_source(s, e.start, e.end)
+    }
+    #[test]
+    fn copy_block_raw_tokens_bom_crlf_and_independent_comments() {
+        let s="\u{feff}# 中文😀\r\nroot:\r\n  - 0xFF # attached\r\n  # next item\r\n  - '字'\r\nother: 8_080\r\n";
+        let r = copy_item(s, "$.root[0]").unwrap();
+        assert_eq!(
+            r.content,
+            s.replace("  # next item", "  - 0xFF\r\n  # next item")
+        );
+        assert_eq!(&r.content[r.start..r.end], "0xFF");
+        let r = copy_item(s, "$.root[1]").unwrap();
+        assert_eq!(r.content, s.replace("other:", "  - '字'\r\nother:"));
+        assert_eq!(
+            copy_item("- null", "$[0]").unwrap().content,
+            "- null\n- null\n"
+        );
+    }
+    #[test]
+    fn copy_flow_first_middle_last_and_exact_selected_literals() {
+        for raw in [
+            "0xFF",
+            "8_080",
+            "1.20",
+            "false",
+            "null",
+            "~",
+            "'字😀'",
+            "\"a\\nb\"",
+        ] {
+            let s = format!("root: [1, {raw}, true,]\nother: [9]\n");
+            let r = copy_item(&s, "$.root[1]").unwrap();
+            assert_eq!(
+                r.content,
+                s.replacen(&format!("{raw}, true"), &format!("{raw}, {raw}, true"), 1)
+            );
+            assert_eq!(&r.content[r.start..r.end], raw);
+        }
+        assert_eq!(copy_item("[1, 2,]", "$[0]").unwrap().content, "[1, 1, 2,]");
+        assert_eq!(copy_item("[1, 2,]", "$[1]").unwrap().content, "[1, 2, 2,]");
+    }
+    #[test]
+    fn copy_rejects_ranges_fields_complex_references_and_ambiguous_comments() {
+        for (s, p) in [
+            ("x: 1", "$.x"),
+            ("x: [[1]]", "$.x[0]"),
+            ("x: [{a: 1}]", "$.x[0]"),
+            ("x: &a [1]", "$.x[0]"),
+            ("x: [!tag 1]", "$.x[0]"),
+            ("base: &a 1\nx: [*a]", "$.x[0]"),
+            ("<<: {a: 1}\nx: [1]", "$.x[0]"),
+            ("x: [1]\n---\nx: [2]", "$.x[0]"),
+            ("x: [1, # attached\n 2]", "$.x[0]"),
+            ("x:\n - |\n   text\n", "$.x[0]"),
+        ] {
+            assert!(copy_item(s, p).is_err(), "{s}");
+        }
+        let s = "['😀']";
+        for (a, b) in [(2, 5), (1, 6), (99, 100), (5, 1)] {
+            assert!(copy_yaml_sequence_item_source(s, a, b).is_err());
+        }
+        assert!(
+            copy_yaml_sequence_item_source(&" ".repeat(MAX_YAML_SOURCE_BYTES + 1), 0, 0).is_err()
+        );
+    }
+    #[test]
+    fn copy_then_remove_or_copy_again_preserves_siblings_and_source() {
+        let s = "root:\n  - '字' # keep\n  - false\nother: 0xFF\n";
+        let a = copy_item(s, "$.root[0]").unwrap();
+        assert_eq!(
+            remove_yaml_sequence_item_source(&a.content, a.start, a.end)
+                .unwrap()
+                .content,
+            s
+        );
+        assert_eq!(
+            copy_item(&a.content, "$.root[1]").unwrap().content,
+            s.replace("  - false", "  - '字'\n  - '字'\n  - false")
+        );
     }
 }

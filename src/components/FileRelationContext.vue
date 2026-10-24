@@ -1,6 +1,7 @@
 <template>
   <div v-if="libraryRoot && filePath" class="relation-context-host" :class="{ open }">
     <button
+      v-if="!menuEntry"
       class="relation-context-trigger"
       type="button"
       :aria-expanded="open"
@@ -19,7 +20,7 @@
           <strong>{{ context?.node?.title || displayName }}</strong>
           <span>{{ context?.node ? objectTypeLabel(context.node.objectType) : '当前格式尚未进入图谱索引' }}</span>
         </div>
-        <button type="button" aria-label="关闭关系上下文" @click="open = false">×</button>
+        <button type="button" aria-label="关闭关系上下文" @click="setOpen(false)">×</button>
       </header>
 
       <div class="context-actions">
@@ -183,6 +184,7 @@ interface GraphRelationContext {
 interface KnowledgeSearchResult { path: string; objectType: string }
 
 const props = defineProps<{
+  menuEntry?: boolean
   libraryRoot: string
   filePath: string
   focusLocatorKind?: string
@@ -317,11 +319,15 @@ const loadContext = async (force = false) => {
 const stopRelationChanges = onFileRelationsChanged(root => { if (samePath(root, props.libraryRoot) && open.value) void loadContext(true) })
 onBeforeUnmount(stopRelationChanges)
 
-const toggle = () => {
-  open.value = !open.value
+const setOpen = (value: boolean) => {
+  open.value = value
   sessionStorage.setItem('longedit.relation-context.open', String(open.value))
   if (open.value) void loadContext()
 }
+const toggle = () => setOpen(!open.value)
+const toggleFromDocumentMenu=()=>{if(props.menuEntry)toggle()}
+window.addEventListener('longedit:toggle-relation-context',toggleFromDocumentMenu)
+onBeforeUnmount(()=>window.removeEventListener('longedit:toggle-relation-context',toggleFromDocumentMenu))
 const relationKey = (relation: GraphContextRelation, index?: number) => `${relation.source.id}:${relation.target.id}:${relation.relationType}${index === undefined ? '' : `:${index}`}`
 const isDecisionRelation = (relation: GraphContextRelation) => relation.relationType === 'shares-tag'
 const setRelationDecision = async (

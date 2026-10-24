@@ -329,6 +329,7 @@
           <n-popover v-model:show="documentActionsVisible" trigger="click" placement="bottom-end" class="document-actions-popover">
             <template #trigger><n-button data-testid="library-document-menu" @mousedown="documentFindAdapter.rememberSelection" quaternary size="small" aria-label="文档操作"><span class="document-action-long">文档操作</span><span class="document-action-short">更多</span><template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
             <div class="document-menu-content" aria-label="文档操作菜单">
+        <n-button data-testid="library-relation-context" quaternary size="small" @click="openRelationContext">查看文件关系</n-button>
         <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" quaternary size="small" @mousedown.prevent @click="openDocumentFind">查找替换… · Ctrl+H</n-button>
         <n-button quaternary size="small" :disabled="fileOperationBusy || editorLoading || editorModeChangeBusy" @click="openAttachments(activeTabId)"><template #icon><n-icon :component="AttachmentIcon" /></template>管理附件…</n-button>
         <n-button v-if="activeIsMarkdown && activeTextTab?.content?.includes('longedit:')" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="openPdfReadingUpdate">更新 PDF 阅读笔记…</n-button>
@@ -1113,6 +1114,7 @@ const searchReferencedNote = (target: string) => {
 const editorLoading = ref(false)
 const editorModeChangeBusy = ref(false)
 const documentActionsVisible = ref(false)
+const openRelationContext=()=>{documentActionsVisible.value=false;window.dispatchEvent(new Event('longedit:toggle-relation-context'))}
 const wordCount = ref(0)
 const cursorLine = ref(1)
 const cursorCol = ref(1)
