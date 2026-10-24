@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.27",
-  "releaseCandidate": true,
+  "appVersion": "1.2.28",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-25",
-  "currentStatus": "v1.2.27-community-release-published",
+  "currentStatus": "v1.2.28-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.26",
+    "previousPublicVersion": "1.2.27",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.26-to-1.2.27-pending",
-    "scope": "yaml-sequence-ordering"
+    "managedUpdaterUpgradePath": "1.2.27-to-1.2.28-pending",
+    "scope": "toml-array-ordering"
   },
   "targetRelease": {
-    "tag": "v1.2.27",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.27",
+    "tag": "v1.2.28",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.28",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "96a6f9931c1b247ad8e6c4b116f8c57002e2f734",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40122805893,
-    "hostedInstalledLifecycleRunId": 40124943176,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.2.27_x64_zh-CN.msi",
-        "sizeBytes": 78151680,
-        "sha256": "df82cc44c1a44507e3cd67bbb647ff2edd24d3905f6ab71b7e9db7c580e2889e",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.27_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.2.27_x64-setup.exe",
-        "sizeBytes": 68759233,
-        "sha256": "b3df820808723c2dcd9084552bb26bc74f771b3b1217d0e23a51c0bac4462913",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.27_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.2.27",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.27",
-    "databaseId": 422949424,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "96a6f9931c1b247ad8e6c4b116f8c57002e2f734",
-    "publishedAt": "2026-10-24T19:57:12Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -149,7 +118,8 @@
     "v1.2.23-to-v1.2.24-managed-update-observation-pending",
     "v1.2.24-to-v1.2.25-managed-update-observation-pending",
     "v1.2.25-to-v1.2.26-managed-update-observation-pending",
-    "v1.2.26-to-v1.2.27-managed-update-observation-pending"
+    "v1.2.26-to-v1.2.27-managed-update-observation-pending",
+    "v1.2.27-to-v1.2.28-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.28-toml-array-ordering-planned"
+  "nextAction": "validate-and-build-v1.2.28-installers"
 }

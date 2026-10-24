@@ -165,6 +165,27 @@ pub fn copy_toml_array_item_source(
 }
 
 #[tauri::command]
+pub fn move_toml_array_item_source(
+    content: String,
+    start: usize,
+    end: usize,
+    item_start: usize,
+    item_end: usize,
+    direction: String,
+) -> Result<crate::formats::toml::TomlKeyChange, TextDocumentError> {
+    crate::formats::toml::move_toml_array_item_source(
+        &content, start, end, item_start, item_end, &direction,
+    )
+    .map_err(|message| {
+        TextDocumentError::recoverable(
+            "toml-array-move-rejected",
+            message,
+            "定位源码后继续修改；当前草稿仍保留",
+        )
+    })
+}
+
+#[tauri::command]
 pub fn replace_toml_array_item_source(
     content: String,
     start: usize,
