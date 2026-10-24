@@ -1,0 +1,476 @@
+{
+  "appVersion": "1.2.29",
+  "sourceCommit": "bc52c23b1d17ebc07b3dd63a2e824e4670d8492e",
+  "installerSha256": "54b539eae4c61dce463c1861b4cb4a136285feecf5183f68b41d952b5063e141",
+  "harnessSourceCommit": "a234d0db9669d9d715d9fec9a2f6dd489048713f",
+  "executableSha256": "a11f0d214d72a017ba312a0dbeb5ff451548707d50f25ff11b08b474338b17ae",
+  "status": "passed",
+  "evidenceLevel": "installed-native-workbook-entry-check-and-correction",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "integer-direct-refusal-with-draft-retained",
+      "status": "passed"
+    },
+    {
+      "id": "mixed-paste-atomic-rejection",
+      "status": "passed"
+    },
+    {
+      "id": "valid-paste-single-undo-redo-formula-bar",
+      "status": "passed"
+    },
+    {
+      "id": "correction-preview-cancel",
+      "status": "passed"
+    },
+    {
+      "id": "filtered-scope-hidden-rows-and-unknown-rules",
+      "status": "passed"
+    },
+    {
+      "id": "unicode-correction-stable-coordinate-undo",
+      "status": "passed"
+    },
+    {
+      "id": "date-entry-explicit-save-and-independent-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "other-drafts-trusted-input-no-runtime-errors",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1131-before.xlsx",
+      "sizeBytes": 6493,
+      "sha256": "0731b282043d61cd8dd75eef3f4b19081fb259728a43cef13b79fcc333c26514"
+    },
+    {
+      "fileName": "installed-v1131-scope.json",
+      "sizeBytes": 679,
+      "sha256": "95ca1e9639a6e57780e85caaa6758353f965ab08bfffaed7f66f6442c0decb9b"
+    },
+    {
+      "fileName": "installed-v1131-saved.xlsx",
+      "sizeBytes": 6548,
+      "sha256": "2b11c7d042bc0da8205db11e348bee81bc7092365c1ca5a0832cd112ef9dfc6f"
+    },
+    {
+      "fileName": "installed-v1131-inspection.json",
+      "sizeBytes": 465,
+      "sha256": "b8937e8cd68691425535ad1075bc8756f667433a9cf2c4ea94355c3a2074c518"
+    }
+  ],
+  "directRefused": true,
+  "atomicRefused": true,
+  "undoRedoExact": true,
+  "cancelExact": true,
+  "scopeText": "检查录入\n\n筛选结果（不含标题和隐藏行，按原单元格位置） · 10 个单元格，2 处不合规，2 处需另行核对\n\n录入!A2 · 不符合规则\n1.5\n请输入整数\n整数 介于 1 ～ 10 · A2:A4\n定位\n修改…\n录入!C2 · 不符合规则\n太长的备注\n文本长度 介于 0 ～ 3\n文本长度 介于 0 ～ 3 · C2:C4\n定位\n修改…\n录入!E2 · 需另行核对\n甲\n列表来自区域或名称，需在电子表格软件中核对\n列表：Options!$A$1:$A$3 · E2:E4\n定位\n录入!E4 · 需另行核对\n=A4\n公式结果需要在电子表格软件中核对\n列表：Options!$A$1:$A$3 · E2:E4\n定位\n关闭",
+  "filteredExact": true,
+  "correctionExact": true,
+  "inspection": {
+    "status": "passed",
+    "beforeSha256": "0731b282043d61cd8dd75eef3f4b19081fb259728a43cef13b79fcc333c26514",
+    "sha256": "2b11c7d042bc0da8205db11e348bee81bc7092365c1ca5a0832cd112ef9dfc6f",
+    "changedParts": [
+      "xl/worksheets/sheet1.xml"
+    ],
+    "sheetNames": [
+      "录入",
+      "保留",
+      "Options"
+    ],
+    "values": {
+      "A2": 1.5,
+      "B2": 0.1,
+      "C2": "😀字",
+      "D2": "2026-10-23 00:00:00",
+      "A5": "未保存保护三一",
+      "E4": "=A4"
+    }
+  },
+  "saveReopenExact": true,
+  "otherDraftsPreserved": true,
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "paste",
+      "trusted": true,
+      "text": "3\t9"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "paste",
+      "trusted": true,
+      "text": "3\t0.3"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}

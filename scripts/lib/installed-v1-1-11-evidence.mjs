@@ -9,7 +9,7 @@ export const graphExplorationChecks = [
  'single-select-and-double-click-managed-open', 'source-hashes-and-no-global-errors',
 ]
 export function validateInstalledGraphExploration(report, manifest) {
- assert.ok(['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion)
+ assert.ok(['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion)
  assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(item=>item.target==='nsis')?.sha256)
  for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/)
  assert.match(report.executableSha256,/^[a-f0-9]{64}$/)
@@ -36,7 +36,7 @@ export function validateInstalledGraphExploration(report, manifest) {
  assert.deepEqual(report.layouts,['自动网络','树状层级','组织结构','放射聚焦','时间线'])
  assert.deepEqual(report.themes,['专业 · 克制网格','多彩 · 语义光域','专注 · 纯净画布'])
  assert.equal(report.singleClickStayed,true);assert.equal(normalizePath(report.doubleClickPath),normalizePath(report.sourceFiles[17].path))
- if(['1.1.37','1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28'].includes(manifest.appVersion)){
+ if(['1.1.37','1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29'].includes(manifest.appVersion)){
   assert.equal(report.singleClickNodeId,report.selectedNodeId)
   assert.equal(report.doubleClickFocus?.nodeId,report.selectedNodeId)
   for(const key of ['x','y'])assert.ok(Number.isFinite(report.doubleClickTarget?.[key]))

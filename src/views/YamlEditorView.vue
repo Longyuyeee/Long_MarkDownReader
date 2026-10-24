@@ -180,6 +180,15 @@
       <template #footer><div class="value-edit-actions"><n-button :disabled="renamePending" @click="renameVisible=false">取消</n-button>
         <n-button type="primary" :loading="renamePending" @click="previewRename">预览修改</n-button></div></template>
     </n-modal>
+    <n-modal v-model:show="duplicateVisible" preset="card" class="yaml-field-copy-dialog yaml-key-rename-dialog" title="复制为新字段"
+      :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!duplicatePending" :closable="!duplicatePending" :close-on-esc="!duplicatePending"
+      @after-enter="duplicateInput?.select()" @after-leave="finishDuplicateDialog">
+      <code>{{ duplicateEntry?.path }}</code>
+      <label for="yaml-copy-field-name">新字段名</label>
+      <n-input ref="duplicateInput" v-model:value="duplicateName" :disabled="duplicatePending" :input-props="{id:'yaml-copy-field-name','aria-label':'新 YAML 字段名'}" @keydown.enter="onDuplicateEnter" />
+      <p v-if="duplicateError" role="alert" class="value-edit-error">{{ duplicateError }} <n-button text :disabled="duplicatePending" @click="revealDuplicateSource">定位源码</n-button></p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="duplicatePending" @click="duplicateVisible=false">取消</n-button><n-button type="primary" :loading="duplicatePending" @click="previewDuplicate">预览修改</n-button></div></template>
+    </n-modal>
     <n-modal v-model:show="fieldVisible" preset="card" class="yaml-field-dialog" :title="fieldMode==='add' ? '新增 YAML 字段' : '删除 YAML 字段'"
       :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!fieldPending" :closable="!fieldPending" :close-on-esc="!fieldPending"
       @after-enter="fieldInput?.select()" @after-leave="finishFieldDialog">
@@ -437,6 +446,48 @@ const previewRename = async () => {
   } catch (cause) { if (renameOwner === owner && session.owns(owner)) renameError.value = errorMessage(cause) }
   finally { if (renameOwner === owner && session.owns(owner)) renamePending.value = false }
 }
+const duplicateVisible=ref(false),duplicatePending=ref(false),duplicateName=ref(''),duplicateError=ref('')
+const duplicateInput=ref<InputInst|null>(null),duplicateEntry=ref<YamlOutlineEntry|null>(null)
+let duplicateOwner:ReturnType<typeof session.capture>,pendingDuplicate:(()=>void)|undefined,resumeDuplicate=false
+const finishDuplicateDialog=()=>{const action=pendingDuplicate;pendingDuplicate=undefined;if(action)void nextTick(action)}
+const revealDuplicateSource=()=>{
+  const owner=duplicateOwner,field=duplicateEntry.value?.field
+  if(!owner||!field||!session.unchanged(owner))return
+  resumeDuplicate=true;pendingDuplicate=()=>{if(session.unchanged(owner))revealRange(field)};duplicateVisible.value=false
+}
+const openDuplicate=(entry:YamlOutlineEntry)=>{
+  if(editDisabled.value||!entry.field)return
+  if(resumeDuplicate&&duplicateOwner&&session.unchanged(duplicateOwner)&&duplicateEntry.value?.field?.start===entry.field.start){resumeDuplicate=false;duplicateVisible.value=true;return}
+  resumeDuplicate=false;duplicateOwner=session.capture();if(!duplicateOwner)return
+  const entries=analysis.value?.outline||[],index=entries.indexOf(entry)
+  let from=index,to=index+1
+  while(from>0&&entries[from-1]!.depth>=entry.depth)from--
+  while(to<entries.length&&entries[to]!.depth>=entry.depth)to++
+  const names=new Set(entries.slice(from,to).filter(e=>e.depth===entry.depth).map(e=>e.field?.name))
+  // Leave room for the suffix even when the original name reaches the byte limit.
+  const base=Array.from(entry.field.name).slice(0,900).join('')+'_copy'
+  let name=base,n=2;while(names.has(name))name=base+n++
+  duplicateEntry.value=entry;duplicateName.value=name;duplicateError.value='';duplicateVisible.value=true
+}
+const onDuplicateEnter=(event:KeyboardEvent)=>{if(event.isComposing||event.keyCode===229)return;event.preventDefault();void previewDuplicate()}
+const previewDuplicate=async()=>{
+  const owner=duplicateOwner,field=duplicateEntry.value?.field
+  if(!owner||!field||duplicatePending.value)return
+  if(!session.unchanged(owner)){duplicateError.value='文件或草稿已变化，请重新选择字段；名称与内容仍保留';return}
+  duplicatePending.value=true;duplicateError.value=''
+  try{
+    const result=await invoke<{content:string;start:number;end:number}>('copy_yaml_field_source',{content:owner.source,start:field.start,end:field.end,name:duplicateName.value})
+    if(duplicateOwner!==owner)return
+    if(!session.unchanged(owner)){duplicateError.value='草稿已继续编辑，未应用旧结果；名称与内容仍保留';return}
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    pendingDuplicate=()=>session.offerChange(owner,'复制 YAML 字段',result.content,point(result.start),()=>{
+      outlineQuery.value='';selectedFieldStart.value=result.start
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+    duplicateVisible.value=false
+  }catch(cause){if(duplicateOwner===owner&&session.owns(owner))duplicateError.value=errorMessage(cause)}
+  finally{if(duplicateOwner===owner&&session.owns(owner))duplicatePending.value=false}
+}
 const fieldVisible=ref(false), fieldPending=ref(false), fieldMode=ref<'add'|'remove'>('add'), fieldName=ref(''), fieldValue=ref("''"), fieldError=ref('')
 const fieldInput=ref<InputInst|null>(null), fieldEntry=ref<YamlOutlineEntry|null>(null)
 const openEmptyFieldMenu=(event:MouseEvent)=>{
@@ -561,7 +612,7 @@ const moveItem=async(entry:YamlOutlineEntry,direction:'up'|'down')=>{
   finally{if(moveRequest===request&&session.owns(owner))movePending.value=false}
 }
 const revealMoveSource=()=>{const owner=moveOwner,entry=moveEntry.value;if(owner&&entry&&session.unchanged(owner))pendingMoveReveal=()=>{if(session.unchanged(owner))revealRange(entry)};moveError.value=''}
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || sequencePending.value || copyPending.value || movePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || duplicatePending.value || fieldPending.value || sequencePending.value || copyPending.value || movePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
 const openValueEdit = (entry: YamlOutlineEntry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); revealRange(entry); return }
@@ -586,8 +637,8 @@ const previewValueEdit = async () => {
   finally { if (session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<YamlOutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry),
-  extra: entry => [...(entry.kind==='sequence' ? [{key:'append-item',label:'追加列表项…',disabled:editDisabled.value}] : []), ...(!entry.field&&/\[\d+\]$/.test(entry.path) ? [{key:'move-up',label:'上移',disabled:editDisabled.value||!canMoveItem(entry,'up')},{key:'move-down',label:'下移',disabled:editDisabled.value||!canMoveItem(entry,'down')},{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除列表项…',disabled:editDisabled.value}] : []),...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
-  action: (key,entry) => { if(key==='move-up')void moveItem(entry,'up');if(key==='move-down')void moveItem(entry,'down');if(key==='copy-item')void copyItem(entry); if(key==='append-item')openSequenceChange(entry,'append');if(key==='after-item')openSequenceChange(entry,'after');if(key==='remove-item')openSequenceChange(entry,'remove');if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
+  extra: entry => [...(entry.kind==='sequence' ? [{key:'append-item',label:'追加列表项…',disabled:editDisabled.value}] : []), ...(!entry.field&&/\[\d+\]$/.test(entry.path) ? [{key:'move-up',label:'上移',disabled:editDisabled.value||!canMoveItem(entry,'up')},{key:'move-down',label:'下移',disabled:editDisabled.value||!canMoveItem(entry,'down')},{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除列表项…',disabled:editDisabled.value}] : []),...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'duplicate-field',label:'复制为新字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='move-up')void moveItem(entry,'up');if(key==='move-down')void moveItem(entry,'down');if(key==='copy-item')void copyItem(entry); if(key==='append-item')openSequenceChange(entry,'append');if(key==='after-item')openSequenceChange(entry,'after');if(key==='remove-item')openSequenceChange(entry,'remove');if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='duplicate-field')openDuplicate(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerCurrentTab = (snapshot?: TextDocumentSnapshot) => session.bind(snapshot)
 
@@ -698,6 +749,7 @@ const load = async (discardDraft = false) => {
   const owner = session.capture()
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
+  duplicateVisible.value=false;duplicatePending.value=false;duplicateOwner=undefined;duplicateEntry.value=null;pendingDuplicate=undefined;resumeDuplicate=false
   copyRequest=undefined;copyOwner=undefined;pendingCopyReveal=undefined;copyPending.value=false;copyError.value='';copyEntry.value=null
   moveRequest=undefined;moveOwner=undefined;pendingMoveReveal=undefined;movePending.value=false;moveError.value='';moveEntry.value=null
   sequenceVisible.value=false;sequencePending.value=false;sequenceOwner=undefined;sequenceEntry.value=null;pendingSequence=undefined;resumeSequence=false
