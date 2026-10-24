@@ -42,12 +42,12 @@
         </button>
         <div v-if="analysis?.valid" class="valid"><n-icon :component="ValidIcon" /><span>语法有效</span><WorkspaceHelp label="说明：语法有效，注释、顺序与字面量由源码保" text="语法有效，注释、顺序与字面量由源码保留" /></div>
         <n-input v-model:value="query" @keydown.enter.prevent="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选键路径或值"><template #prefix><n-icon :component="SearchIcon" /></template></n-input>
-        <div class="outline">
+        <div class="outline" @contextmenu.self="openRootFieldMenu">
           <button v-for="item in filteredOutline" :key="`${item.start}:${item.path}`" :aria-current="selectedFieldStart !== undefined && selectedFieldStart === item.field?.start ? 'true' : undefined" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
             <n-icon :component="item.kind === 'value' ? KeyIcon : TableIcon" />
             <span><strong>{{ item.label }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
           </button>
-          <p v-if="!filteredOutline.length">{{ analysis?.valid ? '没有匹配的键路径' : '修复语法后显示提纲' }}</p>
+          <p v-if="!filteredOutline.length" @contextmenu="openRootFieldMenu">{{ analysis?.valid ? (analysis.outline.length ? '没有匹配的键路径' : '空文档 · 右键新增字段') : '修复语法后显示提纲' }}</p>
           <p v-if="analysis?.outlineTruncated" class="warning">结构过大，仅显示受限范围</p>
         </div>
       </aside>
@@ -74,6 +74,17 @@
       <p v-if="renameError" role="alert" class="error">{{ renameError }} <n-button text :disabled="renamePending" @click="revealRenameSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="renamePending" @click="renameVisible=false">取消</n-button>
         <n-button type="primary" :loading="renamePending" @click="previewRename">预览修改</n-button></div></template>
+    </n-modal>
+    <n-modal v-model:show="fieldVisible" preset="card" class="toml-field-dialog" :title="fieldMode==='add' ? '新增 TOML 字段' : '删除 TOML 字段'"
+      :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!fieldPending" :closable="!fieldPending" :close-on-esc="!fieldPending"
+      @after-enter="fieldInput?.select()" @after-leave="finishFieldDialog">
+      <code>{{ fieldEntry?.path || '$' }}</code>
+      <template v-if="fieldMode==='add'">
+        <label for="toml-new-field">字段名</label><n-input ref="fieldInput" v-model:value="fieldName" :disabled="fieldPending" :input-props="{id:'toml-new-field','aria-label':'新增 TOML 字段名'}" @keydown.enter="onFieldEnter" />
+        <label for="toml-new-value">值</label><n-input v-model:value="fieldValue" :disabled="fieldPending" placeholder="例如：'内容'、42、true、[1, 2]" :input-props="{id:'toml-new-value','aria-label':'新增 TOML 字段值'}" @keydown.enter="onFieldEnter" />
+      </template>
+      <p v-if="fieldError" role="alert" class="error">{{ fieldError }} <n-button text :disabled="fieldPending" @click="revealFieldSource">定位源码</n-button></p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="fieldPending" @click="fieldVisible=false">取消</n-button><n-button type="primary" :loading="fieldPending" @click="previewFieldChange">预览修改</n-button></div></template>
     </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
@@ -178,7 +189,49 @@ const previewRename = async () => {
   } catch (cause) { if (renameOwner === owner && session.owns(owner)) renameError.value = errorText(cause) }
   finally { if (renameOwner === owner && session.owns(owner)) renamePending.value = false }
 }
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
+const fieldVisible=ref(false), fieldPending=ref(false), fieldMode=ref<'add'|'remove'>('add'), fieldName=ref(''), fieldValue=ref("''"), fieldError=ref('')
+const fieldInput=ref<InputInst|null>(null), fieldEntry=ref<Entry|null>(null)
+const openRootFieldMenu=(event:MouseEvent)=>{
+  if(!analysis.value?.valid)return
+  event.preventDefault();event.stopPropagation()
+  nodeMenu.open(event,{path:'$',label:'文档根部',kind:'root',start:0,end:0,depth:0,preview:''})
+}
+let fieldOwner:ReturnType<typeof session.capture>, pendingField:(()=>void)|undefined, resumeField=false
+const finishFieldDialog=()=>{const offer=pendingField;pendingField=undefined;offer?.()}
+const revealFieldSource=()=>{
+  const owner=fieldOwner,entry=fieldEntry.value
+  if(!owner||!entry||!session.unchanged(owner))return
+  resumeField=true;pendingField=()=>{if(session.unchanged(owner))reveal(entry.field||entry)};fieldVisible.value=false
+}
+const openFieldChange=(entry:Entry,mode:'add'|'remove')=>{
+  if(editDisabled.value)return
+  if(resumeField&&fieldMode.value===mode&&fieldOwner&&session.unchanged(fieldOwner)&&fieldEntry.value?.path===entry.path){resumeField=false;fieldVisible.value=true;return}
+  resumeField=false;fieldOwner=session.capture();if(!fieldOwner)return
+  fieldEntry.value=entry;fieldMode.value=mode;fieldName.value='';fieldValue.value="''";fieldError.value=''
+  if(mode==='add')fieldVisible.value=true;else void previewFieldChange()
+}
+const onFieldEnter=(event:KeyboardEvent)=>{if(event.isComposing||event.keyCode===229)return;event.preventDefault();void previewFieldChange()}
+const previewFieldChange=async()=>{
+  const owner=fieldOwner,entry=fieldEntry.value,mode=fieldMode.value
+  if(!owner||!entry||fieldPending.value)return
+  if(!session.unchanged(owner)){fieldError.value='文件或草稿已变化，请重新选择；当前输入与内容仍保留';fieldVisible.value=true;return}
+  fieldPending.value=true;fieldError.value=''
+  try{
+    const field=entry.field
+    const result=await invoke<{content:string;start:number;end:number;valueType?:string}>(mode==='add'?'add_toml_field_source':'remove_toml_field_source',{
+      content:owner.source,...(mode==='add'?{start:['table','root'].includes(entry.kind)?entry.start:field?.start??0,end:['table','root'].includes(entry.kind)?entry.end:field?.end??0,inside:['table','root'].includes(entry.kind),name:fieldName.value,value:fieldValue.value}:{start:field?.start,end:field?.end})})
+    if(fieldOwner!==owner)return
+    if(!session.unchanged(owner)){fieldError.value='草稿已继续编辑，未应用旧结果；当前输入与内容仍保留';fieldVisible.value=true;return}
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    const offer=()=>session.offerChange(owner,mode==='add'?`新增 TOML 字段${result.valueType?' · '+result.valueType:''}`:'删除 TOML 字段',result.content,point(result.start),()=>{
+      query.value='';selectedFieldStart.value=mode==='add'?result.start:undefined
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+    if(fieldVisible.value){pendingField=offer;fieldVisible.value=false}else offer()
+  }catch(cause){if(fieldOwner===owner&&session.owns(owner)){fieldError.value=errorText(cause);fieldVisible.value=true}}
+  finally{if(fieldOwner===owner&&session.owns(owner))fieldPending.value=false}
+}
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
 const openValueEdit = (entry: Entry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); reveal(entry); return }
@@ -203,8 +256,8 @@ const previewValueEdit = async () => {
   finally { if (session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<Entry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === content.value, reveal: entry => reveal(entry),
-  extra: entry => [...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(entry.kind === 'value' ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
-  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry) } })
+  extra: entry => [...(['table','root'].includes(entry.kind)||entry.field ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(entry.kind === 'value' ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerTab = (snapshot?: Snapshot) => session.bind(snapshot)
 
@@ -234,6 +287,7 @@ const load = async (discardDraft = false) => {
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
+  fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
   renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
@@ -298,4 +352,7 @@ footer > * { flex-shrink: 0; }
 .toml-key-rename-dialog label { display:block; margin-bottom:6px; }
 .value-edit-actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
 .outline button[aria-current="true"] { background:var(--theme-accent-hover); color:var(--theme-accent); }
+.toml-field-dialog :deep(.n-card__content) { overflow:auto; }
+.toml-field-dialog code { display:block; overflow-wrap:anywhere; margin-bottom:12px; }
+.toml-field-dialog label { display:block; margin:12px 0 6px; }
 </style>

@@ -1,0 +1,384 @@
+use super::*;
+
+fn prepare(content: &str) -> Result<Document<&str>, String> {
+    if !analyze_toml_source(content).valid {
+        return Err("TOML 语法或分析范围暂不支持此操作，请定位源码；草稿仍保留".into());
+    }
+    Document::parse(content).map_err(|_| "当前 TOML 已变化，请重新选择字段".into())
+}
+
+// Paths consist of parser-owned key segments, never a dotted display string.
+fn target(
+    table: &Table,
+    start: usize,
+    end: usize,
+    inside: bool,
+    path: &mut Vec<String>,
+) -> Option<Vec<String>> {
+    for (name, item) in table.iter() {
+        if !inside && table.key(name).and_then(Key::span) == Some(start..end) {
+            return Some(path.clone());
+        }
+        if let Item::Table(child) = item {
+            if inside
+                && child.span() == Some(start..end)
+                && !child.is_implicit()
+                && !child.is_dotted()
+            {
+                let mut found = path.clone();
+                found.push(name.into());
+                return Some(found);
+            }
+            if !child.is_dotted() {
+                path.push(name.into());
+                let found = target(child, start, end, inside, path);
+                path.pop();
+                if found.is_some() {
+                    return found;
+                }
+            }
+        }
+    }
+    None
+}
+
+fn table_at<'a>(mut table: &'a Table, path: &[String]) -> Option<&'a Table> {
+    for name in path {
+        table = table.get(name)?.as_table()?;
+    }
+    Some(table)
+}
+
+fn fields_at<'a>(
+    tree: &'a mut serde_json::Value,
+    path: &[String],
+) -> Option<&'a mut serde_json::Map<String, serde_json::Value>> {
+    let mut tree = tree;
+    for name in path {
+        tree = tree.get_mut(1)?.as_object_mut()?.get_mut(name)?;
+    }
+    tree.get_mut(1)?.as_object_mut()
+}
+
+fn checked(
+    content: &str,
+    expected: &serde_json::Value,
+    start: usize,
+    end: usize,
+    value_type: Option<String>,
+) -> Result<TomlKeyChange, String> {
+    let after = prepare(content)?;
+    if source_tree(content, after.as_item(), None).as_ref() != Some(expected) {
+        return Err("无法确认只改变当前字段，请定位源码；输入与草稿仍保留".into());
+    }
+    Ok(TomlKeyChange {
+        content: content.into(),
+        start,
+        end,
+        value_type,
+    })
+}
+
+fn line_start(content: &str, at: usize) -> usize {
+    content[..at].rfind('\n').map_or(0, |n| n + 1)
+}
+fn line_end(content: &str, at: usize) -> usize {
+    content[at..]
+        .find('\n')
+        .map_or(content.len(), |n| at + n + 1)
+}
+
+pub fn add_toml_field_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    inside: bool,
+    name: &str,
+    value: &str,
+) -> Result<TomlKeyChange, String> {
+    let doc = prepare(content)?;
+    let path = if inside && start == 0 && end == 0 {
+        vec![]
+    } else {
+        target(doc.as_table(), start, end, inside, &mut vec![])
+            .ok_or("请从根部或已有普通表新增；点键与数组表请定位源码")?
+    };
+    let table = table_at(doc.as_table(), &path).ok_or("字段归属已变化，请重新选择")?;
+    if table.is_dotted() || (!path.is_empty() && table.is_implicit()) {
+        return Err("隐式表和点键请在源码中修改；输入与草稿仍保留".into());
+    }
+    if name.is_empty() || name.len() > 4096 || name.chars().any(char::is_control) {
+        return Err("请输入单行字段名（最多 4096 字节）；输入与草稿仍保留".into());
+    }
+    if table.contains_key(name) {
+        return Err("字段名已存在或与表路径冲突；输入与草稿仍保留".into());
+    }
+    let value = value.trim();
+    if value.len() > MAX_TOML_SOURCE_BYTES || value.contains(['\r', '\n']) {
+        return Err("请使用单行 TOML 值，多行内容请定位源码；输入与草稿仍保留".into());
+    }
+    let prefix = "__value__ = ";
+    let wrapper = format!("{prefix}{value}");
+    let parsed = Document::parse(wrapper.as_str())
+        .map_err(|_| "请输入合法的 TOML 值；字符串需要引号，输入与草稿仍保留")?;
+    let literal = parsed
+        .get("__value__")
+        .and_then(Item::as_value)
+        .filter(|v| parsed.len() == 1 && v.span() == Some(prefix.len()..wrapper.len()))
+        .ok_or("只新增当前字段，请勿加入注释、其他字段或表头；输入与草稿仍保留")?;
+    let kind = match literal {
+        Value::String(_) => "文本",
+        Value::Integer(_) | Value::Float(_) => "数字",
+        Value::Boolean(_) => "布尔",
+        Value::Datetime(_) => "日期时间",
+        Value::Array(_) => "数组",
+        Value::InlineTable(_) => "内联表",
+    };
+    // JSON quoting is also valid TOML basic-key quoting. A dot remains one key.
+    let key = if name
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        name.to_string()
+    } else {
+        serde_json::to_string(name).map_err(|_| "无法编码字段名")?
+    };
+    let bom = usize::from(content.starts_with('\u{feff}')) * 3;
+    let mut at = if path.is_empty() {
+        bom
+    } else {
+        line_end(
+            content,
+            table.span().ok_or("表头位置不明确，请定位源码")?.end,
+        )
+    };
+    // Only direct assignments belong to this table; a descendant header does not.
+    for (name, item) in table.iter().filter(|(_, item)| item.is_value()) {
+        let key_info = field_info(
+            content,
+            table.key(name).ok_or("字段位置不明确")?,
+            item,
+            false,
+        )
+        .ok_or("字段位置不明确")?;
+        if key_info.rename_unavailable_reason.is_some() {
+            return Err("表中包含无法确认归属的字段，请定位源码；输入仍保留".into());
+        }
+        at = at.max(line_end(content, item.span().ok_or("字段位置不明确")?.end));
+    }
+    let eol = if content.contains("\r\n") {
+        "\r\n"
+    } else {
+        "\n"
+    };
+    let separator = if at > bom && !content[..at].ends_with('\n') {
+        eol
+    } else {
+        ""
+    };
+    let insertion = format!("{separator}{key} = {value}{eol}");
+    let candidate = format!("{}{}{}", &content[..at], insertion, &content[at..]);
+    let mut expected =
+        source_tree(content, doc.as_item(), None).ok_or("无法确认当前结构，请定位源码")?;
+    fields_at(&mut expected, &path)
+        .ok_or("无法确认表归属")?
+        .insert(name.into(), serde_json::json!(["value", value]));
+    let point = at + separator.len();
+    checked(
+        &candidate,
+        &expected,
+        point,
+        point + key.len(),
+        Some(kind.into()),
+    )
+}
+
+pub fn remove_toml_field_source(
+    content: &str,
+    start: usize,
+    end: usize,
+) -> Result<TomlKeyChange, String> {
+    let doc = prepare(content)?;
+    let path = target(doc.as_table(), start, end, false, &mut vec![])
+        .ok_or("请从普通键值字段删除；点键、表头和数组表请定位源码")?;
+    let table = table_at(doc.as_table(), &path).ok_or("字段归属已变化")?;
+    let (name, item) = table
+        .iter()
+        .find(|(name, _)| table.key(name).and_then(Key::span) == Some(start..end))
+        .ok_or("字段位置已过期")?;
+    let field = field_info(
+        content,
+        table.key(name).ok_or("字段位置不明确")?,
+        item,
+        table.is_dotted(),
+    )
+    .ok_or("字段位置不明确")?;
+    if let Some(reason) = field.rename_unavailable_reason {
+        return Err(reason);
+    }
+    let span = item
+        .as_value()
+        .and_then(Value::span)
+        .ok_or("表头请在源码中修改；草稿仍保留")?;
+    if content[start..span.end].contains(['\r', '\n']) {
+        return Err("多行字段请在源码中删除；当前草稿仍保留".into());
+    }
+    let first = line_start(content, start);
+    let from = first.max(usize::from(content.starts_with('\u{feff}')) * 3);
+    let to = line_end(content, span.end);
+    let suffix = &content[span.end..to];
+    let replacement =
+        if let Some(comment) = suffix.trim_start_matches([' ', '\t']).strip_prefix('#') {
+            format!("{}#{}", &content[from..start], comment)
+        } else if suffix.trim().is_empty() {
+            String::new()
+        } else {
+            return Err("字段后缀无法确认，请定位源码；草稿仍保留".into());
+        };
+    let candidate = format!("{}{}{}", &content[..from], replacement, &content[to..]);
+    let mut expected = source_tree(content, doc.as_item(), None).ok_or("无法确认当前结构")?;
+    fields_at(&mut expected, &path)
+        .ok_or("无法确认表归属")?
+        .remove(name);
+    checked(&candidate, &expected, from, from, None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn entry(s: &str, p: &str) -> TomlOutlineEntry {
+        analyze_toml_source(s)
+            .outline
+            .into_iter()
+            .find(|e| e.path == p)
+            .unwrap()
+    }
+    fn add(s: &str, p: &str, k: &str, v: &str) -> Result<TomlKeyChange, String> {
+        if p == "$" {
+            return add_toml_field_source(s, 0, 0, true, k, v);
+        }
+        let e = entry(s, p);
+        let inside = e.kind == "table";
+        let (a, b) = if inside {
+            (e.start, e.end)
+        } else {
+            let f = e.field.unwrap();
+            (f.start, f.end)
+        };
+        add_toml_field_source(s, a, b, inside, k, v)
+    }
+    fn remove(s: &str, p: &str) -> Result<TomlKeyChange, String> {
+        let f = entry(s, p).field.unwrap();
+        remove_toml_field_source(s, f.start, f.end)
+    }
+    #[test]
+    fn inserts_only_into_selected_table_before_next_header() {
+        let s = "# 中文😀\nroot = 1\n[a]\nold=0xFF # 保留\n# 后续说明\n[b]\nold=2\n";
+        let c = add(s, "a.old", "a.b", "true").unwrap();
+        assert_eq!(
+            c.content,
+            s.replace("# 后续说明", "\"a.b\" = true\n# 后续说明")
+        );
+        assert_eq!(&c.content[c.start..c.end], "\"a.b\"");
+        assert_eq!(c.value_type.as_deref(), Some("布尔"));
+        assert_eq!(
+            add(s, "$", "new", "[1, 2]").unwrap().content,
+            s.replace("[a]", "new = [1, 2]\n[a]")
+        );
+    }
+    #[test]
+    fn empty_root_empty_table_and_no_final_newline() {
+        assert_eq!(add("", "$", "first", "''").unwrap().content, "first = ''\n");
+        assert_eq!(
+            add("# 保留", "$", "first", "1").unwrap().content,
+            "first = 1\n# 保留"
+        );
+        assert_eq!(
+            add("[a] # 说明", "a", "x", "1").unwrap().content,
+            "[a] # 说明\nx = 1\n"
+        );
+        let s = "[a]\nx=1\n[b]\ny=2";
+        assert_eq!(
+            add(s, "a", "z", "false").unwrap().content,
+            s.replace("[b]", "z = false\n[b]")
+        );
+    }
+    #[test]
+    fn preserves_bom_crlf_unicode_comments_and_empty_table() {
+        let s = "\u{feff}# 中文😀\r\n[a]\r\n  x = 8_080 # 保留\r\n[b]\r\nx=2\r\n";
+        assert_eq!(
+            add(s, "a", "中文", "'值'").unwrap().content,
+            s.replace("[b]", "\"中文\" = '值'\r\n[b]")
+        );
+        assert_eq!(
+            remove(s, "a.x").unwrap().content,
+            s.replace("  x = 8_080 # 保留", "  # 保留")
+        );
+        assert_eq!(remove("\u{feff}x=1", "x").unwrap().content, "\u{feff}");
+        assert_eq!(
+            remove("[a]\nx=1\n[b]\nx=2\n", "a.x").unwrap().content,
+            "[a]\n[b]\nx=2\n"
+        );
+    }
+    #[test]
+    fn literal_key_and_whole_single_line_values_roundtrip() {
+        for v in [
+            "'值'",
+            "42",
+            "false",
+            "1979-05-27T07:32:00Z",
+            "[1, 2]",
+            "{ first = 1, second = 'x' }",
+        ] {
+            let c = add("[a]\n", "a", "a.b", v).unwrap();
+            assert_eq!(remove(&c.content, "a[\"a.b\"]").unwrap().content, "[a]\n");
+        }
+    }
+    #[test]
+    fn rejects_duplicate_path_conflicts_injections_and_old_positions() {
+        let s = "x=1\n[a]\ny=2\n";
+        for k in ["x", "a"] {
+            assert!(add(s, "$", k, "1").is_err());
+        }
+        for v in ["1 # injected", "1\nz=2", "[a]", "null", ""] {
+            assert!(add(s, "$", "new", v).is_err());
+        }
+        assert!(add(s, "$", "bad\nkey", "1").is_err());
+        assert!(add_toml_field_source(s, 99, 100, false, "x", "1").is_err());
+    }
+    #[test]
+    fn keeps_dotted_and_array_table_operations_local_to_source() {
+        for (s, p) in [("a.b=1\n", "a.b"), ("[[a]]\nx=1\n", "a[0].x")] {
+            assert!(add(s, p, "new", "1").is_err());
+            assert!(remove(s, p).is_err());
+        }
+        let s = "[a.b]\nx=1\n[a]\ny=2\n";
+        assert_eq!(
+            add(s, "a", "z", "1").unwrap().content,
+            s.to_owned() + "z = 1\n"
+        );
+        assert!(add("[a.b]\nx=1\n", "a", "z", "1").is_err());
+    }
+    #[test]
+    fn multiline_values_untouched_and_table_ownership_is_parser_proven() {
+        let s = "title='''line\n[a]\n'''\n[a]\nx=[\n 1,\n 2\n]\n[a.child]\ny=3\n";
+        assert_eq!(
+            add(s, "a", "z", "2").unwrap().content,
+            s.replace("[a.child]", "z = 2\n[a.child]")
+        );
+        assert!(remove(s, "a.x").is_err());
+        assert!(remove(s, "title").is_err());
+    }
+    #[test]
+    fn delete_keeps_independent_comments_and_unselected_values_exact() {
+        let s = "# before\n[a]\nx = 1 # x note\n# neighbor\ny = {hex=0xFF, date=1979-05-27}\n";
+        assert_eq!(
+            remove(s, "a.x").unwrap().content,
+            s.replace("x = 1 # x note", "# x note")
+        );
+        assert_eq!(
+            remove(s, "a.y").unwrap().content,
+            "# before\n[a]\nx = 1 # x note\n# neighbor\n"
+        );
+    }
+}

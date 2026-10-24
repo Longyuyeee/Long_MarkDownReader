@@ -1,0 +1,49 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "syntheticCompositionProbe": true,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "add-to-same-parent-type-diff-and-independent-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "delete-flow-field-empty-document-blank-context-and-no-disk-write",
+      "status": "passed"
+    },
+    {
+      "id": "duplicate-local-error-retains-name-value-and-source-location",
+      "status": "passed"
+    },
+    {
+      "id": "late-result-keeps-subsequent-input",
+      "status": "passed"
+    },
+    {
+      "id": "stale-preview-does-not-overwrite-draft",
+      "status": "passed"
+    },
+    {
+      "id": "old-file-result-does-not-contaminate-new-dialog",
+      "status": "passed"
+    },
+    {
+      "id": "source-switch-clears-form-menu-delete-preview-and-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "save-failure-retry-and-trusted-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "composition-229-both-inputs-and-ordinary-enter-preview",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-narrow-full-page-form-diff-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}
