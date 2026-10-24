@@ -106,8 +106,8 @@ pub(crate) fn current_directory(path: &Path) -> Result<PathBuf, String> {
     for _ in 0..s.moved.len() + 1 {
         let mut changed = false;
         for (old, new) in s.moved.iter() {
-            if !old.try_exists().map_err(|e| e.to_string())? {
-                if let Ok(suffix) = current.strip_prefix(old) {
+            if let Ok(suffix) = current.strip_prefix(old) {
+                if !old.try_exists().map_err(|e| e.to_string())? {
                     current = new.join(suffix);
                     changed = true;
                     break;
@@ -162,5 +162,15 @@ mod tests {
         assert!(!old.exists());
         std::fs::create_dir(&old).unwrap();
         assert_eq!(current_directory(&old).unwrap(), old);
+    }
+
+    #[test]
+    fn unrelated_move_history_does_not_probe_inaccessible_paths() {
+        let f = crate::services::test_workspace::TestWorkspace::new();
+        let current = f.dir("current");
+        let inaccessible = f.0.join("unrelated\0inaccessible");
+        assert!(inaccessible.try_exists().is_err());
+        remember_move(&inaccessible, &f.0.join("unrelated-destination"));
+        assert_eq!(current_directory(&current).unwrap(), current);
     }
 }
