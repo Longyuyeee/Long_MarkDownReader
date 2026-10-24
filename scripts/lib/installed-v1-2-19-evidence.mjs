@@ -6,6 +6,7 @@ export const yamlRenameDraft=yamlRenameSource.replace('原稿','我的草稿')
 export const yamlRenameRenamed=yamlRenameDraft.replace('  old:', '  字段:')
 export const yamlRenameAdded=yamlRenameRenamed.replace('label: other', '"true": other')
 export const yamlRenameConflict=yamlRenameAdded.replace('  字段:', '  待保存:')
+export const yamlRenameOutputFiles=['installed-v1219-yaml-observations.json','installed-v1219-yaml-saved.yaml','installed-v1219-yaml-copy.yaml','installed-v1219-yaml-external.yaml']
 export function validateInstalledYamlRename(r,m){
  assert.equal(m.appVersion,'1.2.19');for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-yaml-key-rename-trusted-input-and-file-bytes')
@@ -16,7 +17,7 @@ export function validateInstalledYamlRename(r,m){
  assert.ok(r.inputTrace.length>10&&r.inputTrace.every(e=>e.trusted));assert.ok(r.inputTrace.some(e=>e.type==='input'));assert.equal(r.disposableDraftsExplicitlyDiscarded,true)
 }
 export function assertYamlRenameOutputBytes(r,read){
- const names=['installed-v1219-yaml-observations.json','installed-v1219-yaml-saved.yaml','installed-v1219-yaml-copy.yaml','installed-v1219-yaml-external.yaml']
+ const names=yamlRenameOutputFiles
  assert.deepEqual(r.outputs.map(o=>o.fileName),names)
  for(const o of r.outputs){const b=read(o.fileName);assert.equal(b.length,o.sizeBytes);assert.equal(crypto.createHash('sha256').update(b).digest('hex'),o.sha256)}
  const obs=JSON.parse(read(names[0]).toString('utf8'));for(const id of yamlRenameChecks)assert.equal(obs[id],true,id)
