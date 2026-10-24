@@ -3,7 +3,7 @@ use toml_edit::{Document, Item, Key, Table, Value};
 
 #[path = "toml_fields.rs"]
 mod fields;
-pub use fields::{add_toml_field_source, remove_toml_field_source};
+pub use fields::{add_toml_field_source, remove_toml_field_source, copy_toml_field_source};
 
 #[path = "toml_arrays.rs"]
 mod arrays;
@@ -848,3 +848,7 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+#[path = "toml_field_copy_tests.rs"]
+mod field_copy_tests;

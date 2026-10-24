@@ -1,0 +1,48 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "name-only-selected-unique-default-local-validation-and-cancel",
+      "status": "passed"
+    },
+    {
+      "id": "copy-current-draft-comments-highlight-selection-and-single-history",
+      "status": "passed"
+    },
+    {
+      "id": "flow-literals-repeated-copy-and-follow-up-value-edit",
+      "status": "passed"
+    },
+    {
+      "id": "complex-local-fallback-restores-source-focus-and-preserves-name",
+      "status": "passed"
+    },
+    {
+      "id": "late-result-cannot-replace-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "old-diff-cannot-replace-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "file-switch-keeps-draft-and-current-preview-clears-old-dialog-menu-diff",
+      "status": "passed"
+    },
+    {
+      "id": "save-retry-and-external-conflict-keep-original-and-complete-draft",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-whole-page-name-dialog-diff-wide-narrow-normal-motion",
+      "status": "passed"
+    },
+    {
+      "id": "no-runtime-errors",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

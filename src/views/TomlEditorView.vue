@@ -83,6 +83,15 @@
       <template #footer><div class="value-edit-actions"><n-button :disabled="renamePending" @click="renameVisible=false">取消</n-button>
         <n-button type="primary" :loading="renamePending" @click="previewRename">预览修改</n-button></div></template>
     </n-modal>
+    <n-modal v-model:show="duplicateVisible" preset="card" class="toml-field-copy-dialog toml-key-rename-dialog" title="复制为新字段"
+      :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!duplicatePending" :closable="!duplicatePending" :close-on-esc="!duplicatePending"
+      @after-enter="duplicateInput?.select()" @after-leave="finishDuplicateDialog">
+      <code>{{ duplicateEntry?.path }}</code>
+      <label for="toml-copy-field-name">新字段名</label>
+      <n-input ref="duplicateInput" v-model:value="duplicateName" :disabled="duplicatePending" :input-props="{id:'toml-copy-field-name','aria-label':'新 TOML 字段名'}" @keydown.enter="onDuplicateEnter" />
+      <p v-if="duplicateError" role="alert" class="value-edit-error">{{ duplicateError }} <n-button text :disabled="duplicatePending" @click="revealDuplicateSource">定位源码</n-button></p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="duplicatePending" @click="duplicateVisible=false">取消</n-button><n-button type="primary" :loading="duplicatePending" @click="previewDuplicate">预览修改</n-button></div></template>
+    </n-modal>
     <n-modal v-model:show="fieldVisible" preset="card" class="toml-field-dialog" :title="fieldMode==='add' ? '新增 TOML 字段' : '删除 TOML 字段'"
       :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!fieldPending" :closable="!fieldPending" :close-on-esc="!fieldPending"
       @after-enter="fieldInput?.select()" @after-leave="finishFieldDialog">
@@ -230,6 +239,48 @@ const previewRename = async () => {
   } catch (cause) { if (renameOwner === owner && session.owns(owner)) renameError.value = errorText(cause) }
   finally { if (renameOwner === owner && session.owns(owner)) renamePending.value = false }
 }
+const duplicateVisible=ref(false),duplicatePending=ref(false),duplicateName=ref(''),duplicateError=ref('')
+const duplicateInput=ref<InputInst|null>(null),duplicateEntry=ref<Entry|null>(null)
+let duplicateOwner:ReturnType<typeof session.capture>,pendingDuplicate:(()=>void)|undefined,resumeDuplicate=false
+const finishDuplicateDialog=()=>{const action=pendingDuplicate;pendingDuplicate=undefined;if(action)void nextTick(action)}
+const revealDuplicateSource=()=>{
+  const owner=duplicateOwner,field=duplicateEntry.value?.field
+  if(!owner||!field||!session.unchanged(owner))return
+  resumeDuplicate=true;pendingDuplicate=()=>{if(session.unchanged(owner))reveal(field)};duplicateVisible.value=false
+}
+const openDuplicate=(entry:Entry)=>{
+  if(editDisabled.value||!entry.field)return
+  if(resumeDuplicate&&duplicateOwner&&session.unchanged(duplicateOwner)&&duplicateEntry.value?.field?.start===entry.field.start){resumeDuplicate=false;duplicateVisible.value=true;return}
+  resumeDuplicate=false;duplicateOwner=session.capture();if(!duplicateOwner)return
+  const entries=analysis.value?.outline||[],index=entries.indexOf(entry)
+  let from=index,to=index+1
+  while(from>0&&entries[from-1]!.depth>=entry.depth)from--
+  while(to<entries.length&&entries[to]!.depth>=entry.depth)to++
+  const names=new Set(entries.slice(from,to).filter(e=>e.depth===entry.depth).map(e=>e.field?.name))
+  // Leave room for the suffix even when the original name reaches the byte limit.
+  const base=Array.from(entry.field.name).slice(0,900).join('')+'_copy'
+  let name=base,n=2;while(names.has(name))name=base+n++
+  duplicateEntry.value=entry;duplicateName.value=name;duplicateError.value='';duplicateVisible.value=true
+}
+const onDuplicateEnter=(event:KeyboardEvent)=>{if(event.isComposing||event.keyCode===229)return;event.preventDefault();void previewDuplicate()}
+const previewDuplicate=async()=>{
+  const owner=duplicateOwner,field=duplicateEntry.value?.field
+  if(!owner||!field||duplicatePending.value)return
+  if(!session.unchanged(owner)){duplicateError.value='文件或草稿已变化，请重新选择字段；名称与内容仍保留';return}
+  duplicatePending.value=true;duplicateError.value=''
+  try{
+    const result=await invoke<{content:string;start:number;end:number}>('copy_toml_field_source',{content:owner.source,start:field.start,end:field.end,name:duplicateName.value})
+    if(duplicateOwner!==owner)return
+    if(!session.unchanged(owner)){duplicateError.value='草稿已继续编辑，未应用旧结果；名称与内容仍保留';return}
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    pendingDuplicate=()=>session.offerChange(owner,'复制 TOML 字段',result.content,point(result.start),()=>{
+      query.value='';selectedFieldStart.value=result.start
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+    duplicateVisible.value=false
+  }catch(cause){if(duplicateOwner===owner&&session.owns(owner))duplicateError.value=errorText(cause)}
+  finally{if(duplicateOwner===owner&&session.owns(owner))duplicatePending.value=false}
+}
 const fieldVisible=ref(false), fieldPending=ref(false), fieldMode=ref<'add'|'remove'>('add'), fieldName=ref(''), fieldValue=ref("''"), fieldError=ref('')
 const fieldInput=ref<InputInst|null>(null), fieldEntry=ref<Entry|null>(null)
 const openRootFieldMenu=(event:MouseEvent)=>{
@@ -375,7 +426,7 @@ const moveItem=async(entry:Entry,direction:'up'|'down')=>{
   finally{if(moveRequest===request&&session.owns(owner))movePending.value=false}
 }
 const revealMoveSource=()=>{const owner=moveOwner,entry=moveEntry.value;if(owner&&entry&&session.unchanged(owner))pendingMoveReveal=()=>{if(session.unchanged(owner))reveal(entry)};moveError.value=''}
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || arrayPending.value || copyPending.value || movePending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || duplicatePending.value || fieldPending.value || arrayPending.value || copyPending.value || movePending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
 const openValueEdit = (entry: Entry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); reveal(entry); return }
@@ -420,8 +471,8 @@ const previewValueEdit = async () => {
   finally { if (valueOwner===owner&&session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<Entry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === content.value, reveal: entry => reveal(entry),
-  extra: entry => [...(entry.array ? [{key:'append-item',label:'追加数组项…',disabled:editDisabled.value},{key:'toggle-array',label:expandedArrays.value[entry.path]?'收起数组项':'展开数组项',disabled:analysisPending.value}] : []), ...(entry.kind==='array-item' ? [{key:'move-up',label:'上移',disabled:editDisabled.value||!canMoveItem(entry,'up')},{key:'move-down',label:'下移',disabled:editDisabled.value||!canMoveItem(entry,'down')},{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除数组项…',disabled:editDisabled.value}] : []),...(['table','root'].includes(entry.kind)||entry.field ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['value','array-item'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
-  action: (key,entry) => { if(key==='move-up')void moveItem(entry,'up');if(key==='move-down')void moveItem(entry,'down');if(key==='copy-item')void copyItem(entry); if(key==='append-item')openArrayChange(entry,'append');if(key==='after-item')openArrayChange(entry,'after');if(key==='remove-item')openArrayChange(entry,'remove');if(key==='toggle-array')void toggleArray(entry);if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
+  extra: entry => [...(entry.array ? [{key:'append-item',label:'追加数组项…',disabled:editDisabled.value},{key:'toggle-array',label:expandedArrays.value[entry.path]?'收起数组项':'展开数组项',disabled:analysisPending.value}] : []), ...(entry.kind==='array-item' ? [{key:'move-up',label:'上移',disabled:editDisabled.value||!canMoveItem(entry,'up')},{key:'move-down',label:'下移',disabled:editDisabled.value||!canMoveItem(entry,'down')},{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除数组项…',disabled:editDisabled.value}] : []),...(['table','root'].includes(entry.kind)||entry.field ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'duplicate-field',label:'复制为新字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['value','array-item'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='move-up')void moveItem(entry,'up');if(key==='move-down')void moveItem(entry,'down');if(key==='copy-item')void copyItem(entry); if(key==='append-item')openArrayChange(entry,'append');if(key==='after-item')openArrayChange(entry,'after');if(key==='remove-item')openArrayChange(entry,'remove');if(key==='toggle-array')void toggleArray(entry);if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='duplicate-field')openDuplicate(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerTab = (snapshot?: Snapshot) => session.bind(snapshot)
 
@@ -455,6 +506,7 @@ const load = async (discardDraft = false) => {
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined; resumeValue=false
   resetArrayOutline();arrayVisible.value=false;arrayPending.value=false;arrayOwner=undefined;arrayEntry.value=null;pendingArray=undefined;resumeArray=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
+  duplicateVisible.value=false;duplicatePending.value=false;duplicateOwner=undefined;duplicateEntry.value=null;pendingDuplicate=undefined;resumeDuplicate=false
   renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
