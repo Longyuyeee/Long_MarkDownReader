@@ -1,13 +1,17 @@
 use saphyr::{LoadableYamlNode, MarkedYamlOwned, ScalarOwned, YamlDataOwned};
 use saphyr_parser::{Event, Parser, ScalarStyle};
 use serde::Serialize;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 const MAX_YAML_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_YAML_NODES: usize = 100_000;
 const MAX_YAML_OUTLINE_ENTRIES: usize = 20_000;
 const MAX_YAML_DEPTH: usize = 128;
 const MAX_YAML_PREVIEW_CHARS: usize = 120;
+
+fn parser_source(content: &str) -> &str {
+    content.strip_prefix('\u{feff}').unwrap_or(content)
+}
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -25,6 +29,7 @@ pub struct YamlDiagnostic {
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct YamlOutlineEntry {
+    pub field: Option<YamlField>,
     pub document_index: usize,
     pub path: String,
     pub label: String,
@@ -38,6 +43,28 @@ pub struct YamlOutlineEntry {
     pub preview: String,
     pub editable: bool,
     pub edit_unavailable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct YamlField {
+    pub name: String,
+    pub start: usize,
+    pub end: usize,
+    pub rename_unavailable_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct YamlKeyChange {
+    pub content: String,
+    pub start: usize,
+    pub end: usize,
+}
+
+#[derive(Default)]
+struct YamlTokens {
+    scalars: HashMap<(usize, usize), ScalarStyle>,
+    aliases: HashSet<(usize, usize)>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -82,7 +109,7 @@ pub fn analyze_yaml_source(content: &str) -> YamlSourceAnalysis {
     }
 
     let offsets = source_offsets(content);
-    let documents = match MarkedYamlOwned::load_from_str(content) {
+    let documents = match MarkedYamlOwned::load_from_str(parser_source(content)) {
         Ok(documents) => documents,
         Err(error) => {
             let marker = error.marker();
@@ -101,6 +128,7 @@ pub fn analyze_yaml_source(content: &str) -> YamlSourceAnalysis {
 
     let mut counters = AnalysisCounters::default();
     let editable_spans = inspect_events(content, &mut counters, &offsets);
+    let key_tokens = key_tokens(content, &offsets);
     let mut outline = Vec::new();
     for (document_index, document) in documents.iter().enumerate() {
         inspect_node(
@@ -115,6 +143,8 @@ pub fn analyze_yaml_source(content: &str) -> YamlSourceAnalysis {
             &editable_spans,
             content,
             true,
+            &key_tokens,
+            None,
         );
         if counters.limit_exceeded {
             break;
@@ -126,6 +156,10 @@ pub fn analyze_yaml_source(content: &str) -> YamlSourceAnalysis {
             entry.editable = false;
             entry.edit_unavailable_reason =
                 Some("多文档 YAML 请在源码中修改，当前内容会保留".into());
+            if let Some(field) = &mut entry.field {
+                field.rename_unavailable_reason =
+                    Some("多文档 YAML 请在源码中重命名，当前输入会保留".into());
+            }
         }
     }
 
@@ -186,6 +220,8 @@ fn inspect_node(
     editable_spans: &HashSet<(usize, usize)>,
     content: &str,
     editable_context: bool,
+    key_tokens: &YamlTokens,
+    field: Option<YamlField>,
 ) {
     counters.nodes = counters.nodes.saturating_add(1);
     counters.max_depth = counters.max_depth.max(depth);
@@ -193,6 +229,11 @@ fn inspect_node(
         counters.limit_exceeded = true;
         return;
     }
+
+    let is_alias = key_tokens.aliases.contains(&(
+        byte_offset(offsets, node.span.start.index()),
+        byte_offset(offsets, node.span.end.index()),
+    ));
 
     if outline.len() < MAX_YAML_OUTLINE_ENTRIES {
         let start = byte_offset(offsets, node.span.start.index());
@@ -207,17 +248,20 @@ fn inspect_node(
             && start < end
             && editable_spans.contains(&(start, end));
         outline.push(YamlOutlineEntry {
+            field,
             document_index,
             path: path.to_string(),
             label: truncate(label),
-            kind: node_kind(node).into(),
+            kind: if is_alias { "alias" } else { node_kind(node) }.into(),
             depth,
-            child_count: child_count(node),
+            child_count: if is_alias { 0 } else { child_count(node) },
             start,
             end,
             line: node.span.start.line().max(1),
             column: node.span.start.col().saturating_add(1),
-            preview: if matches!(
+            preview: if is_alias {
+                content.get(start..end).map(truncate).unwrap_or_default()
+            } else if matches!(
                 &node.data,
                 YamlDataOwned::Value(ScalarOwned::Integer(_) | ScalarOwned::FloatingPoint(_))
             ) {
@@ -237,6 +281,12 @@ fn inspect_node(
                 }
             }),
         });
+    }
+
+    // Saphyr expands aliases into cloned values whose children retain the
+    // anchor's original spans. They must not become editable duplicate fields.
+    if is_alias {
+        return;
     }
 
     match &node.data {
@@ -262,6 +312,14 @@ fn inspect_node(
                     editable_context
                         && !has_merge
                         && matches!(&key.data, YamlDataOwned::Value(ScalarOwned::String(_))),
+                    key_tokens,
+                    Some(field_info(
+                        key,
+                        content,
+                        offsets,
+                        key_tokens,
+                        editable_context && !has_merge,
+                    )),
                 );
                 if counters.limit_exceeded {
                     return;
@@ -282,6 +340,8 @@ fn inspect_node(
                     editable_spans,
                     content,
                     editable_context,
+                    key_tokens,
+                    None,
                 );
                 if counters.limit_exceeded {
                     return;
@@ -300,6 +360,8 @@ fn inspect_node(
             editable_spans,
             content,
             false,
+            key_tokens,
+            None,
         ),
         _ => {}
     }
@@ -312,7 +374,7 @@ fn inspect_events(
 ) -> HashSet<(usize, usize)> {
     let mut editable = HashSet::new();
     let mut blocked = Vec::new();
-    for event in Parser::new_from_str(content) {
+    for event in Parser::new_from_str(parser_source(content)) {
         let Ok((event, span)) = event else {
             return editable;
         };
@@ -374,6 +436,7 @@ fn source_offsets(content: &str) -> Vec<usize> {
     }
     content
         .char_indices()
+        .skip(usize::from(content.starts_with('\u{feff}')))
         .map(|(index, _)| index)
         .chain(std::iter::once(content.len()))
         .collect()
@@ -454,15 +517,15 @@ pub fn replace_yaml_value_source(
     {
         return Err("只修改当前值，请勿加入注释、其他字段、标签或锚点".into());
     }
-    let mut expected =
-        MarkedYamlOwned::load_from_str(content).map_err(|_| "当前源码已变化，请重新选择")?;
+    let mut expected = MarkedYamlOwned::load_from_str(parser_source(content))
+        .map_err(|_| "当前源码已变化，请重新选择")?;
     let offsets = source_offsets(content);
     let replaced = replace_value_node(&mut expected[0], content, &offsets, start, end, node)?;
     if replaced != 1 {
         return Err("字段位置无法唯一确认，请在源码中修改".into());
     }
     let candidate = format!("{}{value}{}", &content[..start], &content[end..]);
-    let parsed = MarkedYamlOwned::load_from_str(&candidate)
+    let parsed = MarkedYamlOwned::load_from_str(parser_source(&candidate))
         .map_err(|_| "这个值在当前位置无效，当前草稿未变")?;
     if parsed != expected || !analyze_yaml_source(&candidate).valid {
         return Err("这个值会改变其他字段、列表结构或类型，请调整引号；当前草稿未变".into());
@@ -502,6 +565,229 @@ fn replace_value_node(
         YamlDataOwned::Sequence(items) => {
             for child in items {
                 count += replace_value_node(child, content, offsets, start, end, value)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(count)
+}
+
+// Intersect parser scalar tokens with AST mapping keys. A value span is never
+// used as a key span, and aliases/anchors/tags cannot masquerade as key text.
+fn key_tokens(content: &str, offsets: &[usize]) -> YamlTokens {
+    let mut tokens = YamlTokens::default();
+    for event in Parser::new_from_str(parser_source(content)) {
+        if let Ok((Event::Alias(_), span)) = &event {
+            tokens.aliases.insert((
+                byte_offset(offsets, span.start.index()),
+                byte_offset(offsets, span.end.index()),
+            ));
+        }
+        if let Ok((Event::Scalar(_, style, 0, None), span)) = event {
+            let start = byte_offset(offsets, span.start.index());
+            let end = scalar_end(content, start, byte_offset(offsets, span.end.index()));
+            if matches!(
+                style,
+                ScalarStyle::Plain | ScalarStyle::SingleQuoted | ScalarStyle::DoubleQuoted
+            ) && start < end
+                && content
+                    .get(start..end)
+                    .is_some_and(|raw| !raw.contains(['\r', '\n']))
+            {
+                tokens.scalars.insert((start, end), style);
+            }
+        }
+    }
+    tokens
+}
+
+fn field_info(
+    key: &MarkedYamlOwned,
+    content: &str,
+    offsets: &[usize],
+    tokens: &YamlTokens,
+    ordinary_context: bool,
+) -> YamlField {
+    let start = byte_offset(offsets, key.span.start.index());
+    let end = scalar_end(content, start, byte_offset(offsets, key.span.end.index()));
+    let name = scalar_label(key).unwrap_or_else(|| "复杂键".into());
+    let supported = ordinary_context
+        && name != "<<"
+        && matches!(&key.data, YamlDataOwned::Value(ScalarOwned::String(_)))
+        && tokens.scalars.contains_key(&(start, end));
+    YamlField {
+        name,
+        start,
+        end,
+        rename_unavailable_reason: (!supported).then(|| {
+            "此字段包含复杂键、合并键、锚点、标签或非字符串键，请在源码中重命名；输入会保留".into()
+        }),
+    }
+}
+
+fn string_key_literal(name: &str, style: ScalarStyle) -> String {
+    if style == ScalarStyle::SingleQuoted && !name.chars().any(char::is_control) {
+        return format!("'{}'", name.replace('\'', "''"));
+    }
+    if style == ScalarStyle::Plain && !name.chars().any(char::is_control) {
+        // Confirm both block and flow contexts, including implicit key types.
+        let plain = [format!("{name}: 0\n"), format!("{{{name}: 0}}")]
+            .iter()
+            .all(|source| {
+                let Ok(docs) = MarkedYamlOwned::load_from_str(source) else {
+                    return false;
+                };
+                let Some(doc) = docs.first().filter(|_| docs.len() == 1) else {
+                    return false;
+                };
+                let YamlDataOwned::Mapping(mapping) = &doc.data else {
+                    return false;
+                };
+                mapping.len() == 1
+                    && mapping.keys().all(|key| {
+                        matches!(&key.data,
+                YamlDataOwned::Value(ScalarOwned::String(value)) if value == name)
+                    })
+            });
+        if plain {
+            return name.into();
+        }
+    }
+    // JSON double quoted strings are also YAML strings; no implicit conversion.
+    serde_json::to_string(name).expect("string encoding")
+}
+
+pub fn rename_yaml_key_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    name: &str,
+) -> Result<YamlKeyChange, String> {
+    let analysis = analyze_yaml_source(content);
+    if !analysis.valid {
+        return Err("YAML 语法存在错误，请先在源码中修复；当前草稿未变".into());
+    }
+    if has_duplicate_string_keys(content) {
+        return Err("YAML 中存在同级重复字段，请先在源码中整理；当前输入与草稿仍保留".into());
+    }
+    let field = analysis
+        .outline
+        .iter()
+        .filter_map(|entry| entry.field.as_ref())
+        .find(|field| field.start == start && field.end == end)
+        .ok_or("字段位置已过期，请重新选择")?;
+    if let Some(reason) = &field.rename_unavailable_reason {
+        return Err(reason.clone());
+    }
+    if name.is_empty() || name.len() > 4096 || name.contains(['\r', '\n']) || name == "<<" {
+        return Err("请输入单行字段名（最多 4096 字节）；合并键 << 请在源码中修改".into());
+    }
+    let offsets = source_offsets(content);
+    let tokens = key_tokens(content, &offsets);
+    let style = *tokens
+        .scalars
+        .get(&(start, end))
+        .ok_or("无法确认字段原文，请在源码中修改")?;
+    let literal = string_key_literal(name, style);
+    let mut expected = MarkedYamlOwned::load_from_str(parser_source(content))
+        .map_err(|_| "当前源码已变化，请重新选择")?;
+    let changed = rename_key_node(&mut expected[0], content, &offsets, start, end, name)?;
+    // Expanded alias copies share their anchor's key span. Update those only
+    // in the expected semantic tree; the actual edit is one proven key token.
+    if changed == 0 {
+        return Err("字段归属无法唯一确认，请在源码中修改；当前草稿未变".into());
+    }
+    let candidate = format!("{}{literal}{}", &content[..start], &content[end..]);
+    let parsed = MarkedYamlOwned::load_from_str(parser_source(&candidate))
+        .map_err(|_| "新名称在此处无法表示，请调整输入；当前草稿未变")?;
+    if parsed != expected || !analyze_yaml_source(&candidate).valid {
+        return Err("新名称会改变其他字段、类型或结构，请在源码中修改；当前草稿未变".into());
+    }
+    Ok(YamlKeyChange {
+        content: candidate,
+        start,
+        end: start + literal.len(),
+    })
+}
+
+fn has_duplicate_string_keys(content: &str) -> bool {
+    // The loader retains the last duplicate. Track keys in parser events before
+    // that loss, including mappings nested in flow collections or sequences.
+    let mut stack: Vec<Option<(bool, HashSet<String>)>> = Vec::new();
+    for event in Parser::new_from_str(parser_source(content)) {
+        let Ok((event, _)) = event else { return true };
+        match event {
+            Event::MappingEnd | Event::SequenceEnd => {
+                stack.pop();
+            }
+            Event::Scalar(_, _, _, _)
+            | Event::Alias(_)
+            | Event::MappingStart(_, _)
+            | Event::SequenceStart(_, _) => {
+                if let Some(Some((is_key, seen))) = stack.last_mut() {
+                    if *is_key {
+                        if let Event::Scalar(value, style, _, _) = &event {
+                            let string = *style != ScalarStyle::Plain
+                                || MarkedYamlOwned::load_from_str(value).is_ok_and(|docs| {
+                                    docs.len() == 1
+                                        && matches!(
+                                            &docs[0].data,
+                                            YamlDataOwned::Value(ScalarOwned::String(_))
+                                        )
+                                });
+                            if string && !seen.insert(value.to_string()) {
+                                return true;
+                            }
+                        }
+                    }
+                    *is_key = !*is_key;
+                }
+                match event {
+                    Event::MappingStart(_, _) => stack.push(Some((true, HashSet::new()))),
+                    Event::SequenceStart(_, _) => stack.push(None),
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
+fn rename_key_node(
+    node: &mut MarkedYamlOwned,
+    content: &str,
+    offsets: &[usize],
+    start: usize,
+    end: usize,
+    name: &str,
+) -> Result<usize, String> {
+    let mut count = 0;
+    match &mut node.data {
+        YamlDataOwned::Mapping(mapping) => {
+            let target = mapping.keys().any(|key| {
+                byte_offset(offsets, key.span.start.index()) == start
+                    && scalar_end(content, start, byte_offset(offsets, key.span.end.index())) == end
+            });
+            if target && mapping.keys().any(|key| matches!(&key.data, YamlDataOwned::Value(ScalarOwned::String(value)) if value == name)
+                && byte_offset(offsets,key.span.start.index()) != start) {
+                return Err("同一层级已有这个字段名，请换一个名称；当前草稿未变".into());
+            }
+            let original = std::mem::take(mapping);
+            for (mut key, mut value) in original {
+                if byte_offset(offsets, key.span.start.index()) == start
+                    && scalar_end(content, start, byte_offset(offsets, key.span.end.index())) == end
+                {
+                    key.data = YamlDataOwned::Value(ScalarOwned::String(name.into()));
+                    count += 1;
+                }
+                count += rename_key_node(&mut value, content, offsets, start, end, name)?;
+                mapping.insert(key, value);
+            }
+        }
+        YamlDataOwned::Sequence(items) => {
+            for item in items {
+                count += rename_key_node(item, content, offsets, start, end, name)?;
             }
         }
         _ => {}
@@ -599,6 +885,137 @@ fn truncate(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn rename(source: &str, path: &str, name: &str) -> Result<YamlKeyChange, String> {
+        let analysis = analyze_yaml_source(source);
+        assert!(analysis.valid, "{:?}", analysis.diagnostics);
+        let field = analysis
+            .outline
+            .iter()
+            .find(|entry| entry.path == path)
+            .unwrap()
+            .field
+            .as_ref()
+            .unwrap();
+        rename_yaml_key_source(source, field.start, field.end, name)
+    }
+
+    #[test]
+    fn key_rename_keeps_bom_crlf_unicode_comments_anchors_and_raw_numbers() {
+        let source = "\u{feff}# 中文😀\r\ndefaults: &base {keep: 0xFF}\r\nuse: *base\r\nroot:\r\n  old: 9007199254740993123456789 # old\r\n";
+        let changed = rename(source, "$.root.old", "字段😀").unwrap();
+        assert_eq!(changed.content, source.replace("old:", "字段😀:"));
+        assert_eq!(&changed.content[changed.start..changed.end], "字段😀");
+        let anchored = rename(&changed.content, "$.defaults.keep", "留下").unwrap();
+        assert_eq!(anchored.content, changed.content.replace("keep:", "留下:"));
+        assert_eq!(analyze_yaml_source(&anchored.content).alias_count, 1);
+        let analysis = analyze_yaml_source(&anchored.content);
+        assert!(analysis
+            .outline
+            .iter()
+            .any(|e| e.path == "$.use" && e.kind == "alias" && e.preview == "*base"));
+        assert!(!analysis
+            .outline
+            .iter()
+            .any(|e| e.path.starts_with("$.use.")));
+    }
+
+    #[test]
+    fn key_rename_supports_mapping_sequence_alias_values_and_consecutive_paths() {
+        let source =
+            "base: &a hi\nold: {item: [1, 2]}\nref: *a\nlist: [{old: value}, {old: other}]\n";
+        let a = rename(source, "$.old", "new").unwrap();
+        let b = rename(&a.content, "$.new.item", "children").unwrap();
+        let c = rename(&b.content, "$.list[1].old", "next").unwrap();
+        let d = rename(&c.content, "$.ref", "reference").unwrap();
+        assert_eq!(d.content,"base: &a hi\nnew: {children: [1, 2]}\nreference: *a\nlist: [{old: value}, {next: other}]\n");
+    }
+
+    #[test]
+    fn key_rename_preserves_quotes_and_escapes_string_names() {
+        let source = "'old': 1\n\"quoted\": 2\nplain: 3\n";
+        assert_eq!(
+            rename(source, "$.old", "it's new").unwrap().content,
+            source.replace("'old'", "'it''s new'")
+        );
+        assert_eq!(
+            rename(source, "$.quoted", "中\"文").unwrap().content,
+            source.replace("\"quoted\"", "\"中\\\"文\"")
+        );
+        for name in [
+            "true", "null", "123", "0xFF", "[a]", "a: b", " a ", "a,b", "#comment", "*alias",
+            "a\tb",
+        ] {
+            let result = rename(source, "$.plain", name).unwrap();
+            assert_eq!(
+                analyze_yaml_source(&result.content)
+                    .outline
+                    .last()
+                    .unwrap()
+                    .field
+                    .as_ref()
+                    .unwrap()
+                    .name,
+                name
+            );
+            assert!(result
+                .content
+                .contains(&format!("{}: 3", serde_json::to_string(name).unwrap())));
+        }
+    }
+
+    #[test]
+    fn key_rename_rejects_sibling_duplicates_even_when_loader_discards_them() {
+        for source in ["old: 1\nother: 2\n", "{old: 1, other: 2}"] {
+            assert!(rename(source, "$.old", "other")
+                .unwrap_err()
+                .contains("同一层级"));
+            assert_eq!(rename(source, "$.old", "old").unwrap().content, source);
+        }
+        for source in [
+            "old: 1\nold: 2\n",
+            "{old: 1, 'old': 2}",
+            "x: [{old: 1, old: 2}]\nother: 3\n",
+        ] {
+            let path = if source.starts_with("x:") {
+                "$.other"
+            } else {
+                "$.old"
+            };
+            assert!(rename(source, path, "new")
+                .unwrap_err()
+                .contains("重复字段"));
+        }
+        assert!(rename("a: {old: 1}\nb: {old: 2}\n", "$.a.old", "new").is_ok());
+    }
+
+    #[test]
+    fn key_rename_rejects_nonstring_merge_alias_tagged_multiline_and_multiple_documents() {
+        for (source, path) in [
+            ("true: value\n", "$.true"),
+            ("'<<': value\n", "$[\"<<\"]"),
+            ("&k old: value\n", "$.old"),
+            ("!!str old: value\n", "$.old"),
+            ("? [a,b]\n: v\n", "$[\"复杂键 1\"]"),
+            ("old: 1\n---\nother: 2\n", "$.old"),
+            ("? 'old\n  name'\n: 1\n", "$[\"old name\"]"),
+        ] {
+            assert!(rename(source, path, "new").is_err(), "{source}");
+        }
+        let source = "base: &b {a: 1}\nmerged: {<<: *b, old: 2}\n";
+        assert!(rename(source, "$.merged.old", "new").is_err());
+    }
+
+    #[test]
+    fn key_rename_rejects_stale_value_ranges_and_invalid_input() {
+        let source = "old: value\n";
+        assert!(rename_yaml_key_source(source, 5, 10, "new").is_err());
+        for name in ["", "<<", "new\nfield", "new\rfield"] {
+            assert!(rename(source, "$.old", name).is_err());
+        }
+        assert!(rename(source, "$.old", &"a".repeat(4097)).is_err());
+        assert!(rename_yaml_key_source("[broken", 0, 1, "new").is_err());
+    }
 
     #[test]
     fn yaml_numeric_outline_keeps_original_digits_and_notation() {

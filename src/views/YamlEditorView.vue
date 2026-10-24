@@ -128,6 +128,7 @@
             type="button"
             :style="{ paddingLeft: `${12 + Math.min(entry.depth, 8) * 14}px` }"
             @click="revealRange(entry)" @contextmenu.prevent.stop="nodeMenu.open($event, entry)"
+            :aria-current="selectedFieldStart !== undefined && entry.field?.start === selectedFieldStart ? 'true' : undefined"
           >
             <n-icon :component="kindIcon(entry.kind)" />
             <span class="outline-copy">
@@ -168,6 +169,16 @@
       <p v-if="valueError" role="alert" class="value-edit-error">{{ valueError }}</p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
         <n-button type="primary" :loading="valueEditPending" @click="previewValueEdit">预览修改</n-button></div></template>
+    </n-modal>
+    <n-modal v-model:show="renameVisible" preset="card" class="yaml-key-rename-dialog" title="重命名 YAML 字段"
+      :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!renamePending" :closable="!renamePending" :close-on-esc="!renamePending"
+      @after-enter="renameInput?.select()" @after-leave="finishRenameDialog">
+      <code>{{ renameEntry?.path }}</code>
+      <label for="yaml-key-name">字段名</label>
+      <n-input ref="renameInput" v-model:value="renameName" :disabled="renamePending" :input-props="{id:'yaml-key-name','aria-label':'YAML 字段名'}" @keydown.enter="onRenameEnter" />
+      <p v-if="renameError" role="alert" class="value-edit-error">{{ renameError }} <n-button text :disabled="renamePending" @click="revealRenameSource">定位源码</n-button></p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="renamePending" @click="renameVisible=false">取消</n-button>
+        <n-button type="primary" :loading="renamePending" @click="previewRename">预览修改</n-button></div></template>
     </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
@@ -235,6 +246,7 @@ interface YamlDiagnostic {
 }
 
 interface YamlOutlineEntry {
+  field?: { name: string; start: number; end: number; renameUnavailableReason?: string }
   editable?: boolean
   editUnavailableReason?: string
   documentIndex: number
@@ -344,6 +356,7 @@ const kindIcon = (kind: string) => {
 }
 
 const analyzedSource = ref('')
+const selectedFieldStart = ref<number>()
 const session = useStructuredSession({
   path: () => yamlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
@@ -354,7 +367,48 @@ const valueEditVisible = ref(false), valueEditPending = ref(false), valueText = 
 const valueInput = ref<InputInst | null>(null), valueEntry = ref<YamlOutlineEntry | null>(null)
 let valueOwner: ReturnType<typeof session.capture>, pendingValuePreview: (() => void) | undefined
 const finishValueDialog = () => { const offer = pendingValuePreview; pendingValuePreview = undefined; offer?.() }
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const renameVisible = ref(false), renamePending = ref(false), renameName = ref(''), renameError = ref('')
+const renameInput = ref<InputInst | null>(null), renameEntry = ref<YamlOutlineEntry | null>(null)
+let renameOwner: ReturnType<typeof session.capture>, pendingRename: (() => void) | undefined, resumeRename = false
+const finishRenameDialog = () => { const offer = pendingRename; pendingRename = undefined; offer?.() }
+const revealRenameSource = () => {
+  const owner = renameOwner, field = renameEntry.value?.field
+  if (!owner || !field || !session.unchanged(owner)) return
+  resumeRename = true; pendingRename = () => { if (session.unchanged(owner)) revealRange(field) }; renameVisible.value = false
+}
+const openRename = (entry: YamlOutlineEntry) => {
+  if (editDisabled.value || !entry.field) return
+  if (resumeRename && renameOwner && session.unchanged(renameOwner) && renameEntry.value?.field?.start === entry.field.start) {
+    resumeRename = false; renameVisible.value = true; return
+  }
+  resumeRename = false; renameOwner = session.capture()
+  if (!renameOwner) return
+  renameEntry.value = entry; renameName.value = entry.field.name
+  renameError.value = entry.field.renameUnavailableReason || ''; renameVisible.value = true
+}
+const onRenameEnter = (event: KeyboardEvent) => {
+  if (event.isComposing || event.keyCode === 229) return
+  event.preventDefault(); void previewRename()
+}
+const previewRename = async () => {
+  const owner = renameOwner, field = renameEntry.value?.field
+  if (!owner || !field || renamePending.value) return
+  if (!session.unchanged(owner)) { renameError.value = '文件或草稿已变化，请重新选择字段；输入与内容仍保留'; return }
+  renamePending.value = true; renameError.value = ''
+  try {
+    const result = await invoke<{content:string;start:number;end:number}>('rename_yaml_key_source', {content:owner.source,start:field.start,end:field.end,name:renameName.value})
+    if (renameOwner !== owner) return
+    if (!session.unchanged(owner)) { renameError.value = '草稿已继续编辑，未应用旧结果；输入与内容仍保留'; return }
+    const bytes = new TextEncoder().encode(result.content), point = (offset:number) => new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,offset)).length
+    pendingRename = () => session.offerChange(owner,'重命名 YAML 字段',result.content,point(result.start),() => {
+      outlineQuery.value = ''; selectedFieldStart.value = result.start
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+    renameVisible.value = false
+  } catch (cause) { if (renameOwner === owner && session.owns(owner)) renameError.value = errorMessage(cause) }
+  finally { if (renameOwner === owner && session.owns(owner)) renamePending.value = false }
+}
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
 const openValueEdit = (entry: YamlOutlineEntry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); revealRange(entry); return }
@@ -379,8 +433,8 @@ const previewValueEdit = async () => {
   finally { if (session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<YamlOutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry),
-  extra: entry => ['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [],
-  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry) } })
+  extra: entry => [...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry) } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerCurrentTab = (snapshot?: TextDocumentSnapshot) => session.bind(snapshot)
 
@@ -491,6 +545,7 @@ const load = async (discardDraft = false) => {
   const owner = session.capture()
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
+  renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
@@ -516,7 +571,7 @@ const load = async (discardDraft = false) => {
 
 const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
   const bytes = new TextEncoder().encode(content)
-  return new TextDecoder().decode(bytes.slice(0, Math.min(byteOffset, bytes.length))).length
+  return new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0, Math.min(byteOffset, bytes.length))).length
 }
 
 const revealRange = (range: Pick<YamlDiagnostic, 'start' | 'end'>) => {
@@ -883,4 +938,8 @@ onBeforeUnmount(() => {
 }
 
 .inspector > :not(.outline-list) { flex-shrink: 0; }
+.yaml-key-rename-dialog :deep(.n-card__content) { overflow:auto; }
+.yaml-key-rename-dialog code { display:block; overflow-wrap:anywhere; margin-bottom:12px; }
+.yaml-key-rename-dialog label { display:block; margin-bottom:6px; }
+.outline-list button[aria-current="true"] { background:var(--theme-accent-hover); color:var(--theme-accent); }
 </style>

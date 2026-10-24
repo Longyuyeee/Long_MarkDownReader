@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.2.18 已发布：XML 子元素创建与元素重命名已完成；[1.2.17—1.2.18](docs/Foundation_Deepening_Roadmap_1_2_17_to_1_2_18_2026-10-24.md) 已交付 2/2。[下一轮 1.2.19—1.2.20](docs/Foundation_Deepening_Roadmap_1_2_19_to_1_2_20_2026-10-24.md) 规划 YAML、TOML 字段重命名，尚未实施。
+v1.2.18 已发布；v1.2.19 正在完成 YAML 字段重命名，尚未发布。见[开发记录](docs/V1_2_19_Unsigned_Community_Release_Audit_2026-10-24.md)。
 
 ## 不只是打开文件，更是接续你的工作
 

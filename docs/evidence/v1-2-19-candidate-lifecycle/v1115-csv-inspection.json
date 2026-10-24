@@ -1,0 +1,35 @@
+﻿{
+    "status":  "passed",
+    "sha256":  "d304b018187c186304746ca27d000438987122cf9e7377f161c8d01e544aa6a7",
+    "reader":  "independent-dotnet-powershell-no-extraction",
+    "nativeBridgeMocked":  false,
+    "sourceUserContentIncluded":  false,
+    "hasBom":  true,
+    "endsCrlf":  true,
+    "rows":  [
+                 [
+                     "会议\r\n备注",
+                     "可见",
+                     "00123",
+                     ""
+                 ],
+                 [
+                     "保持原样",
+                     "隐藏",
+                     "9007199254740993123",
+                     ""
+                 ],
+                 [
+                     "核对文档",
+                     "可见",
+                     "9007199254740993124",
+                     ""
+                 ],
+                 [
+                     "=SUM(A1:A2)",
+                     "已完成",
+                     "42",
+                     ""
+                 ]
+             ]
+}

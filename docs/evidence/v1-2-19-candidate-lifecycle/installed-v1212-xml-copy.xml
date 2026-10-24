@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!-- 我的草稿 -->
+<catalog xmlns:doc="urn:docs">
+  <doc:item id='first'>first</doc:item>
+  <doc:item id="9007199254740993123456789">冲突草稿</doc:item>
+  <literal><![CDATA[原始 <文字> & 😀]]></literal>
+  <empty></empty>
+  <annotated><!-- 保留 -->一段文字<?keep value?></annotated>
+  <mixed>before<child/>after</mixed>
+  <split>前<!-- c -->后</split>
+  <selfClosing/>
+</catalog>
