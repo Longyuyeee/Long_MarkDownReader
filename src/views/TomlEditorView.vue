@@ -105,7 +105,7 @@
       <template #footer><div class="value-edit-actions"><n-button :disabled="arrayPending" @click="arrayVisible=false">取消</n-button><n-button type="primary" :loading="arrayPending" @click="previewArrayChange">预览修改</n-button></div></template>
     </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
-    <n-modal :show="!!copyError" preset="card" title="暂时无法复制这项" class="toml-copy-error-dialog" style="width:min(480px,94vw);max-height:calc(100dvh - 24px)" @update:show="(value: boolean)=>{if(!value)copyError=''}">
+    <n-modal :show="!!copyError" preset="card" title="暂时无法复制这项" class="toml-copy-error-dialog" style="width:min(480px,94vw);max-height:calc(100dvh - 24px)" @update:show="(value: boolean)=>{if(!value)copyError=''}" @after-leave="finishCopyError">
       <p role="alert">{{ copyError }}</p>
       <template #footer><div class="value-edit-actions"><n-button @click="copyError=''">关闭</n-button><n-button type="primary" @click="revealCopySource">定位源码</n-button></div></template>
     </n-modal>
@@ -327,11 +327,13 @@ const resetArrayOutline=()=>{expandedArrays.value=emptyArrayRecord<boolean>();cl
 const refreshExpandedArrays=(result:Analysis)=>{for(const entry of result.outline)if(entry.array&&expandedArrays.value[entry.path])void loadArrayItems(entry)}
 watch(content,clearArrayItems,{flush:'sync'})
 const copyPending=ref(false),copyError=ref(''),copyEntry=ref<Entry|null>(null)
-let copyRequest:object|undefined
+let copyRequest:object|undefined,pendingCopyReveal:(()=>void)|undefined
+let copyOwner:ReturnType<typeof session.capture>
+const finishCopyError=()=>{const reveal=pendingCopyReveal;pendingCopyReveal=undefined;if(reveal)void nextTick(reveal)}
 const copyItem=async(entry:Entry)=>{
   if(editDisabled.value)return
   const owner=session.capture();if(!owner)return
-  const request={};copyRequest=request;copyPending.value=true;copyError.value='';copyEntry.value=entry
+  const request={};copyRequest=request;copyOwner=owner;pendingCopyReveal=undefined;copyPending.value=true;copyError.value='';copyEntry.value=entry
   try{
     const result=await invoke<{content:string;start:number;end:number}>('copy_toml_array_item_source',{content:owner.source,start:entry.arrayParent?.start,end:entry.arrayParent?.end,itemStart:entry.start,itemEnd:entry.end})
     if(copyRequest!==request||!session.unchanged(owner))return
@@ -343,7 +345,7 @@ const copyItem=async(entry:Entry)=>{
   }catch(cause){if(copyRequest===request&&session.unchanged(owner))copyError.value=errorText(cause)}
   finally{if(copyRequest===request&&session.owns(owner))copyPending.value=false}
 }
-const revealCopySource=()=>{const entry=copyEntry.value;copyError.value='';if(entry)reveal(entry)}
+const revealCopySource=()=>{const owner=copyOwner,entry=copyEntry.value;if(owner&&entry&&session.unchanged(owner))pendingCopyReveal=()=>{if(session.unchanged(owner))reveal(entry)};copyError.value=''}
 const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || arrayPending.value || copyPending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
 const openValueEdit = (entry: Entry) => {
   if (editDisabled.value) return
@@ -419,7 +421,7 @@ const load = async (discardDraft = false) => {
   const owner = session.capture()
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
-  copyRequest=undefined;copyPending.value=false;copyError.value='';copyEntry.value=null
+  copyRequest=undefined;copyOwner=undefined;pendingCopyReveal=undefined;copyPending.value=false;copyError.value='';copyEntry.value=null
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined; resumeValue=false
   resetArrayOutline();arrayVisible.value=false;arrayPending.value=false;arrayOwner=undefined;arrayEntry.value=null;pendingArray=undefined;resumeArray=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
