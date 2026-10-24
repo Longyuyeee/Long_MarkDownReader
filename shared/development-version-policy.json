@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-160-v1.2.28-toml-array-ordering-candidate",
-  "binaryVersionTransition": "v1.2.28-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.28-release-ready",
   "displayLabel": "v1.2.28 TOML 数组项上移／下移候选 · 当前公开 v1.2.27",
   "activeSlice": {
     "id": "v1.2.28-toml-array-ordering",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_28_Unsigned_Community_Release_Audit_2026-10-25.md"
   }
 }
