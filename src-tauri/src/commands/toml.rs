@@ -40,6 +40,22 @@ pub fn replace_toml_value_source(
 }
 
 #[tauri::command]
+pub fn rename_toml_key_source(
+    content: String,
+    start: usize,
+    end: usize,
+    name: String,
+) -> Result<crate::formats::toml::TomlKeyChange, TextDocumentError> {
+    crate::formats::toml::rename_toml_key_source(&content, start, end, &name).map_err(|message| {
+        TextDocumentError::recoverable(
+            "toml-key-rename-rejected",
+            message,
+            "调整字段名后重试，或定位源码；当前输入和草稿仍保留",
+        )
+    })
+}
+
+#[tauri::command]
 pub async fn write_toml_source_document(
     library_root: String,
     path: String,

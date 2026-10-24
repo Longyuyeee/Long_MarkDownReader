@@ -144,7 +144,7 @@ use commands::table::{
     read_table_file, write_external_table_file, write_table_file,
 };
 use commands::toml::{
-    analyze_toml_source, replace_toml_value_source, write_external_toml_source_document,
+    analyze_toml_source, rename_toml_key_source, replace_toml_value_source, write_external_toml_source_document,
     write_toml_source_document,
 };
 use commands::updater::{check_community_update, install_community_update};
@@ -416,6 +416,7 @@ pub fn run() {
             write_external_drawio_source_document,
             analyze_toml_source,
             replace_toml_value_source,
+            rename_toml_key_source,
             write_toml_source_document,
             write_external_toml_source_document,
             read_text_document,

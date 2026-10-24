@@ -43,7 +43,7 @@
         <div v-if="analysis?.valid" class="valid"><n-icon :component="ValidIcon" /><span>语法有效</span><WorkspaceHelp label="说明：语法有效，注释、顺序与字面量由源码保" text="语法有效，注释、顺序与字面量由源码保留" /></div>
         <n-input v-model:value="query" @keydown.enter.prevent="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选键路径或值"><template #prefix><n-icon :component="SearchIcon" /></template></n-input>
         <div class="outline">
-          <button v-for="item in filteredOutline" :key="`${item.start}:${item.path}`" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
+          <button v-for="item in filteredOutline" :key="`${item.start}:${item.path}`" :aria-current="selectedFieldStart !== undefined && selectedFieldStart === item.field?.start ? 'true' : undefined" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
             <n-icon :component="item.kind === 'value' ? KeyIcon : TableIcon" />
             <span><strong>{{ item.label }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
           </button>
@@ -64,6 +64,16 @@
       <p v-if="valueError" role="alert" class="error">{{ valueError }}</p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
         <n-button type="primary" :loading="valueEditPending" @click="previewValueEdit">预览修改</n-button></div></template>
+    </n-modal>
+    <n-modal v-model:show="renameVisible" preset="card" class="toml-key-rename-dialog" title="重命名 TOML 字段"
+      :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!renamePending" :closable="!renamePending" :close-on-esc="!renamePending"
+      @after-enter="renameInput?.select()" @after-leave="finishRenameDialog">
+      <code>{{ renameEntry?.path }}</code>
+      <label for="toml-key-name">字段名</label>
+      <n-input ref="renameInput" v-model:value="renameName" :disabled="renamePending" :input-props="{id:'toml-key-name','aria-label':'TOML 字段名'}" @keydown.enter="onRenameEnter" />
+      <p v-if="renameError" role="alert" class="error">{{ renameError }} <n-button text :disabled="renamePending" @click="revealRenameSource">定位源码</n-button></p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="renamePending" @click="renameVisible=false">取消</n-button>
+        <n-button type="primary" :loading="renamePending" @click="previewRename">预览修改</n-button></div></template>
     </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
@@ -100,7 +110,7 @@ import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../u
 interface Snapshot { path: string; content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
 interface Range { start: number; end: number }
 interface Diagnostic extends Range { code: string; message: string; line: number; column: number }
-interface Entry extends Range { path: string; label: string; kind: string; depth: number; preview: string; editable?: boolean; editUnavailableReason?: string }
+interface Entry extends Range { field?: { name:string;start:number;end:number;renameUnavailableReason?:string }; path: string; label: string; kind: string; depth: number; preview: string; editable?: boolean; editUnavailableReason?: string }
 interface Analysis { valid: boolean; tableCount: number; arrayOfTablesCount: number; valueCount: number; maxDepth: number; outline: Entry[]; outlineTruncated: boolean; diagnostics: Diagnostic[] }
 
 const route = useRoute(), router = useRouter(), store = useAppStore(), dialog = useDialog(), message = useMessage()
@@ -115,6 +125,7 @@ const filteredOutline = computed(() => { const q = query.value.trim().toLowerCas
 let editor: EditorView | null = null, applying = false, loadId = 0, analysisId = 0, timer: ReturnType<typeof setTimeout> | null = null
 const errorText = (cause: unknown) => { const e = cause as { message?: string; suggestion?: string }; const text = e?.message || String(cause).replace(/^Error:\s*/, ''); return e?.suggestion ? `${text} · ${e.suggestion}` : text }
 const clearTimer = () => { if (timer) clearTimeout(timer); timer = null }
+const selectedFieldStart = ref<number>()
 const analyzedSource = ref('')
 const session = useStructuredSession({
   path: () => path.value, external: () => isExternal.value, format: () => format.value?.id || '',
@@ -126,14 +137,55 @@ const valueEditVisible = ref(false), valueEditPending = ref(false), valueText = 
 const valueInput = ref<InputInst | null>(null), valueEntry = ref<Entry | null>(null)
 let valueOwner: ReturnType<typeof session.capture>, pendingValuePreview: (() => void) | undefined
 const finishValueDialog = () => { const offer = pendingValuePreview; pendingValuePreview = undefined; offer?.() }
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
+const renameVisible = ref(false), renamePending = ref(false), renameName = ref(''), renameError = ref('')
+const renameInput = ref<InputInst | null>(null), renameEntry = ref<Entry | null>(null)
+let renameOwner: ReturnType<typeof session.capture>, pendingRename: (() => void) | undefined, resumeRename = false
+const finishRenameDialog = () => { const offer = pendingRename; pendingRename = undefined; offer?.() }
+const revealRenameSource = () => {
+  const owner = renameOwner, field = renameEntry.value?.field
+  if (!owner || !field || !session.unchanged(owner)) return
+  resumeRename = true; pendingRename = () => { if (session.unchanged(owner)) reveal(field) }; renameVisible.value = false
+}
+const openRename = (entry: Entry) => {
+  if (editDisabled.value || !entry.field) return
+  if (resumeRename && renameOwner && session.unchanged(renameOwner) && renameEntry.value?.field?.start === entry.field.start) {
+    resumeRename = false; renameVisible.value = true; return
+  }
+  resumeRename = false; renameOwner = session.capture()
+  if (!renameOwner) return
+  renameEntry.value = entry; renameName.value = entry.field.name
+  renameError.value = entry.field.renameUnavailableReason || ''; renameVisible.value = true
+}
+const onRenameEnter = (event: KeyboardEvent) => {
+  if (event.isComposing || event.keyCode === 229) return
+  event.preventDefault(); void previewRename()
+}
+const previewRename = async () => {
+  const owner = renameOwner, field = renameEntry.value?.field
+  if (!owner || !field || renamePending.value) return
+  if (!session.unchanged(owner)) { renameError.value = '文件或草稿已变化，请重新选择字段；输入与内容仍保留'; return }
+  renamePending.value = true; renameError.value = ''
+  try {
+    const result = await invoke<{content:string;start:number;end:number}>('rename_toml_key_source', {content:owner.source,start:field.start,end:field.end,name:renameName.value})
+    if (renameOwner !== owner) return
+    if (!session.unchanged(owner)) { renameError.value = '草稿已继续编辑，未应用旧结果；输入与内容仍保留'; return }
+    const bytes = new TextEncoder().encode(result.content), point = (offset:number) => new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,offset)).length
+    pendingRename = () => session.offerChange(owner,'重命名 TOML 字段',result.content,point(result.start),() => {
+      query.value = ''; selectedFieldStart.value = result.start
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+    renameVisible.value = false
+  } catch (cause) { if (renameOwner === owner && session.owns(owner)) renameError.value = errorText(cause) }
+  finally { if (renameOwner === owner && session.owns(owner)) renamePending.value = false }
+}
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
 const openValueEdit = (entry: Entry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); reveal(entry); return }
   valueOwner = session.capture()
   if (!valueOwner) return
   valueEntry.value = entry
-  valueText.value = new TextDecoder().decode(new TextEncoder().encode(valueOwner.source).slice(entry.start,entry.end))
+  valueText.value = new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(valueOwner.source).slice(entry.start,entry.end))
   valueError.value = ''; valueEditVisible.value = true
 }
 const previewValueEdit = async () => {
@@ -144,15 +196,15 @@ const previewValueEdit = async () => {
   try {
     const target = await invoke<string>('replace_toml_value_source',{content:owner.source,start:entry.start,end:entry.end,replacement:valueText.value})
     if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择字段'; return }
-    const anchor = new TextDecoder().decode(new TextEncoder().encode(target).slice(0,entry.start)).length
+    const anchor = new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(target).slice(0,entry.start)).length
     pendingValuePreview = () => session.offerChange(owner,'修改 TOML 值',target,anchor)
     valueEditVisible.value = false
   } catch (cause) { if (session.owns(owner)) valueError.value = errorText(cause) }
   finally { if (session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<Entry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === content.value, reveal: entry => reveal(entry),
-  extra: entry => entry.kind === 'value' ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [],
-  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry) } })
+  extra: entry => [...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(entry.kind === 'value' ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry) } })
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerTab = (snapshot?: Snapshot) => session.bind(snapshot)
 
@@ -182,6 +234,7 @@ const load = async (discardDraft = false) => {
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
+  renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
 
@@ -205,7 +258,7 @@ const load = async (discardDraft = false) => {
 }
 
 const reveal = (range: Range) => {
-  if (analyzedSource.value !== content.value) { message.info('正在更新定位，请稍候再试'); return } if (!editor) return; const bytes = new TextEncoder().encode(content.value), point = (n: number) => new TextDecoder().decode(bytes.slice(0, Math.min(n, bytes.length))).length, from = point(range.start), to = Math.max(from, point(range.end)); editor.dispatch({ selection: { anchor: from, head: to }, effects: EditorView.scrollIntoView(from, { y: 'center' }) }); editor.focus() }
+  if (analyzedSource.value !== content.value) { message.info('正在更新定位，请稍候再试'); return } if (!editor) return; const bytes = new TextEncoder().encode(content.value), point = (n: number) => new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0, Math.min(n, bytes.length))).length, from = point(range.start), to = Math.max(from, point(range.end)); editor.dispatch({ selection: { anchor: from, head: to }, effects: EditorView.scrollIntoView(from, { y: 'center' }) }); editor.focus() }
 const save = () => session.save()
 
 const reload = () => session.reload()
@@ -240,4 +293,9 @@ footer > * { flex-shrink: 0; }
   aside { border-left: 0; border-top: var(--theme-border); }
   footer { gap: 8px; padding-inline: 9px; }
 }
+.toml-key-rename-dialog :deep(.n-card__content) { overflow:auto; }
+.toml-key-rename-dialog code { display:block; overflow-wrap:anywhere; margin-bottom:12px; }
+.toml-key-rename-dialog label { display:block; margin-bottom:6px; }
+.value-edit-actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+.outline button[aria-current="true"] { background:var(--theme-accent-hover); color:var(--theme-accent); }
 </style>

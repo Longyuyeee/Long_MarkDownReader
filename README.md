@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.2.19 已发布：YAML 字段重命名已完成；[1.2.19—1.2.20](docs/Foundation_Deepening_Roadmap_1_2_19_to_1_2_20_2026-10-24.md) 已交付 1/2。下一版继续 TOML 字段重命名，尚未实施。
+v1.2.19 已发布；v1.2.20 正在完成 TOML 字段重命名，尚未发布。见[开发记录](docs/V1_2_20_Unsigned_Community_Release_Audit_2026-10-24.md)。
 
 ## 不只是打开文件，更是接续你的工作
 

@@ -415,6 +415,12 @@ if (pkg.version === '1.2.19') {
   required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.19' : '1.2.18') && development.publicTag === `v${development.publicVersion}`]
   required[9] = [published ? '当前阶段：**v1.2.19 已发布**' : '当前阶段：**v1.2.19 YAML 字段重命名候选**', development.currentStage === (published ? 'M8-143-v1.2.19-published' : 'M8-142-v1.2.19-yaml-key-rename-candidate') && development.activeSlice?.id === 'v1.2.19-yaml-key-rename' && fs.existsSync(development.activeSlice.document)]
 }
+if (pkg.version === '1.2.20') {
+  const published = policy.gates?.githubReleasePublished === true
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.2.21' : '1.2.20')]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.20' : '1.2.19') && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? '当前阶段：**v1.2.20 已发布**' : '当前阶段：**v1.2.20 TOML 字段重命名候选**', development.currentStage === (published ? 'M8-145-v1.2.20-published' : 'M8-144-v1.2.20-toml-key-rename-candidate') && development.activeSlice?.id === 'v1.2.20-toml-key-rename' && fs.existsSync(development.activeSlice.document)]
+}
 
 for (const [token, condition] of required) {
   if (!condition) throw new Error(`[current-development-audit] source-of-truth no longer supports: ${token}`)
