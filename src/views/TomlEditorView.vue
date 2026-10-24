@@ -111,7 +111,7 @@
 
 <script setup lang="ts">
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'
 import { StreamLanguage } from '@codemirror/language'
@@ -152,7 +152,8 @@ const content = ref(''), signature = ref(''), encoding = ref('utf-8'), readOnlyR
 const analysis = ref<Analysis | null>(null), readOnly = computed(() => Boolean(readOnlyReason.value))
 function emptyArrayRecord<T>():Record<string,T>{return Object.create(null)}
 function updateArrayRecord<T>(record:Record<string,T>,key:string,value:T):Record<string,T>{return Object.assign(emptyArrayRecord<T>(),record,{[key]:value})}
-const expandedArrays=ref(emptyArrayRecord<boolean>()),arrayItems=ref(emptyArrayRecord<Entry[]>()),arrayErrors=ref(emptyArrayRecord<string>()),arrayLoading=ref(emptyArrayRecord<boolean>())
+// Paths are user data: avoid both inherited keys and Vue's proxy flag names.
+const expandedArrays=shallowRef(emptyArrayRecord<boolean>()),arrayItems=shallowRef(emptyArrayRecord<Entry[]>()),arrayErrors=shallowRef(emptyArrayRecord<string>()),arrayLoading=shallowRef(emptyArrayRecord<boolean>())
 const arraySource=ref('')
 const filteredOutline = computed(() => {
   const q=query.value.trim().toLowerCase(),rows:Entry[]=[]
