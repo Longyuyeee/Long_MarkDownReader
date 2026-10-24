@@ -147,6 +147,32 @@ pub fn remove_toml_array_item_source(
 }
 
 #[tauri::command]
+pub fn replace_toml_array_item_source(
+    content: String,
+    start: usize,
+    end: usize,
+    item_start: usize,
+    item_end: usize,
+    replacement: String,
+) -> Result<crate::formats::toml::TomlKeyChange, TextDocumentError> {
+    crate::formats::toml::replace_toml_array_item_source(
+        &content,
+        start,
+        end,
+        item_start,
+        item_end,
+        &replacement,
+    )
+    .map_err(|message| {
+        TextDocumentError::recoverable(
+            "toml-array-value-edit-rejected",
+            message,
+            "调整值后重试，或定位源码；当前输入与草稿仍保留",
+        )
+    })
+}
+
+#[tauri::command]
 pub async fn write_toml_source_document(
     library_root: String,
     path: String,
