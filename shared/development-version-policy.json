@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-148-v1.2.22-toml-field-management-candidate",
-  "binaryVersionTransition": "v1.2.22-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.22-release-ready",
   "displayLabel": "v1.2.22 TOML 字段新增与删除候选 · 当前公开 v1.2.21",
   "activeSlice": {
     "id": "v1.2.22-toml-field-management",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_22_Unsigned_Community_Release_Audit_2026-10-24.md"
   }
 }

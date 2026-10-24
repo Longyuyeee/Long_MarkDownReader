@@ -1,0 +1,15 @@
+﻿# 外部保留
+title = '原稿' # 保留
+n = 9_223_372_036_854_775_807
+enabled = true
+items = [1,2]
+date = 1979-05-27
+"a.b" = 'literal'
+[a]
+port = 8_080
+[b]
+port = 9_090
+[[servers]]
+name = 'first'
+[[servers]]
+name = 'second'
