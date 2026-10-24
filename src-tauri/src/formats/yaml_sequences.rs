@@ -345,6 +345,165 @@ pub fn copy_yaml_sequence_item_source(
     change(content, start, end, true, Some(literal))
 }
 
+fn swap_items(
+    node: &mut MarkedYamlOwned,
+    source: &str,
+    offsets: &[usize],
+    range: (usize, usize),
+    left: usize,
+) -> usize {
+    if bounds(node, source, offsets) == range {
+        if let YamlDataOwned::Sequence(items) = &mut node.data {
+            items.swap(left, left + 1);
+            return 1;
+        }
+    }
+    match &mut node.data {
+        YamlDataOwned::Sequence(items) => items
+            .iter_mut()
+            .map(|v| swap_items(v, source, offsets, range, left))
+            .sum(),
+        YamlDataOwned::Mapping(map) => map
+            .values_mut()
+            .map(|v| swap_items(v, source, offsets, range, left))
+            .sum(),
+        _ => 0,
+    }
+}
+
+// A comment separated from both items by blank lines stays in its original
+// slot. A directly adjacent standalone comment has ambiguous ownership.
+fn independent_gap(gap: &str) -> bool {
+    if gap.trim().is_empty() {
+        return true;
+    }
+    let lines: Vec<_> = gap.lines().collect();
+    lines.first().is_some_and(|s| s.trim().is_empty())
+        && lines.last().is_some_and(|s| s.trim().is_empty())
+        && lines
+            .iter()
+            .all(|s| s.trim().is_empty() || s.trim_start().starts_with('#'))
+}
+
+fn body_end(source: &str, finish: usize) -> usize {
+    let line = &source[..finish];
+    if line.ends_with("\r\n") {
+        finish - 2
+    } else if line.ends_with('\n') {
+        finish - 1
+    } else {
+        finish
+    }
+}
+
+pub fn move_yaml_sequence_item_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    direction: &str,
+) -> Result<YamlKeyChange, String> {
+    if !matches!(direction, "up" | "down") {
+        return Err("请选择上移或下移；草稿仍保留".into());
+    }
+    let (mut docs, offsets, _) = prepare(content)?;
+    let ranges = ordinary_sequences(content, &offsets);
+    let node = docs
+        .first()
+        .and_then(|d| target(d, content, &offsets, &ranges, (start, end), true))
+        .ok_or(FALLBACK)?;
+    let YamlDataOwned::Sequence(items) = &node.data else {
+        unreachable!()
+    };
+    let range = bounds(node, content, &offsets);
+    let mut counters = AnalysisCounters::default();
+    let scalars = inspect_events(content, &mut counters, &offsets);
+    if items.iter().any(|v| {
+        let r = bounds(v, content, &offsets);
+        !matches!(v.data, YamlDataOwned::Value(_))
+            || r.0 >= r.1
+            || !scalars.contains(&r)
+            || content[r.0..r.1].contains(['\r', '\n'])
+    }) {
+        return Err(FALLBACK.into());
+    }
+    let index = items
+        .iter()
+        .position(|v| bounds(v, content, &offsets) == (start, end))
+        .ok_or(FALLBACK)?;
+    let neighbor = if direction == "up" {
+        index.checked_sub(1)
+    } else {
+        index.checked_add(1).filter(|i| *i < items.len())
+    }
+    .ok_or("已经是第一项或最后一项；草稿仍保留")?;
+    let left = index.min(neighbor);
+    let a = bounds(&items[left], content, &offsets);
+    let b = bounds(&items[left + 1], content, &offsets);
+    let (unit_a, unit_b) = if content[range.0..].starts_with('[') {
+        // Keep the delimiters and whitespace exactly. Flow comments can belong
+        // to either neighboring value, so they retain the source-only workflow.
+        let closing = close(content, range.1).ok_or(FALLBACK)?;
+        for (i, item) in items.iter().enumerate() {
+            let r = bounds(item, content, &offsets);
+            let next = items
+                .get(i + 1)
+                .map_or(closing, |v| bounds(v, content, &offsets).0);
+            if content[r.1..next].contains('#') {
+                return Err(FALLBACK.into());
+            }
+        }
+        if content[range.0..bounds(&items[0], content, &offsets).0].contains('#') {
+            return Err(FALLBACK.into());
+        }
+        (a, b)
+    } else {
+        let (line_a, finish_a, indent_a) = block_line(content, a.0, a.1)?;
+        let (line_b, finish_b, indent_b) = block_line(content, b.0, b.1)?;
+        if indent_a != indent_b || !independent_gap(&content[finish_a..line_b]) {
+            return Err(FALLBACK.into());
+        }
+        let before = content[..line_a]
+            .strip_suffix('\n')
+            .unwrap_or(&content[..line_a]);
+        if before.rsplit('\n').next().is_some_and(|s| {
+            s.trim_start_matches('\u{feff}')
+                .trim_start()
+                .starts_with('#')
+        }) {
+            return Err(FALLBACK.into());
+        }
+        (
+            (line_a, body_end(content, finish_a)),
+            (line_b, body_end(content, finish_b)),
+        )
+    };
+    if unit_a.1 > unit_b.0 {
+        return Err(FALLBACK.into());
+    }
+    let raw_a = &content[unit_a.0..unit_a.1];
+    let raw_b = &content[unit_b.0..unit_b.1];
+    let candidate = format!(
+        "{}{}{}{}{}",
+        &content[..unit_a.0],
+        raw_b,
+        &content[unit_a.1..unit_b.0],
+        raw_a,
+        &content[unit_b.1..]
+    );
+    if candidate == content {
+        return Err("相邻两项内容相同，无需移动；草稿仍保留".into());
+    }
+    let point = if direction == "up" {
+        unit_a.0 + b.0 - unit_b.0
+    } else {
+        unit_a.0 + raw_b.len() + (unit_b.0 - unit_a.1) + (a.0 - unit_a.0)
+    };
+    if swap_items(&mut docs[0], content, &offsets, range, left) != 1 {
+        return Err(FALLBACK.into());
+    }
+    checked(candidate, docs, point, point + end - start).map_err(|_| FALLBACK.into())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -566,5 +725,164 @@ mod tests {
             copy_item(&a.content, "$.root[1]").unwrap().content,
             s.replace("  - false", "  - '字'\n  - '字'\n  - false")
         );
+    }
+
+    fn move_item(s: &str, p: &str, direction: &str) -> Result<YamlKeyChange, String> {
+        let e = analyze_yaml_source(s)
+            .outline
+            .into_iter()
+            .find(|e| e.path == p)
+            .unwrap();
+        move_yaml_sequence_item_source(s, e.start, e.end, direction)
+    }
+    #[test]
+    fn move_flow_raw_values_bom_crlf_and_trailing_comma() {
+        for raw in [
+            "0xFF",
+            "8_080",
+            "1.20e+2",
+            "false",
+            "null",
+            "~",
+            "'字😀'",
+            "\"a\\nb\"",
+            "'a#b'",
+        ] {
+            let s = format!("\u{feff}# 文档😀\r\nitems: [1, {raw}, true,]\r\nother: 8_080\r\n");
+            for (direction, want) in [
+                ("up", format!("[{raw}, 1, true,")),
+                ("down", format!("[1, true, {raw},")),
+            ] {
+                let r = move_item(&s, "$.items[1]", direction).unwrap();
+                assert_eq!(r.content, s.replace(&format!("[1, {raw}, true,"), &want));
+                assert_eq!(&r.content[r.start..r.end], raw);
+            }
+        }
+        assert_eq!(
+            move_item("x: [\n  1,\n  2,\n]\n", "$.x[1]", "up")
+                .unwrap()
+                .content,
+            "x: [\n  2,\n  1,\n]\n"
+        );
+    }
+    #[test]
+    fn move_block_inline_comments_and_final_newline_stay_exact() {
+        for eol in ["\n", "\r\n"] {
+            for final_eol in ["", eol] {
+                let s = format!(
+                    "\u{feff}items:{eol}  - 0xFF # first{eol}  - '字😀' # second{final_eol}"
+                );
+                let want = format!(
+                    "\u{feff}items:{eol}  - '字😀' # second{eol}  - 0xFF # first{final_eol}"
+                );
+                for (p, d, raw) in [
+                    ("$.items[0]", "down", "0xFF"),
+                    ("$.items[1]", "up", "'字😀'"),
+                ] {
+                    let r = move_item(&s, p, d).unwrap();
+                    assert_eq!(r.content, want);
+                    assert_eq!(&r.content[r.start..r.end], raw);
+                }
+            }
+        }
+        assert_eq!(
+            move_item("- one\n- two", "$[0]", "down").unwrap().content,
+            "- two\n- one"
+        );
+    }
+    #[test]
+    fn move_keeps_separated_independent_comments_and_rejects_ambiguous_ownership() {
+        let s = "items:\n  - one # attached\n\n  # independent\n\n  - two\nother: 8_080\n";
+        assert_eq!(
+            move_item(s, "$.items[0]", "down").unwrap().content,
+            "items:\n  - two\n\n  # independent\n\n  - one # attached\nother: 8_080\n"
+        );
+        for s in [
+            "items:\n - one\n # next\n - two\n",
+            "# header\n- one\n- two\n",
+            "\u{feff}# header\r\n- one\r\n- two\r\n",
+            "x: [1, # attached\n 2]\n",
+            "x: [1, 2 # last\n]\n",
+            "x: [ # first\n 1, 2]\n",
+        ] {
+            let p = if s.starts_with("items:") {
+                "$.items[0]"
+            } else if s.starts_with("x:") {
+                "$.x[0]"
+            } else {
+                "$[0]"
+            };
+            assert!(move_item(s, p, "down").is_err(), "{s}");
+        }
+    }
+    #[test]
+    fn move_boundaries_invalid_directions_and_stale_utf8_ranges_never_apply() {
+        let s = "x: ['😀', 2]";
+        for (p, d) in [("$.x[0]", "up"), ("$.x[1]", "down"), ("$.x[0]", "sideways")] {
+            assert!(move_item(s, p, d).is_err());
+        }
+        for (a, b) in [
+            (6, 9),
+            (4, 9),
+            (999, 1000),
+            (9, 4),
+            (usize::MAX, usize::MAX),
+        ] {
+            assert!(move_yaml_sequence_item_source(s, a, b, "down").is_err());
+        }
+        assert!(move_item("[1]", "$[0]", "down").is_err());
+        assert!(move_item("[1, 1]", "$[0]", "down").is_err());
+        assert!(move_yaml_sequence_item_source(
+            &" ".repeat(MAX_YAML_SOURCE_BYTES + 1),
+            0,
+            0,
+            "down"
+        )
+        .is_err());
+    }
+    #[test]
+    fn move_rejects_complex_references_multidoc_and_multiline_scalars() {
+        for (s, p) in [
+            ("x: [[1], 2]", "$.x[0]"),
+            ("x: [{a: 1}, 2]", "$.x[0]"),
+            ("x: &a [1, 2]", "$.x[0]"),
+            ("x: [!tag 1, 2]", "$.x[0]"),
+            ("base: &a 1\nx: [*a, 2]", "$.x[0]"),
+            ("<<: {a: 1}\nx: [1, 2]", "$.x[0]"),
+            ("x: [1, 2]\n---\nx: [3]", "$.x[0]"),
+            ("x:\n - |\n   text\n - 2\n", "$.x[0]"),
+            ("x: ['one\n two', 2]", "$.x[0]"),
+            ("- - one\n  - two\n", "$[0][0]"),
+        ] {
+            assert!(move_item(s, p, "down").is_err(), "{s}");
+        }
+    }
+    #[test]
+    fn move_uses_exact_parent_and_retains_equal_values_with_distinct_comments() {
+        let s = "root:\n  'a[0]': [1, 2]\n  other: [3, 4]\n";
+        let n = analyze_yaml_source(s)
+            .outline
+            .into_iter()
+            .find(|e| e.start == s.find('1').unwrap())
+            .unwrap();
+        let r = move_yaml_sequence_item_source(s, n.start, n.end, "down").unwrap();
+        assert_eq!(r.content, s.replace("[1, 2]", "[2, 1]"));
+        let s = "x:\n - 1 # first\n - 1 # second\n";
+        assert_eq!(
+            move_item(s, "$.x[0]", "down").unwrap().content,
+            "x:\n - 1 # second\n - 1 # first\n"
+        );
+    }
+    #[test]
+    fn move_repeated_inverse_and_followup_copy_use_fresh_selected_ranges() {
+        let s = "x: [0xFF, '字😀', false,]\nother: 8_080\n";
+        let a = move_item(s, "$.x[0]", "down").unwrap();
+        let b = move_item(&a.content, "$.x[1]", "down").unwrap();
+        assert_eq!(b.content, "x: ['字😀', false, 0xFF,]\nother: 8_080\n");
+        let c = move_item(&b.content, "$.x[2]", "up").unwrap();
+        let d = move_item(&c.content, "$.x[1]", "up").unwrap();
+        assert_eq!(d.content, s);
+        let e = copy_yaml_sequence_item_source(&b.content, b.start, b.end).unwrap();
+        assert!(e.content.contains("false, 0xFF, 0xFF,"));
     }
 }

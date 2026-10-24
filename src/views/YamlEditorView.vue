@@ -128,7 +128,7 @@
             type="button"
             :style="{ paddingLeft: `${12 + Math.min(entry.depth, 8) * 14}px` }"
             @click="revealRange(entry)" @contextmenu.prevent.stop="nodeMenu.open($event, entry)"
-            :aria-current="selectedFieldStart !== undefined && entry.field?.start === selectedFieldStart ? 'true' : undefined"
+            :aria-current="selectedFieldStart !== undefined && (entry.field ? entry.field.start : entry.start) === selectedFieldStart ? 'true' : undefined"
           >
             <n-icon :component="kindIcon(entry.kind)" />
             <span class="outline-copy">
@@ -205,6 +205,10 @@
     <n-modal :show="!!copyError" preset="card" title="暂时无法复制这项" class="yaml-copy-error-dialog" style="width:min(480px,94vw);max-height:calc(100dvh - 24px)" @update:show="(value: boolean)=>{if(!value)copyError=''}" @after-leave="finishCopyError">
       <p role="alert">{{ copyError }}</p>
       <template #footer><div class="value-edit-actions"><n-button @click="copyError=''">关闭</n-button><n-button type="primary" @click="revealCopySource">定位源码</n-button></div></template>
+    </n-modal>
+    <n-modal :show="!!moveError" preset="card" title="暂时无法移动这项" class="yaml-move-error-dialog" style="width:min(480px,94vw);max-height:calc(100dvh - 24px)" @update:show="(value: boolean)=>{if(!value)moveError=''}" @after-leave="finishMoveError">
+      <p role="alert">{{ moveError }}</p>
+      <template #footer><div class="value-edit-actions"><n-button @click="moveError=''">关闭</n-button><n-button type="primary" @click="revealMoveSource">定位源码</n-button></div></template>
     </n-modal>
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
@@ -531,7 +535,33 @@ const copyItem=async(entry:YamlOutlineEntry)=>{
   finally{if(copyRequest===request&&session.owns(owner))copyPending.value=false}
 }
 const revealCopySource=()=>{const owner=copyOwner,entry=copyEntry.value;if(owner&&entry&&session.unchanged(owner))pendingCopyReveal=()=>{if(session.unchanged(owner))revealRange(entry)};copyError.value=''}
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || sequencePending.value || copyPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const movePending=ref(false), moveError=ref(''), moveEntry=ref<YamlOutlineEntry|null>(null)
+let moveOwner:ReturnType<typeof session.capture>, moveRequest:object|undefined, pendingMoveReveal:(()=>void)|undefined
+const finishMoveError=()=>{const reveal=pendingMoveReveal;pendingMoveReveal=undefined;if(reveal)void nextTick(reveal)}
+const canMoveItem=(entry:YamlOutlineEntry,direction:'up'|'down')=>{
+  const match=entry.path.match(/^(.*)\[(\d+)\]$/)
+  if(entry.field||!match)return false
+  const parent=analysis.value?.outline.find(e=>e.documentIndex===entry.documentIndex&&e.path===match[1]&&e.kind==='sequence')
+  const index=Number(match[2])
+  return !!parent&&index<parent.childCount&&(direction==='up'?index>0:index+1<parent.childCount)
+}
+const moveItem=async(entry:YamlOutlineEntry,direction:'up'|'down')=>{
+  if(editDisabled.value||!canMoveItem(entry,direction))return
+  const owner=session.capture();if(!owner)return
+  const request={};moveRequest=request;moveOwner=owner;pendingMoveReveal=undefined;movePending.value=true;moveError.value='';moveEntry.value=entry
+  try{
+    const result=await invoke<{content:string;start:number;end:number}>('move_yaml_sequence_item_source',{content:owner.source,start:entry.start,end:entry.end,direction})
+    if(moveRequest!==request||!session.unchanged(owner))return
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    session.offerChange(owner,direction==='up'?'上移 YAML 列表项':'下移 YAML 列表项',result.content,point(result.start),()=>{
+      outlineQuery.value='';selectedFieldStart.value=result.start
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+  }catch(cause){if(moveRequest===request&&session.unchanged(owner))moveError.value=errorMessage(cause)}
+  finally{if(moveRequest===request&&session.owns(owner))movePending.value=false}
+}
+const revealMoveSource=()=>{const owner=moveOwner,entry=moveEntry.value;if(owner&&entry&&session.unchanged(owner))pendingMoveReveal=()=>{if(session.unchanged(owner))revealRange(entry)};moveError.value=''}
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || sequencePending.value || copyPending.value || movePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
 const openValueEdit = (entry: YamlOutlineEntry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); revealRange(entry); return }
@@ -556,8 +586,8 @@ const previewValueEdit = async () => {
   finally { if (session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<YamlOutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry),
-  extra: entry => [...(entry.kind==='sequence' ? [{key:'append-item',label:'追加列表项…',disabled:editDisabled.value}] : []), ...(!entry.field&&/\[\d+\]$/.test(entry.path) ? [{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除列表项…',disabled:editDisabled.value}] : []),...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
-  action: (key,entry) => { if(key==='copy-item')void copyItem(entry); if(key==='append-item')openSequenceChange(entry,'append');if(key==='after-item')openSequenceChange(entry,'after');if(key==='remove-item')openSequenceChange(entry,'remove');if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
+  extra: entry => [...(entry.kind==='sequence' ? [{key:'append-item',label:'追加列表项…',disabled:editDisabled.value}] : []), ...(!entry.field&&/\[\d+\]$/.test(entry.path) ? [{key:'move-up',label:'上移',disabled:editDisabled.value||!canMoveItem(entry,'up')},{key:'move-down',label:'下移',disabled:editDisabled.value||!canMoveItem(entry,'down')},{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除列表项…',disabled:editDisabled.value}] : []),...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='move-up')void moveItem(entry,'up');if(key==='move-down')void moveItem(entry,'down');if(key==='copy-item')void copyItem(entry); if(key==='append-item')openSequenceChange(entry,'append');if(key==='after-item')openSequenceChange(entry,'after');if(key==='remove-item')openSequenceChange(entry,'remove');if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerCurrentTab = (snapshot?: TextDocumentSnapshot) => session.bind(snapshot)
 
@@ -669,6 +699,7 @@ const load = async (discardDraft = false) => {
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
   copyRequest=undefined;copyOwner=undefined;pendingCopyReveal=undefined;copyPending.value=false;copyError.value='';copyEntry.value=null
+  moveRequest=undefined;moveOwner=undefined;pendingMoveReveal=undefined;movePending.value=false;moveError.value='';moveEntry.value=null
   sequenceVisible.value=false;sequencePending.value=false;sequenceOwner=undefined;sequenceEntry.value=null;pendingSequence=undefined;resumeSequence=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
   renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined

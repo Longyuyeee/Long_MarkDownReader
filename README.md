@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.2.26 已发布：YAML／TOML 清单项可右键复制为新项，直接预览并接着修改；[1.2.25—1.2.26](docs/Foundation_Deepening_Roadmap_1_2_25_to_1_2_26_2026-10-24.md) 已交付 **2/2 版**。下一轮 [1.2.27—1.2.28](docs/Foundation_Deepening_Roadmap_1_2_27_to_1_2_28_2026-10-25.md) 深化清单项上移／下移，当前 **0/2 版规划**，尚未实施。
+当前公开版本为 v1.2.26；v1.2.27 已接入 YAML 清单项右键上移／下移，正在候选收尾。[开发记录](docs/V1_2_27_Unsigned_Community_Release_Audit_2026-10-25.md) · [1.2.27—1.2.28 路线](docs/Foundation_Deepening_Roadmap_1_2_27_to_1_2_28_2026-10-25.md)。本轮 0/2 版已发布，TOML 相邻排序仍为下一版规划。
 
 ## 不只是打开文件，更是接续你的工作
 
