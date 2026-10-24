@@ -6,4 +6,6 @@
 
 资料库“查看文件关系”移到“文档操作”菜单，收起的浮动把手不再挡住提纲按钮；原关系能力、其他工作面入口、全部主题与正常动效继续保留。
 
-未签名社区版；完整发布检查与 602 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
+未签名社区版；完整发布检查与 602 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件重新下载核对通过。应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.26) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_26_Unsigned_Community_Release_Audit_2026-10-24.md)。
