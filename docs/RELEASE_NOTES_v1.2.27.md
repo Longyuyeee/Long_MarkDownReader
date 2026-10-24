@@ -6,8 +6,10 @@
 
 保护未保存内容、延迟结果、旧差异、来源切换、保存失败重试和外部冲突副本。保留已有全部功能、主题与正常动效。
 
-未签名社区版；完整发布检查与 611 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
+未签名社区版；完整发布检查与 611 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件重新下载核对通过。应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
 
 结构提纲右键菜单支持 Esc 关闭，输入法组合输入时保留输入法自身的取消操作。
 
 修复无关旧目录不可访问时，可能影响当前资料保存的问题。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.27) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_27_Unsigned_Community_Release_Audit_2026-10-25.md)。
