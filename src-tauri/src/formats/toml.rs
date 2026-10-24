@@ -5,6 +5,10 @@ use toml_edit::{Document, Item, Key, Table, Value};
 mod fields;
 pub use fields::{add_toml_field_source, remove_toml_field_source};
 
+#[path = "toml_arrays.rs"]
+mod arrays;
+pub use arrays::{add_toml_array_item_source, inspect_toml_array_items_source, remove_toml_array_item_source, TomlArrayItem};
+
 const MAX_TOML_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_TOML_NODES: usize = 100_000;
 const MAX_TOML_DEPTH: usize = 128;
@@ -27,6 +31,8 @@ pub struct TomlDiagnostic {
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct TomlOutlineEntry {
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub array: bool,
     pub field: Option<TomlField>,
     pub path: String,
     pub label: String,
@@ -197,6 +203,7 @@ fn inspect_item(
     if state.outline.len() < MAX_TOML_OUTLINE_ENTRIES {
         let (line, column) = line_column(content, span.start);
         state.outline.push(TomlOutlineEntry {
+            array: item.as_value().is_some_and(Value::is_array),
             field: parent.key(label).and_then(|key| {
                 field_info(content, key, item, parent.is_dotted() || in_array_table)
             }),

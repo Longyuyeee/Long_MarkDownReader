@@ -43,10 +43,18 @@
         <div v-if="analysis?.valid" class="valid"><n-icon :component="ValidIcon" /><span>语法有效</span><WorkspaceHelp label="说明：语法有效，注释、顺序与字面量由源码保" text="语法有效，注释、顺序与字面量由源码保留" /></div>
         <n-input v-model:value="query" @keydown.enter.prevent="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选键路径或值"><template #prefix><n-icon :component="SearchIcon" /></template></n-input>
         <div class="outline" @contextmenu.self="openRootFieldMenu">
-          <button v-for="item in filteredOutline" :key="`${item.start}:${item.path}`" :aria-current="selectedFieldStart !== undefined && selectedFieldStart === item.field?.start ? 'true' : undefined" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
-            <n-icon :component="item.kind === 'value' ? KeyIcon : TableIcon" />
-            <span><strong>{{ item.label }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
-          </button>
+          <template v-for="item in filteredOutline" :key="`${item.start}:${item.path}`">
+            <div class="outline-node">
+              <button :aria-current="selectedFieldStart !== undefined && selectedFieldStart === item.field?.start ? 'true' : undefined" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
+                <n-icon :component="item.array || item.kind==='array-item' ? ArrayIcon : item.kind === 'value' ? KeyIcon : TableIcon" />
+                <span><strong>{{ item.label }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
+              </button>
+              <button v-if="item.array" class="array-toggle" :aria-label="(expandedArrays[item.path]?'收起数组 ':'展开数组 ')+item.path" :aria-expanded="!!expandedArrays[item.path]" :disabled="arrayLoading[item.path] || analysisPending || analyzedSource!==content" @click="toggleArray(item)">
+                <n-spin v-if="arrayLoading[item.path]" size="small" /><n-icon v-else :component="expandedArrays[item.path]?UnfoldArrayIcon:FoldArrayIcon" />
+              </button>
+            </div>
+            <div v-if="item.array && expandedArrays[item.path] && arrayErrors[item.path]" class="array-error" role="alert">{{ arrayErrors[item.path] }} <n-button text size="small" @click="reveal(item)">定位源码</n-button></div>
+          </template>
           <p v-if="!filteredOutline.length" @contextmenu="openRootFieldMenu">{{ analysis?.valid ? (analysis.outline.length ? '没有匹配的键路径' : '空文档 · 右键新增字段') : '修复语法后显示提纲' }}</p>
           <p v-if="analysis?.outlineTruncated" class="warning">结构过大，仅显示受限范围</p>
         </div>
@@ -86,6 +94,16 @@
       <p v-if="fieldError" role="alert" class="error">{{ fieldError }} <n-button text :disabled="fieldPending" @click="revealFieldSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="fieldPending" @click="fieldVisible=false">取消</n-button><n-button type="primary" :loading="fieldPending" @click="previewFieldChange">预览修改</n-button></div></template>
     </n-modal>
+    <n-modal v-model:show="arrayVisible" preset="card" class="toml-array-dialog" :title="arrayMode==='remove' ? '删除 TOML 数组项' : '新增 TOML 数组项'"
+      :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!arrayPending" :closable="!arrayPending" :close-on-esc="!arrayPending"
+      @after-enter="arrayInput?.select()" @after-leave="finishArrayDialog">
+      <code>{{ arrayEntry?.path || '$' }}</code>
+      <template v-if="arrayMode!=='remove'">
+        <label for="toml-array-value">值</label><n-input ref="arrayInput" v-model:value="arrayValue" :disabled="arrayPending" placeholder="例如：'内容'、42、true、2026-10-24" :input-props="{id:'toml-array-value','aria-label':'新增 TOML 数组项值'}" @keydown.enter="onArrayEnter" />
+      </template>
+      <p v-if="arrayError" role="alert" class="error">{{ arrayError }} <n-button text :disabled="arrayPending" @click="revealArraySource">定位源码</n-button></p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="arrayPending" @click="arrayVisible=false">取消</n-button><n-button type="primary" :loading="arrayPending" @click="previewArrayChange">预览修改</n-button></div></template>
+    </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
@@ -93,7 +111,7 @@
 
 <script setup lang="ts">
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'
 import { StreamLanguage } from '@codemirror/language'
@@ -104,7 +122,7 @@ import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage, type InputInst } from 'naive-ui'
-import { AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon, FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, KeyRound as KeyIcon, PanelRight as InspectorIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Search as SearchIcon, TableProperties as TableIcon, UnfoldVertical as UnfoldIcon } from 'lucide-vue-next'
+import { List as ArrayIcon, ChevronRight as FoldArrayIcon, ChevronDown as UnfoldArrayIcon, AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon, FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, KeyRound as KeyIcon, PanelRight as InspectorIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Search as SearchIcon, TableProperties as TableIcon, UnfoldVertical as UnfoldIcon } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextConflictDialog from '../components/TextConflictDialog.vue'
 import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
@@ -121,7 +139,7 @@ import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../u
 interface Snapshot { path: string; content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
 interface Range { start: number; end: number }
 interface Diagnostic extends Range { code: string; message: string; line: number; column: number }
-interface Entry extends Range { field?: { name:string;start:number;end:number;renameUnavailableReason?:string }; path: string; label: string; kind: string; depth: number; preview: string; editable?: boolean; editUnavailableReason?: string }
+interface Entry extends Range { array?:boolean; childCount?:number; arrayParent?:Range; field?: { name:string;start:number;end:number;renameUnavailableReason?:string }; path: string; label: string; kind: string; depth: number; preview: string; editable?: boolean; editUnavailableReason?: string }
 interface Analysis { valid: boolean; tableCount: number; arrayOfTablesCount: number; valueCount: number; maxDepth: number; outline: Entry[]; outlineTruncated: boolean; diagnostics: Diagnostic[] }
 
 const route = useRoute(), router = useRouter(), store = useAppStore(), dialog = useDialog(), message = useMessage()
@@ -132,7 +150,22 @@ const fileName = computed(() => path.value.split(/[\\/]/).pop() || '未命名 TO
 const loading = ref(true), saving = ref(false), dirty = ref(false), analysisPending = ref(false), loadError = ref(''), query = ref('')
 const content = ref(''), signature = ref(''), encoding = ref('utf-8'), readOnlyReason = ref(''), fileSize = ref(0), modified = ref(0), lines = ref(1), cursorLine = ref(1), cursorColumn = ref(1)
 const analysis = ref<Analysis | null>(null), readOnly = computed(() => Boolean(readOnlyReason.value))
-const filteredOutline = computed(() => { const q = query.value.trim().toLowerCase(), entries = analysis.value?.outline || []; return (q ? entries.filter(e => `${e.path} ${e.preview}`.toLowerCase().includes(q)) : entries).slice(0, 500) })
+function emptyArrayRecord<T>():Record<string,T>{return Object.create(null)}
+function updateArrayRecord<T>(record:Record<string,T>,key:string,value:T):Record<string,T>{return Object.assign(emptyArrayRecord<T>(),record,{[key]:value})}
+// Paths are user data: avoid both inherited keys and Vue's proxy flag names.
+const expandedArrays=shallowRef(emptyArrayRecord<boolean>()),arrayItems=shallowRef(emptyArrayRecord<Entry[]>()),arrayErrors=shallowRef(emptyArrayRecord<string>()),arrayLoading=shallowRef(emptyArrayRecord<boolean>())
+const arraySource=ref('')
+const filteredOutline = computed(() => {
+  const q=query.value.trim().toLowerCase(),rows:Entry[]=[]
+  for(const entry of analysis.value?.outline||[]){
+    const children=arraySource.value===content.value&&expandedArrays.value[entry.path]?(arrayItems.value[entry.path]||[]):[]
+    const matches=(e:Entry)=>!q||`${e.path} ${e.preview}`.toLowerCase().includes(q)
+    if(matches(entry)||children.some(matches))rows.push(entry)
+    rows.push(...children.filter(matches))
+  }
+  return rows.slice(0,500)
+})
+
 let editor: EditorView | null = null, applying = false, loadId = 0, analysisId = 0, timer: ReturnType<typeof setTimeout> | null = null
 const errorText = (cause: unknown) => { const e = cause as { message?: string; suggestion?: string }; const text = e?.message || String(cause).replace(/^Error:\s*/, ''); return e?.suggestion ? `${text} · ${e.suggestion}` : text }
 const clearTimer = () => { if (timer) clearTimeout(timer); timer = null }
@@ -231,7 +264,65 @@ const previewFieldChange=async()=>{
   }catch(cause){if(fieldOwner===owner&&session.owns(owner)){fieldError.value=errorText(cause);fieldVisible.value=true}}
   finally{if(fieldOwner===owner&&session.owns(owner))fieldPending.value=false}
 }
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
+const arrayVisible=ref(false), arrayPending=ref(false), arrayMode=ref<'append'|'after'|'remove'>('append'), arrayValue=ref("''"), arrayError=ref('')
+const arrayInput=ref<InputInst|null>(null), arrayEntry=ref<Entry|null>(null)
+let arrayOwner:ReturnType<typeof session.capture>, pendingArray:(()=>void)|undefined, resumeArray=false
+const finishArrayDialog=()=>{const offer=pendingArray;pendingArray=undefined;offer?.()}
+const revealArraySource=()=>{
+  const owner=arrayOwner,entry=arrayEntry.value
+  if(!owner||!entry||!session.unchanged(owner))return
+  resumeArray=true;pendingArray=()=>{if(session.unchanged(owner))reveal(entry)};arrayVisible.value=false
+}
+const openArrayChange=(entry:Entry,mode:'append'|'after'|'remove')=>{
+  if(editDisabled.value)return
+  if(resumeArray&&arrayMode.value===mode&&arrayOwner&&session.unchanged(arrayOwner)&&arrayEntry.value?.path===entry.path){resumeArray=false;arrayVisible.value=true;return}
+  resumeArray=false;arrayOwner=session.capture();if(!arrayOwner)return
+  arrayEntry.value=entry;arrayMode.value=mode;arrayValue.value="''";arrayError.value=''
+  if(mode!=='remove')arrayVisible.value=true;else void previewArrayChange()
+}
+const onArrayEnter=(event:KeyboardEvent)=>{if(event.isComposing||event.keyCode===229)return;event.preventDefault();void previewArrayChange()}
+const previewArrayChange=async()=>{
+  const owner=arrayOwner,entry=arrayEntry.value,mode=arrayMode.value
+  if(!owner||!entry||arrayPending.value)return
+  if(!session.unchanged(owner)){arrayError.value='文件或草稿已变化，请重新选择；当前输入与内容仍保留';arrayVisible.value=true;return}
+  arrayPending.value=true;arrayError.value=''
+  try{
+    const parent=entry.arrayParent||entry
+    const result=await invoke<{content:string;start:number;end:number;valueType?:string}>(mode==='remove'?'remove_toml_array_item_source':'add_toml_array_item_source',{
+      content:owner.source,start:parent.start,end:parent.end,...(mode==='remove'?{itemStart:entry.start,itemEnd:entry.end}:{...(mode==='after'?{afterStart:entry.start,afterEnd:entry.end}:{}),value:arrayValue.value})})
+    if(arrayOwner!==owner)return
+    if(!session.unchanged(owner)){arrayError.value='草稿已继续编辑，未应用旧结果；当前输入与内容仍保留';arrayVisible.value=true;return}
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    const offer=()=>session.offerChange(owner,mode!=='remove'?`新增 TOML 数组项${result.valueType?' · '+result.valueType:''}`:'删除 TOML 数组项',result.content,point(result.start),()=>{
+      query.value='';selectedFieldStart.value=undefined
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+    if(arrayVisible.value){pendingArray=offer;arrayVisible.value=false}else offer()
+  }catch(cause){if(arrayOwner===owner&&session.owns(owner)){arrayError.value=errorText(cause);arrayVisible.value=true}}
+  finally{if(arrayOwner===owner&&session.owns(owner))arrayPending.value=false}
+}
+let arrayRequests=emptyArrayRecord<object>()
+const loadArrayItems=async(entry:Entry)=>{
+  const owner=session.capture();if(!owner)return
+  const request={};arrayRequests[entry.path]=request
+  arrayLoading.value=updateArrayRecord(arrayLoading.value,entry.path,true);arrayErrors.value=updateArrayRecord(arrayErrors.value,entry.path,'')
+  try{
+    const items=await invoke<{index:number;start:number;end:number;preview:string;editable:boolean}[]>('inspect_toml_array_items_source',{content:owner.source,start:entry.start,end:entry.end})
+    if(arrayRequests[entry.path]!==request||!session.unchanged(owner))return
+    arraySource.value=owner.source;arrayItems.value=updateArrayRecord(arrayItems.value,entry.path,items.map(item=>({...item,path:`${entry.path}[${item.index}]`,label:`[${item.index}]`,kind:'array-item',depth:entry.depth+1,arrayParent:{start:entry.start,end:entry.end}})))
+  }catch(cause){if(arrayRequests[entry.path]===request&&session.unchanged(owner))arrayErrors.value=updateArrayRecord(arrayErrors.value,entry.path,errorText(cause))}
+  finally{if(arrayRequests[entry.path]===request&&session.owns(owner))arrayLoading.value=updateArrayRecord(arrayLoading.value,entry.path,false)}
+}
+const toggleArray=async(entry:Entry)=>{
+  if(arrayLoading.value[entry.path]||loading.value||analysisPending.value||analyzedSource.value!==content.value)return
+  if(expandedArrays.value[entry.path]){expandedArrays.value=updateArrayRecord(expandedArrays.value,entry.path,false);return}
+  expandedArrays.value=updateArrayRecord(expandedArrays.value,entry.path,true);await loadArrayItems(entry)
+}
+const clearArrayItems=()=>{arrayRequests=emptyArrayRecord<object>();arrayItems.value=emptyArrayRecord<Entry[]>();arrayErrors.value=emptyArrayRecord<string>();arrayLoading.value=emptyArrayRecord<boolean>();arraySource.value=''}
+const resetArrayOutline=()=>{expandedArrays.value=emptyArrayRecord<boolean>();clearArrayItems()}
+const refreshExpandedArrays=(result:Analysis)=>{for(const entry of result.outline)if(entry.array&&expandedArrays.value[entry.path])void loadArrayItems(entry)}
+watch(content,clearArrayItems,{flush:'sync'})
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || arrayPending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
 const openValueEdit = (entry: Entry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); reveal(entry); return }
@@ -256,12 +347,12 @@ const previewValueEdit = async () => {
   finally { if (session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<Entry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === content.value, reveal: entry => reveal(entry),
-  extra: entry => [...(['table','root'].includes(entry.kind)||entry.field ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(entry.kind === 'value' ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
-  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
+  extra: entry => [...(entry.array ? [{key:'append-item',label:'追加数组项…',disabled:editDisabled.value},{key:'toggle-array',label:expandedArrays.value[entry.path]?'收起数组项':'展开数组项',disabled:analysisPending.value}] : []), ...(entry.kind==='array-item' ? [{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除数组项…',disabled:editDisabled.value}] : []),...(['table','root'].includes(entry.kind)||entry.field ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(entry.kind === 'value' ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='append-item')openArrayChange(entry,'append');if(key==='after-item')openArrayChange(entry,'after');if(key==='remove-item')openArrayChange(entry,'remove');if(key==='toggle-array')void toggleArray(entry);if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerTab = (snapshot?: Snapshot) => session.bind(snapshot)
 
-const analyze = async (source: string) => { const analysisOwner = session.capture(); const id = ++analysisId; analysisPending.value = true; try { const result = await invoke<Analysis>('analyze_toml_source', { content: source }); if (session.owns(analysisOwner) && id === analysisId && content.value === source) { analysis.value = result; analyzedSource.value = source }; return result } finally { if (id === analysisId) analysisPending.value = false } }
+const analyze = async (source: string) => { const analysisOwner = session.capture(); const id = ++analysisId; analysisPending.value = true; try { const result = await invoke<Analysis>('analyze_toml_source', { content: source }); if (session.owns(analysisOwner) && id === analysisId && content.value === source) { analysis.value = result; analyzedSource.value = source;refreshExpandedArrays(result) }; return result } finally { if (id === analysisId) analysisPending.value = false } }
 const schedule = () => {
   clearTimer()
   timer = setTimeout(() => {
@@ -287,6 +378,7 @@ const load = async (discardDraft = false) => {
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
+  resetArrayOutline();arrayVisible.value=false;arrayPending.value=false;arrayOwner=undefined;arrayEntry.value=null;pendingArray=undefined;resumeArray=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
   renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined
   loading.value = true; loadError.value = ''
@@ -355,4 +447,11 @@ footer > * { flex-shrink: 0; }
 .toml-field-dialog :deep(.n-card__content) { overflow:auto; }
 .toml-field-dialog code { display:block; overflow-wrap:anywhere; margin-bottom:12px; }
 .toml-field-dialog label { display:block; margin:12px 0 6px; }
+.outline-node { display:flex; min-width:0; }
+.outline-node > button:first-child { flex:1; min-width:0; }
+.outline-node > .array-toggle { flex:0 0 30px; width:30px; min-height:30px; justify-content:center; padding:3px; align-self:stretch; }
+.array-error { padding:6px; font-size:12px; color:var(--theme-danger,#d03050); overflow-wrap:anywhere; }
+.toml-array-dialog :deep(.n-card__content) { overflow:auto; }
+.toml-array-dialog code { display:block; overflow-wrap:anywhere; margin-bottom:12px; }
+.toml-array-dialog label { display:block; margin:12px 0 6px; }
 </style>

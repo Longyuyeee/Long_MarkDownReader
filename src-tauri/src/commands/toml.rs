@@ -90,6 +90,63 @@ pub fn remove_toml_field_source(
 }
 
 #[tauri::command]
+pub fn inspect_toml_array_items_source(
+    content: String,
+    start: usize,
+    end: usize,
+) -> Result<Vec<crate::formats::toml::TomlArrayItem>, TextDocumentError> {
+    crate::formats::toml::inspect_toml_array_items_source(&content, start, end).map_err(|message| {
+        TextDocumentError::recoverable(
+            "toml-array-inspection-rejected",
+            message,
+            "定位源码查看；当前草稿仍保留",
+        )
+    })
+}
+#[tauri::command]
+pub fn add_toml_array_item_source(
+    content: String,
+    start: usize,
+    end: usize,
+    after_start: Option<usize>,
+    after_end: Option<usize>,
+    value: String,
+) -> Result<crate::formats::toml::TomlKeyChange, TextDocumentError> {
+    crate::formats::toml::add_toml_array_item_source(
+        &content,
+        start,
+        end,
+        after_start,
+        after_end,
+        &value,
+    )
+    .map_err(|message| {
+        TextDocumentError::recoverable(
+            "toml-array-add-rejected",
+            message,
+            "调整输入后重试，或定位源码；当前输入与草稿仍保留",
+        )
+    })
+}
+#[tauri::command]
+pub fn remove_toml_array_item_source(
+    content: String,
+    start: usize,
+    end: usize,
+    item_start: usize,
+    item_end: usize,
+) -> Result<crate::formats::toml::TomlKeyChange, TextDocumentError> {
+    crate::formats::toml::remove_toml_array_item_source(&content, start, end, item_start, item_end)
+        .map_err(|message| {
+            TextDocumentError::recoverable(
+                "toml-array-remove-rejected",
+                message,
+                "定位源码后继续修改；当前草稿仍保留",
+            )
+        })
+}
+
+#[tauri::command]
 pub async fn write_toml_source_document(
     library_root: String,
     path: String,
