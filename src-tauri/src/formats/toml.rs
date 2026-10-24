@@ -1,6 +1,10 @@
 use serde::Serialize;
 use toml_edit::{Document, Item, Key, Table, Value};
 
+#[path = "toml_fields.rs"]
+mod fields;
+pub use fields::{add_toml_field_source, remove_toml_field_source};
+
 const MAX_TOML_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_TOML_NODES: usize = 100_000;
 const MAX_TOML_DEPTH: usize = 128;
@@ -50,6 +54,8 @@ pub struct TomlField {
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct TomlKeyChange {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub value_type: Option<String>,
     pub content: String,
     pub start: usize,
     pub end: usize,
@@ -349,6 +355,7 @@ pub fn rename_toml_key_source(
     let raw = &content[start..end];
     if name == field.name {
         return Ok(TomlKeyChange {
+            value_type: None,
             content: content.into(),
             start,
             end,
@@ -379,6 +386,7 @@ pub fn rename_toml_key_source(
         return Err("无法确认只改变当前字段，请定位源码修改；输入与草稿仍保留".into());
     }
     Ok(TomlKeyChange {
+        value_type: None,
         content: candidate,
         start,
         end: start + replacement.len(),

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.21",
-  "releaseCandidate": true,
+  "appVersion": "1.2.22",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-24",
-  "currentStatus": "v1.2.21-community-release-published",
+  "currentStatus": "v1.2.22-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.20",
+    "previousPublicVersion": "1.2.21",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.20-to-1.2.21-pending",
-    "scope": "yaml-field-management"
+    "managedUpdaterUpgradePath": "1.2.21-to-1.2.22-pending",
+    "scope": "toml-field-management"
   },
   "targetRelease": {
-    "tag": "v1.2.21",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.21",
+    "tag": "v1.2.22",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.22",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "674bf15838afb786bcc06524c0c42a439a0d5230",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40063705670,
-    "hostedInstalledLifecycleRunId": 40067685425,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.2.21_x64_zh-CN.msi",
-        "sizeBytes": 78045184,
-        "sha256": "b8733946382f916408938de5d3357684c84fe7402e18badae3ffba8db25246df",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.21_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.2.21_x64-setup.exe",
-        "sizeBytes": 68684140,
-        "sha256": "99701caf6627e265fb244a0e20b93ab5cdc668b89384cb0b2e8e9832be05c863",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.21_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.2.21",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.21",
-    "databaseId": 422555151,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "674bf15838afb786bcc06524c0c42a439a0d5230",
-    "publishedAt": "2026-10-24T06:17:40Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -143,7 +112,8 @@
     "v1.2.17-to-v1.2.18-managed-update-observation-pending",
     "v1.2.18-to-v1.2.19-managed-update-observation-pending",
     "v1.2.19-to-v1.2.20-managed-update-observation-pending",
-    "v1.2.20-to-v1.2.21-managed-update-observation-pending"
+    "v1.2.20-to-v1.2.21-managed-update-observation-pending",
+    "v1.2.21-to-v1.2.22-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.22-toml-field-management-planned"
+  "nextAction": "validate-and-build-v1.2.22-installers"
 }

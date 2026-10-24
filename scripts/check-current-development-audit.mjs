@@ -427,6 +427,12 @@ if (pkg.version === '1.2.21') {
   required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.21' : '1.2.20') && development.publicTag === `v${development.publicVersion}`]
   required[9] = [published ? '当前阶段：**v1.2.21 已发布**' : '当前阶段：**v1.2.21 YAML 字段新增与删除候选**', development.currentStage === (published ? 'M8-147-v1.2.21-published' : 'M8-146-v1.2.21-yaml-field-management-candidate') && development.activeSlice?.id === 'v1.2.21-yaml-field-management' && fs.existsSync(development.activeSlice.document)]
 }
+if (pkg.version === '1.2.22') {
+  const published = policy.gates?.githubReleasePublished === true
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.2.23' : '1.2.22')]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.22' : '1.2.21') && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? '当前阶段：**v1.2.22 已发布**' : '当前阶段：**v1.2.22 TOML 字段新增与删除候选**', development.currentStage === (published ? 'M8-149-v1.2.22-published' : 'M8-148-v1.2.22-toml-field-management-candidate') && development.activeSlice?.id === 'v1.2.22-toml-field-management' && fs.existsSync(development.activeSlice.document)]
+}
 
 for (const [token, condition] of required) {
   if (!condition) throw new Error(`[current-development-audit] source-of-truth no longer supports: ${token}`)
