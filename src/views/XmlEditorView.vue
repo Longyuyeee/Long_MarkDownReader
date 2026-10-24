@@ -119,7 +119,7 @@
       @after-enter="elementNameInput?.select()" @after-leave="finishElementDialog">
       <code>{{ elementEntry?.path }}</code>
       <label for="xml-element-name">{{ elementMode === 'add' ? '子元素名称' : '元素名称' }}</label>
-      <n-input ref="elementNameInput" v-model:value="elementName" :disabled="elementEditPending" :input-props="{id:'xml-element-name','aria-label':'XML 元素名称'}" @keydown.enter.prevent="previewElementEdit" />
+      <n-input ref="elementNameInput" v-model:value="elementName" :disabled="elementEditPending" :input-props="{id:'xml-element-name','aria-label':'XML 元素名称'}" @keydown.enter="onElementNameEnter" />
       <WorkspaceHelp v-if="elementMode === 'add'" label="子元素命名空间说明" text="新元素不带前缀，会继承此位置的默认命名空间（如有）。需要指定前缀时，请在源码中添加。" />
       <WorkspaceHelp v-else-if="elementEntry?.name.includes(':')" label="元素前缀说明" :text="`保留前缀 ${elementEntry.name.split(':')[0]}，这里只修改本地名称，不改变命名空间绑定。`" />
       <template v-if="elementMode === 'add'">
@@ -306,6 +306,11 @@ const openElementEdit = (entry: OutlineEntry, mode: 'add'|'rename') => {
   elementEntry.value = entry; elementMode.value = mode
   elementName.value = mode === 'rename' ? entry.name.split(':').pop()! : ''
   elementText.value = ''; elementError.value = ''; elementEditVisible.value = true
+}
+const onElementNameEnter = (event: KeyboardEvent) => {
+  if (event.isComposing || event.keyCode === 229) return
+  event.preventDefault()
+  void previewElementEdit()
 }
 const previewElementEdit = async () => {
   const owner = elementOwner, entry = elementEntry.value, mode = elementMode.value
