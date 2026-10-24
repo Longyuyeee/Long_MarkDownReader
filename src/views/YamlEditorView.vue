@@ -191,6 +191,16 @@
       <p v-if="fieldError" role="alert" class="value-edit-error">{{ fieldError }} <n-button text :disabled="fieldPending" @click="revealFieldSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="fieldPending" @click="fieldVisible=false">取消</n-button><n-button type="primary" :loading="fieldPending" @click="previewFieldChange">预览修改</n-button></div></template>
     </n-modal>
+    <n-modal v-model:show="sequenceVisible" preset="card" class="yaml-sequence-dialog" :title="sequenceMode==='remove' ? '删除 YAML 列表项' : '新增 YAML 列表项'"
+      :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!sequencePending" :closable="!sequencePending" :close-on-esc="!sequencePending"
+      @after-enter="sequenceInput?.select()" @after-leave="finishSequenceDialog">
+      <code>{{ sequenceEntry?.path || '$' }}</code>
+      <template v-if="sequenceMode!=='remove'">
+        <label for="yaml-sequence-value">值</label><n-input ref="sequenceInput" v-model:value="sequenceValue" :disabled="sequencePending" placeholder="例如：内容、42、true、null" :input-props="{id:'yaml-sequence-value','aria-label':'新增 YAML 列表项值'}" @keydown.enter="onSequenceEnter" />
+      </template>
+      <p v-if="sequenceError" role="alert" class="value-edit-error">{{ sequenceError }} <n-button text :disabled="sequencePending" @click="revealSequenceSource">定位源码</n-button></p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="sequencePending" @click="sequenceVisible=false">取消</n-button><n-button type="primary" :loading="sequencePending" @click="previewSequenceChange">预览修改</n-button></div></template>
+    </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
@@ -461,7 +471,43 @@ const previewFieldChange=async()=>{
   }catch(cause){if(fieldOwner===owner&&session.owns(owner)){fieldError.value=errorMessage(cause);fieldVisible.value=true}}
   finally{if(fieldOwner===owner&&session.owns(owner))fieldPending.value=false}
 }
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const sequenceVisible=ref(false), sequencePending=ref(false), sequenceMode=ref<'append'|'after'|'remove'>('append'), sequenceValue=ref("''"), sequenceError=ref('')
+const sequenceInput=ref<InputInst|null>(null), sequenceEntry=ref<YamlOutlineEntry|null>(null)
+let sequenceOwner:ReturnType<typeof session.capture>, pendingSequence:(()=>void)|undefined, resumeSequence=false
+const finishSequenceDialog=()=>{const offer=pendingSequence;pendingSequence=undefined;offer?.()}
+const revealSequenceSource=()=>{
+  const owner=sequenceOwner,entry=sequenceEntry.value
+  if(!owner||!entry||!session.unchanged(owner))return
+  resumeSequence=true;pendingSequence=()=>{if(session.unchanged(owner))revealRange(entry)};sequenceVisible.value=false
+}
+const openSequenceChange=(entry:YamlOutlineEntry,mode:'append'|'after'|'remove')=>{
+  if(editDisabled.value)return
+  if(resumeSequence&&sequenceMode.value===mode&&sequenceOwner&&session.unchanged(sequenceOwner)&&sequenceEntry.value?.path===entry.path){resumeSequence=false;sequenceVisible.value=true;return}
+  resumeSequence=false;sequenceOwner=session.capture();if(!sequenceOwner)return
+  sequenceEntry.value=entry;sequenceMode.value=mode;sequenceValue.value="''";sequenceError.value=''
+  if(mode!=='remove')sequenceVisible.value=true;else void previewSequenceChange()
+}
+const onSequenceEnter=(event:KeyboardEvent)=>{if(event.isComposing||event.keyCode===229)return;event.preventDefault();void previewSequenceChange()}
+const previewSequenceChange=async()=>{
+  const owner=sequenceOwner,entry=sequenceEntry.value,mode=sequenceMode.value
+  if(!owner||!entry||sequencePending.value)return
+  if(!session.unchanged(owner)){sequenceError.value='文件或草稿已变化，请重新选择；当前输入与内容仍保留';sequenceVisible.value=true;return}
+  sequencePending.value=true;sequenceError.value=''
+  try{
+    const result=await invoke<{content:string;start:number;end:number;valueType?:string}>(mode==='remove'?'remove_yaml_sequence_item_source':'add_yaml_sequence_item_source',{
+      content:owner.source,start:entry.start,end:entry.end,...(mode==='remove'?{}:{after:mode==='after',value:sequenceValue.value})})
+    if(sequenceOwner!==owner)return
+    if(!session.unchanged(owner)){sequenceError.value='草稿已继续编辑，未应用旧结果；当前输入与内容仍保留';sequenceVisible.value=true;return}
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    const offer=()=>session.offerChange(owner,mode!=='remove'?`新增 YAML 列表项${result.valueType?' · '+result.valueType:''}`:'删除 YAML 列表项',result.content,point(result.start),()=>{
+      outlineQuery.value='';selectedFieldStart.value=undefined
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+    if(sequenceVisible.value){pendingSequence=offer;sequenceVisible.value=false}else offer()
+  }catch(cause){if(sequenceOwner===owner&&session.owns(owner)){sequenceError.value=errorMessage(cause);sequenceVisible.value=true}}
+  finally{if(sequenceOwner===owner&&session.owns(owner))sequencePending.value=false}
+}
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || sequencePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
 const openValueEdit = (entry: YamlOutlineEntry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); revealRange(entry); return }
@@ -486,8 +532,8 @@ const previewValueEdit = async () => {
   finally { if (session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<YamlOutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry),
-  extra: entry => [...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
-  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
+  extra: entry => [...(entry.kind==='sequence' ? [{key:'append-item',label:'追加列表项…',disabled:editDisabled.value}] : []), ...(!entry.field&&/\[\d+\]$/.test(entry.path) ? [{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除列表项…',disabled:editDisabled.value}] : []),...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='append-item')openSequenceChange(entry,'append');if(key==='after-item')openSequenceChange(entry,'after');if(key==='remove-item')openSequenceChange(entry,'remove');if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerCurrentTab = (snapshot?: TextDocumentSnapshot) => session.bind(snapshot)
 
@@ -598,6 +644,7 @@ const load = async (discardDraft = false) => {
   const owner = session.capture()
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
+  sequenceVisible.value=false;sequencePending.value=false;sequenceOwner=undefined;sequenceEntry.value=null;pendingSequence=undefined;resumeSequence=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
   renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
@@ -999,4 +1046,7 @@ onBeforeUnmount(() => {
 .yaml-field-dialog :deep(.n-card__content) { overflow:auto; }
 .yaml-field-dialog code { display:block; overflow-wrap:anywhere; margin-bottom:12px; }
 .yaml-field-dialog label { display:block; margin:12px 0 6px; }
+.yaml-sequence-dialog :deep(.n-card__content) { overflow:auto; }
+.yaml-sequence-dialog code { display:block; overflow-wrap:anywhere; margin-bottom:12px; }
+.yaml-sequence-dialog label { display:block; margin:12px 0 6px; }
 </style>

@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict'
+import crypto from 'node:crypto'
+export const yamlSequencesChecks=['append-preview-type-independent-undo-redo','insert-after-and-delete-flow-items','empty-sequence-first-last-and-string-type','reference-fallback-retains-input-and-source-location','switch-form-preview-menu-preserves-draft','real-locked-save-retry-and-reopen','external-conflict-copy-keeps-source-and-draft','all-owned-fixtures-clean-and-no-runtime-error']
+export const yamlSequencesSource="# 配置 中文😀\nlabel: 原稿\nroot:\n  - 0xFF # 保留\n  - '内容'\nflow: [1, 2, 3,]\nempty: []\nblocked: &items [1, 2]\nother: 8_080\n"
+export const yamlSequencesDraft=yamlSequencesSource.replace('原稿','我的草稿')
+export const yamlSequencesAdded=yamlSequencesDraft.replace('flow:','  - true\nflow:')
+export const yamlSequencesEdited=yamlSequencesAdded.replace('1, 2, 3,','1,  3,')
+export const yamlSequencesConflict=yamlSequencesEdited.replace('flow:','  - false\nflow:')
+export const yamlSequencesOutputFiles=['installed-v1223-yaml-observations.json','installed-v1223-yaml-saved.yaml','installed-v1223-yaml-copy.yaml','installed-v1223-yaml-external.yaml']
+export function validateInstalledYamlSequences(r,m){
+ assert.ok(['1.2.23','1.2.22', '1.2.23'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-yaml-sequence-items-trusted-input-and-file-bytes')
+ for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
+ assert.equal(r.lockedBefore,r.lockedAfter);assert.equal(r.externalBefore,r.externalAfter)
+ for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(r[k],false)
+ assert.deepEqual(r.checks.map(c=>[c.id,c.status]),yamlSequencesChecks.map(id=>[id,'passed']));assert.deepEqual(r.runtimeErrors,[])
+ assert.ok(r.inputTrace.length>10&&r.inputTrace.every(e=>e.trusted));assert.ok(r.inputTrace.some(e=>e.type==='input'));assert.equal(r.disposableDraftsExplicitlyDiscarded,true)
+}
+export function assertYamlSequencesOutputBytes(r,read){
+ const names=yamlSequencesOutputFiles
+ assert.deepEqual(r.outputs.map(o=>o.fileName),names)
+ for(const o of r.outputs){const b=read(o.fileName);assert.equal(b.length,o.sizeBytes);assert.equal(crypto.createHash('sha256').update(b).digest('hex'),o.sha256)}
+ const obs=JSON.parse(read(names[0]).toString('utf8'));for(const id of yamlSequencesChecks)assert.equal(obs[id],true,id)
+ assert.equal(read(names[1]).toString('utf8'),'\uFEFF'+yamlSequencesEdited.replaceAll('\n','\r\n'))
+ assert.equal(read(names[2]).toString('utf8'),yamlSequencesConflict)
+ assert.equal(read(names[3]).toString('utf8'),'\uFEFF'+yamlSequencesEdited.replace('我的草稿','外部保留').replaceAll('\n','\r\n'))
+}

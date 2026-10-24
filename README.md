@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.2.22 已发布：TOML 字段新增与删除已完成；[1.2.21—1.2.22](docs/Foundation_Deepening_Roadmap_1_2_21_to_1_2_22_2026-10-24.md) 已交付 **2/2 版**。下一轮 [1.2.23—1.2.24](docs/Foundation_Deepening_Roadmap_1_2_23_to_1_2_24_2026-10-24.md) 深化 YAML 序列与 TOML 数组的单项增删，当前 **0/2 版**，尚未实施。
+v1.2.22 已发布；v1.2.23 正在完成 YAML 列表项新增与删除，尚未发布。见[开发记录](docs/V1_2_23_Unsigned_Community_Release_Audit_2026-10-24.md)。
 
 ## 不只是打开文件，更是接续你的工作
 

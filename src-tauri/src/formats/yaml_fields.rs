@@ -39,7 +39,7 @@ fn ordinary_maps(content: &str, offsets: &[usize]) -> HashSet<(usize, usize)> {
     maps
 }
 
-fn bounds(node: &MarkedYamlOwned, content: &str, offsets: &[usize]) -> (usize, usize) {
+pub(super) fn bounds(node: &MarkedYamlOwned, content: &str, offsets: &[usize]) -> (usize, usize) {
     let start = byte_offset(offsets, node.span.start.index());
     let end = byte_offset(offsets, node.span.end.index());
     (
@@ -90,7 +90,7 @@ fn find_target<'a>(
     }
 }
 
-fn prepare(
+pub(super) fn prepare(
     content: &str,
 ) -> Result<(Vec<MarkedYamlOwned>, Vec<usize>, HashSet<(usize, usize)>), String> {
     let analysis = analyze_yaml_source(content);
@@ -144,7 +144,7 @@ fn apply_expected(
     }
 }
 
-fn checked(
+pub(super) fn checked(
     candidate: String,
     expected: Vec<MarkedYamlOwned>,
     start: usize,
@@ -333,7 +333,7 @@ pub fn add_yaml_field_source(
 
 // Return the sole structural comma, ignoring comments. Other non-whitespace
 // tokens cannot be removed as if they were a separator.
-fn separator(raw: &str) -> Option<usize> {
+pub(super) fn separator(raw: &str) -> Option<usize> {
     let mut comment = false;
     let mut comma = None;
     for (i, c) in raw.char_indices() {
