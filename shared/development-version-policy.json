@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.2.22",
+  "developmentTargetVersion": "1.2.23",
   "runtimeBaseVersion": "1.2.22",
-  "publicVersion": "1.2.21",
-  "publicTag": "v1.2.21",
-  "publicTagCommit": "674bf15838afb786bcc06524c0c42a439a0d5230",
+  "publicVersion": "1.2.22",
+  "publicTag": "v1.2.22",
+  "publicTagCommit": "c017664419bb1e7b57cbbff609ce629ee76b8b51",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-148-v1.2.22-toml-field-management-candidate",
-  "binaryVersionTransition": "v1.2.22-release-ready",
-  "displayLabel": "v1.2.22 TOML 字段新增与删除候选 · 当前公开 v1.2.21",
+  "currentStage": "M8-149-v1.2.22-published",
+  "binaryVersionTransition": "v1.2.22-public-release-published",
+  "displayLabel": "v1.2.22 已发布 · 下一目标 v1.2.23",
   "activeSlice": {
     "id": "v1.2.22-toml-field-management",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-and-remote-assets-verified",
     "document": "docs/V1_2_22_Unsigned_Community_Release_Audit_2026-10-24.md"
   }
 }

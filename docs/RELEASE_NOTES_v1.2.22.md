@@ -6,4 +6,6 @@
 
 应用仅改草稿，可撤销／重做，显式保存才写盘。错误保留名称和值，继续保护后续输入、保存失败重试及外部冲突副本；保留全部功能、主题和正常动效，不增加常驻表单。
 
-未签名社区版；完整发布检查与 569 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
+未签名社区版；完整发布检查与 569 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件重新下载核对通过。应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.22) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_22_Unsigned_Community_Release_Audit_2026-10-24.md)。
