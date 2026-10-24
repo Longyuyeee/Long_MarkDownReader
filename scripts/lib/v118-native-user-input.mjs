@@ -46,11 +46,16 @@ export function nativeUserInput({send,evaluate},{timeoutMs=20000,pollMs=80,stabl
     if(text)await send('Input.insertText',{text})
   }
   const tabTo=async(selector)=>{
-    for(let n=0;n<100;n++){
+    await waitFor(`Array.from(document.querySelectorAll(${JSON.stringify(selector)})).some(e=>!e.disabled&&e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden'&&(e.tabIndex>=0||e.isContentEditable))`,'keyboard target '+selector)
+    // Full installed flows retain many open tabs. Count their actual tab stops
+    // instead of treating the hundredth key as proof that a control is absent.
+    const count=await evaluate(`Array.from(document.querySelectorAll('a[href],button,input,textarea,select,[tabindex],[contenteditable="true"]')).filter(e=>!e.disabled&&e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden'&&(e.tabIndex>=0||e.isContentEditable)).length`)
+    const limit=Math.min(4000,Math.max(100,count*2+20))
+    for(let n=0;n<limit;n++){
       if(await evaluate(`document.activeElement?.matches(${JSON.stringify(selector)})`))return
       await key('Tab','Tab',9)
     }
-    throw Error('Native keyboard cannot reach '+selector)
+    throw Error('Native keyboard cannot reach '+selector+' after '+limit+' keys for '+count+' focusable controls')
   }
   return {waitFor,key,clickTarget,hoverTarget,click,clickText,fill,tabTo}
 }

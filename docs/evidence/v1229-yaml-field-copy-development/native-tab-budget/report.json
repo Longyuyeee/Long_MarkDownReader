@@ -1,0 +1,16 @@
+{
+  "nativeBridgeMocked": false,
+  "installedProductProof": false,
+  "fixtureOnly": true,
+  "precedingTabStops": 240,
+  "checks": [
+    {
+      "id": "trusted-keyboard-reaches-real-control-after-240-preceding-tab-stops",
+      "status": "passed"
+    },
+    {
+      "id": "missing-and-explicitly-unreachable-controls-remain-failures",
+      "status": "passed"
+    }
+  ]
+}
