@@ -1,0 +1,9 @@
+{
+  "actualExit": 0,
+  "passed": 452,
+  "ignored": 2,
+  "newOrderingTests": 8,
+  "compiledPackageMetadata": "1.2.28",
+  "scope": "complete formats module",
+  "command": "cargo test --manifest-path src-tauri/Cargo.toml --lib formats::"
+}

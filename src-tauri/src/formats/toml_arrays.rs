@@ -327,6 +327,166 @@ pub fn copy_toml_array_item_source(
     )
 }
 
+// With inline comments, each item must occupy its own line. Keep the comma
+// and indentation in their original slots, while moving the raw value and
+// its trailing comment together (the final slot may have no comma).
+struct MoveLine<'a> {
+    start: usize,
+    body_end: usize,
+    finish: usize,
+    separator: &'a str,
+    comment: &'a str,
+}
+
+fn move_line<'a>(content: &'a str, value: &Range<usize>) -> Result<MoveLine<'a>, String> {
+    let start = content[..value.start].rfind('\n').map_or(0, |i| i + 1);
+    if !content[start..value.start]
+        .chars()
+        .all(|c| matches!(c, ' ' | '\t'))
+    {
+        return Err(FALLBACK.into());
+    }
+    let newline = content[value.end..].find('\n').map(|i| value.end + i);
+    let finish = newline.map_or(content.len(), |i| i + 1);
+    let mut body_end = newline.unwrap_or(content.len());
+    if content[..body_end].ends_with('\r') {
+        body_end -= 1;
+    }
+    let tail = &content[value.end..body_end];
+    let comma = gap(tail)?;
+    let boundary = comma.map_or(0, |i| i + 1);
+    Ok(MoveLine {
+        start,
+        body_end,
+        finish,
+        separator: &tail[..boundary],
+        comment: &tail[boundary..],
+    })
+}
+
+fn independent_move_gap(raw: &str) -> bool {
+    if !raw.contains('#') {
+        return raw.chars().all(char::is_whitespace);
+    }
+    let lines = raw.lines().collect::<Vec<_>>();
+    lines.first().is_some_and(|s| s.trim().is_empty())
+        && lines.last().is_some_and(|s| s.trim().is_empty())
+        && lines
+            .iter()
+            .all(|s| s.trim().is_empty() || s.trim_start().starts_with('#'))
+}
+
+pub fn move_toml_array_item_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    item_start: usize,
+    item_end: usize,
+    direction: &str,
+) -> Result<TomlKeyChange, String> {
+    if !matches!(direction, "up" | "down") {
+        return Err("请选择上移或下移；草稿仍保留".into());
+    }
+    let range = start..end;
+    let doc = prepare(content, &range)?;
+    let array = find_array(doc.as_item(), &range).ok_or(FALLBACK)?;
+    if array.len() > 2000 {
+        return Err("数组超过 2000 项，请定位源码修改；草稿仍保留".into());
+    }
+    if array.iter().any(|v| !scalar(content, v)) {
+        return Err("嵌套数组、内联表和多行值请定位源码；草稿仍保留".into());
+    }
+    let spans = array
+        .iter()
+        .map(|v| v.span())
+        .collect::<Option<Vec<_>>>()
+        .ok_or(FALLBACK)?;
+    let index = spans
+        .iter()
+        .position(|r| *r == (item_start..item_end))
+        .ok_or("条目位置已变化，请重新选择；草稿仍保留")?;
+    let neighbor = if direction == "up" {
+        index.checked_sub(1)
+    } else {
+        index.checked_add(1).filter(|i| *i < spans.len())
+    }
+    .ok_or("已经是第一项或最后一项；草稿仍保留")?;
+    let left = index.min(neighbor);
+    let a = &spans[left];
+    let b = &spans[left + 1];
+    let mut cursor = start + 1;
+    let mut comments = false;
+    for r in &spans {
+        comments |= content[cursor..r.start].contains('#');
+        cursor = r.end;
+    }
+    comments |= content[cursor..end - 1].contains('#');
+    let (unit_a, unit_b, replacement_a, replacement_b) = if comments {
+        let lines = spans
+            .iter()
+            .map(|r| move_line(content, r))
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut cursor = start + 1;
+        for line in &lines {
+            if cursor > line.start || !independent_move_gap(&content[cursor..line.start]) {
+                return Err(FALLBACK.into());
+            }
+            cursor = line.finish;
+        }
+        if cursor > end - 1 || !independent_move_gap(&content[cursor..end - 1]) {
+            return Err(FALLBACK.into());
+        }
+        let la = &lines[left];
+        let lb = &lines[left + 1];
+        (
+            a.start..la.body_end,
+            b.start..lb.body_end,
+            format!("{}{}{}", &content[b.clone()], la.separator, lb.comment),
+            format!("{}{}{}", &content[a.clone()], lb.separator, la.comment),
+        )
+    } else {
+        (
+            a.clone(),
+            b.clone(),
+            content[b.clone()].into(),
+            content[a.clone()].into(),
+        )
+    };
+    let middle = &content[unit_a.end..unit_b.start];
+    let point = if direction == "up" {
+        unit_a.start
+    } else {
+        unit_a.start + replacement_a.len() + middle.len()
+    };
+    let candidate = format!(
+        "{}{}{}{}{}",
+        &content[..unit_a.start],
+        replacement_a,
+        middle,
+        replacement_b,
+        &content[unit_b.end..]
+    );
+    if candidate == content {
+        return Err("相邻两项内容相同，无需移动；草稿仍保留".into());
+    }
+    let mut expected = literals(content, array).ok_or(FALLBACK)?;
+    expected.swap(left, left + 1);
+    let changed_doc = prepare(&candidate, &range)?;
+    let changed = find_array(changed_doc.as_item(), &range).ok_or(FALLBACK)?;
+    if literals(&candidate, changed).as_ref() != Some(&expected)
+        || masked_tree(content, doc.as_item(), &range).ok_or(FALLBACK)?
+            != masked_tree(&candidate, changed_doc.as_item(), &range).ok_or(FALLBACK)?
+    {
+        return Err("无法确认只移动当前相邻项，请定位源码；草稿仍保留".into());
+    }
+    Ok(TomlKeyChange {
+        content: candidate,
+        start: point,
+        end: point + item_end - item_start,
+        value_type: None,
+    })
+}
+
 pub fn replace_toml_array_item_source(
     content: &str,
     start: usize,
@@ -397,6 +557,10 @@ pub fn replace_toml_array_item_source(
         value_type: Some(kind.into()),
     })
 }
+
+#[cfg(test)]
+#[path = "toml_array_order_tests.rs"]
+mod order_tests;
 
 #[cfg(test)]
 mod tests {

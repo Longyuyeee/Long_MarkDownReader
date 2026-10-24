@@ -1,0 +1,11 @@
+{
+  "decoded-prefill-exact-current-draft-and-isolated-history": true,
+  "attribute-picker-prefixed-name-and-siblings-stay-distinct": true,
+  "empty-and-multiline-values-escape-without-extra-steps": true,
+  "invalid-input-retained-and-corrected-without-disk-write": true,
+  "namespace-source-fallback-keeps-workspace-usable": true,
+  "source-switch-clears-dialog-preview-and-menu": true,
+  "real-locked-save-retry-reopen-preserves-bom-crlf-originals": true,
+  "external-conflict-keeps-edited-draft-and-original": true,
+  "yaml-numeric-outline-keeps-exact-source-digits": true
+}
