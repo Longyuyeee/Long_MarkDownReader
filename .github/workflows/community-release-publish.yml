@@ -336,7 +336,9 @@ jobs:
           for(const key of ['executableSha256','harnessSourceCommit'])assert.equal(report[key],prior[key]);
           assertXmlCreateOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));
           '@ | node --input-type=module
-            if ($env:RELEASE_VERSION -in @('1.2.17','1.2.18')) {
+            if ($LASTEXITCODE -ne 0) { throw 'Installed XML creation and rename tasks or original bytes failed' }
+          }
+          if ($env:RELEASE_VERSION -in @('1.2.17','1.2.18')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';

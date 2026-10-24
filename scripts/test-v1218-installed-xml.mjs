@@ -3,8 +3,21 @@ import fs from 'node:fs'
 import {test} from 'node:test'
 import vm from 'node:vm'
 import ts from 'typescript'
+import {spawnSync} from 'node:child_process'
+import {parse as parseYaml} from 'yaml'
 import {xmlCreateChecks,validateInstalledXmlCreate} from './lib/installed-v1-2-18-evidence.mjs'
 import {runInstalledV1218XmlCreateWorkflow} from './lib/installed-v1-2-18-workflow.mjs'
+test('publisher PowerShell blocks parse and reject the missing XML verification closure',{skip:process.platform!=='win32'},()=>{
+ const workflow=parseYaml(fs.readFileSync('.github/workflows/community-release-publish.yml','utf8'))
+ const scripts=Object.values(workflow.jobs).flatMap(job=>job.steps.filter(step=>step.shell==='pwsh'&&typeof step.run==='string').map(step=>step.run))
+ assert.ok(scripts.length>=2)
+ const parser=`[Console]::InputEncoding=[Text.UTF8Encoding]::new($false);$tokens=$null;$errors=$null;$ast=[System.Management.Automation.Language.Parser]::ParseInput([Console]::In.ReadToEnd(),[ref]$tokens,[ref]$errors);if($errors.Count){[Console]::WriteLine(($errors|ForEach-Object ErrorId|ConvertTo-Json -Compress));exit 1}`
+ const check=script=>spawnSync('pwsh',['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(parser,'utf16le').toString('base64')],{input:script,encoding:'utf8',windowsHide:true})
+ for(const script of scripts){const result=check(script);assert.equal(result.status,0,result.stdout+result.stderr)}
+ const verification=scripts.find(s=>s.includes('assertXmlCreateOutputBytes'))
+ const broken=verification.replace(/\s*if \(\$LASTEXITCODE -ne 0\) \{ throw 'Installed XML creation and rename tasks or original bytes failed' \}\r?\n\s*\}/,'')
+ assert.notEqual(broken,verification);const result=check(broken);assert.equal(result.status,1);assert.match(result.stdout,/MissingEndCurlyBrace/)
+})
 test('installed XML creation driver uses real input with parseable observation expressions',()=>{
  assert.equal(typeof runInstalledV1218XmlCreateWorkflow,'function')
  const source=fs.readFileSync('scripts/lib/installed-v1-2-18-workflow.mjs','utf8');assert.ok(source.includes('nativeUserInput'));assert.ok(source.includes('FileShare]::Read'));assert.ok(!/dispatchEvent|__TAURI|\.force\(/.test(source))
