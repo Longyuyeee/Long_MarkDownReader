@@ -1,0 +1,53 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "syntheticCompositionProbe": true,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "exact-prefill-type-diff-selection-and-independent-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "consecutive-type-changes-retain-expansion-raw-siblings-and-disk",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-and-complex-local-fallback-retains-input-and-source-location",
+      "status": "passed"
+    },
+    {
+      "id": "late-result-does-not-overwrite-subsequent-input",
+      "status": "passed"
+    },
+    {
+      "id": "stale-diff-retains-new-draft",
+      "status": "passed"
+    },
+    {
+      "id": "old-file-result-cannot-pollute-new-dialog",
+      "status": "passed"
+    },
+    {
+      "id": "source-switch-clears-form-diff-menu-and-retains-draft",
+      "status": "passed"
+    },
+    {
+      "id": "save-failure-retry-preserves-draft-and-baseline",
+      "status": "passed"
+    },
+    {
+      "id": "composition-229-and-normal-enter",
+      "status": "passed"
+    },
+    {
+      "id": "reserved-field-names-support-independent-value-edit-roundtrips",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-narrow-full-page-form-diff-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}
