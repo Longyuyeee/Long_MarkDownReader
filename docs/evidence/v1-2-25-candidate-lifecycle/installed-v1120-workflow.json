@@ -1,0 +1,951 @@
+{
+  "appVersion": "1.2.25",
+  "sourceCommit": "d39f2f60031143dfe07ece31b061d22fe6ff62e0",
+  "installerSha256": "08a2d1bef66eeeb786aca57baf3ca70bbf8d62cc3d7284e7f71f73f399a42cdf",
+  "harnessSourceCommit": "281883006e9df7b99de34e1f9653f1f6003bba60",
+  "executableSha256": "2545ee786841b50a0faefd055881e8e5ef34af6af439e9996f0a8d30ba950e62",
+  "status": "passed",
+  "evidenceLevel": "installed-structured-editors-and-original-output-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "json-source-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "json-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-source-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "xml-source-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "xml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-source-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "toml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "json-format-preview-cancel-apply-undo",
+      "status": "passed"
+    },
+    {
+      "id": "json-pointer-context-source-navigation",
+      "status": "passed"
+    },
+    {
+      "id": "reload-cancel-and-native-failure-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "independent-structured-output-inspection",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-input-unselected-and-shortcut-preserved",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1120-json-saved.jsonc",
+      "sizeBytes": 94,
+      "sha256": "70016a0ed978d4bdacdaccd52442c628364bf08453802af87e45df606423dba0"
+    },
+    {
+      "fileName": "installed-v1120-json-copy.jsonc",
+      "sizeBytes": 95,
+      "sha256": "b5d17159412be378e34bb74b1504de3646d06539388512e0756e15e34d0b8b07"
+    },
+    {
+      "fileName": "installed-v1120-yaml-saved.yaml",
+      "sizeBytes": 80,
+      "sha256": "8755518287c7d05c83eb9afa8b784752c689eea956cc9ea0c8805b4a51f28d81"
+    },
+    {
+      "fileName": "installed-v1120-yaml-copy.yaml",
+      "sizeBytes": 79,
+      "sha256": "2697a9e00323b97b2ec2ac596d29cc805b150a40c29786e16dab01e4d2305917"
+    },
+    {
+      "fileName": "installed-v1120-xml-saved.xml",
+      "sizeBytes": 88,
+      "sha256": "1bad2f605f0636c9870f7203c3f2c0063243df47427cff4100e9d70f853eba7d"
+    },
+    {
+      "fileName": "installed-v1120-xml-copy.xml",
+      "sizeBytes": 88,
+      "sha256": "aa26e08b26a91ea3fa43fcceff5f9e271461ebc98de93212c94a6127a1ad2568"
+    },
+    {
+      "fileName": "installed-v1120-toml-saved.toml",
+      "sizeBytes": 67,
+      "sha256": "eeb324d85d09b572f93c9383a01212662a9f9331733a30ff70e5da981199ddb5"
+    },
+    {
+      "fileName": "installed-v1120-toml-copy.toml",
+      "sizeBytes": 67,
+      "sha256": "db9172a546ab40823ea103f71bc2178292e4f7f307afcba13b0518ad3f171856"
+    },
+    {
+      "fileName": "installed-v1120-unselected.md",
+      "sizeBytes": 28,
+      "sha256": "da1e814cc968e54f338acce5be69503e10420454fb8b4223e10df5eb1f85af56"
+    }
+  ],
+  "saveExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "reopenExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "conflictOriginalExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "conflictDraftExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "copyExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "unselectedBefore": "da1e814cc968e54f338acce5be69503e10420454fb8b4223e10df5eb1f85af56",
+  "reloadCancelExact": true,
+  "reloadFailureExact": true,
+  "formatCancelExact": true,
+  "formatApplyExact": true,
+  "formatUndoExact": true,
+  "navigationSourceExact": true,
+  "pointerNavigationExact": true,
+  "contextNavigationExact": true,
+  "formatUndoDiskBefore": "7768e4aef92cbe6f722668b6e09a0596b5e75a587e267254f27268003ba74986",
+  "formatUndoDiskAfter": "7768e4aef92cbe6f722668b6e09a0596b5e75a587e267254f27268003ba74986",
+  "formatUndoCleanExact": true,
+  "cleanReloadWithoutConfirmation": true,
+  "inspection": {
+    "status": "passed",
+    "reader": "stdlib-json-tomllib-defusedxml-and-exact-yaml-bytes",
+    "nativeBridgeMocked": false,
+    "outputs": [
+      {
+        "fileName": "installed-v1120-json-copy.jsonc",
+        "sizeBytes": 95,
+        "sha256": "b5d17159412be378e34bb74b1504de3646d06539388512e0756e15e34d0b8b07"
+      },
+      {
+        "fileName": "installed-v1120-json-saved.jsonc",
+        "sizeBytes": 94,
+        "sha256": "70016a0ed978d4bdacdaccd52442c628364bf08453802af87e45df606423dba0"
+      },
+      {
+        "fileName": "installed-v1120-toml-copy.toml",
+        "sizeBytes": 67,
+        "sha256": "db9172a546ab40823ea103f71bc2178292e4f7f307afcba13b0518ad3f171856"
+      },
+      {
+        "fileName": "installed-v1120-toml-saved.toml",
+        "sizeBytes": 67,
+        "sha256": "eeb324d85d09b572f93c9383a01212662a9f9331733a30ff70e5da981199ddb5"
+      },
+      {
+        "fileName": "installed-v1120-unselected.md",
+        "sizeBytes": 28,
+        "sha256": "da1e814cc968e54f338acce5be69503e10420454fb8b4223e10df5eb1f85af56"
+      },
+      {
+        "fileName": "installed-v1120-xml-copy.xml",
+        "sizeBytes": 88,
+        "sha256": "aa26e08b26a91ea3fa43fcceff5f9e271461ebc98de93212c94a6127a1ad2568"
+      },
+      {
+        "fileName": "installed-v1120-xml-saved.xml",
+        "sizeBytes": 88,
+        "sha256": "1bad2f605f0636c9870f7203c3f2c0063243df47427cff4100e9d70f853eba7d"
+      },
+      {
+        "fileName": "installed-v1120-yaml-copy.yaml",
+        "sizeBytes": 79,
+        "sha256": "2697a9e00323b97b2ec2ac596d29cc805b150a40c29786e16dab01e4d2305917"
+      },
+      {
+        "fileName": "installed-v1120-yaml-saved.yaml",
+        "sizeBytes": 80,
+        "sha256": "8755518287c7d05c83eb9afa8b784752c689eea956cc9ea0c8805b4a51f28d81"
+      }
+    ]
+  },
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Enter"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Home"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    }
+  ],
+  "runtimeErrors": [],
+  "uiMessages": [
+    "已可靠另存并验证 1 项修改：wps-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "已保存",
+    "副本已保存：json-当前副本1.jsonc；原件与当前草稿未变",
+    "副本已保存：yaml-当前副本1.yaml；原件与当前草稿未变",
+    "副本已保存：xml-当前副本1.xml；原件与当前草稿未变",
+    "副本已保存：toml-当前副本1.toml；原件与当前草稿未变",
+    "重新读取失败，原内容与草稿仍保留：路径不存在或不可访问: The system cannot find the file specified. (os error 2)",
+    "已应用到草稿，可撤销；保存后才写入文件"
+  ],
+  "shortcutExclusive": true,
+  "errorOverlay": false,
+  "unselectedAfter": "da1e814cc968e54f338acce5be69503e10420454fb8b4223e10df5eb1f85af56"
+}
