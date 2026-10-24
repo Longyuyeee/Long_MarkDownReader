@@ -457,6 +457,12 @@ if (pkg.version === '1.2.26') {
   required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.26' : '1.2.25') && development.publicTag === `v${development.publicVersion}`]
   required[9] = [published ? '当前阶段：**v1.2.26 已发布**' : '当前阶段：**v1.2.26 YAML／TOML 清单单项复制候选**', development.currentStage === (published ? 'M8-157-v1.2.26-published' : 'M8-156-v1.2.26-yaml-toml-item-copy-candidate') && development.activeSlice?.id === 'v1.2.26-yaml-toml-item-copy' && fs.existsSync(development.activeSlice.document)]
 }
+if (pkg.version === '1.2.27') {
+  const published = policy.gates?.githubReleasePublished === true
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.2.28' : '1.2.27')]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.27' : '1.2.26') && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? '当前阶段：**v1.2.27 已发布**' : '当前阶段：**v1.2.27 YAML 清单项上移／下移候选**', development.currentStage === (published ? 'M8-159-v1.2.27-published' : 'M8-158-v1.2.27-yaml-sequence-ordering-candidate') && development.activeSlice?.id === 'v1.2.27-yaml-sequence-ordering' && fs.existsSync(development.activeSlice.document)]
+}
 
 for (const [token, condition] of required) {
   if (!condition) throw new Error(`[current-development-audit] source-of-truth no longer supports: ${token}`)

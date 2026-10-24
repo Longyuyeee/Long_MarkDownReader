@@ -1,0 +1,88 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": false,
+  "sourceUserContentIncluded": false,
+  "reader": "openpyxl-3.1.5-hash-pinned",
+  "sha256": "1a8b53f8c838e5775ec06360dd453ed8a60564850280c4ad40a6b4131fbfd3f6",
+  "beforeSha256": "d1883275760283aa9fbd02e174480d8340ba1287070bdf2b7fd19c44ed67ec0f",
+  "cells": {
+    "A1": "任务",
+    "B1": "状态",
+    "C1": "编号",
+    "D1": "数值",
+    "A2": "会议\n备注",
+    "B2": "可见",
+    "C2": "00124",
+    "D2": "0.1",
+    "A3": "不要修改",
+    "B3": "隐藏",
+    "C3": "9007199254740993124",
+    "D3": "0.2",
+    "A4": "核对文档",
+    "B4": "可见",
+    "C4": "9007199254740993123",
+    "D4": "0.3",
+    "A5": "=保留文本",
+    "B5": "可见",
+    "C5": "00007",
+    "D5": "=D2+D3",
+    "A6": "=保留文本",
+    "B6": "",
+    "C6": "",
+    "D6": "=D3+D4"
+  },
+  "types": {
+    "A1": "s",
+    "B1": "s",
+    "C1": "s",
+    "D1": "s",
+    "A2": "s",
+    "B2": "s",
+    "C2": "s",
+    "D2": "n",
+    "A3": "s",
+    "B3": "s",
+    "C3": "s",
+    "D3": "n",
+    "A4": "s",
+    "B4": "s",
+    "C4": "s",
+    "D4": "n",
+    "A5": "s",
+    "B5": "s",
+    "C5": "s",
+    "D5": "f",
+    "A6": "s",
+    "B6": "n",
+    "C6": "n",
+    "D6": "f"
+  },
+  "preservedParts": [
+    {
+      "part": "xl/worksheets/sheet2.xml",
+      "sha256": "16e2c86340f5c5a8af4bc1691629b2a25a99362c394b83008c4c1fdf53abdb16"
+    },
+    {
+      "part": "docProps/core.xml",
+      "sha256": "55be02c961613f041afaea1f3a871961cb6b02dcdd96fa5edbd2fdc367cb06a3"
+    },
+    {
+      "part": "docProps/app.xml",
+      "sha256": "209fca6b00afe72a5029754b94be5953d8f16d96f67130325566b9366ad4ccc5"
+    },
+    {
+      "part": "xl/_rels/workbook.xml.rels",
+      "sha256": "15586b8b5fa62b6cbe80c791dc12827c15c2c511f84901daf48e025d77259225"
+    },
+    {
+      "part": "[Content_Types].xml",
+      "sha256": "8b17c67fc07ed1bc8cddabf0c66e4fb2195cfdb89689998adc2dccbaca1fb71b"
+    }
+  ],
+  "producerReopen": {
+    "status": "passed",
+    "sha256": "c4595392a3de45e3d215386ce840e197a2f98dea751b9f02e673a672440f80db",
+    "formulaCalculated": false,
+    "officeVisualAcceptance": false
+  }
+}

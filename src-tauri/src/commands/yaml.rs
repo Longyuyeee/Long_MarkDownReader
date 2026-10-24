@@ -146,6 +146,24 @@ pub fn copy_yaml_sequence_item_source(
 }
 
 #[tauri::command]
+pub fn move_yaml_sequence_item_source(
+    content: String,
+    start: usize,
+    end: usize,
+    direction: String,
+) -> Result<YamlKeyChange, TextDocumentError> {
+    crate::formats::yaml::move_yaml_sequence_item_source(&content, start, end, &direction).map_err(
+        |message| {
+            TextDocumentError::recoverable(
+                "yaml-sequence-move-rejected",
+                message,
+                "定位源码后继续修改；当前草稿仍保留",
+            )
+        },
+    )
+}
+
+#[tauri::command]
 pub async fn write_yaml_source_document(
     library_root: String,
     path: String,

@@ -1,0 +1,10 @@
+﻿# 配置 中文😀
+label: 外部保留
+root:
+  - 0xFF # 保留
+  - '内容'
+  - true
+flow: [1,  3,]
+empty: []
+blocked: &items [1, 2]
+other: 8_080
