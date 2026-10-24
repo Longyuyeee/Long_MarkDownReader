@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
-export const tomlArraysChecks=['lazy-expand-locate-append-type-independent-undo-redo','insert-after-and-delete-items-keeps-expanded-state','empty-array-first-last-and-datetime-type','collection-fallback-retains-input-and-source-location','switch-form-preview-menu-preserves-draft','real-locked-save-retry-and-reopen','external-conflict-copy-keeps-source-and-draft','all-owned-fixtures-clean-and-no-runtime-error']
+export const tomlArraysChecks=['lazy-expand-locate-append-type-independent-undo-redo','insert-after-and-delete-items-keeps-expanded-state','empty-array-first-last-datetime-and-reserved-names','collection-fallback-retains-input-and-source-location','switch-form-preview-menu-preserves-draft','real-locked-save-retry-and-reopen','external-conflict-copy-keeps-source-and-draft','all-owned-fixtures-clean-and-no-runtime-error']
 export const tomlArraysSource='# 配置 中文😀\nlabel = "原稿"\nitems = [0xFF, \'内容\',]\nempty = []\nblocked = [[1]]\n[other]\nitems = [8_080]\n'
 export const tomlArraysDraft=tomlArraysSource.replace('原稿','我的草稿')
 export const tomlArraysAdded=tomlArraysDraft.replace("'内容',]","'内容', true,]")

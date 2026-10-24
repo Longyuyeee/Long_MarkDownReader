@@ -150,7 +150,9 @@ const fileName = computed(() => path.value.split(/[\\/]/).pop() || '未命名 TO
 const loading = ref(true), saving = ref(false), dirty = ref(false), analysisPending = ref(false), loadError = ref(''), query = ref('')
 const content = ref(''), signature = ref(''), encoding = ref('utf-8'), readOnlyReason = ref(''), fileSize = ref(0), modified = ref(0), lines = ref(1), cursorLine = ref(1), cursorColumn = ref(1)
 const analysis = ref<Analysis | null>(null), readOnly = computed(() => Boolean(readOnlyReason.value))
-const expandedArrays=ref<Record<string,boolean>>({}),arrayItems=ref<Record<string,Entry[]>>({}),arrayErrors=ref<Record<string,string>>({}),arrayLoading=ref<Record<string,boolean>>({})
+function emptyArrayRecord<T>():Record<string,T>{return Object.create(null)}
+function updateArrayRecord<T>(record:Record<string,T>,key:string,value:T):Record<string,T>{return Object.assign(emptyArrayRecord<T>(),record,{[key]:value})}
+const expandedArrays=ref(emptyArrayRecord<boolean>()),arrayItems=ref(emptyArrayRecord<Entry[]>()),arrayErrors=ref(emptyArrayRecord<string>()),arrayLoading=ref(emptyArrayRecord<boolean>())
 const arraySource=ref('')
 const filteredOutline = computed(() => {
   const q=query.value.trim().toLowerCase(),rows:Entry[]=[]
@@ -298,25 +300,25 @@ const previewArrayChange=async()=>{
   }catch(cause){if(arrayOwner===owner&&session.owns(owner)){arrayError.value=errorText(cause);arrayVisible.value=true}}
   finally{if(arrayOwner===owner&&session.owns(owner))arrayPending.value=false}
 }
-let arrayRequests:Record<string,object>={}
+let arrayRequests=emptyArrayRecord<object>()
 const loadArrayItems=async(entry:Entry)=>{
   const owner=session.capture();if(!owner)return
   const request={};arrayRequests[entry.path]=request
-  arrayLoading.value={...arrayLoading.value,[entry.path]:true};arrayErrors.value={...arrayErrors.value,[entry.path]:''}
+  arrayLoading.value=updateArrayRecord(arrayLoading.value,entry.path,true);arrayErrors.value=updateArrayRecord(arrayErrors.value,entry.path,'')
   try{
     const items=await invoke<{index:number;start:number;end:number;preview:string;editable:boolean}[]>('inspect_toml_array_items_source',{content:owner.source,start:entry.start,end:entry.end})
     if(arrayRequests[entry.path]!==request||!session.unchanged(owner))return
-    arraySource.value=owner.source;arrayItems.value={...arrayItems.value,[entry.path]:items.map(item=>({...item,path:`${entry.path}[${item.index}]`,label:`[${item.index}]`,kind:'array-item',depth:entry.depth+1,arrayParent:{start:entry.start,end:entry.end}}))}
-  }catch(cause){if(arrayRequests[entry.path]===request&&session.unchanged(owner))arrayErrors.value={...arrayErrors.value,[entry.path]:errorText(cause)}}
-  finally{if(arrayRequests[entry.path]===request&&session.owns(owner))arrayLoading.value={...arrayLoading.value,[entry.path]:false}}
+    arraySource.value=owner.source;arrayItems.value=updateArrayRecord(arrayItems.value,entry.path,items.map(item=>({...item,path:`${entry.path}[${item.index}]`,label:`[${item.index}]`,kind:'array-item',depth:entry.depth+1,arrayParent:{start:entry.start,end:entry.end}})))
+  }catch(cause){if(arrayRequests[entry.path]===request&&session.unchanged(owner))arrayErrors.value=updateArrayRecord(arrayErrors.value,entry.path,errorText(cause))}
+  finally{if(arrayRequests[entry.path]===request&&session.owns(owner))arrayLoading.value=updateArrayRecord(arrayLoading.value,entry.path,false)}
 }
 const toggleArray=async(entry:Entry)=>{
   if(arrayLoading.value[entry.path]||loading.value||analysisPending.value||analyzedSource.value!==content.value)return
-  if(expandedArrays.value[entry.path]){expandedArrays.value={...expandedArrays.value,[entry.path]:false};return}
-  expandedArrays.value={...expandedArrays.value,[entry.path]:true};await loadArrayItems(entry)
+  if(expandedArrays.value[entry.path]){expandedArrays.value=updateArrayRecord(expandedArrays.value,entry.path,false);return}
+  expandedArrays.value=updateArrayRecord(expandedArrays.value,entry.path,true);await loadArrayItems(entry)
 }
-const clearArrayItems=()=>{arrayRequests={};arrayItems.value={};arrayErrors.value={};arrayLoading.value={};arraySource.value=''}
-const resetArrayOutline=()=>{expandedArrays.value={};clearArrayItems()}
+const clearArrayItems=()=>{arrayRequests=emptyArrayRecord<object>();arrayItems.value=emptyArrayRecord<Entry[]>();arrayErrors.value=emptyArrayRecord<string>();arrayLoading.value=emptyArrayRecord<boolean>();arraySource.value=''}
+const resetArrayOutline=()=>{expandedArrays.value=emptyArrayRecord<boolean>();clearArrayItems()}
 const refreshExpandedArrays=(result:Analysis)=>{for(const entry of result.outline)if(entry.array&&expandedArrays.value[entry.path])void loadArrayItems(entry)}
 watch(content,clearArrayItems,{flush:'sync'})
 const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || arrayPending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
