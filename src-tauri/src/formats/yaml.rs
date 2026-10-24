@@ -9,7 +9,7 @@ pub use fields::{add_yaml_field_source, remove_yaml_field_source};
 
 #[path = "yaml_sequences.rs"]
 mod sequences;
-pub use sequences::{add_yaml_sequence_item_source, remove_yaml_sequence_item_source};
+pub use sequences::{add_yaml_sequence_item_source, remove_yaml_sequence_item_source, copy_yaml_sequence_item_source};
 
 const MAX_YAML_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_YAML_NODES: usize = 100_000;

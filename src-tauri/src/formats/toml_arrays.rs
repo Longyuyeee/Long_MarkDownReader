@@ -142,8 +142,8 @@ fn change(
     let range = start..end;
     let doc = prepare(content, &range)?;
     let array = find_array(doc.as_item(), &range).ok_or(FALLBACK)?;
-    if array.len() > 2000 {
-        return Err("数组超过 2000 项，请定位源码修改；输入与草稿仍保留".into());
+    if array.len() > 2000 || (value.is_some() && array.len() == 2000) {
+        return Err("数组已达到 2000 项上限，请定位源码修改；输入与草稿仍保留".into());
     }
     if array.iter().any(|v| !scalar(content, v)) {
         return Err("嵌套数组、内联表和多行值请定位源码；输入与草稿仍保留".into());
@@ -304,6 +304,27 @@ pub fn remove_toml_array_item_source(
     item_end: usize,
 ) -> Result<TomlKeyChange, String> {
     change(content, start, end, Some((item_start, item_end)), None)
+}
+
+pub fn copy_toml_array_item_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    item_start: usize,
+    item_end: usize,
+) -> Result<TomlKeyChange, String> {
+    let literal = content
+        .get(item_start..item_end)
+        .ok_or("条目位置已变化，请重新选择；草稿仍保留")?;
+    // Reuse exact item ownership, insertion and full-document checks. Copy the
+    // original token rather than serializing its value (hex, quotes and dates).
+    change(
+        content,
+        start,
+        end,
+        Some((item_start, item_end)),
+        Some(literal),
+    )
 }
 
 pub fn replace_toml_array_item_source(
@@ -631,5 +652,84 @@ mod tests {
                 .content,
             s
         );
+    }
+
+    fn copy_item(s: &str, p: &str, index: usize) -> Result<TomlKeyChange, String> {
+        let e = entry(s, p);
+        let item = inspect_toml_array_items_source(s, e.start, e.end)?.remove(index);
+        copy_toml_array_item_source(s, e.start, e.end, item.start, item.end)
+    }
+    #[test]
+    fn copy_preserves_raw_types_quotes_unicode_and_selection() {
+        for raw in [
+            "0xFF",
+            "8_080",
+            "1.20e+2",
+            "true",
+            "1979-05-27",
+            "'文本😀'",
+            "\"a\\nb\"",
+        ] {
+            let s = format!("items = [1, {raw}, false,]\nother = 8_080\n");
+            let r = copy_item(&s, "items", 1).unwrap();
+            assert_eq!(
+                r.content,
+                s.replacen(&format!("{raw}, false"), &format!("{raw}, {raw}, false"), 1)
+            );
+            assert_eq!(&r.content[r.start..r.end], raw);
+        }
+    }
+    #[test]
+    fn copy_first_last_bom_crlf_parent_and_comments_stay_in_place() {
+        let s = "\u{feff}# 中文😀\r\n[root]\r\nitems = [\r\n  0xFF,\r\n  '字',\r\n]\r\n# independent\r\n[other]\r\nitems = [8_080]\r\n";
+        for (i, raw) in [(0, "0xFF"), (1, "'字'")] {
+            let r = copy_item(s, "root.items", i).unwrap();
+            assert_eq!(r.content, s.replacen(raw, &format!("{raw}, {raw}"), 1));
+        }
+        let s = "items = [1, # attached\n 2]\n";
+        assert!(copy_item(s, "items", 0).is_err());
+    }
+    #[test]
+    fn copy_rejects_stale_partial_complex_scopes_and_item_budget() {
+        let s = "items = ['😀']";
+        let e = entry(s, "items");
+        let i = inspect_toml_array_items_source(s, e.start, e.end)
+            .unwrap()
+            .remove(0);
+        for (a, b) in [
+            (i.start + 2, i.end),
+            (i.start, i.end - 1),
+            (usize::MAX, usize::MAX),
+            (i.end, i.start),
+        ] {
+            assert!(copy_toml_array_item_source(s, e.start, e.end, a, b).is_err());
+        }
+        for (s, p) in [
+            ("items = [[1]]", "items"),
+            ("items = [{x=1}]", "items"),
+            ("x.items = [1]", "x.items"),
+            ("[[x]]\nitems = [1]", "x[0].items"),
+            ("items = ['''text''']", "items"),
+        ] {
+            assert!(copy_item(s, p, 0).is_err(), "{s}");
+        }
+        let huge = format!("items = [{}]", vec!["1"; 2000].join(","));
+        assert!(copy_item(&huge, "items", 0).is_err());
+    }
+    #[test]
+    fn copy_then_edit_or_remove_uses_new_ranges_without_reformatting() {
+        let s = "__v_raw = [0xFF, '字', true,]\nother = 8_080\n";
+        let a = copy_item(s, "__v_raw", 1).unwrap();
+        let b = replace_item(&a.content, "__v_raw", 2, "false").unwrap();
+        assert_eq!(b.content, s.replace("'字', true", "'字', false, true"));
+        let e = entry(&a.content, "__v_raw");
+        assert_eq!(
+            remove_toml_array_item_source(&a.content, e.start, e.end, a.start, a.end)
+                .unwrap()
+                .content,
+            s.replace("'字', true", "'字',  true")
+        );
+        let c = copy_item(&a.content, "__v_raw", 2).unwrap();
+        assert!(c.content.contains("'字', '字', '字'"));
     }
 }

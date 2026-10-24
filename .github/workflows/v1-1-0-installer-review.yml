@@ -9,11 +9,11 @@ name: Community Release Same Installer Review
       current_version:
         description: Current package version
         required: true
-        default: "1.2.25"
+        default: "1.2.26"
       previous_version:
         description: Previous official version
         required: true
-        default: "1.2.24"
+        default: "1.2.25"
       candidate_commit:
         description: Exact source commit from the original installer build receipt
         required: true
@@ -62,12 +62,8 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or $run.status -ne 'completed' -or $run.conclusion -ne 'success' -or $run.path -ne '.github/workflows/v1-1-0-candidate-lifecycle.yml') { throw 'Original frozen build is unavailable or failed' }
           & node scripts/assert-frozen-build-source.mjs --head $run.head_sha --product $env:CANDIDATE_COMMIT
           if ($LASTEXITCODE -ne 0) { throw 'Original frozen builder definitions differ from the product' }
-          $jobs = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:INSTALLER_RUN_ID/jobs" | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0) { throw 'Original build job receipt unavailable' }
-          foreach ($name in @('Run frozen candidate release quality gate', 'Run complete Rust regression suite', 'Build frozen candidate MSI and NSIS', 'Capture immutable installer receipt')) {
-            $step = @($jobs.jobs.steps | Where-Object { $_.name -eq $name })
-            if ($step.Count -ne 1 -or $step[0].conclusion -ne 'success') { throw "Original gate did not pass: $name" }
-          }
+          & node scripts/assert-frozen-build-gates.mjs --run-id $env:INSTALLER_RUN_ID
+          if ($LASTEXITCODE -ne 0) { throw 'Original frozen build gates did not pass' }
           $root = Join-Path $env:GITHUB_WORKSPACE 'immutable-build'
           $receipt = Get-Content -Encoding UTF8 -LiteralPath (Join-Path $root 'community-release-output\installer-build-receipt.json') -Raw | ConvertFrom-Json
           $previous = Get-Content -Encoding UTF8 -LiteralPath "docs/evidence/v$($env:PREVIOUS_VERSION)-release/release-receipt.json" -Raw | ConvertFrom-Json
@@ -107,12 +103,12 @@ jobs:
           $identity | ConvertTo-Json -Depth 6
 
       - name: Set up independent XLSX producer Python
-        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21", "1.1.22", "1.1.23", "1.1.24", "1.1.25", "1.1.26", "1.1.27", "1.1.28", "1.1.29", "1.1.30", "1.1.31", "1.1.32", "1.1.33", "1.1.34", "1.1.35", "1.1.36", "1.1.37", "1.2.0", "1.2.1", "1.2.2", "1.2.3", "1.2.4", "1.2.5", "1.2.6", "1.2.7", "1.2.8", "1.2.9", "1.2.10", "1.2.11", "1.2.12", "1.2.13", "1.2.14", "1.2.15", "1.2.16", "1.2.17", "1.2.18", "1.2.19", "1.2.20", "1.2.21", "1.2.22", "1.2.23", "1.2.24", "1.2.25"]'), inputs.current_version)
+        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21", "1.1.22", "1.1.23", "1.1.24", "1.1.25", "1.1.26", "1.1.27", "1.1.28", "1.1.29", "1.1.30", "1.1.31", "1.1.32", "1.1.33", "1.1.34", "1.1.35", "1.1.36", "1.1.37", "1.2.0", "1.2.1", "1.2.2", "1.2.3", "1.2.4", "1.2.5", "1.2.6", "1.2.7", "1.2.8", "1.2.9", "1.2.10", "1.2.11", "1.2.12", "1.2.13", "1.2.14", "1.2.15", "1.2.16", "1.2.17", "1.2.18", "1.2.19", "1.2.20", "1.2.21", "1.2.22", "1.2.23", "1.2.24", "1.2.25", "1.2.26"]'), inputs.current_version)
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install hash-pinned independent XLSX producer
-        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21", "1.1.22", "1.1.23", "1.1.24", "1.1.25", "1.1.26", "1.1.27", "1.1.28", "1.1.29", "1.1.30", "1.1.31", "1.1.32", "1.1.33", "1.1.34", "1.1.35", "1.1.36", "1.1.37", "1.2.0", "1.2.1", "1.2.2", "1.2.3", "1.2.4", "1.2.5", "1.2.6", "1.2.7", "1.2.8", "1.2.9", "1.2.10", "1.2.11", "1.2.12", "1.2.13", "1.2.14", "1.2.15", "1.2.16", "1.2.17", "1.2.18", "1.2.19", "1.2.20", "1.2.21", "1.2.22", "1.2.23", "1.2.24", "1.2.25"]'), inputs.current_version)
+        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21", "1.1.22", "1.1.23", "1.1.24", "1.1.25", "1.1.26", "1.1.27", "1.1.28", "1.1.29", "1.1.30", "1.1.31", "1.1.32", "1.1.33", "1.1.34", "1.1.35", "1.1.36", "1.1.37", "1.2.0", "1.2.1", "1.2.2", "1.2.3", "1.2.4", "1.2.5", "1.2.6", "1.2.7", "1.2.8", "1.2.9", "1.2.10", "1.2.11", "1.2.12", "1.2.13", "1.2.14", "1.2.15", "1.2.16", "1.2.17", "1.2.18", "1.2.19", "1.2.20", "1.2.21", "1.2.22", "1.2.23", "1.2.24", "1.2.25", "1.2.26"]'), inputs.current_version)
         shell: powershell
         run: scripts/setup-hosted-xlsx-producer.ps1
       - name: Test directory identity without changing the filesystem

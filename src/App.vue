@@ -28,6 +28,7 @@
           </router-view>
           <FileRelationContext
             v-if="activeContextPath"
+            :menu-entry="router.currentRoute.value.name === 'LibraryMode' && !store.isZen"
             :library-root="store.libraryPath"
             :file-path="activeContextPath"
             :focus-locator-kind="activeContextFocus?.locatorKind"

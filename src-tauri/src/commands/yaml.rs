@@ -131,6 +131,21 @@ pub fn remove_yaml_sequence_item_source(
 }
 
 #[tauri::command]
+pub fn copy_yaml_sequence_item_source(
+    content: String,
+    start: usize,
+    end: usize,
+) -> Result<YamlKeyChange, TextDocumentError> {
+    crate::formats::yaml::copy_yaml_sequence_item_source(&content, start, end).map_err(|message| {
+        TextDocumentError::recoverable(
+            "yaml-sequence-copy-rejected",
+            message,
+            "定位源码后继续修改；当前草稿仍保留",
+        )
+    })
+}
+
+#[tauri::command]
 pub async fn write_yaml_source_document(
     library_root: String,
     path: String,

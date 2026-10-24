@@ -105,6 +105,10 @@
       <template #footer><div class="value-edit-actions"><n-button :disabled="arrayPending" @click="arrayVisible=false">取消</n-button><n-button type="primary" :loading="arrayPending" @click="previewArrayChange">预览修改</n-button></div></template>
     </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
+    <n-modal :show="!!copyError" preset="card" title="暂时无法复制这项" class="toml-copy-error-dialog" style="width:min(480px,94vw);max-height:calc(100dvh - 24px)" @update:show="(value: boolean)=>{if(!value)copyError=''}" @after-leave="finishCopyError">
+      <p role="alert">{{ copyError }}</p>
+      <template #footer><div class="value-edit-actions"><n-button @click="copyError=''">关闭</n-button><n-button type="primary" @click="revealCopySource">定位源码</n-button></div></template>
+    </n-modal>
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
 </template>
@@ -322,7 +326,27 @@ const clearArrayItems=()=>{arrayRequests=emptyArrayRecord<object>();arrayItems.v
 const resetArrayOutline=()=>{expandedArrays.value=emptyArrayRecord<boolean>();clearArrayItems()}
 const refreshExpandedArrays=(result:Analysis)=>{for(const entry of result.outline)if(entry.array&&expandedArrays.value[entry.path])void loadArrayItems(entry)}
 watch(content,clearArrayItems,{flush:'sync'})
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || arrayPending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
+const copyPending=ref(false),copyError=ref(''),copyEntry=ref<Entry|null>(null)
+let copyRequest:object|undefined,pendingCopyReveal:(()=>void)|undefined
+let copyOwner:ReturnType<typeof session.capture>
+const finishCopyError=()=>{const reveal=pendingCopyReveal;pendingCopyReveal=undefined;if(reveal)void nextTick(reveal)}
+const copyItem=async(entry:Entry)=>{
+  if(editDisabled.value)return
+  const owner=session.capture();if(!owner)return
+  const request={};copyRequest=request;copyOwner=owner;pendingCopyReveal=undefined;copyPending.value=true;copyError.value='';copyEntry.value=entry
+  try{
+    const result=await invoke<{content:string;start:number;end:number}>('copy_toml_array_item_source',{content:owner.source,start:entry.arrayParent?.start,end:entry.arrayParent?.end,itemStart:entry.start,itemEnd:entry.end})
+    if(copyRequest!==request||!session.unchanged(owner))return
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    session.offerChange(owner,'复制TOML 数组项',result.content,point(result.start),()=>{
+      query.value='';selectedFieldStart.value=undefined
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+  }catch(cause){if(copyRequest===request&&session.unchanged(owner))copyError.value=errorText(cause)}
+  finally{if(copyRequest===request&&session.owns(owner))copyPending.value=false}
+}
+const revealCopySource=()=>{const owner=copyOwner,entry=copyEntry.value;if(owner&&entry&&session.unchanged(owner))pendingCopyReveal=()=>{if(session.unchanged(owner))reveal(entry)};copyError.value=''}
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || arrayPending.value || copyPending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
 const openValueEdit = (entry: Entry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); reveal(entry); return }
@@ -367,8 +391,8 @@ const previewValueEdit = async () => {
   finally { if (valueOwner===owner&&session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<Entry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === content.value, reveal: entry => reveal(entry),
-  extra: entry => [...(entry.array ? [{key:'append-item',label:'追加数组项…',disabled:editDisabled.value},{key:'toggle-array',label:expandedArrays.value[entry.path]?'收起数组项':'展开数组项',disabled:analysisPending.value}] : []), ...(entry.kind==='array-item' ? [{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除数组项…',disabled:editDisabled.value}] : []),...(['table','root'].includes(entry.kind)||entry.field ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['value','array-item'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
-  action: (key,entry) => { if(key==='append-item')openArrayChange(entry,'append');if(key==='after-item')openArrayChange(entry,'after');if(key==='remove-item')openArrayChange(entry,'remove');if(key==='toggle-array')void toggleArray(entry);if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
+  extra: entry => [...(entry.array ? [{key:'append-item',label:'追加数组项…',disabled:editDisabled.value},{key:'toggle-array',label:expandedArrays.value[entry.path]?'收起数组项':'展开数组项',disabled:analysisPending.value}] : []), ...(entry.kind==='array-item' ? [{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除数组项…',disabled:editDisabled.value}] : []),...(['table','root'].includes(entry.kind)||entry.field ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['value','array-item'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='copy-item')void copyItem(entry); if(key==='append-item')openArrayChange(entry,'append');if(key==='after-item')openArrayChange(entry,'after');if(key==='remove-item')openArrayChange(entry,'remove');if(key==='toggle-array')void toggleArray(entry);if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerTab = (snapshot?: Snapshot) => session.bind(snapshot)
 
@@ -397,6 +421,7 @@ const load = async (discardDraft = false) => {
   const owner = session.capture()
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
+  copyRequest=undefined;copyOwner=undefined;pendingCopyReveal=undefined;copyPending.value=false;copyError.value='';copyEntry.value=null
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined; resumeValue=false
   resetArrayOutline();arrayVisible.value=false;arrayPending.value=false;arrayOwner=undefined;arrayEntry.value=null;pendingArray=undefined;resumeArray=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false

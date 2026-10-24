@@ -7,7 +7,7 @@ pub use fields::{add_toml_field_source, remove_toml_field_source};
 
 #[path = "toml_arrays.rs"]
 mod arrays;
-pub use arrays::{add_toml_array_item_source, inspect_toml_array_items_source, remove_toml_array_item_source, replace_toml_array_item_source, TomlArrayItem};
+pub use arrays::{add_toml_array_item_source, inspect_toml_array_items_source, remove_toml_array_item_source, copy_toml_array_item_source, replace_toml_array_item_source, TomlArrayItem};
 
 const MAX_TOML_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_TOML_NODES: usize = 100_000;

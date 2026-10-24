@@ -1,0 +1,72 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "yaml-raw-copy-direct-diff-selection-draft-and-independent-history",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-repeated-copy-new-ranges-retain-other-values-and-expansion",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-late-copy-keeps-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-old-diff-cannot-overwrite-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-file-switch-preserves-draft-and-rejects-old-result-and-diff",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-complex-copy-local-source-fallback-preserves-draft",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-save-retry-and-external-conflict-copy-preserve-source-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-six-styles-wide-narrow-full-page-diff-and-normal-motion",
+      "status": "passed"
+    },
+    {
+      "id": "toml-raw-copy-direct-diff-selection-draft-and-independent-history",
+      "status": "passed"
+    },
+    {
+      "id": "toml-repeated-copy-new-ranges-retain-other-values-and-expansion",
+      "status": "passed"
+    },
+    {
+      "id": "toml-late-copy-keeps-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "toml-old-diff-cannot-overwrite-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "toml-file-switch-preserves-draft-and-rejects-old-result-and-diff",
+      "status": "passed"
+    },
+    {
+      "id": "toml-complex-copy-local-source-fallback-preserves-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-save-retry-and-external-conflict-copy-preserve-source-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-six-styles-wide-narrow-full-page-diff-and-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}
