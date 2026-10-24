@@ -1,0 +1,55 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "xml-analysis-route-switch-never-writes-other-file",
+      "status": "passed"
+    },
+    {
+      "id": "xml-save-retains-later-input-and-pending-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "xml-second-shortcut-saves-later-draft",
+      "status": "passed"
+    },
+    {
+      "id": "xml-reload-cancel-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "xml-reload-read-failure-keeps-draft-and-outline",
+      "status": "passed"
+    },
+    {
+      "id": "xml-late-read-never-overwrites-newer-document",
+      "status": "passed"
+    },
+    {
+      "id": "xml-stale-invalid-confirmation-never-saves-replacement",
+      "status": "passed"
+    },
+    {
+      "id": "xml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "xml-conflict-reload-protects-draft-in-sibling-copy",
+      "status": "passed"
+    },
+    {
+      "id": "xml-enter-navigates-without-replacing-source",
+      "status": "passed"
+    },
+    {
+      "id": "xml-context-locate-preserves-source-selection-and-focus",
+      "status": "passed"
+    },
+    {
+      "id": "xml-failed-new-target-save-blocked-and-retry-keeps-original-draft",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

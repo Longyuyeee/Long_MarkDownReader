@@ -45,6 +45,17 @@ pub struct XmlOutlineEntry {
     pub copy_unavailable_reason: Option<String>,
     pub order: Option<XmlElementOrder>,
     pub move_unavailable_reason: Option<String>,
+    pub syntax: Option<XmlElementSyntax>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct XmlElementSyntax {
+    pub opening_name: XmlElementRange,
+    pub closing_name: Option<XmlElementRange>,
+    pub opening_end: usize,
+    pub closing_start: Option<usize>,
+    pub self_closing: bool,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -223,10 +234,30 @@ pub fn analyze_xml_source(content: &str) -> XmlSourceAnalysis {
                     break;
                 }
             }
-            Event::End(_) => {
+            Event::End(ref end) => {
                 if let Some(frame) = stack.pop() {
                     if let Some(index) = frame.outline_index {
                         state.outline[index].end = event_end;
+                        let from = event_start + 2;
+                        let to = from + end.name().as_ref().len();
+                        let entry = &mut state.outline[index];
+                        if content.get(event_start..from) == Some("</")
+                            && content.get(from..to) == Some(entry.name.as_str())
+                            && content
+                                .get(to..event_end.saturating_sub(1))
+                                .is_some_and(|s| s.bytes().all(xml_space))
+                            && content.as_bytes().get(event_end.saturating_sub(1)) == Some(&b'>')
+                        {
+                            if let Some(syntax) = &mut entry.syntax {
+                                syntax.closing_name = Some(XmlElementRange {
+                                    start: from,
+                                    end: to,
+                                });
+                                syntax.closing_start = Some(event_start);
+                            }
+                        } else {
+                            entry.syntax = None;
+                        }
                         finish_element_copy(content, &frame, event_start, &mut state.outline);
                         finish_text(
                             content,
@@ -538,6 +569,20 @@ fn push_element(
                 "根元素不能在同一文档中复制，请在源码中编辑".into()
             } else {
                 "父元素结构无法完整确认，请在源码中复制".into()
+            }),
+            syntax: (content.get(event_start..event_start + 1) == Some("<")
+                && content.get(event_start + 1..tag_end).map(str::as_bytes)
+                    == Some(start.as_ref())
+                && content.get(tag_end..event_end) == Some(if empty { "/>" } else { ">" }))
+            .then_some(XmlElementSyntax {
+                opening_name: XmlElementRange {
+                    start: event_start + 1,
+                    end: event_start + 1 + name.len(),
+                },
+                closing_name: None,
+                opening_end: event_end,
+                closing_start: None,
+                self_closing: empty,
             }),
         });
         Some(state.outline.len() - 1)
@@ -1014,6 +1059,244 @@ pub fn replace_xml_text_source(
     Ok(candidate)
 }
 
+fn element_edit_entry(
+    analysis: &XmlSourceAnalysis,
+    start: usize,
+    end: usize,
+) -> Result<&XmlOutlineEntry, String> {
+    if !analysis.valid || analysis.outline_truncated {
+        return Err("XML 存在语法问题或结构无法完整确认，请在源码中处理；当前草稿未变".into());
+    }
+    let entry = analysis
+        .outline
+        .iter()
+        .find(|e| e.start == start && e.end == end)
+        .ok_or("元素位置已变化，请重新选择；当前草稿未变")?;
+    let syntax = entry
+        .syntax
+        .as_ref()
+        .ok_or("标签原文位置无法确认，请在源码中处理；当前草稿未变")?;
+    if !syntax.self_closing && (syntax.closing_name.is_none() || syntax.closing_start.is_none()) {
+        return Err("结束标签位置无法确认，请在源码中处理；当前草稿未变".into());
+    }
+    Ok(entry)
+}
+
+fn validate_local_element_name(name: &str) -> Result<(), String> {
+    if name.len() > MAX_XML_SOURCE_BYTES || !plain_attribute_name(name) {
+        return Err("请输入有效的元素本地名称，不含冒号或空格，不能以数字开头；输入仍保留".into());
+    }
+    Ok(())
+}
+
+pub fn rename_xml_element_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    name: &str,
+) -> Result<XmlElementMove, String> {
+    validate_local_element_name(name)?;
+    let analysis = analyze_xml_source(content);
+    let entry = element_edit_entry(&analysis, start, end)?;
+    let syntax = entry.syntax.as_ref().unwrap();
+    let qualified = match entry.name.split_once(':') {
+        Some((prefix, local)) if plain_attribute_name(prefix) && plain_attribute_name(local) => {
+            format!("{prefix}:{name}")
+        }
+        Some(_) => return Err("原元素前缀无法确认，请在源码中重命名；当前草稿未变".into()),
+        None if plain_attribute_name(&entry.name) => name.to_owned(),
+        None => return Err("原元素名称无法确认，请在源码中重命名；当前草稿未变".into()),
+    };
+    let mut candidate = content.to_owned();
+    if let Some(range) = &syntax.closing_name {
+        candidate.replace_range(range.start..range.end, &qualified);
+    }
+    candidate.replace_range(
+        syntax.opening_name.start..syntax.opening_name.end,
+        &qualified,
+    );
+    if candidate.len() > MAX_XML_SOURCE_BYTES {
+        return Err("重命名后源码超过编辑上限，请缩短名称；当前草稿未变".into());
+    }
+    let checked = analyze_xml_source(&candidate);
+    let changed = checked.outline.iter().find(|e| e.start == start);
+    if !checked.valid
+        || checked.outline_truncated
+        || checked.element_count != analysis.element_count
+        || checked.attribute_count != analysis.attribute_count
+        || checked.namespace_count != analysis.namespace_count
+        || !changed.is_some_and(|e| e.name == qualified && e.depth == entry.depth)
+    {
+        return Err("无法完整保留其他原文，请在源码中重命名；当前草稿未变".into());
+    }
+    let changed_end = changed.unwrap().end;
+    Ok(XmlElementMove {
+        content: candidate,
+        start,
+        end: changed_end,
+    })
+}
+
+fn escape_element_text(value: &str) -> String {
+    value
+        .chars()
+        .map(|c| match c {
+            '&' => "&amp;".into(),
+            '<' => "&lt;".into(),
+            '>' => "&gt;".into(),
+            '\r' => "&#xD;".into(),
+            c @ '\u{7f}'..='\u{9f}' => format!("&#x{:X};", c as u32),
+            '\u{2028}' => "&#x2028;".into(),
+            other => other.to_string(),
+        })
+        .collect()
+}
+
+pub fn add_xml_child_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    name: &str,
+    value: &str,
+) -> Result<XmlElementMove, String> {
+    validate_local_element_name(name)?;
+    if value.len() > MAX_XML_SOURCE_BYTES || value.chars().any(|c| !attribute_input_char(c)) {
+        return Err("文字超过上限或含 XML 不支持的字符；输入与草稿仍保留".into());
+    }
+    let analysis = analyze_xml_source(content);
+    let entry = element_edit_entry(&analysis, start, end)?;
+    let syntax = entry.syntax.as_ref().unwrap();
+    let children: Vec<_> = analysis
+        .outline
+        .iter()
+        .filter(|e| e.depth == entry.depth + 1 && e.start > start && e.end < end)
+        .collect();
+    let close = syntax.closing_start.unwrap_or(syntax.opening_end);
+    let mut cursor = syntax.opening_end;
+    for child in &children {
+        if !content
+            .get(cursor..child.start)
+            .is_some_and(|s| s.bytes().all(xml_space))
+        {
+            return Err("父元素含正文、注释或处理指令，请在源码中确认新增位置；输入仍保留".into());
+        }
+        cursor = child.end;
+    }
+    if !syntax.self_closing
+        && !content
+            .get(cursor..close)
+            .is_some_and(|s| s.bytes().all(xml_space))
+    {
+        return Err("父元素含正文、注释或处理指令，请在源码中确认新增位置；输入仍保留".into());
+    }
+    let literal = if value.is_empty() {
+        format!("<{name}/>")
+    } else {
+        format!("<{name}>{}</{name}>", escape_element_text(value))
+    };
+    // Reuse the last child's exact separating whitespace. Existing content,
+    // including the closing tag's whitespace, is never reindented.
+    let (from, to, inserted, child_start) = if let Some(last) = children.last() {
+        let previous_end = children
+            .iter()
+            .rev()
+            .nth(1)
+            .map_or(syntax.opening_end, |e| e.end);
+        let gap = &content[previous_end..last.start];
+        let separator = gap.rfind('\n').map_or(gap, |i| {
+            &gap[if i > 0 && gap.as_bytes()[i - 1] == b'\r' {
+                i - 1
+            } else {
+                i
+            }..]
+        });
+        (
+            last.end,
+            last.end,
+            format!("{separator}{literal}"),
+            last.end + separator.len(),
+        )
+    } else {
+        let line_start = content[..start].rfind('\n').map_or(0, |i| i + 1);
+        let parent_indent = &content[line_start..start];
+        let body = if syntax.self_closing {
+            ""
+        } else {
+            &content[syntax.opening_end..close]
+        };
+        let multiline = body.contains('\n')
+            || (syntax.self_closing
+                && line_start > 0
+                && parent_indent.bytes().all(|b| matches!(b, b' ' | b'\t')));
+        if multiline && !parent_indent.bytes().all(|b| matches!(b, b' ' | b'\t')) {
+            return Err("父元素缩进位置不明确，请在源码中新增；输入仍保留".into());
+        }
+        let newline = if content.contains("\r\n") {
+            "\r\n"
+        } else {
+            "\n"
+        };
+        let indent = if parent_indent.contains('\t') {
+            "\t"
+        } else {
+            "  "
+        };
+        let separator = if multiline {
+            format!("{newline}{parent_indent}{indent}")
+        } else {
+            String::new()
+        };
+        if syntax.self_closing {
+            let from = syntax.opening_end - 2;
+            let tail = if multiline {
+                format!("{newline}{parent_indent}")
+            } else {
+                String::new()
+            };
+            (
+                from,
+                syntax.opening_end,
+                format!(">{separator}{literal}{tail}</{}>", entry.name),
+                from + 1 + separator.len(),
+            )
+        } else {
+            (
+                syntax.opening_end,
+                syntax.opening_end,
+                format!("{separator}{literal}"),
+                syntax.opening_end + separator.len(),
+            )
+        }
+    };
+    if content.len() - (to - from) + inserted.len() > MAX_XML_SOURCE_BYTES {
+        return Err("新增后源码超过编辑上限，请缩短输入；当前草稿未变".into());
+    }
+    let mut candidate = content.to_owned();
+    candidate.replace_range(from..to, &inserted);
+    let checked = analyze_xml_source(&candidate);
+    let added = checked.outline.iter().find(|e| e.start == child_start);
+    if !checked.valid
+        || checked.outline_truncated
+        || checked.element_count != analysis.element_count + 1
+        || checked.attribute_count != analysis.attribute_count
+        || checked.namespace_count != analysis.namespace_count
+        || checked.root_name != analysis.root_name
+        || !added.is_some_and(|e| {
+            e.name == name
+                && e.depth == entry.depth + 1
+                && (value.is_empty() || e.text.as_ref().is_some_and(|text| text.value == value))
+        })
+    {
+        return Err("无法完整保留新增元素，请在源码中处理；输入与草稿仍保留".into());
+    }
+    let added_end = added.unwrap().end;
+    Ok(XmlElementMove {
+        content: candidate,
+        start: child_start,
+        end: added_end,
+    })
+}
+
 fn attribute_input_char(c: char) -> bool {
     matches!(c, '\t' | '\n' | '\r' | '\u{20}'..='\u{d7ff}' | '\u{e000}'..='\u{fffd}' | '\u{10000}'..='\u{10ffff}')
 }
@@ -1321,6 +1604,191 @@ fn failed_analysis(diagnostic: XmlDiagnostic) -> XmlSourceAnalysis {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rename_exact_paired_tag_ranges_keep_prefix_and_every_other_byte() {
+        let source = "\u{feff}<root xmlns:p='urn:p'>\r\n\t<p:条目 a='p:条目'><![CDATA[p:条目]]><!--p:条目--><?pi p:条目?><p:条目/></p:条目 >\r\n\t<p:条目/>\r\n</root>";
+        let analysis = analyze_xml_source(source);
+        let entry = &analysis.outline[1];
+        let syntax = entry.syntax.as_ref().unwrap();
+        assert_eq!(
+            &source[syntax.opening_name.start..syntax.opening_name.end],
+            "p:条目"
+        );
+        let closing = syntax.closing_name.as_ref().unwrap();
+        assert_eq!(&source[closing.start..closing.end], "p:条目");
+        let result = rename_xml_element_source(source, entry.start, entry.end, "新名").unwrap();
+        assert_eq!(
+            result.content,
+            source
+                .replacen("<p:条目 a=", "<p:新名 a=", 1)
+                .replacen("</p:条目 >", "</p:新名 >", 1)
+        );
+        let changed = analyze_xml_source(&result.content);
+        assert_eq!(changed.outline[1].path, "/root[1]/p:新名[1]");
+        assert_eq!(changed.outline[2].path, "/root[1]/p:新名[1]/p:条目[1]");
+        assert_eq!(
+            (result.start, result.end),
+            (changed.outline[1].start, changed.outline[1].end)
+        );
+    }
+
+    #[test]
+    fn rename_root_self_closing_repeated_siblings_and_same_name() {
+        for source in ["<r/>", "<r a = '1'></r>", "<r><r/><r></r></r>"] {
+            let a = analyze_xml_source(source);
+            let e = &a.outline[0];
+            let result = rename_xml_element_source(source, e.start, e.end, "新根").unwrap();
+            assert!(result.content.starts_with("<新根"));
+            assert_eq!(
+                rename_xml_element_source(source, e.start, e.end, "r")
+                    .unwrap()
+                    .content,
+                source
+            );
+        }
+        let source = "<r><a/><a/><b/></r>";
+        let a = analyze_xml_source(source);
+        let e = &a.outline[2];
+        let result = rename_xml_element_source(source, e.start, e.end, "b").unwrap();
+        assert_eq!(result.content, "<r><a/><b/><b/></r>");
+        assert_eq!(
+            analyze_xml_source(&result.content).outline[3].path,
+            "/r[1]/b[2]"
+        );
+    }
+
+    #[test]
+    fn child_add_preserves_bom_crlf_sibling_whitespace_and_internal_markup() {
+        let source = "\u{feff}<r xmlns='urn:r'>\r\n  <a x='1'><!--inside--><![CDATA[keep]]></a>\r\n  <a/>\r\n</r>\r\n";
+        let a = analyze_xml_source(source);
+        let e = &a.outline[0];
+        let result = add_xml_child_source(source, e.start, e.end, "条目", "<&>😀\r\n").unwrap();
+        assert_eq!(
+            result.content,
+            source.replace(
+                "  <a/>\r\n",
+                "  <a/>\r\n  <条目>&lt;&amp;&gt;😀&#xD;\n</条目>\r\n"
+            )
+        );
+        assert_eq!(
+            &result.content[result.start..result.end],
+            "<条目>&lt;&amp;&gt;😀&#xD;\n</条目>"
+        );
+        let b = analyze_xml_source(&result.content);
+        assert_eq!(b.outline.last().unwrap().path, "/r[1]/条目[1]");
+    }
+
+    #[test]
+    fn child_add_empty_paired_self_closing_and_indented_containers() {
+        for (source, expected) in [
+            ("<r/>", "<r><new/></r>"),
+            ("<r />", "<r ><new/></r>"),
+            ("<r></r>", "<r><new/></r>"),
+            ("<r>   </r>", "<r><new/>   </r>"),
+            ("<r>\r\n</r>", "<r>\r\n  <new/>\r\n</r>"),
+            ("<r>\n\t<p/>\n</r>", "<r>\n\t<p>\n\t\t<new/>\n\t</p>\n</r>"),
+        ] {
+            let a = analyze_xml_source(source);
+            let e = &a.outline[usize::from(source.contains("<p/>"))];
+            assert_eq!(
+                add_xml_child_source(source, e.start, e.end, "new", "")
+                    .unwrap()
+                    .content,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn child_add_namespace_keeps_parent_prefix_and_default_namespace_declarations() {
+        let source = "<p:r xmlns:p='urn:p' xmlns='urn:default'><p:a/></p:r>";
+        let a = analyze_xml_source(source);
+        let e = &a.outline[0];
+        let r = add_xml_child_source(source, e.start, e.end, "child", "").unwrap();
+        assert_eq!(
+            r.content,
+            "<p:r xmlns:p='urn:p' xmlns='urn:default'><p:a/><child/></p:r>"
+        );
+        let e = &a.outline[1];
+        assert_eq!(
+            add_xml_child_source(source, e.start, e.end, "child", "")
+                .unwrap()
+                .content,
+            "<p:r xmlns:p='urn:p' xmlns='urn:default'><p:a><child/></p:a></p:r>"
+        );
+    }
+
+    #[test]
+    fn child_add_ambiguous_outer_content_rejected_but_inner_markup_retained() {
+        for source in [
+            "<r>text<a/></r>",
+            "<r><a/>tail</r>",
+            "<r><!--comment--><a/></r>",
+            "<r><?pi keep?></r>",
+            "<r><![CDATA[]]></r>",
+            "<r>&#x20;</r>",
+        ] {
+            let a = analyze_xml_source(source);
+            let e = &a.outline[0];
+            assert!(add_xml_child_source(source, e.start, e.end, "new", "")
+                .unwrap_err()
+                .contains("源码"));
+        }
+        let source = "<r><a><!--internal--><?pi keep?>text</a></r>";
+        let a = analyze_xml_source(source);
+        let e = &a.outline[0];
+        assert_eq!(
+            add_xml_child_source(source, e.start, e.end, "new", "")
+                .unwrap()
+                .content,
+            "<r><a><!--internal--><?pi keep?>text</a><new/></r>"
+        );
+    }
+
+    #[test]
+    fn element_name_input_stale_source_and_budget_errors_do_not_produce_candidates() {
+        let source = "<r><a/></r>";
+        let a = analyze_xml_source(source);
+        let e = &a.outline[1];
+        for name in ["", "1bad", "a:b", "a b", "a><b", "xmlns:x", "\u{0}"] {
+            assert!(rename_xml_element_source(source, e.start, e.end, name).is_err());
+            assert!(add_xml_child_source(source, 0, source.len(), name, "").is_err());
+        }
+        assert!(rename_xml_element_source(source, e.start + 1, e.end, "new").is_err());
+        assert!(add_xml_child_source("<r>", 0, 3, "new", "").is_err());
+        assert!(add_xml_child_source(source, 0, source.len(), "new", "\u{1}").is_err());
+        assert!(add_xml_child_source(
+            source,
+            0,
+            source.len(),
+            "new",
+            &"x".repeat(MAX_XML_SOURCE_BYTES)
+        )
+        .is_err());
+        assert!(rename_xml_element_source(
+            source,
+            e.start,
+            e.end,
+            &"x".repeat(MAX_XML_SOURCE_BYTES)
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn child_add_and_rename_can_repeat_on_fresh_same_named_paths() {
+        let source = "<r><a/><a/></r>";
+        let added = add_xml_child_source(source, 0, source.len(), "a", "").unwrap();
+        assert_eq!(
+            analyze_xml_source(&added.content).outline[3].path,
+            "/r[1]/a[3]"
+        );
+        let renamed =
+            rename_xml_element_source(&added.content, added.start, added.end, "b").unwrap();
+        let nested =
+            add_xml_child_source(&renamed.content, renamed.start, renamed.end, "a", "new").unwrap();
+        assert_eq!(nested.content, "<r><a/><a/><b><a>new</a></b></r>");
+    }
 
     fn delete_at(source: &str, path: &str) -> Result<XmlElementDeletion, String> {
         let a = analyze_xml_source(source);

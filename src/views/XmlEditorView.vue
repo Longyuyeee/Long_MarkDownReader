@@ -95,8 +95,9 @@
             v-for="item in filteredOutline"
             :key="`${item.start}:${item.path}`"
             type="button"
+            :aria-current="selectedElementStart === item.start ? 'true' : undefined"
             :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }"
-            @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)"
+            @click="selectedElementStart = item.start; reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)"
           >
             <n-icon :component="TagIcon" />
             <span><strong>{{ item.name }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
@@ -113,6 +114,22 @@
     </footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
+    <n-modal v-model:show="elementEditVisible" preset="card" class="xml-element-edit-dialog" :title="elementMode === 'add' ? '添加 XML 子元素' : '重命名 XML 元素'"
+      :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!elementEditPending" :closable="!elementEditPending" :close-on-esc="!elementEditPending"
+      @after-enter="elementNameInput?.select()" @after-leave="finishElementDialog">
+      <code>{{ elementEntry?.path }}</code>
+      <label for="xml-element-name">{{ elementMode === 'add' ? '子元素名称' : '元素名称' }}</label>
+      <n-input ref="elementNameInput" v-model:value="elementName" :disabled="elementEditPending" :input-props="{id:'xml-element-name','aria-label':'XML 元素名称'}" @keydown.enter="onElementNameEnter" />
+      <WorkspaceHelp v-if="elementMode === 'add'" label="子元素命名空间说明" text="新元素不带前缀，会继承此位置的默认命名空间（如有）。需要指定前缀时，请在源码中添加。" />
+      <WorkspaceHelp v-else-if="elementEntry?.name.includes(':')" label="元素前缀说明" :text="`保留前缀 ${elementEntry.name.split(':')[0]}，这里只修改本地名称，不改变命名空间绑定。`" />
+      <template v-if="elementMode === 'add'">
+        <label for="xml-element-text">文字（可不填）</label>
+        <n-input v-model:value="elementText" type="textarea" :autosize="{minRows:3,maxRows:7}" :disabled="elementEditPending" :input-props="{id:'xml-element-text','aria-label':'XML 子元素文字'}" />
+      </template>
+      <p v-if="elementError" role="alert" class="attribute-edit-error">{{ elementError }} <n-button text :disabled="elementEditPending" @click="revealElementSource">定位源码</n-button></p>
+      <template #footer><div class="attribute-edit-actions"><n-button :disabled="elementEditPending" @click="elementEditVisible=false">取消</n-button>
+        <n-button type="primary" :loading="elementEditPending" @click="previewElementEdit">{{ elementMode === 'add' ? '预览新增' : '预览修改' }}</n-button></div></template>
+    </n-modal>
     <n-modal v-model:show="textEditVisible" preset="card" class="xml-text-edit-dialog" title="修改 XML 文字" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
       :mask-closable="!textEditPending" :closable="!textEditPending" :close-on-esc="!textEditPending"
       @after-enter="textInput?.select()" @after-leave="finishTextDialog">
@@ -182,7 +199,7 @@ interface Diagnostic { severity: string; code: string; message: string; start: n
 interface AttributeEntry { name: string; value: string; start: number; end: number; editable: boolean; editUnavailableReason?: string }
 interface TextEntry { kind: 'text' | 'cdata'; value: string; start: number; end: number }
 interface ElementRange { start:number; end:number }
-interface OutlineEntry { path: string; name: string; depth: number; attributeCount: number; start: number; end: number; line: number; column: number; preview: string; attributes?: AttributeEntry[]; attributesTruncated?: boolean; text?: TextEntry; textEditUnavailableReason?: string; copy?: {separatorStart:number;separatorEnd:number}; copyUnavailableReason?: string; order?: {previous?:ElementRange;next?:ElementRange}; moveUnavailableReason?:string }
+interface OutlineEntry { path: string; name: string; depth: number; attributeCount: number; start: number; end: number; line: number; column: number; preview: string; attributes?: AttributeEntry[]; attributesTruncated?: boolean; text?: TextEntry; textEditUnavailableReason?: string; copy?: {separatorStart:number;separatorEnd:number}; copyUnavailableReason?: string; order?: {previous?:ElementRange;next?:ElementRange}; moveUnavailableReason?:string; syntax?: {openingName:ElementRange;closingName?:ElementRange;openingEnd:number;closingStart?:number;selfClosing:boolean} }
 interface Analysis {
   valid: boolean; rootName?: string; elementCount: number; attributeCount: number; namespaceCount: number; maxDepth: number
   commentCount: number; cdataCount: number; processingInstructionCount: number; doctypeCount: number
@@ -240,6 +257,7 @@ const updatePreview = (source?: string) => {
 }
 
 const analyzedSource = ref('')
+const selectedElementStart = ref<number | undefined>()
 const session = useStructuredSession({
   path: () => xmlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
@@ -265,7 +283,57 @@ const revealAttributeSource = () => {
   pendingAttributePreview = () => { if (session.unchanged(owner)) reveal(entry) }
   attributeEditVisible.value = false
 }
-const editDisabled = computed(() => isSvg.value || loading.value || saving.value || readOnly.value || analysisPending.value || attributeEditPending.value || textEditPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const elementEditVisible = ref(false), elementEditPending = ref(false), elementMode = ref<'add'|'rename'>('add')
+const elementEntry = ref<OutlineEntry | null>(null), elementName = ref(''), elementText = ref(''), elementError = ref(''), elementNameInput = ref<InputInst | null>(null)
+let elementOwner: ReturnType<typeof session.capture>, pendingElementPreview: (() => void) | undefined
+let resumeElementInput = false
+const finishElementDialog = () => { const offer = pendingElementPreview; pendingElementPreview = undefined; offer?.() }
+const revealElementSource = () => {
+  const owner = elementOwner, entry = elementEntry.value
+  if (!owner || !entry || !session.unchanged(owner)) return
+  resumeElementInput = true
+  pendingElementPreview = () => { if (session.unchanged(owner)) reveal(entry) }
+  elementEditVisible.value = false
+}
+const openElementEdit = (entry: OutlineEntry, mode: 'add'|'rename') => {
+  if (editDisabled.value) return
+  if (resumeElementInput && elementOwner && session.unchanged(elementOwner) && elementMode.value === mode && elementEntry.value?.start === entry.start && elementEntry.value.end === entry.end) {
+    resumeElementInput = false; elementEditVisible.value = true; return
+  }
+  resumeElementInput = false
+  elementOwner = session.capture()
+  if (!elementOwner) return
+  elementEntry.value = entry; elementMode.value = mode
+  elementName.value = mode === 'rename' ? entry.name.split(':').pop()! : ''
+  elementText.value = ''; elementError.value = ''; elementEditVisible.value = true
+}
+const onElementNameEnter = (event: KeyboardEvent) => {
+  if (event.isComposing || event.keyCode === 229) return
+  event.preventDefault()
+  void previewElementEdit()
+}
+const previewElementEdit = async () => {
+  const owner = elementOwner, entry = elementEntry.value, mode = elementMode.value
+  if (!owner || !entry || elementEditPending.value) return
+  if (!session.unchanged(owner)) { elementError.value = '文件或草稿已变化，请重新选择元素；输入与内容仍保留'; return }
+  elementEditPending.value = true; elementError.value = ''
+  try {
+    const result = await invoke<{content:string;start:number;end:number}>(mode === 'add' ? 'add_xml_child_source' : 'rename_xml_element_source', {
+      content:owner.source,start:entry.start,end:entry.end,name:elementName.value,...(mode === 'add' ? {value:elementText.value} : {}),
+    })
+    if (elementOwner !== owner) return
+    if (!session.unchanged(owner)) { elementError.value = '草稿已继续编辑，未应用旧结果；输入与内容仍保留'; return }
+    const bytes = new TextEncoder().encode(result.content)
+    const point = (offset:number) => new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,offset)).length
+    pendingElementPreview = () => session.offerChange(owner,mode === 'add' ? '添加 XML 子元素' : '重命名 XML 元素',result.content,point(result.start),() => {
+      query.value = ''; selectedElementStart.value = result.start
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+    elementEditVisible.value = false
+  } catch (cause) { if (elementOwner === owner && session.owns(owner)) elementError.value = errorText(cause) }
+  finally { if (elementOwner === owner && session.owns(owner)) elementEditPending.value = false }
+}
+const editDisabled = computed(() => isSvg.value || loading.value || saving.value || readOnly.value || analysisPending.value || attributeEditPending.value || textEditPending.value || elementEditPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
 const openTextEdit = (entry: OutlineEntry) => {
   if (editDisabled.value) return
   if (!entry.text) { message.info(entry.textEditUnavailableReason || '此元素请在源码中修改文字'); reveal(entry); return }
@@ -332,11 +400,11 @@ const previewAttributeEdit = async (action: 'edit' | 'remove' = 'edit') => {
   finally { if (attributeOwner === owner && session.owns(owner)) attributeEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<OutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => reveal(entry),
-  extra: entry => isSvg.value ? [] : [{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value},{key:'edit-text',label:'修改文字…',disabled:editDisabled.value},{key:'copy-element',label:'复制元素',disabled:editDisabled.value},
+  extra: entry => isSvg.value ? [] : [{key:'add-child',label:'添加子元素…',disabled:editDisabled.value},{key:'rename-element',label:'重命名元素…',disabled:editDisabled.value},{key:'edit-attribute',label:'修改属性…',disabled:editDisabled.value},{key:'edit-text',label:'修改文字…',disabled:editDisabled.value},{key:'copy-element',label:'复制元素',disabled:editDisabled.value},
     {key:'move-up',label:'上移',disabled:editDisabled.value || Boolean(entry.order && !entry.order.previous)},
     {key:'move-down',label:'下移',disabled:editDisabled.value || Boolean(entry.order && !entry.order.next)},
     {key:'delete-element',label:'删除元素…',disabled:editDisabled.value}],
-  action: (key,entry) => { if(key==='edit-attribute')openAttributeEdit(entry); if(key==='edit-text')openTextEdit(entry); if(key==='copy-element')void copyElement(entry); if(key==='move-up'||key==='move-down')void moveElement(entry,key==='move-up'?'up':'down'); if(key==='delete-element')void deleteElement(entry) } })
+  action: (key,entry) => { if(key==='add-child')openElementEdit(entry,'add'); if(key==='rename-element')openElementEdit(entry,'rename'); if(key==='edit-attribute')openAttributeEdit(entry); if(key==='edit-text')openTextEdit(entry); if(key==='copy-element')void copyElement(entry); if(key==='move-up'||key==='move-down')void moveElement(entry,key==='move-up'?'up':'down'); if(key==='delete-element')void deleteElement(entry) } })
 const deleteElement = async (entry: OutlineEntry) => {
   if (editDisabled.value) return
   if (!entry.copy || !entry.order) {
@@ -440,6 +508,7 @@ const load = async (discardDraft = false) => {
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
   attributeEditVisible.value = false; attributeEditPending.value = false; attributeOwner = undefined; attributeEntry.value = null; pendingAttributePreview = undefined; attributeDrafts.clear()
   textEditVisible.value = false; textEditPending.value = false; textOwner = undefined; textEntry.value = null; pendingTextPreview = undefined
+  elementEditVisible.value = false; elementEditPending.value = false; elementOwner = undefined; elementEntry.value = null; pendingElementPreview = undefined; selectedElementStart.value = undefined; resumeElementInput = false
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
 
@@ -490,7 +559,9 @@ onBeforeUnmount(() => {
 .attribute-edit-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px}
 .attribute-edit-heading{display:flex;align-items:center;gap:10px}
 .attribute-edit-heading :deep(.n-select),.attribute-edit-heading strong{flex:1;min-width:0}
-.xml-attribute-edit-dialog code,.xml-text-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px;max-height:72px;overflow:auto}
+.xml-attribute-edit-dialog code,.xml-text-edit-dialog code,.xml-element-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px;max-height:72px;overflow:auto}
+.xml-element-edit-dialog label{display:block;margin:12px 0 6px}
+.xml-element-edit-dialog :deep(.n-card__content){min-height:0;overflow:auto}
 .xml-attribute-edit-dialog strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .xml-attribute-edit-dialog :deep(.n-card__content),.xml-text-edit-dialog :deep(.n-card__content){min-height:0;overflow:auto}
 .xml-attribute-edit-dialog :deep(.n-select){margin-bottom:10px}
@@ -525,6 +596,7 @@ onBeforeUnmount(() => {
 .valid-summary div { display: flex; flex-direction: column; }
 .outline { min-height: 0; flex: 1; overflow: auto; }.outline button { min-height: 48px; padding-top: 6px; padding-right: 8px; padding-bottom: 6px; display: flex; align-items: center; gap: 7px; border-bottom: var(--theme-border); }
 .outline button:hover { background: rgba(var(--theme-primary-rgb),.07); }.outline strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.outline button[aria-current="true"] { color:var(--theme-primary);background:rgba(var(--theme-primary-rgb),.1) }
 .outline em { padding: 1px 5px; border-radius: 8px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); font-size: var(--text-compact); font-style: normal; }
 .outline > p { padding: 14px 6px; color: var(--theme-text-secondary); font-size: 12px; text-align: center; }.outline > p.warning { color: var(--theme-warning, #f0a020); }
 footer { min-height: 28px; padding: 0 14px; display: flex; align-items: center; gap: 14px; border-top: var(--theme-border); color: var(--theme-text-secondary); background: var(--theme-surface); font-size: 11px; }
