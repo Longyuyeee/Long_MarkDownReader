@@ -3,6 +3,10 @@ use saphyr_parser::{Event, Parser, ScalarStyle};
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 
+#[path = "yaml_fields.rs"]
+mod fields;
+pub use fields::{add_yaml_field_source, remove_yaml_field_source};
+
 const MAX_YAML_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_YAML_NODES: usize = 100_000;
 const MAX_YAML_OUTLINE_ENTRIES: usize = 20_000;
@@ -56,6 +60,8 @@ pub struct YamlField {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct YamlKeyChange {
+    #[serde(rename = "valueType", skip_serializing_if = "Option::is_none")]
+    pub value_type: Option<String>,
     pub content: String,
     pub start: usize,
     pub end: usize,
@@ -704,6 +710,7 @@ pub fn rename_yaml_key_source(
         return Err("新名称会改变其他字段、类型或结构，请在源码中修改；当前草稿未变".into());
     }
     Ok(YamlKeyChange {
+        value_type: None,
         content: candidate,
         start,
         end: start + literal.len(),

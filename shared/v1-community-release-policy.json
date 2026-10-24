@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.20",
-  "releaseCandidate": true,
+  "appVersion": "1.2.21",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-24",
-  "currentStatus": "v1.2.20-community-release-published",
+  "currentStatus": "v1.2.21-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.19",
+    "previousPublicVersion": "1.2.20",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.19-to-1.2.20-pending",
-    "scope": "toml-key-rename"
+    "managedUpdaterUpgradePath": "1.2.20-to-1.2.21-pending",
+    "scope": "yaml-field-management"
   },
   "targetRelease": {
-    "tag": "v1.2.20",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.20",
+    "tag": "v1.2.21",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.21",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "5662b5aa6855f98ff7848595e2d444545a249d12",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40058310174,
-    "hostedInstalledLifecycleRunId": 40060251914,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.2.20_x64_zh-CN.msi",
-        "sizeBytes": 78053376,
-        "sha256": "510c135c7d6299b0df98afa7a7e4dfacf8e6104e4edacbe48a4894ed1773f184",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.20_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.2.20_x64-setup.exe",
-        "sizeBytes": 68657479,
-        "sha256": "bf7d91cea5a36d324f25f7c00f185e028b27de09b81b6b8463340ea92885d52f",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.20_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.2.20",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.20",
-    "databaseId": 422512439,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "5662b5aa6855f98ff7848595e2d444545a249d12",
-    "publishedAt": "2026-10-24T04:22:41Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -142,7 +111,8 @@
     "v1.2.16-to-v1.2.17-managed-update-observation-pending",
     "v1.2.17-to-v1.2.18-managed-update-observation-pending",
     "v1.2.18-to-v1.2.19-managed-update-observation-pending",
-    "v1.2.19-to-v1.2.20-managed-update-observation-pending"
+    "v1.2.19-to-v1.2.20-managed-update-observation-pending",
+    "v1.2.20-to-v1.2.21-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.21-yaml-field-management-planned"
+  "nextAction": "validate-and-build-v1.2.21-installers"
 }

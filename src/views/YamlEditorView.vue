@@ -121,7 +121,7 @@
           <template #prefix><n-icon :component="SearchIcon" /></template>
         </n-input>
 
-        <div class="outline-list">
+        <div class="outline-list" @contextmenu="openEmptyFieldMenu">
           <button
             v-for="entry in filteredOutline"
             :key="`${entry.documentIndex}:${entry.start}:${entry.path}`"
@@ -141,7 +141,7 @@
             </span>
           </button>
           <div v-if="!filteredOutline.length" class="empty-outline">
-            {{ analysis?.valid ? '没有匹配的结构节点' : '修复语法后显示结构提纲' }}
+            {{ analysis?.valid ? (analysis.outline.length ? '没有匹配的结构节点' : '空文档 · 右键新增字段') : '修复语法后显示结构提纲' }}
           </div>
           <div v-if="analysis?.outlineTruncated" class="outline-warning">
             结构过大，提纲仅显示受限范围
@@ -179,6 +179,17 @@
       <p v-if="renameError" role="alert" class="value-edit-error">{{ renameError }} <n-button text :disabled="renamePending" @click="revealRenameSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="renamePending" @click="renameVisible=false">取消</n-button>
         <n-button type="primary" :loading="renamePending" @click="previewRename">预览修改</n-button></div></template>
+    </n-modal>
+    <n-modal v-model:show="fieldVisible" preset="card" class="yaml-field-dialog" :title="fieldMode==='add' ? '新增 YAML 字段' : '删除 YAML 字段'"
+      :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!fieldPending" :closable="!fieldPending" :close-on-esc="!fieldPending"
+      @after-enter="fieldInput?.select()" @after-leave="finishFieldDialog">
+      <code>{{ fieldEntry?.path || '$' }}</code>
+      <template v-if="fieldMode==='add'">
+        <label for="yaml-new-field">字段名</label><n-input ref="fieldInput" v-model:value="fieldName" :disabled="fieldPending" :input-props="{id:'yaml-new-field','aria-label':'新增 YAML 字段名'}" @keydown.enter="onFieldEnter" />
+        <label for="yaml-new-value">值</label><n-input v-model:value="fieldValue" :disabled="fieldPending" placeholder="例如：内容、42、true、null" :input-props="{id:'yaml-new-value','aria-label':'新增 YAML 字段值'}" @keydown.enter="onFieldEnter" />
+      </template>
+      <p v-if="fieldError" role="alert" class="value-edit-error">{{ fieldError }} <n-button text :disabled="fieldPending" @click="revealFieldSource">定位源码</n-button></p>
+      <template #footer><div class="value-edit-actions"><n-button :disabled="fieldPending" @click="fieldVisible=false">取消</n-button><n-button type="primary" :loading="fieldPending" @click="previewFieldChange">预览修改</n-button></div></template>
     </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
@@ -408,7 +419,49 @@ const previewRename = async () => {
   } catch (cause) { if (renameOwner === owner && session.owns(owner)) renameError.value = errorMessage(cause) }
   finally { if (renameOwner === owner && session.owns(owner)) renamePending.value = false }
 }
-const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
+const fieldVisible=ref(false), fieldPending=ref(false), fieldMode=ref<'add'|'remove'>('add'), fieldName=ref(''), fieldValue=ref("''"), fieldError=ref('')
+const fieldInput=ref<InputInst|null>(null), fieldEntry=ref<YamlOutlineEntry|null>(null)
+const openEmptyFieldMenu=(event:MouseEvent)=>{
+  if(!analysis.value?.valid||analysis.value.outline.length)return
+  event.preventDefault();event.stopPropagation()
+  nodeMenu.open(event,{path:'$',label:'文档',kind:'mapping',start:0,end:0,depth:0,documentIndex:0,childCount:0,line:1,column:1,preview:''})
+}
+let fieldOwner:ReturnType<typeof session.capture>, pendingField:(()=>void)|undefined, resumeField=false
+const finishFieldDialog=()=>{const offer=pendingField;pendingField=undefined;offer?.()}
+const revealFieldSource=()=>{
+  const owner=fieldOwner,entry=fieldEntry.value
+  if(!owner||!entry||!session.unchanged(owner))return
+  resumeField=true;pendingField=()=>{if(session.unchanged(owner))revealRange(entry.field||entry)};fieldVisible.value=false
+}
+const openFieldChange=(entry:YamlOutlineEntry,mode:'add'|'remove')=>{
+  if(editDisabled.value)return
+  if(resumeField&&fieldMode.value===mode&&fieldOwner&&session.unchanged(fieldOwner)&&fieldEntry.value?.path===entry.path){resumeField=false;fieldVisible.value=true;return}
+  resumeField=false;fieldOwner=session.capture();if(!fieldOwner)return
+  fieldEntry.value=entry;fieldMode.value=mode;fieldName.value='';fieldValue.value="''";fieldError.value=''
+  if(mode==='add')fieldVisible.value=true;else void previewFieldChange()
+}
+const onFieldEnter=(event:KeyboardEvent)=>{if(event.isComposing||event.keyCode===229)return;event.preventDefault();void previewFieldChange()}
+const previewFieldChange=async()=>{
+  const owner=fieldOwner,entry=fieldEntry.value,mode=fieldMode.value
+  if(!owner||!entry||fieldPending.value)return
+  if(!session.unchanged(owner)){fieldError.value='文件或草稿已变化，请重新选择；当前输入与内容仍保留';fieldVisible.value=true;return}
+  fieldPending.value=true;fieldError.value=''
+  try{
+    const field=entry.field
+    const result=await invoke<{content:string;start:number;end:number;valueType?:string}>(mode==='add'?'add_yaml_field_source':'remove_yaml_field_source',{
+      content:owner.source,...(mode==='add'?{start:entry.kind==='mapping'?entry.start:field?.start??0,end:entry.kind==='mapping'?entry.end:field?.end??0,inside:entry.kind==='mapping',name:fieldName.value,value:fieldValue.value}:{start:field?.start,end:field?.end})})
+    if(fieldOwner!==owner)return
+    if(!session.unchanged(owner)){fieldError.value='草稿已继续编辑，未应用旧结果；当前输入与内容仍保留';fieldVisible.value=true;return}
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    const offer=()=>session.offerChange(owner,mode==='add'?`新增 YAML 字段${result.valueType?' · '+result.valueType:''}`:'删除 YAML 字段',result.content,point(result.start),()=>{
+      outlineQuery.value='';selectedFieldStart.value=mode==='add'?result.start:undefined
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+    if(fieldVisible.value){pendingField=offer;fieldVisible.value=false}else offer()
+  }catch(cause){if(fieldOwner===owner&&session.owns(owner)){fieldError.value=errorMessage(cause);fieldVisible.value=true}}
+  finally{if(fieldOwner===owner&&session.owns(owner))fieldPending.value=false}
+}
+const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || fieldPending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
 const openValueEdit = (entry: YamlOutlineEntry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); revealRange(entry); return }
@@ -433,8 +486,8 @@ const previewValueEdit = async () => {
   finally { if (session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<YamlOutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry),
-  extra: entry => [...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
-  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry) } })
+  extra: entry => [...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerCurrentTab = (snapshot?: TextDocumentSnapshot) => session.bind(snapshot)
 
@@ -545,6 +598,7 @@ const load = async (discardDraft = false) => {
   const owner = session.capture()
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
+  fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
   renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
   loading.value = true; loadError.value = ''
@@ -942,4 +996,7 @@ onBeforeUnmount(() => {
 .yaml-key-rename-dialog code { display:block; overflow-wrap:anywhere; margin-bottom:12px; }
 .yaml-key-rename-dialog label { display:block; margin-bottom:6px; }
 .outline-list button[aria-current="true"] { background:var(--theme-accent-hover); color:var(--theme-accent); }
+.yaml-field-dialog :deep(.n-card__content) { overflow:auto; }
+.yaml-field-dialog code { display:block; overflow-wrap:anywhere; margin-bottom:12px; }
+.yaml-field-dialog label { display:block; margin:12px 0 6px; }
 </style>
