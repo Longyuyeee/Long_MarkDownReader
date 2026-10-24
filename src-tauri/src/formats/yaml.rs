@@ -5,7 +5,11 @@ use std::collections::{HashMap, HashSet};
 
 #[path = "yaml_fields.rs"]
 mod fields;
-pub use fields::{add_yaml_field_source, remove_yaml_field_source};
+pub use fields::{add_yaml_field_source, remove_yaml_field_source, copy_yaml_field_source};
+
+#[cfg(test)]
+#[path = "yaml_field_copy_tests.rs"]
+mod field_copy_tests;
 
 #[path = "yaml_sequences.rs"]
 mod sequences;

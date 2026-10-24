@@ -172,6 +172,176 @@ fn empty_document(content: &str) -> bool {
         .all(|line| line.trim().is_empty() || line.trim_start().starts_with('#'))
 }
 
+/// Duplicate one parser-owned scalar field without serializing its neighbours.
+pub fn copy_yaml_field_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    name: &str,
+) -> Result<YamlKeyChange, String> {
+    let (mut docs, offsets, maps) = prepare(content)?;
+    let fallback = "此字段的结构或注释归属无法准确接续，请定位源码；输入与草稿仍保留";
+    if name.is_empty() || name.len() > 4096 || name.contains(['\r', '\n']) || name == "<<" {
+        return Err("请输入单行字段名（最多 4096 字节）；合并键请在源码中修改".into());
+    }
+    let target = docs
+        .first()
+        .and_then(|doc| find_target(doc, content, &offsets, &maps, (start, end), false))
+        .ok_or(fallback)?;
+    let YamlDataOwned::Mapping(mapping) = &target.node.data else {
+        unreachable!()
+    };
+    if mapping
+        .keys()
+        .any(|key| matches!(&key.data, YamlDataOwned::Value(ScalarOwned::String(s)) if s == name))
+    {
+        return Err("同一层级已有这个字段名，请换一个名称；输入与草稿仍保留".into());
+    }
+    let pairs = mapping.iter().collect::<Vec<_>>();
+    let index = pairs
+        .iter()
+        .position(|(key, _)| bounds(key, content, &offsets) == (start, end))
+        .ok_or(fallback)?;
+    let (original_key, value) = pairs[index];
+    let (value_start, value_end) = bounds(value, content, &offsets);
+    let tokens = key_tokens(content, &offsets);
+    let style = *tokens.scalars.get(&(start, end)).ok_or(fallback)?;
+    if !matches!(value.data, YamlDataOwned::Value(_))
+        || !tokens.scalars.contains_key(&(value_start, value_end))
+        || value_start >= value_end
+        || content
+            .get(start..value_end)
+            .is_none_or(|raw| raw.contains(['\r', '\n']))
+        || content
+            .get(end..value_start)
+            .is_none_or(|raw| raw.trim() != ":")
+    {
+        return Err(fallback.into());
+    }
+    let key = string_key_literal(name, style);
+    let field = format!("{key}{}", &content[end..value_end]);
+    let range = (target.start, target.end);
+    let (at, insert, key_offset) = if content
+        .get(target.start..)
+        .is_some_and(|s| s.starts_with('{'))
+    {
+        let next = if index + 1 < pairs.len() {
+            bounds(pairs[index + 1].0, content, &offsets).0
+        } else {
+            flow_close(content, target.end).ok_or(fallback)?
+        };
+        let tail = &content[value_end..next];
+        // A same-line flow comment could belong to either neighbour.
+        if tail.contains('#')
+            || tail.chars().any(|c| !c.is_whitespace() && c != ',')
+            || tail.matches(',').count() > 1
+        {
+            return Err(fallback.into());
+        }
+        (value_end, format!(", {field}"), 2)
+    } else {
+        let line = content[..start]
+            .rfind('\n')
+            .map_or(usize::from(content.starts_with('\u{feff}')) * 3, |i| i + 1);
+        let prefix = &content[line..start];
+        if !prefix.chars().all(|c| c == ' ')
+            && !(prefix.ends_with("- ") && prefix[..prefix.len() - 2].chars().all(|c| c == ' '))
+        {
+            return Err(fallback.into());
+        }
+        let newline = content[value_end..].find('\n').map(|i| value_end + i);
+        let body_end = newline.map_or(content.len(), |i| {
+            if content.as_bytes().get(i.wrapping_sub(1)) == Some(&b'\r') {
+                i - 1
+            } else {
+                i
+            }
+        });
+        let tail = &content[value_end..body_end];
+        if !tail.trim().is_empty()
+            && (!tail.starts_with([' ', '\t']) || !tail.trim_start().starts_with('#'))
+        {
+            return Err(fallback.into());
+        }
+        let indent = " ".repeat(prefix.len());
+        match newline {
+            Some(i) => (
+                i + 1,
+                format!("{indent}{field}{tail}{}", &content[body_end..i + 1]),
+                indent.len(),
+            ),
+            None => {
+                let eol = if content.contains("\r\n") {
+                    "\r\n"
+                } else {
+                    "\n"
+                };
+                (
+                    content.len(),
+                    format!("{eol}{indent}{field}{tail}"),
+                    eol.len() + indent.len(),
+                )
+            }
+        }
+    };
+    if content
+        .len()
+        .checked_add(insert.len())
+        .is_none_or(|n| n > MAX_YAML_SOURCE_BYTES)
+    {
+        return Err("复制后源码超过分析上限；输入与草稿仍保留".into());
+    }
+    let mut new_key = original_key.clone();
+    new_key.data = YamlDataOwned::Value(ScalarOwned::String(name.into()));
+    let pair = (new_key, value.clone());
+    if insert_copy_expected(&mut docs[0], content, &offsets, range, (start, end), &pair) != 1 {
+        return Err(fallback.into());
+    }
+    checked(
+        format!("{}{}{}", &content[..at], insert, &content[at..]),
+        docs,
+        at + key_offset,
+        at + key_offset + key.len(),
+    )
+}
+
+// Mapping equality includes order. Model the adjacent insertion, rather than
+// appending to the expected tree as the separate "add field" operation does.
+fn insert_copy_expected(
+    node: &mut MarkedYamlOwned,
+    source: &str,
+    offsets: &[usize],
+    parent: (usize, usize),
+    selected: (usize, usize),
+    pair: &(MarkedYamlOwned, MarkedYamlOwned),
+) -> usize {
+    let is_parent = bounds(node, source, offsets) == parent;
+    match &mut node.data {
+        YamlDataOwned::Mapping(mapping) if is_parent => {
+            let original = std::mem::take(mapping);
+            let mut count = 0;
+            for (key, value) in original {
+                let selected_key = bounds(&key, source, offsets) == selected;
+                mapping.insert(key, value);
+                if selected_key {
+                    mapping.insert(pair.0.clone(), pair.1.clone());
+                    count += 1;
+                }
+            }
+            count
+        }
+        YamlDataOwned::Mapping(mapping) => mapping
+            .values_mut()
+            .map(|v| insert_copy_expected(v, source, offsets, parent, selected, pair))
+            .sum(),
+        YamlDataOwned::Sequence(items) => items
+            .iter_mut()
+            .map(|v| insert_copy_expected(v, source, offsets, parent, selected, pair))
+            .sum(),
+        _ => 0,
+    }
+}
+
 pub fn add_yaml_field_source(
     content: &str,
     start: usize,
