@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.2.23",
-  "runtimeBaseVersion": "1.2.22",
+  "runtimeBaseVersion": "1.2.23",
   "publicVersion": "1.2.22",
   "publicTag": "v1.2.22",
   "publicTagCommit": "c017664419bb1e7b57cbbff609ce629ee76b8b51",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-149-v1.2.22-published",
-  "binaryVersionTransition": "v1.2.22-public-release-published",
-  "displayLabel": "v1.2.22 已发布 · 下一目标 v1.2.23",
+  "currentStage": "M8-150-v1.2.23-yaml-sequence-items-candidate",
+  "binaryVersionTransition": "v1.2.23-release-ready",
+  "displayLabel": "v1.2.23 YAML 列表项新增与删除候选 · 当前公开 v1.2.22",
   "activeSlice": {
-    "id": "v1.2.22-toml-field-management",
-    "status": "published-and-remote-assets-verified",
-    "document": "docs/V1_2_22_Unsigned_Community_Release_Audit_2026-10-24.md"
+    "id": "v1.2.23-yaml-sequence-items",
+    "status": "installed-workflows-passed-ready-to-publish",
+    "document": "docs/V1_2_23_Unsigned_Community_Release_Audit_2026-10-24.md"
   }
 }

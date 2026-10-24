@@ -97,6 +97,40 @@ pub fn remove_yaml_field_source(
 }
 
 #[tauri::command]
+pub fn add_yaml_sequence_item_source(
+    content: String,
+    start: usize,
+    end: usize,
+    after: bool,
+    value: String,
+) -> Result<YamlKeyChange, TextDocumentError> {
+    crate::formats::yaml::add_yaml_sequence_item_source(&content, start, end, after, &value)
+        .map_err(|message| {
+            TextDocumentError::recoverable(
+                "yaml-sequence-add-rejected",
+                message,
+                "调整输入后重试，或定位源码；当前输入与草稿仍保留",
+            )
+        })
+}
+#[tauri::command]
+pub fn remove_yaml_sequence_item_source(
+    content: String,
+    start: usize,
+    end: usize,
+) -> Result<YamlKeyChange, TextDocumentError> {
+    crate::formats::yaml::remove_yaml_sequence_item_source(&content, start, end).map_err(
+        |message| {
+            TextDocumentError::recoverable(
+                "yaml-sequence-remove-rejected",
+                message,
+                "定位源码后继续修改；当前草稿仍保留",
+            )
+        },
+    )
+}
+
+#[tauri::command]
 pub async fn write_yaml_source_document(
     library_root: String,
     path: String,
