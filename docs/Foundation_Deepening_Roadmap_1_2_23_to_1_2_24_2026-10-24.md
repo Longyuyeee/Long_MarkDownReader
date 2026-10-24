@@ -1,12 +1,12 @@
 # 1.2.23—1.2.24：序列与数组项的新增和删除
 
-状态：1.2.23 已发布，本轮完成 1/2；1.2.24 TOML 数组项新增／删除已接入，正在候选收尾，尚未发布。
+状态：1.2.23 YAML 列表项与 1.2.24 TOML 数组项增删均已正式发布，本路线 **2/2 版完成**；[1.2.24 发布记录](V1_2_24_Unsigned_Community_Release_Audit_2026-10-24.md)。下一轮 [1.2.25—1.2.26](Foundation_Deepening_Roadmap_1_2_25_to_1_2_26_2026-10-24.md) 已规划，当前 0/2，尚未实施。
 
 ## 规划时的代码复核与实际需求
 
 1.2.22 中，`src/views/YamlEditorView.vue` 提纲能够显示序列，但节点右键和 `src-tauri/src/commands/yaml.rs` 只提供字段增删、改名和简单值修改，尚无序列项增删。`src/views/TomlEditorView.vue`、`src-tauri/src/formats/toml.rs` 能显示数组整体信息；本版允许单行数组作为一个完整字段值新增或删除，但尚无单独数组项的定位和增删命令。既有 JSON 数组整理能力继续保留，不重复包装成新功能。
 
-规划时用户修改清单仍需手动处理缩进、逗号和注释。1.2.23 已通过列表右键补齐 YAML 项增删；实现位于 `src-tauri/src/formats/yaml_sequences.rs`、`commands/yaml.rs` 和 `YamlEditorView.vue`，TOML 数组项继续按 1.2.24 推进。
+规划时用户修改清单仍需手动处理缩进、逗号和注释。1.2.23 已通过列表右键补齐 YAML 项增删；实现位于 `src-tauri/src/formats/yaml_sequences.rs`、`commands/yaml.rs` 和 `YamlEditorView.vue`，1.2.24 已补齐 TOML 数组按需展开、定位与单项增删，实现位于 `src-tauri/src/formats/toml_arrays.rs`、`commands/toml.rs` 与 `TomlEditorView.vue`。本轮完成 2/2；后续继续按 [1.2.25—1.2.26](Foundation_Deepening_Roadmap_1_2_25_to_1_2_26_2026-10-24.md) 规划推进。
 
 | 顺序 | 版本 | 用户任务 | 入口与首批范围 |
 | --- | --- | --- | --- |
@@ -19,7 +19,7 @@
 
 块式与流式分别确认破折号、缩进、逗号和结束范围；保留未修改项的顺序、字面量和独立注释。锚点／别名依赖、标签、合并、多文档、复杂集合项或注释归属无法证明时给出局部说明与源码定位，保留输入和原稿。首批不顺带承诺任意嵌套集合整理、排序或拖动重排。
 
-## 1.2.24：TOML 数组项增删（规划）
+## 1.2.24：TOML 数组项增删（已发布）
 
 数组信息按需展开，条目显示便于识别的序号和短值，点击定位当前项；不把所有元素常驻摊开。数组右键“新增项…”，项右键“在此项后新增…”／“删除项…”，位置来自解析器，不让用户手填下标。
 

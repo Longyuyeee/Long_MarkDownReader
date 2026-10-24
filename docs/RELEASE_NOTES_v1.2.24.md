@@ -6,4 +6,6 @@ TOML 提纲数组按需展开，显示序号和短值，点击定位源码。数
 
 修改后保留已展开状态，自动刷新条目，继续保护延迟读取、后续输入、来源切换、保存失败重试和外部冲突副本。差异确认仅应用到草稿，可撤销／重做，保存后才写盘。保留全部功能、风格与正常动效，不新增常驻表单。
 
-未签名社区版；完整发布检查与 585 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
+未签名社区版；完整发布检查与 585 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件重新下载核对通过。应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.24) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_24_Unsigned_Community_Release_Audit_2026-10-24.md)。
