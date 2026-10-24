@@ -1,0 +1,6 @@
+# 配置 中文😀
+base: &defaults {keep: 0xFF}
+reference: *defaults
+root:
+  待保存: 9007199254740993123456789 # old 保留
+  items: [{label: 我的草稿}, {"true": other}]

@@ -1,0 +1,25 @@
+{
+  "kind": "longedit-collections",
+  "schemaVersion": 1,
+  "collections": [
+    {
+      "name": "二七复用",
+      "query": "预算",
+      "objectTypes": [
+        "markdown"
+      ],
+      "filters": {
+        "directory": "000-v1127-reuse-c3961e8a-ca21-4310-988f-2cc99ac61924/来源",
+        "tag": "工作",
+        "modifiedWithinDays": 7
+      }
+    },
+    {
+      "name": "二七复用",
+      "query": "__longedit_graph_collection__",
+      "objectTypes": [],
+      "graphRoot": "000-v1127-reuse-c3961e8a-ca21-4310-988f-2cc99ac61924/来源/一已保存.md",
+      "graphDepth": 2
+    }
+  ]
+}
