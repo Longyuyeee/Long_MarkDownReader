@@ -395,6 +395,12 @@ try {
     if (-not (Test-Path -LiteralPath $mainBinary -PathType Leaf)) {
         throw "Installed application binary is missing."
     }
+    if ($env:LONGEDIT_EXPECTED_PAYLOAD_EXE_SHA256 -and
+        (Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant() -ne $env:LONGEDIT_EXPECTED_PAYLOAD_EXE_SHA256) {
+        $identity = [ordered]@{ currentVersion=$CurrentVersion; installRoot=$installRoot; registeredLocation=[string]$currentRegistration.InstallLocation; registeredVersion=[string]$currentRegistration.DisplayVersion; expectedExecutableSha256=$env:LONGEDIT_EXPECTED_PAYLOAD_EXE_SHA256; actualExecutableSha256=(Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant(); actualFileVersion=(Get-Item -LiteralPath $mainBinary).VersionInfo.FileVersion }
+        [IO.File]::WriteAllText((Join-Path $OutputDirectory 'installer-binary-mismatch.json'),($identity | ConvertTo-Json -Depth 5),[Text.UTF8Encoding]::new($false))
+        throw 'Installed executable does not match the verified current installer payload.'
+    }
     if (Get-NetTCPConnection -LocalPort 9343 -State Listen -ErrorAction SilentlyContinue) {
         throw "R5J installed-artifact smoke requires free local port 9343."
     }
