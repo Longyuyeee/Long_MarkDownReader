@@ -306,6 +306,77 @@ pub fn remove_toml_array_item_source(
     change(content, start, end, Some((item_start, item_end)), None)
 }
 
+pub fn replace_toml_array_item_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    item_start: usize,
+    item_end: usize,
+    replacement: &str,
+) -> Result<TomlKeyChange, String> {
+    let range = start..end;
+    let doc = prepare(content, &range)?;
+    let array = find_array(doc.as_item(), &range).ok_or(FALLBACK)?;
+    if array.len() > 2000 {
+        return Err("数组超过 2000 项，请定位源码修改；输入与草稿仍保留".into());
+    }
+    if array.iter().any(|v| !scalar(content, v)) {
+        return Err("嵌套数组、内联表和多行值请定位源码；输入与草稿仍保留".into());
+    }
+    let index = array
+        .iter()
+        .position(|v| v.span() == Some(item_start..item_end))
+        .ok_or("条目位置已变化，请重新选择；输入与草稿仍保留")?;
+    let value = replacement.trim();
+    if value.is_empty() || value.len() > MAX_TOML_SOURCE_BYTES || value.contains(['\r', '\n']) {
+        return Err("请输入单行 TOML 值；字符串需要引号，输入仍保留".into());
+    }
+    let prefix = "__item__ = ";
+    let wrapper = format!("{prefix}{value}");
+    let parsed = Document::parse(wrapper.as_str())
+        .map_err(|_| "请输入文本、数字、布尔或日期时间；字符串需要引号，输入仍保留")?;
+    let literal = parsed
+        .get("__item__")
+        .and_then(Item::as_value)
+        .filter(|v| {
+            parsed.len() == 1
+                && v.span() == Some(prefix.len()..wrapper.len())
+                && scalar(&wrapper, v)
+        })
+        .ok_or("只修改一个单行标量，请勿加入集合、注释或其他字段；输入仍保留")?;
+    let kind = match literal {
+        Value::String(_) => "文本",
+        Value::Integer(_) | Value::Float(_) => "数字",
+        Value::Boolean(_) => "布尔",
+        Value::Datetime(_) => "日期时间",
+        _ => unreachable!(),
+    };
+    let mut expected = literals(content, array).ok_or(FALLBACK)?;
+    expected[index] = value.into();
+    let mut candidate = content.to_string();
+    candidate.replace_range(item_start..item_end, value);
+    if candidate.len() > MAX_TOML_SOURCE_BYTES {
+        return Err("修改后源码超过分析上限；输入与草稿仍保留".into());
+    }
+    let new_end = end
+        .checked_add_signed(candidate.len() as isize - content.len() as isize)
+        .ok_or(FALLBACK)?;
+    let changed_doc = prepare(&candidate, &(start..new_end))?;
+    let changed = find_array(changed_doc.as_item(), &(start..new_end)).ok_or(FALLBACK)?;
+    if literals(&candidate, changed).as_ref() != Some(&expected)
+        || masked_tree(content, doc.as_item(), &range).ok_or(FALLBACK)?
+            != masked_tree(&candidate, changed_doc.as_item(), &(start..new_end)).ok_or(FALLBACK)?
+    {
+        return Err("无法确认只改变当前数组项，请定位源码；输入与草稿仍保留".into());
+    }
+    Ok(TomlKeyChange {
+        content: candidate,
+        start: item_start,
+        end: item_start + value.len(),
+        value_type: Some(kind.into()),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -458,5 +529,107 @@ mod tests {
             Some("1")
         )
         .is_err());
+    }
+
+    fn replace_item(s: &str, p: &str, i: usize, value: &str) -> Result<TomlKeyChange, String> {
+        let e = entry(s, p);
+        let item = inspect_toml_array_items_source(s, e.start, e.end)?.remove(i);
+        replace_toml_array_item_source(s, e.start, e.end, item.start, item.end, value)
+    }
+    #[test]
+    fn replace_item_supports_scalar_types_and_exact_selection() {
+        for (value, kind) in [
+            ("'内容,#😀'", "文本"),
+            ("0xFF", "数字"),
+            ("9_223_372_036_854_775_807", "数字"),
+            ("-1.25e3", "数字"),
+            ("false", "布尔"),
+            ("2026-10-24T10:20:30Z", "日期时间"),
+            ("07:32:00", "日期时间"),
+        ] {
+            let r = replace_item("items = [1, 'keep',]\n", "items", 0, value).unwrap();
+            assert_eq!(r.content, format!("items = [{value}, 'keep',]\n"));
+            assert_eq!(&r.content[r.start..r.end], value);
+            assert_eq!(r.value_type.as_deref(), Some(kind));
+        }
+    }
+    #[test]
+    fn replace_item_preserves_bom_crlf_comments_quoted_keys_and_siblings() {
+        let s = "\u{feff}# 中文😀\r\n[root]\r\n\"a.b\" = [\r\n 0xFF, # first\r\n '文本😀', # selected\r\n 2026-10-24,\r\n]\r\n[other]\r\nitems = [8_080]\r\n";
+        for (i, old) in ["0xFF", "'文本😀'", "2026-10-24"].iter().enumerate() {
+            let r = replace_item(s, "root[\"a.b\"]", i, "true").unwrap();
+            assert_eq!(r.content, s.replacen(old, "true", 1));
+        }
+    }
+    #[test]
+    fn replace_item_rejects_complex_ownership_and_values_without_changing_source() {
+        for (s, p) in [
+            ("items = [1, [2]]", "items"),
+            ("items = [1, {a=2}]", "items"),
+            ("items = [1, '''text''']", "items"),
+            ("a.b = [1]", "a.b"),
+            ("[[a]]\nitems = [1]", "a[0].items"),
+        ] {
+            assert!(replace_item(s, p, 0, "true").is_err(), "{s}");
+        }
+    }
+    #[test]
+    fn replace_item_rejects_stale_partial_unicode_and_budget_ranges() {
+        let s = "items = ['中文😀', 2]";
+        let e = entry(s, "items");
+        for (a, b) in [(999, 1000), (e.start, e.end), (11, 12), (19, 10)] {
+            assert!(replace_toml_array_item_source(s, e.start, e.end, a, b, "true").is_err());
+        }
+        let huge = format!("items = [{}]", vec!["1"; 2001].join(","));
+        let e = entry(&huge, "items");
+        assert!(replace_toml_array_item_source(
+            &huge,
+            e.start,
+            e.end,
+            e.start + 1,
+            e.start + 2,
+            "2"
+        )
+        .is_err());
+        assert!(replace_item(
+            "items = [1]",
+            "items",
+            0,
+            &"1".repeat(MAX_TOML_SOURCE_BYTES + 1)
+        )
+        .is_err());
+    }
+    #[test]
+    fn replace_item_rejects_injection_comments_multiline_and_invalid_literals() {
+        for value in [
+            "",
+            "null",
+            "1 # comment",
+            "1\ny = 2",
+            "[1]",
+            "{a=1}",
+            "'''text'''",
+            "\"\"\"text\"\"\"",
+            "1, 2",
+            "true]\nother = 2",
+        ] {
+            assert!(
+                replace_item("items = [1, 2] # keep\n", "items", 0, value).is_err(),
+                "{value}"
+            );
+        }
+    }
+    #[test]
+    fn replace_item_continues_by_new_ranges_and_never_rewrites_other_literals() {
+        let s = "__v_raw = [0xFF, 'old', true,]\nother = 8_080\n";
+        let a = replace_item(s, "__v_raw", 1, "2026-10-24").unwrap();
+        let b = replace_item(&a.content, "__v_raw", 1, "'longer 😀'").unwrap();
+        assert_eq!(b.content, s.replace("'old'", "'longer 😀'"));
+        assert_eq!(
+            replace_item(&b.content, "__v_raw", 1, "'old'")
+                .unwrap()
+                .content,
+            s
+        );
     }
 }

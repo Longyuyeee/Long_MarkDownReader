@@ -63,13 +63,13 @@
     <footer><span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span><span>{{ encoding.toUpperCase() }}</span><span>{{ lines }} 行</span><span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span></footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
-    <n-modal v-model:show="valueEditVisible" preset="card" class="toml-value-edit-dialog" title="修改 TOML 值" :style="{width:'min(520px,94vw)'}"
+    <n-modal v-model:show="valueEditVisible" preset="card" class="toml-value-edit-dialog" :title="valueEntry?.kind==='array-item' ? '修改 TOML 数组项' : '修改 TOML 值'" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
       :mask-closable="!valueEditPending" :closable="!valueEditPending" :close-on-esc="!valueEditPending"
       @after-enter="valueInput?.select()" @after-leave="finishValueDialog">
       <code>{{ valueEntry?.path }}</code>
-      <n-input ref="valueInput" v-model:value="valueText" type="textarea" :autosize="{minRows:3,maxRows:8}"
-        :disabled="valueEditPending" aria-label="TOML 字段值" :input-props="{'aria-label':'TOML 字段值'}" autofocus />
-      <p v-if="valueError" role="alert" class="error">{{ valueError }}</p>
+      <n-input ref="valueInput" v-model:value="valueText" :type="valueEntry?.kind==='array-item' ? 'text' : 'textarea'" :autosize="valueEntry?.kind==='array-item' ? false : {minRows:3,maxRows:8}" style="width:100%"
+        :disabled="valueEditPending" :input-props="{'aria-label':valueEntry?.kind==='array-item' ? 'TOML 数组项值' : 'TOML 字段值'}" autofocus @keydown.enter="onValueEnter" />
+      <p v-if="valueError" role="alert" class="error">{{ valueError }} <n-button text :disabled="valueEditPending" @click="revealValueSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
         <n-button type="primary" :loading="valueEditPending" @click="previewValueEdit">预览修改</n-button></div></template>
     </n-modal>
@@ -179,7 +179,7 @@ const session = useStructuredSession({
 })
 const valueEditVisible = ref(false), valueEditPending = ref(false), valueText = ref(''), valueError = ref('')
 const valueInput = ref<InputInst | null>(null), valueEntry = ref<Entry | null>(null)
-let valueOwner: ReturnType<typeof session.capture>, pendingValuePreview: (() => void) | undefined
+let valueOwner: ReturnType<typeof session.capture>, pendingValuePreview: (() => void) | undefined, resumeValue = false
 const finishValueDialog = () => { const offer = pendingValuePreview; pendingValuePreview = undefined; offer?.() }
 const renameVisible = ref(false), renamePending = ref(false), renameName = ref(''), renameError = ref('')
 const renameInput = ref<InputInst | null>(null), renameEntry = ref<Entry | null>(null)
@@ -326,28 +326,48 @@ const editDisabled = computed(() => loading.value || saving.value || readOnly.va
 const openValueEdit = (entry: Entry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); reveal(entry); return }
+  if (resumeValue && valueOwner && session.unchanged(valueOwner) && valueEntry.value?.path===entry.path && valueEntry.value.start===entry.start) {
+    resumeValue=false; valueEditVisible.value=true; return
+  }
+  resumeValue=false; pendingValuePreview=undefined
   valueOwner = session.capture()
   if (!valueOwner) return
   valueEntry.value = entry
   valueText.value = new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(valueOwner.source).slice(entry.start,entry.end))
   valueError.value = ''; valueEditVisible.value = true
 }
+const revealValueSource = () => {
+  const owner=valueOwner,entry=valueEntry.value
+  if(!owner||!entry||!session.unchanged(owner))return
+  resumeValue=true;pendingValuePreview=()=>{if(session.unchanged(owner))reveal(entry)};valueEditVisible.value=false
+}
+const onValueEnter = (event:KeyboardEvent) => {
+  if(valueEntry.value?.kind!=='array-item'||event.isComposing||event.keyCode===229)return
+  event.preventDefault();void previewValueEdit()
+}
 const previewValueEdit = async () => {
   const owner = valueOwner, entry = valueEntry.value
   if (!owner || !entry || valueEditPending.value) return
-  if (!session.unchanged(owner)) { valueError.value = '当前文件或草稿已变化，请重新选择字段；内容未被修改'; return }
+  if (!session.unchanged(owner)) { valueError.value = '当前文件或草稿已变化，请重新选择；当前输入与内容仍保留'; return }
   valueEditPending.value = true; valueError.value = ''
   try {
-    const target = await invoke<string>('replace_toml_value_source',{content:owner.source,start:entry.start,end:entry.end,replacement:valueText.value})
-    if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择字段'; return }
-    const anchor = new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(target).slice(0,entry.start)).length
-    pendingValuePreview = () => session.offerChange(owner,'修改 TOML 值',target,anchor)
+    const item=entry.kind==='array-item'&&entry.arrayParent
+    const result=item
+      ? await invoke<{content:string;start:number;end:number;valueType?:string}>('replace_toml_array_item_source',{content:owner.source,start:item.start,end:item.end,itemStart:entry.start,itemEnd:entry.end,replacement:valueText.value})
+      : {content:await invoke<string>('replace_toml_value_source',{content:owner.source,start:entry.start,end:entry.end,replacement:valueText.value}),start:entry.start,end:entry.end,valueType:undefined}
+    if(valueOwner!==owner||!session.owns(owner))return
+    if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择；当前输入与内容仍保留'; return }
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    pendingValuePreview = () => session.offerChange(owner,item?`修改 TOML 数组项${result.valueType?' · '+result.valueType:''}`:'修改 TOML 值',result.content,point(result.start),item?()=>{
+      query.value='';selectedFieldStart.value=result.start
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    }:undefined)
     valueEditVisible.value = false
-  } catch (cause) { if (session.owns(owner)) valueError.value = errorText(cause) }
-  finally { if (session.owns(owner)) valueEditPending.value = false }
+  } catch (cause) { if (valueOwner===owner&&session.owns(owner)) valueError.value = errorText(cause) }
+  finally { if (valueOwner===owner&&session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<Entry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === content.value, reveal: entry => reveal(entry),
-  extra: entry => [...(entry.array ? [{key:'append-item',label:'追加数组项…',disabled:editDisabled.value},{key:'toggle-array',label:expandedArrays.value[entry.path]?'收起数组项':'展开数组项',disabled:analysisPending.value}] : []), ...(entry.kind==='array-item' ? [{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除数组项…',disabled:editDisabled.value}] : []),...(['table','root'].includes(entry.kind)||entry.field ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(entry.kind === 'value' ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  extra: entry => [...(entry.array ? [{key:'append-item',label:'追加数组项…',disabled:editDisabled.value},{key:'toggle-array',label:expandedArrays.value[entry.path]?'收起数组项':'展开数组项',disabled:analysisPending.value}] : []), ...(entry.kind==='array-item' ? [{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除数组项…',disabled:editDisabled.value}] : []),...(['table','root'].includes(entry.kind)||entry.field ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field&&entry.kind==='value' ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['value','array-item'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
   action: (key,entry) => { if(key==='append-item')openArrayChange(entry,'append');if(key==='after-item')openArrayChange(entry,'after');if(key==='remove-item')openArrayChange(entry,'remove');if(key==='toggle-array')void toggleArray(entry);if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerTab = (snapshot?: Snapshot) => session.bind(snapshot)
@@ -377,7 +397,7 @@ const load = async (discardDraft = false) => {
   const owner = session.capture()
   if (!owner) return
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
-  valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
+  valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined; resumeValue=false
   resetArrayOutline();arrayVisible.value=false;arrayPending.value=false;arrayOwner=undefined;arrayEntry.value=null;pendingArray=undefined;resumeArray=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
   renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined
@@ -417,6 +437,7 @@ onBeforeUnmount(() => { clearTimer(); syncTab(); editor?.destroy(); editor = nul
 <style scoped>
 .value-edit-actions{display:flex;justify-content:flex-end;gap:10px}
 .toml-value-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px}
+.toml-value-edit-dialog :deep(.n-card__content){overflow:auto}
 .workspace{width:100%;height:100%;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--theme-bg);color:var(--theme-text)}header{min-height:54px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:var(--theme-border);background:var(--theme-surface)}.identity,.actions{display:flex;align-items:center;gap:8px;min-width:0}.identity>div,.heading>div{display:flex;flex-direction:column;min-width:0}.identity strong{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.identity span,.heading span{font-size:11px;color:var(--theme-text-secondary)}.accent{color:var(--theme-primary)}.error{color:var(--theme-danger,#d03050)}main{min-height:0;flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px)}.source{position:relative;min-width:0;min-height:0}.editor{width:100%;height:100%}.hidden{visibility:hidden}.state{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center}aside{min-height:0;padding:14px;display:flex;flex-direction:column;gap:12px;border-left:var(--theme-border);background:var(--theme-surface)}.heading{display:flex;align-items:center;justify-content:space-between}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.metrics div{padding:8px 3px;display:flex;flex-direction:column;align-items:center;border:var(--theme-border);border-radius:8px}.metrics span{font-size: var(--text-compact);color:var(--theme-text-secondary)}.diagnostic{padding:8px;display:flex;gap:8px;border:0;border-radius:7px;color:var(--theme-danger,#d03050);background:rgba(208,48,80,.08);text-align:left}.diagnostic span,.outline button span{min-width:0;display:flex;flex:1;flex-direction:column}.diagnostic small,.outline small{overflow:hidden;color:var(--theme-text-secondary);text-overflow:ellipsis;white-space:nowrap}.valid{padding:9px;display:flex;gap:8px;border-radius:8px;color:var(--theme-primary);background:rgba(var(--theme-primary-rgb),.08)}.outline{min-height:0;flex:1;overflow:auto}.outline button{width:100%;min-height:48px;padding-top:6px;padding-right:8px;padding-bottom:6px;display:flex;align-items:center;gap:7px;border:0;border-bottom:var(--theme-border);color:inherit;background:transparent;text-align:left;cursor:pointer}.outline button:hover{background:rgba(var(--theme-primary-rgb),.07)}.outline p{padding:14px 6px;color:var(--theme-text-secondary);font-size:12px;text-align:center}.outline .warning{color:var(--theme-warning,#f0a020)}footer{min-height:28px;padding:0 14px;display:flex;align-items:center;gap:14px;border-top:var(--theme-border);color:var(--theme-text-secondary);background:var(--theme-surface);font-size:11px}
 main.inspector-hidden{grid-template-columns:minmax(0,1fr)}main.inspector-hidden aside{display:none}
 .toml-workspace { container-type: inline-size; }
