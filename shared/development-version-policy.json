@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.2.34",
+  "developmentTargetVersion": "1.2.35",
   "runtimeBaseVersion": "1.2.34",
-  "publicVersion": "1.2.33",
-  "publicTag": "v1.2.33",
-  "publicTagCommit": "a93aa47b7894ca98b5ffedd3b85553b6cc54495a",
+  "publicVersion": "1.2.34",
+  "publicTag": "v1.2.34",
+  "publicTagCommit": "774e3e39353ef4d45ee3e84887d012a21a607fc2",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-172-v1.2.34-yaml-literal-block-editing-candidate",
-  "binaryVersionTransition": "v1.2.34-release-ready",
-  "displayLabel": "v1.2.34 YAML 多行文本编辑候选 · 当前公开 v1.2.33",
+  "currentStage": "M8-173-v1.2.34-published",
+  "binaryVersionTransition": "v1.2.34-public-release-published",
+  "displayLabel": "v1.2.34 已发布 · 下一目标 v1.2.35",
   "activeSlice": {
     "id": "v1.2.34-yaml-literal-block-editing",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-and-remote-assets-verified",
     "document": "docs/V1_2_34_Unsigned_Community_Release_Audit_2026-10-25.md"
   }
 }
