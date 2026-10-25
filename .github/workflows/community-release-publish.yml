@@ -49,6 +49,8 @@ jobs:
       - name: Verify source, successful review and exact installer bytes
         shell: pwsh
         run: |
+          node --test scripts/test-community-publish-report-bindings.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Publisher report bindings do not match the installed workflow registry' }
           $ErrorActionPreference = 'Stop'
           if ($env:PRODUCT_COMMIT -notmatch '^[a-f0-9]{40}$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:BUILD_RUN -notmatch '^\d+$' -or $env:REVIEW_RUN -notmatch '^\d+$') { throw 'Invalid immutable release inputs' }
           $build = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:BUILD_RUN" | ConvertFrom-Json
@@ -334,19 +336,8 @@ jobs:
           assertYamlFieldOrderOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed YAML field order tasks or original bytes failed' }
-          }          if ($env:RELEASE_VERSION -in @('1.2.29','1.2.31','1.2.31')) {
-            @'
-          import fs from 'node:fs';
-          import assert from 'node:assert/strict';
-          import {validateInstalledYamlFieldCopy,assertYamlFieldCopyOutputBytes} from './scripts/lib/installed-v1-2-29-evidence.mjs';
-          const read=p=>JSON.parse(fs.readFileSync(p,'utf8').replace(/^\uFEFF/,''));
-          const report=read('verified-review/installed-v1229-order-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),prior=read('verified-review/installed-v118-workflow.json');
-          validateInstalledYamlFieldCopy(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});
-          for(const key of ['executableSha256','harnessSourceCommit'])assert.equal(report[key],prior[key]);
-          assertYamlFieldCopyOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));
-          '@ | node --input-type=module
-            if ($LASTEXITCODE -ne 0) { throw 'Installed TOML array items tasks or original bytes failed' }
-          }          if ($env:RELEASE_VERSION -in @('1.2.30','1.2.31')) {
+          }
+          if ($env:RELEASE_VERSION -in @('1.2.30','1.2.31')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
@@ -358,7 +349,8 @@ jobs:
           assertTomlFieldCopyOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed TOML field copy tasks or original bytes failed' }
-          }          if ($env:RELEASE_VERSION -in @('1.2.29','1.2.30','1.2.31')) {
+          }
+          if ($env:RELEASE_VERSION -in @('1.2.29','1.2.30','1.2.31')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
