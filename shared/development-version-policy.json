@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-172-v1.2.34-yaml-literal-block-editing-candidate",
-  "binaryVersionTransition": "v1.2.34-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.34-release-ready",
   "displayLabel": "v1.2.34 YAML 多行文本编辑候选 · 当前公开 v1.2.33",
   "activeSlice": {
     "id": "v1.2.34-yaml-literal-block-editing",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_34_Unsigned_Community_Release_Audit_2026-10-25.md"
   }
 }

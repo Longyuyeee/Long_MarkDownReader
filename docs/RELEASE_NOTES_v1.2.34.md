@@ -6,6 +6,6 @@
 
 继续保护未保存内容、延迟预填与修改结果、后续输入、旧差异、文件切换、保存失败重试与外部冲突完整副本。错误时保留输入，保留全部既有功能、风格和正常动效。
 
-未签名社区版；完整检查与实际安装检查仍待完成，尚未发布。应用内自动更新实际观察独立记录。
+未签名社区版；完整发布检查与 674 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
 
 [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.34) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_34_Unsigned_Community_Release_Audit_2026-10-25.md)。
