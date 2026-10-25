@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-166-v1.2.31-yaml-field-ordering-candidate",
-  "binaryVersionTransition": "v1.2.31-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.31-release-ready",
   "displayLabel": "v1.2.31 YAML 字段上移／下移候选 · 当前公开 v1.2.30",
   "activeSlice": {
     "id": "v1.2.31-yaml-field-ordering",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_31_Unsigned_Community_Release_Audit_2026-10-25.md"
   }
 }

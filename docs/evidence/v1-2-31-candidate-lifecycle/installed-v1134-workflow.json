@@ -1,0 +1,629 @@
+{
+  "appVersion": "1.2.31",
+  "sourceCommit": "5524c5b34af44102d0a388056a610cadb38e5416",
+  "installerSha256": "45888bcbb425dc9957a6a998b9da69e2e1f4a09754df96358ba5aa2c6f22dadd",
+  "harnessSourceCommit": "5524c5b34af44102d0a388056a610cadb38e5416",
+  "executableSha256": "24ca07c2c2b8b29c9cfbc7f04d2c7e82f2d43ee296698bb8473899fc779ed5ce",
+  "status": "passed",
+  "evidenceLevel": "installed-portable-chapters-trusted-ui-and-output-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "real-portable-and-local-chapter-clipboard",
+      "status": "passed"
+    },
+    {
+      "id": "duplicate-heading-navigation-preserves-both-drafts",
+      "status": "passed"
+    },
+    {
+      "id": "renamed-heading-has-local-feedback",
+      "status": "passed"
+    },
+    {
+      "id": "missing-document-keeps-the-working-page",
+      "status": "passed"
+    },
+    {
+      "id": "cross-library-chapter-and-dependency-output-bytes",
+      "status": "passed"
+    },
+    {
+      "id": "native-rename-repairs-only-the-chapter-destination",
+      "status": "passed"
+    },
+    {
+      "id": "cancel-keeps-files-and-predecessor-drafts",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-input-without-runtime-overlay",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1134-source.md",
+      "sizeBytes": 713,
+      "sha256": "91289c83c90aa2a78787cd255d32b451e8a385cc5a956279a8a4378cfc469888"
+    },
+    {
+      "fileName": "installed-v1134-target.md",
+      "sizeBytes": 1504,
+      "sha256": "e58a10757544b97a475c901407b2711690f798c0095f1a90b84b82de5e8fcd2e"
+    },
+    {
+      "fileName": "installed-v1134-copy-source.md",
+      "sizeBytes": 238,
+      "sha256": "35c52f32c5fcfe00e6d7ae36995e7af447f65c0ada684a36da0bd725deaa391b"
+    },
+    {
+      "fileName": "installed-v1134-copied.md",
+      "sizeBytes": 344,
+      "sha256": "018ce8d55a90d9546738dbf4f7b609cc1cd8bbb485cb7bb1d03f52da76e59d77"
+    },
+    {
+      "fileName": "installed-v1134-dependency.md",
+      "sizeBytes": 1504,
+      "sha256": "e58a10757544b97a475c901407b2711690f798c0095f1a90b84b82de5e8fcd2e"
+    },
+    {
+      "fileName": "installed-v1134-rename-before.md",
+      "sizeBytes": 253,
+      "sha256": "962f72c97efb846a33a2dea380aa4ca80d18446093e8b1a974f4ed282d04724c"
+    },
+    {
+      "fileName": "installed-v1134-rename-note.md",
+      "sizeBytes": 253,
+      "sha256": "6864ce6a5384fd8f51ef08d7761f9884849ad9516dc1ed5617d70500f232e563"
+    },
+    {
+      "fileName": "installed-v1134-renamed.md",
+      "sizeBytes": 43,
+      "sha256": "ba2b1d67aafa27b73deca6a1e5bd45bd55d05879964aa85b2a10c74eadab3e4c"
+    },
+    {
+      "fileName": "installed-v1134-observations.json",
+      "sizeBytes": 578,
+      "sha256": "3edc48b4e225b3dd26747ad97fa916f043605ed1bb6c64dd2795f3d3375f82cc"
+    }
+  ],
+  "editorModeBefore": "sv",
+  "originalRelative": "000-v1121-copy-5496d9d8-95d0-4fea-988c-1f134411ace6/来源/章节 # 目标.md",
+  "clipboardLink": "[重复](<longedit://chapter?path=000-v1121-copy-5496d9d8-95d0-4fea-988c-1f134411ace6%2F%E6%9D%A5%E6%BA%90%2F%E7%AB%A0%E8%8A%82%20%23%20%E7%9B%AE%E6%A0%87.md&title=%E9%87%8D%E5%A4%8D#%E9%87%8D%E5%A4%8D-1>)",
+  "localClipboardLink": "[重复](<C:/LongEditR5ILibrary/000-v1121-copy-5496d9d8-95d0-4fea-988c-1f134411ace6/%E6%9D%A5%E6%BA%90/%E7%AB%A0%E8%8A%82%20%23%20%E7%9B%AE%E6%A0%87.md#%E9%87%8D%E5%A4%8D-1>)",
+  "clipboardExact": true,
+  "targetDraft": "# 章节目标\n\n## 重复\n\n第一处唯一。\n\n中间正文 0。\n\n中间正文 1。\n\n中间正文 2。\n\n中间正文 3。\n\n中间正文 4。\n\n中间正文 5。\n\n中间正文 6。\n\n中间正文 7。\n\n中间正文 8。\n\n中间正文 9。\n\n中间正文 10。\n\n中间正文 11。\n\n中间正文 12。\n\n中间正文 13。\n\n中间正文 14。\n\n中间正文 15。\n\n中间正文 16。\n\n中间正文 17。\n\n中间正文 18。\n\n中间正文 19。\n\n中间正文 20。\n\n中间正文 21。\n\n中间正文 22。\n\n中间正文 23。\n\n中间正文 24。\n\n中间正文 25。\n\n中间正文 26。\n\n中间正文 27。\n\n中间正文 28。\n\n中间正文 29。\n\n中间正文 30。\n\n中间正文 31。\n\n中间正文 32。\n\n中间正文 33。\n\n中间正文 34。\n\n中间正文 35。\n\n中间正文 36。\n\n中间正文 37。\n\n中间正文 38。\n\n中间正文 39。\n\n中间正文 40。\n\n中间正文 41。\n\n中间正文 42。\n\n中间正文 43。\n\n中间正文 44。\n\n中间正文 45。\n\n中间正文 46。\n\n中间正文 47。\n\n中间正文 48。\n\n中间正文 49。\n\n中间正文 50。\n\n中间正文 51。\n\n中间正文 52。\n\n中间正文 53。\n\n中间正文 54。\n\n中间正文 55。\n\n中间正文 56。\n\n中间正文 57。\n\n中间正文 58。\n\n中间正文 59。\n\n中间正文 60。\n\n中间正文 61。\n\n中间正文 62。\n\n中间正文 63。\n\n中间正文 64。\n\n中间正文 65。\n\n中间正文 66。\n\n中间正文 67。\n\n中间正文 68。\n\n中间正文 69。\n\n## 重复\n\n第二处唯一。\n\n目标末尾。\n\n目标保留草稿\n",
+  "sourceDraft": "# 章节来源\n\n[重复](longedit://chapter?path=000-v1121-copy-5496d9d8-95d0-4fea-988c-1f134411ace6%2F%E6%9D%A5%E6%BA%90%2F%E7%AB%A0%E8%8A%82%20%23%20%E7%9B%AE%E6%A0%87.md&title=%E9%87%8D%E5%A4%8D#%E9%87%8D%E5%A4%8D-1)\n\n[已改名章节](longedit://chapter?path=000-v1121-copy-5496d9d8-95d0-4fea-988c-1f134411ace6%2F%E6%9D%A5%E6%BA%90%2F%E7%AB%A0%E8%8A%82%20%23%20%E7%9B%AE%E6%A0%87.md&title=%E4%BB%A5%E5%89%8D%E7%9A%84%E6%A0%87%E9%A2%98#%E9%87%8D%E5%A4%8D)\n\n[不存在的原文](longedit://chapter?path=000-v1121-copy-5496d9d8-95d0-4fea-988c-1f134411ace6%2F%E6%9D%A5%E6%BA%90%2F%E5%B7%B2%E7%BB%8F%E4%B8%8D%E5%AD%98%E5%9C%A8.md&title=%E9%87%8D%E5%A4%8D#%E9%87%8D%E5%A4%8D-1)\n\n来源末尾。\n\n来源保留草稿\n",
+  "draftsExact": true,
+  "duplicateExact": true,
+  "renamedHeadingExact": true,
+  "missingExact": true,
+  "savedSourceExact": true,
+  "savedTargetExact": true,
+  "dependencyRelative": "可移植章节/可复制章节.md.assets/000-v1121-copy-5496d9d8-95d0-4fea-988c-1f134411ace6/来源/章节 # 目标.md",
+  "copyExact": true,
+  "renamedRelative": "000-v1121-copy-5496d9d8-95d0-4fea-988c-1f134411ace6/来源/章节改名副本-v1134.md",
+  "renameExact": true,
+  "editorModeAfter": "sv",
+  "predecessorDraftsExact": true,
+  "cancelExact": true,
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}

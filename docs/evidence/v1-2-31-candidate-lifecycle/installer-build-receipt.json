@@ -1,0 +1,30 @@
+{
+    "schemaVersion":  1,
+    "stage":  "V1.2.31",
+    "status":  "hosted-installers-built",
+    "candidateSourceCommit":  "5524c5b34af44102d0a388056a610cadb38e5416",
+    "previousSourceCommit":  "38b3566b69f5ad3071796d4c926e63ae18e345f8",
+    "appVersion":  "1.2.31",
+    "previousVersion":  "1.2.30",
+    "previousInstallerSource":  "official-github-release",
+    "previousInstallerSha256":  "6da85fe5096c8e5c66b2aa6cfe5520bc1b93011c1653cf40255fe99900d1aa30",
+    "runner":  "windows-latest",
+    "releaseCandidate":  false,
+    "sourceUserContentIncluded":  false,
+    "artifacts":  [
+                      {
+                          "target":  "msi",
+                          "fileName":  "Long编辑_1.2.31_x64_zh-CN.msi",
+                          "sizeBytes":  78139392,
+                          "sha256":  "36d3e46d891e65103b8f05cc61314f17302f5155515d6897102bac1c89fe9ab1",
+                          "authenticodeStatus":  "NotSigned"
+                      },
+                      {
+                          "target":  "nsis",
+                          "fileName":  "Long编辑_1.2.31_x64-setup.exe",
+                          "sizeBytes":  68720516,
+                          "sha256":  "45888bcbb425dc9957a6a998b9da69e2e1f4a09754df96358ba5aa2c6f22dadd",
+                          "authenticodeStatus":  "NotSigned"
+                      }
+                  ]
+}
