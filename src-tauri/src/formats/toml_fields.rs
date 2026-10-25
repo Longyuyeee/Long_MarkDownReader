@@ -88,6 +88,64 @@ fn line_end(content: &str, at: usize) -> usize {
         .map_or(content.len(), |n| at + n + 1)
 }
 
+pub fn copy_toml_field_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    name: &str,
+) -> Result<TomlKeyChange, String> {
+    let doc = prepare(content)?;
+    let fallback = "此字段的结构无法准确复制，点键、数组表、集合和多行值请定位源码；名称与草稿仍保留";
+    let path = target(doc.as_table(), start, end, false, &mut vec![]).ok_or(fallback)?;
+    let table = table_at(doc.as_table(), &path).ok_or(fallback)?;
+    let (original, item) = table
+        .iter()
+        .find(|(key, _)| table.key(key).and_then(Key::span) == Some(start..end))
+        .ok_or(fallback)?;
+    let field = field_info(content, table.key(original).ok_or(fallback)?, item, table.is_dotted())
+        .ok_or(fallback)?;
+    if field.rename_unavailable_reason.is_some() || (!path.is_empty() && table.is_implicit()) {
+        return Err(fallback.into());
+    }
+    if name.is_empty() || name.len() > 4096 || name.chars().any(char::is_control) {
+        return Err("请输入单行字段名（最多 4096 字节）；名称与草稿仍保留".into());
+    }
+    if table.contains_key(name) {
+        return Err("同一层级已有这个字段名或表路径，请换一个名称；名称与草稿仍保留".into());
+    }
+    let value = item.as_value().ok_or(fallback)?;
+    if matches!(value, Value::Array(_) | Value::InlineTable(_)) {
+        return Err(fallback.into());
+    }
+    let span = value.span().ok_or(fallback)?;
+    if content[start..span.end].contains(['\r', '\n']) {
+        return Err(fallback.into());
+    }
+    let key = if name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
+        name.to_string()
+    } else if content[start..end].starts_with('\'') && !name.contains('\'') {
+        format!("'{name}'")
+    } else {
+        serde_json::to_string(name).map_err(|_| fallback)?
+    };
+    let from = line_start(content, start).max(usize::from(content.starts_with('\u{feff}')) * 3);
+    let at = line_end(content, span.end);
+    let tail = &content[span.end..at];
+    if !tail.trim().is_empty() && !tail.trim_start_matches([' ', '\t']).starts_with('#') {
+        return Err(fallback.into());
+    }
+    let separator = if content[..at].ends_with('\n') { "" } else if content.contains("\r\n") { "\r\n" } else { "\n" };
+    let insertion = format!("{separator}{}{key}{}{tail}", &content[from..start], &content[end..span.end]);
+    if content.len().checked_add(insertion.len()).is_none_or(|n| n > MAX_TOML_SOURCE_BYTES) {
+        return Err("复制后源码超过分析上限；名称与草稿仍保留".into());
+    }
+    let mut expected = source_tree(content, doc.as_item(), None).ok_or(fallback)?;
+    fields_at(&mut expected, &path).ok_or(fallback)?
+        .insert(name.into(), serde_json::json!(["value", &content[span]]));
+    let point = at + separator.len() + start - from;
+    checked(&format!("{}{}{}", &content[..at], insertion, &content[at..]), &expected, point, point + key.len(), None)
+}
+
 pub fn add_toml_field_source(
     content: &str,
     start: usize,

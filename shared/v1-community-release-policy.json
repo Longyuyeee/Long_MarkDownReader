@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.29",
+  "appVersion": "1.2.30",
   "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-25",
-  "currentStatus": "v1.2.29-community-release-published",
+  "currentStatus": "v1.2.30-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -33,56 +33,48 @@
     "localRuntimeSmokePassed": true,
     "installedLifecyclePassed": true,
     "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.28",
+    "previousPublicVersion": "1.2.29",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.28-to-1.2.29-pending",
-    "scope": "yaml-field-copy"
+    "managedUpdaterUpgradePath": "1.2.29-to-1.2.30-pending",
+    "scope": "toml-field-copy"
   },
   "targetRelease": {
-    "tag": "v1.2.29",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.29",
+    "tag": "v1.2.30",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.30",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "bc52c23b1d17ebc07b3dd63a2e824e4670d8492e",
+    "artifactSourceCommit": "38b3566b69f5ad3071796d4c926e63ae18e345f8",
     "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40136300307,
-    "hostedInstalledLifecycleRunId": 40140393015,
+    "artifactBuildRunId": 40143977366,
+    "hostedInstalledLifecycleRunId": 40146250856,
     "artifacts": [
       {
         "target": "msi",
-        "fileName": "LongEdit_1.2.29_x64_zh-CN.msi",
+        "fileName": "LongEdit_1.2.30_x64_zh-CN.msi",
         "sizeBytes": 78192640,
-        "sha256": "c637076308f18ebeb048c03f63cb675f31d1d072d5bba4b7ebacc68379622884",
+        "sha256": "27fc4f1e0a2eaf9a63eb89a5a207ba441d4f13d3f5f4e6955f31a9044b2ebb72",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.29_x64_zh-CN.msi"
+        "sourceFileName": "Long编辑_1.2.30_x64_zh-CN.msi"
       },
       {
         "target": "nsis",
-        "fileName": "LongEdit_1.2.29_x64-setup.exe",
-        "sizeBytes": 68785982,
-        "sha256": "54b539eae4c61dce463c1861b4cb4a136285feecf5183f68b41d952b5063e141",
+        "fileName": "LongEdit_1.2.30_x64-setup.exe",
+        "sizeBytes": 68766942,
+        "sha256": "6da85fe5096c8e5c66b2aa6cfe5520bc1b93011c1653cf40255fe99900d1aa30",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.29_x64-setup.exe"
+        "sourceFileName": "Long编辑_1.2.30_x64-setup.exe"
       }
     ]
   },
-  "release": {
-    "tag": "v1.2.29",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.29",
-    "databaseId": 423040076,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "bc52c23b1d17ebc07b3dd63a2e824e4670d8492e",
-    "publishedAt": "2026-10-24T23:26:47Z"
-  },
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -151,7 +143,8 @@
     "v1.2.25-to-v1.2.26-managed-update-observation-pending",
     "v1.2.26-to-v1.2.27-managed-update-observation-pending",
     "v1.2.27-to-v1.2.28-managed-update-observation-pending",
-    "v1.2.28-to-v1.2.29-managed-update-observation-pending"
+    "v1.2.28-to-v1.2.29-managed-update-observation-pending",
+    "v1.2.29-to-v1.2.30-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.30-toml-field-copy-planned"
+  "nextAction": "publish-verified-v1.2.30"
 }

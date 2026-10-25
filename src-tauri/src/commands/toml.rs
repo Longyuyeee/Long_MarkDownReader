@@ -56,6 +56,23 @@ pub fn rename_toml_key_source(
 }
 
 #[tauri::command]
+pub fn copy_toml_field_source(
+    content: String,
+    start: usize,
+    end: usize,
+    name: String,
+) -> Result<crate::formats::toml::TomlKeyChange, TextDocumentError> {
+    crate::formats::toml::copy_toml_field_source(&content, start, end, &name).map_err(|message| {
+        TextDocumentError::recoverable(
+            "toml-field-copy-rejected",
+            message,
+            "调整名称后重试，或定位源码；当前输入与草稿仍保留",
+        )
+    })
+}
+
+
+#[tauri::command]
 pub fn add_toml_field_source(
     content: String,
     start: usize,

@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "passed": 468,
+  "ignored": 2,
+  "newFieldCopyTests": 8,
+  "command": "cargo test --manifest-path src-tauri/Cargo.toml formats:: --lib -- --test-threads=1",
+  "incremental": false
+}
