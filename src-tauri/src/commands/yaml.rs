@@ -47,6 +47,13 @@ pub fn rename_yaml_key_source(
 }
 
 #[tauri::command]
+pub fn inspect_yaml_literal_source(content: String, start: usize, end: usize) -> Result<String, TextDocumentError> {
+    crate::formats::yaml::inspect_yaml_literal_source(&content, start, end).map_err(|message| {
+        TextDocumentError::recoverable("yaml-literal-read-rejected", message, "重新选择或定位源码；当前输入和草稿仍保留")
+    })
+}
+
+#[tauri::command]
 pub fn replace_yaml_value_source(
     content: String,
     start: usize,

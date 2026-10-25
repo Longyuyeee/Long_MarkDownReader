@@ -179,7 +179,7 @@ use commands::xml::{
     write_xml_source_document,
 };
 use commands::yaml::{
-    add_yaml_sequence_item_source, remove_yaml_sequence_item_source, copy_yaml_sequence_item_source, move_yaml_sequence_item_source, add_yaml_field_source, remove_yaml_field_source, copy_yaml_field_source, move_yaml_field_source, analyze_yaml_source, rename_yaml_key_source, replace_yaml_value_source, write_external_yaml_source_document,
+    add_yaml_sequence_item_source, remove_yaml_sequence_item_source, copy_yaml_sequence_item_source, move_yaml_sequence_item_source, add_yaml_field_source, remove_yaml_field_source, copy_yaml_field_source, move_yaml_field_source, analyze_yaml_source, inspect_yaml_literal_source, rename_yaml_key_source, replace_yaml_value_source, write_external_yaml_source_document,
     write_yaml_source_document,
 };
 use services::data_migration::check_and_migrate_data;
@@ -391,6 +391,7 @@ pub fn run() {
             write_json_source_document,
             write_external_json_source_document,
             analyze_yaml_source,
+            inspect_yaml_literal_source,
             replace_yaml_value_source,
             rename_yaml_key_source,
             add_yaml_field_source,
