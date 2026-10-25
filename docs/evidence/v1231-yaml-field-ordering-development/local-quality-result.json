@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "command": "npm run ci:patch-release",
+  "actualExit": 0,
+  "typecheckAndProductionBuild": "passed",
+  "formats": 476,
+  "newYamlFieldOrderRust": 8,
+  "newBrowserChecks": 10,
+  "yamlFieldCopyRegression": 10,
+  "tomlFieldCopyRegression": 10,
+  "browserNativeBridgeMocked": true,
+  "nativeDriverExpressionRecheck": "2 passed after adding explicit adjacent-header fallback"
+}
