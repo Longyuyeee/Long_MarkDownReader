@@ -71,6 +71,23 @@ pub fn copy_toml_field_source(
     })
 }
 
+#[tauri::command]
+pub fn move_toml_field_source(
+    content: String,
+    start: usize,
+    end: usize,
+    direction: String,
+) -> Result<crate::formats::toml::TomlKeyChange, TextDocumentError> {
+    crate::formats::toml::move_toml_field_source(&content, start, end, &direction).map_err(
+        |message| {
+            TextDocumentError::recoverable(
+                "toml-field-move-rejected",
+                message,
+                "定位源码后继续修改；当前草稿仍保留",
+            )
+        },
+    )
+}
 
 #[tauri::command]
 pub fn add_toml_field_source(

@@ -88,6 +88,139 @@ fn line_end(content: &str, at: usize) -> usize {
         .map_or(content.len(), |n| at + n + 1)
 }
 
+/// Swap the exact assignment bodies, keeping line endings and independent comments in place.
+pub fn move_toml_field_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    direction: &str,
+) -> Result<TomlKeyChange, String> {
+    let fallback =
+        "此字段的结构或注释归属无法准确移动，点键、数组表、集合和多行值请定位源码；草稿仍保留";
+    if !matches!(direction, "up" | "down") {
+        return Err("请选择上移或下移；草稿仍保留".into());
+    }
+    let doc = prepare(content)?;
+    let path = target(doc.as_table(), start, end, false, &mut vec![]).ok_or(fallback)?;
+    let table = table_at(doc.as_table(), &path).ok_or(fallback)?;
+    if table.is_dotted() || (!path.is_empty() && table.is_implicit()) {
+        return Err(fallback.into());
+    }
+    // Table.iter also contains descendant tables; only direct assignments are siblings.
+    let fields: Vec<_> = table.iter().filter(|(_, item)| item.is_value()).collect();
+    let index = fields
+        .iter()
+        .position(|(name, _)| table.key(name).and_then(Key::span) == Some(start..end))
+        .ok_or(fallback)?;
+    let neighbor = if direction == "up" {
+        index.checked_sub(1)
+    } else {
+        index.checked_add(1).filter(|i| *i < fields.len())
+    }
+    .ok_or("已经是第一个或最后一个字段；草稿仍保留")?;
+    let left = index.min(neighbor);
+    let unit = |i: usize| -> Result<(usize, usize, usize), String> {
+        let (name, item) = fields[i];
+        let f =
+            field_info(content, table.key(name).ok_or(fallback)?, item, false).ok_or(fallback)?;
+        let v = item.as_value().ok_or(fallback)?;
+        let span = v.span().ok_or(fallback)?;
+        if f.rename_unavailable_reason.is_some()
+            || matches!(v, Value::Array(_) | Value::InlineTable(_))
+            || content
+                .get(f.start..span.end)
+                .is_none_or(|s| s.contains(['\r', '\n']))
+        {
+            return Err(fallback.into());
+        }
+        let from =
+            line_start(content, f.start).max(usize::from(content.starts_with('\u{feff}')) * 3);
+        let newline = content[span.end..]
+            .find('\n')
+            .map_or(content.len(), |i| span.end + i);
+        let to = if content.as_bytes().get(newline.wrapping_sub(1)) == Some(&b'\r') {
+            newline - 1
+        } else {
+            newline
+        };
+        let tail = &content[span.end..to];
+        if !content[from..f.start]
+            .chars()
+            .all(|c| c == ' ' || c == '\t')
+            || (!tail.trim().is_empty()
+                && (!tail.starts_with([' ', '\t']) || !tail.trim_start().starts_with('#')))
+        {
+            return Err(fallback.into());
+        }
+        Ok((from, to, f.start))
+    };
+    let a = unit(left)?;
+    let b = unit(left + 1)?;
+    if a.1 > b.0 {
+        return Err(fallback.into());
+    }
+    let gap = &content[a.1..b.0];
+    let inner = gap
+        .strip_prefix("\r\n")
+        .or_else(|| gap.strip_prefix('\n'))
+        .unwrap_or(gap);
+    let lines: Vec<_> = inner.lines().collect();
+    if !inner.trim().is_empty()
+        && !(lines.first().is_some_and(|s| s.trim().is_empty())
+            && lines.last().is_some_and(|s| s.trim().is_empty())
+            && lines
+                .iter()
+                .all(|s| s.trim().is_empty() || s.trim_start().starts_with('#')))
+    {
+        return Err(fallback.into());
+    }
+    let before = content[..a.0].strip_suffix('\n').unwrap_or(&content[..a.0]);
+    if before.rsplit('\n').next().is_some_and(|s| {
+        s.trim_start_matches('\u{feff}')
+            .trim_start()
+            .starts_with('#')
+    }) {
+        return Err(fallback.into());
+    }
+    let raw_a = &content[a.0..a.1];
+    let raw_b = &content[b.0..b.1];
+    let candidate = format!(
+        "{}{}{}{}{}",
+        &content[..a.0],
+        raw_b,
+        gap,
+        raw_a,
+        &content[b.1..]
+    );
+    let after = prepare(&candidate)?;
+    let expected = source_tree(content, doc.as_item(), None).ok_or(fallback)?;
+    if source_tree(&candidate, after.as_item(), None).as_ref() != Some(&expected) {
+        return Err(fallback.into());
+    }
+    let mut order: Vec<_> = fields.iter().map(|(name, _)| *name).collect();
+    order.swap(left, left + 1);
+    let actual: Vec<_> = table_at(after.as_table(), &path)
+        .ok_or(fallback)?
+        .iter()
+        .filter(|(_, item)| item.is_value())
+        .map(|(name, _)| name)
+        .collect();
+    if actual != order {
+        return Err(fallback.into());
+    }
+    let point = if direction == "up" {
+        a.0 + b.2 - b.0
+    } else {
+        a.0 + raw_b.len() + gap.len() + a.2 - a.0
+    };
+    Ok(TomlKeyChange {
+        content: candidate,
+        start: point,
+        end: point + end - start,
+        value_type: None,
+    })
+}
+
 pub fn copy_toml_field_source(
     content: &str,
     start: usize,
@@ -95,15 +228,21 @@ pub fn copy_toml_field_source(
     name: &str,
 ) -> Result<TomlKeyChange, String> {
     let doc = prepare(content)?;
-    let fallback = "此字段的结构无法准确复制，点键、数组表、集合和多行值请定位源码；名称与草稿仍保留";
+    let fallback =
+        "此字段的结构无法准确复制，点键、数组表、集合和多行值请定位源码；名称与草稿仍保留";
     let path = target(doc.as_table(), start, end, false, &mut vec![]).ok_or(fallback)?;
     let table = table_at(doc.as_table(), &path).ok_or(fallback)?;
     let (original, item) = table
         .iter()
         .find(|(key, _)| table.key(key).and_then(Key::span) == Some(start..end))
         .ok_or(fallback)?;
-    let field = field_info(content, table.key(original).ok_or(fallback)?, item, table.is_dotted())
-        .ok_or(fallback)?;
+    let field = field_info(
+        content,
+        table.key(original).ok_or(fallback)?,
+        item,
+        table.is_dotted(),
+    )
+    .ok_or(fallback)?;
     if field.rename_unavailable_reason.is_some() || (!path.is_empty() && table.is_implicit()) {
         return Err(fallback.into());
     }
@@ -121,7 +260,10 @@ pub fn copy_toml_field_source(
     if content[start..span.end].contains(['\r', '\n']) {
         return Err(fallback.into());
     }
-    let key = if name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
+    let key = if name
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
         name.to_string()
     } else if content[start..end].starts_with('\'') && !name.contains('\'') {
         format!("'{name}'")
@@ -134,16 +276,37 @@ pub fn copy_toml_field_source(
     if !tail.trim().is_empty() && !tail.trim_start_matches([' ', '\t']).starts_with('#') {
         return Err(fallback.into());
     }
-    let separator = if content[..at].ends_with('\n') { "" } else if content.contains("\r\n") { "\r\n" } else { "\n" };
-    let insertion = format!("{separator}{}{key}{}{tail}", &content[from..start], &content[end..span.end]);
-    if content.len().checked_add(insertion.len()).is_none_or(|n| n > MAX_TOML_SOURCE_BYTES) {
+    let separator = if content[..at].ends_with('\n') {
+        ""
+    } else if content.contains("\r\n") {
+        "\r\n"
+    } else {
+        "\n"
+    };
+    let insertion = format!(
+        "{separator}{}{key}{}{tail}",
+        &content[from..start],
+        &content[end..span.end]
+    );
+    if content
+        .len()
+        .checked_add(insertion.len())
+        .is_none_or(|n| n > MAX_TOML_SOURCE_BYTES)
+    {
         return Err("复制后源码超过分析上限；名称与草稿仍保留".into());
     }
     let mut expected = source_tree(content, doc.as_item(), None).ok_or(fallback)?;
-    fields_at(&mut expected, &path).ok_or(fallback)?
+    fields_at(&mut expected, &path)
+        .ok_or(fallback)?
         .insert(name.into(), serde_json::json!(["value", &content[span]]));
     let point = at + separator.len() + start - from;
-    checked(&format!("{}{}{}", &content[..at], insertion, &content[at..]), &expected, point, point + key.len(), None)
+    checked(
+        &format!("{}{}{}", &content[..at], insertion, &content[at..]),
+        &expected,
+        point,
+        point + key.len(),
+        None,
+    )
 }
 
 pub fn add_toml_field_source(
