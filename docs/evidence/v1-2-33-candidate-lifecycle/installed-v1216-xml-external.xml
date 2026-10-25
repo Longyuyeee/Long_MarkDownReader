@@ -1,0 +1,12 @@
+﻿<?xml version="1.0"?>
+<!-- 外部保留 -->
+<catalog xmlns:doc="urn:docs">
+  <doc:item id='first'/>
+  <doc:item
+    doc:label="原值"
+    keep = '&amp;'
+    标题='&apos;" &amp; &lt; &gt;&#xA;中文😀'
+  >正文<![CDATA[< > &]]></doc:item>
+  <empty></empty>
+  <selfClosing/>
+</catalog>

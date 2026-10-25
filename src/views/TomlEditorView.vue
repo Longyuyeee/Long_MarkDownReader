@@ -63,11 +63,11 @@
     <footer><span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span><span>{{ encoding.toUpperCase() }}</span><span>{{ lines }} 行</span><span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span></footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
-    <n-modal v-model:show="valueEditVisible" preset="card" class="toml-value-edit-dialog" :title="valueEntry?.kind==='array-item' ? '修改 TOML 数组项' : '修改 TOML 值'" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
+    <n-modal v-model:show="valueEditVisible" preset="card" class="toml-value-edit-dialog" :title="valueEntry?.kind==='array-item' ? '修改 TOML 数组项' : valueDatetimeKind ? '修改 TOML '+valueDatetimeKind : '修改 TOML 值'" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
       :mask-closable="!valueEditPending" :closable="!valueEditPending" :close-on-esc="!valueEditPending"
       @after-enter="valueInput?.select()" @after-leave="finishValueDialog">
       <code>{{ valueEntry?.path }}</code>
-      <n-input ref="valueInput" v-model:value="valueText" :type="valueEntry?.kind==='array-item' ? 'text' : 'textarea'" :autosize="valueEntry?.kind==='array-item' ? false : {minRows:3,maxRows:8}" style="width:100%"
+      <n-input ref="valueInput" v-model:value="valueText" :type="valueEntry?.kind==='array-item'||valueDatetimeKind ? 'text' : 'textarea'" :autosize="valueEntry?.kind==='array-item'||valueDatetimeKind ? false : {minRows:3,maxRows:8}" style="width:100%"
         :disabled="valueEditPending" :input-props="{'aria-label':valueEntry?.kind==='array-item' ? 'TOML 数组项值' : 'TOML 字段值'}" autofocus @keydown.enter="onValueEnter" />
       <p v-if="valueError" role="alert" class="error">{{ valueError }} <n-button text :disabled="valueEditPending" @click="revealValueSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
@@ -454,6 +454,14 @@ const moveField=async(entry:Entry,direction:'up'|'down')=>{
 }
 const revealMoveSource=()=>{const owner=moveOwner,entry=moveEntry.value;if(owner&&entry&&session.unchanged(owner))pendingMoveReveal=()=>{if(session.unchanged(owner))reveal(entry)};moveError.value=''}
 const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || duplicatePending.value || fieldPending.value || arrayPending.value || copyPending.value || movePending.value || analyzedSource.value !== content.value || !analysis.value?.valid)
+// Classify the parser-confirmed original literal only; never round-trip through Date.
+const valueDatetimeKind = computed(() => {
+  const raw=valueEntry.value?.preview || ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return '日期'
+  if (/^\d{2}:\d{2}(?::\d{2})?/.test(raw)) return '本地时间'
+  if (/^\d{4}-\d{2}-\d{2}[Tt ]\d{2}:/.test(raw)) return /(?:[Zz]|[+-]\d{2}:\d{2})$/.test(raw) ? '带时区日期时间' : '本地日期时间'
+  return ''
+})
 const openValueEdit = (entry: Entry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); reveal(entry); return }
@@ -473,7 +481,7 @@ const revealValueSource = () => {
   resumeValue=true;pendingValuePreview=()=>{if(session.unchanged(owner))reveal(entry)};valueEditVisible.value=false
 }
 const onValueEnter = (event:KeyboardEvent) => {
-  if(valueEntry.value?.kind!=='array-item'||event.isComposing||event.keyCode===229)return
+  if((valueEntry.value?.kind!=='array-item'&&!valueDatetimeKind.value)||event.isComposing||event.keyCode===229)return
   event.preventDefault();void previewValueEdit()
 }
 const previewValueEdit = async () => {

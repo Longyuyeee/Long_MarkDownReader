@@ -1,0 +1,1458 @@
+{
+  "appVersion": "1.2.33",
+  "sourceCommit": "a93aa47b7894ca98b5ffedd3b85553b6cc54495a",
+  "installerSha256": "bd346361cd935f4f774a27c94cf7d09c9b276b3905a984ca4bec823eb72a6011",
+  "harnessSourceCommit": "a93aa47b7894ca98b5ffedd3b85553b6cc54495a",
+  "executableSha256": "0edab7e14b317042dc07e3f7b4863fc470937c607d256adf201dfd21b74f8742",
+  "status": "passed",
+  "evidenceLevel": "installed-docx-native-save-and-independent-zip-xml",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "owned-three-producer-fixtures",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-cancel-never-writes",
+      "status": "passed"
+    },
+    {
+      "id": "automatic-source-save",
+      "status": "passed"
+    },
+    {
+      "id": "automatic-copy-source-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "multi-target-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "copy-collision-preserves-draft",
+      "status": "passed"
+    },
+    {
+      "id": "reload-cancel-preserves-draft",
+      "status": "passed"
+    },
+    {
+      "id": "ctrl-s-explicit-confirmation",
+      "status": "passed"
+    },
+    {
+      "id": "three-producer-native-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "independent-zip-xml-untouched-parts",
+      "status": "passed"
+    },
+    {
+      "id": "external-read-only",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-input-and-unselected-preserved",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1117-microsoft-word-16-before.docx",
+      "sizeBytes": 30078,
+      "sha256": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176"
+    },
+    {
+      "fileName": "installed-v1117-microsoft-word-16-source.docx",
+      "sizeBytes": 28708,
+      "sha256": "8eeba265a01b6b187ef4c974749a96395248f04399f2cde9fa765918edda9e12"
+    },
+    {
+      "fileName": "installed-v1117-microsoft-word-16-copy.docx",
+      "sizeBytes": 28733,
+      "sha256": "43b93038eef4b2d4d32919a6e8797a1eadca4e36f128617711c8d0453f06db71"
+    },
+    {
+      "fileName": "installed-v1117-wps-writer-before.docx",
+      "sizeBytes": 83349,
+      "sha256": "0da9fad1284dcddc27689f381c26fd7f52d82f154e8a5cf152faebb7b206868b"
+    },
+    {
+      "fileName": "installed-v1117-wps-writer-source.docx",
+      "sizeBytes": 83462,
+      "sha256": "eb470e4ba667f11729f869932475654a10fb3ae9e19570559cd520d9a853dabb"
+    },
+    {
+      "fileName": "installed-v1117-wps-writer-copy.docx",
+      "sizeBytes": 83488,
+      "sha256": "1dbd97c6b9835ca6f7e95607102d46d2db7e08ab6dfa54835a28dccd2216a7fc"
+    },
+    {
+      "fileName": "installed-v1117-libreoffice-writer-before.docx",
+      "sizeBytes": 81767,
+      "sha256": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3"
+    },
+    {
+      "fileName": "installed-v1117-libreoffice-writer-source.docx",
+      "sizeBytes": 81661,
+      "sha256": "bd4a9132fd05750effa3c487432024f87d4d79603ba3570b473810f7ee7453f9"
+    },
+    {
+      "fileName": "installed-v1117-libreoffice-writer-copy.docx",
+      "sizeBytes": 81687,
+      "sha256": "8d0b5a3362fa14302fa8f198cd5434f6d4ebec7127f5d690bc6a8637485ef81c"
+    }
+  ],
+  "unselectedBefore": "7d817c42b055425992dc3a5639a1857b64dce9007ef13fb2c29b6f2202780c82",
+  "conflictBeforeSha256": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+  "externalConflictSha256": "0da9fad1284dcddc27689f381c26fd7f52d82f154e8a5cf152faebb7b206868b",
+  "conflictAfterSha256": "0da9fad1284dcddc27689f381c26fd7f52d82f154e8a5cf152faebb7b206868b",
+  "sourceConflictPreserved": true,
+  "cancelExact": true,
+  "reloadCancelExact": true,
+  "samePathExternalDraftProtected": true,
+  "undoRedoExact": true,
+  "shortcutConfirmed": true,
+  "collisionExact": true,
+  "sourceSavedExact": true,
+  "copySourceUnchanged": true,
+  "inspection": {
+    "status": "passed",
+    "reader": "defusedxml-0.7.1-and-stdlib-zipfile",
+    "nativeBridgeMocked": false,
+    "officeVisualAcceptance": false,
+    "cases": [
+      {
+        "producerId": "microsoft-word-16",
+        "beforeSha256": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+        "source": {
+          "sha256": "8eeba265a01b6b187ef4c974749a96395248f04399f2cde9fa765918edda9e12",
+          "preservedParts": [
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "7481cce8bb534a56367dd72483d0e8c53161bc8ba7f76040b7af3901220cb677"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "e19238d7a71fa7a2490776252686f70e2de6238c87cd509b5e3a3cc07c2ea4df"
+            },
+            {
+              "part": "word/_rels/document.xml.rels",
+              "sha256": "5a8352d653b00bdf2169184d826e5a006d1b982473500b5bd76082aa215af20c"
+            },
+            {
+              "part": "word/footnotes.xml",
+              "sha256": "3cdd0c6f8788bb763665401c96236ba2f028d27c1bbfe6e7eb3b1d88d6dc6e3b"
+            },
+            {
+              "part": "word/endnotes.xml",
+              "sha256": "848f8a02d31410763d2a9c092d121c4995c4c4a6a3457370eba3ba32c2de6897"
+            },
+            {
+              "part": "word/header1.xml",
+              "sha256": "606797a43ef99f09828a3079ac27cd2ec0ee0ef416e8f499ef2733ca9fd39ad1"
+            },
+            {
+              "part": "word/header2.xml",
+              "sha256": "c29d8cf15e515e1eabb8d7d49fdfdd854a0bba87da9da5f8878d676635911a95"
+            },
+            {
+              "part": "word/footer1.xml",
+              "sha256": "72160deecb25cc6ab76a27e4e2ceada544b03d3de924f77efdb29cc562662b86"
+            },
+            {
+              "part": "word/footer2.xml",
+              "sha256": "059c31255badb84fc57861e0d73485c0a263b09fc710a52935b8f197c59cd651"
+            },
+            {
+              "part": "word/header3.xml",
+              "sha256": "31f36388ed287cd4e38822b6fa05fe0f99cdbdf9c2eb1d40308b9569651bb43d"
+            },
+            {
+              "part": "word/footer3.xml",
+              "sha256": "282419d5c37d62e534d69551c0ed3ff050f12aef9e92ef2bae17064642a8e8a9"
+            },
+            {
+              "part": "word/media/image1.png",
+              "sha256": "0192fb0e602f8ee7442acae00c9442a1a255bd90cb436156f1d79a3b08b06f67"
+            },
+            {
+              "part": "word/theme/theme1.xml",
+              "sha256": "7017cbe8b7512b56e04e6b3e3579aa862a35b6f9f31e0bf48328f6e5c074ebbd"
+            },
+            {
+              "part": "word/settings.xml",
+              "sha256": "8434dc2c04452872e7ceff6cb4266cbcc884a79a81555cf253940a5383288b55"
+            },
+            {
+              "part": "word/numbering.xml",
+              "sha256": "b76c21d81593aa774c8977279c5a8bb8549909ae8b4f58fc32b7abbe7dbd13fc"
+            },
+            {
+              "part": "word/styles.xml",
+              "sha256": "e9ff473dc6f3b23444cc8d858a475fd15693e89134fc3dbb759b22973cb457c9"
+            },
+            {
+              "part": "word/webSettings.xml",
+              "sha256": "f2f6fe7679634963bf49bae65f941f41934de42ceeb3a806afac4bab92274853"
+            },
+            {
+              "part": "word/commentsExtended.xml",
+              "sha256": "67e358e14fbc9222c2b4e8038e7ab4d254286a27a384143c7ecc38b8f3151c8c"
+            },
+            {
+              "part": "word/commentsIds.xml",
+              "sha256": "8079c4f0ce9c2c585c5b8400bd9ad1f7ef42a743e15eb9cf27547994ee840a3f"
+            },
+            {
+              "part": "word/commentsExtensible.xml",
+              "sha256": "6d1490c3473898d9d80d77bdf9b1ba6d6a903494bb09a0c3ee3e4c1ddde4fabe"
+            },
+            {
+              "part": "word/fontTable.xml",
+              "sha256": "b89a8f926de49c5bec0f5924d95b3bd76de04933c973afc646b333644cd7cb17"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "52d612b6a0464b29ca0886b4c785a32cbc7e7dc20d34f7693bebd4ebbce1d08e"
+            },
+            {
+              "part": "word/comments.xml",
+              "sha256": "e9b83fedd33edac97dc6751bb7ae16788686d1a902223633b857713cdecba6d8"
+            },
+            {
+              "part": "word/people.xml",
+              "sha256": "532103f5959cf2da4e84656f3fcb8fce2faaa94462b349ad4e746d08beb436e7"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "fc59a69ba33ea4c1b53bcf8e386ca66ccbc3a78fe076b6fa8b9e2b944170b354"
+            }
+          ],
+          "expectedTextVerified": true
+        },
+        "copy": {
+          "sha256": "43b93038eef4b2d4d32919a6e8797a1eadca4e36f128617711c8d0453f06db71",
+          "preservedParts": [
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "7481cce8bb534a56367dd72483d0e8c53161bc8ba7f76040b7af3901220cb677"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "e19238d7a71fa7a2490776252686f70e2de6238c87cd509b5e3a3cc07c2ea4df"
+            },
+            {
+              "part": "word/_rels/document.xml.rels",
+              "sha256": "5a8352d653b00bdf2169184d826e5a006d1b982473500b5bd76082aa215af20c"
+            },
+            {
+              "part": "word/footnotes.xml",
+              "sha256": "3cdd0c6f8788bb763665401c96236ba2f028d27c1bbfe6e7eb3b1d88d6dc6e3b"
+            },
+            {
+              "part": "word/endnotes.xml",
+              "sha256": "848f8a02d31410763d2a9c092d121c4995c4c4a6a3457370eba3ba32c2de6897"
+            },
+            {
+              "part": "word/header1.xml",
+              "sha256": "606797a43ef99f09828a3079ac27cd2ec0ee0ef416e8f499ef2733ca9fd39ad1"
+            },
+            {
+              "part": "word/header2.xml",
+              "sha256": "c29d8cf15e515e1eabb8d7d49fdfdd854a0bba87da9da5f8878d676635911a95"
+            },
+            {
+              "part": "word/footer1.xml",
+              "sha256": "72160deecb25cc6ab76a27e4e2ceada544b03d3de924f77efdb29cc562662b86"
+            },
+            {
+              "part": "word/footer2.xml",
+              "sha256": "059c31255badb84fc57861e0d73485c0a263b09fc710a52935b8f197c59cd651"
+            },
+            {
+              "part": "word/header3.xml",
+              "sha256": "31f36388ed287cd4e38822b6fa05fe0f99cdbdf9c2eb1d40308b9569651bb43d"
+            },
+            {
+              "part": "word/footer3.xml",
+              "sha256": "282419d5c37d62e534d69551c0ed3ff050f12aef9e92ef2bae17064642a8e8a9"
+            },
+            {
+              "part": "word/media/image1.png",
+              "sha256": "0192fb0e602f8ee7442acae00c9442a1a255bd90cb436156f1d79a3b08b06f67"
+            },
+            {
+              "part": "word/theme/theme1.xml",
+              "sha256": "7017cbe8b7512b56e04e6b3e3579aa862a35b6f9f31e0bf48328f6e5c074ebbd"
+            },
+            {
+              "part": "word/settings.xml",
+              "sha256": "8434dc2c04452872e7ceff6cb4266cbcc884a79a81555cf253940a5383288b55"
+            },
+            {
+              "part": "word/numbering.xml",
+              "sha256": "b76c21d81593aa774c8977279c5a8bb8549909ae8b4f58fc32b7abbe7dbd13fc"
+            },
+            {
+              "part": "word/styles.xml",
+              "sha256": "e9ff473dc6f3b23444cc8d858a475fd15693e89134fc3dbb759b22973cb457c9"
+            },
+            {
+              "part": "word/webSettings.xml",
+              "sha256": "f2f6fe7679634963bf49bae65f941f41934de42ceeb3a806afac4bab92274853"
+            },
+            {
+              "part": "word/commentsExtended.xml",
+              "sha256": "67e358e14fbc9222c2b4e8038e7ab4d254286a27a384143c7ecc38b8f3151c8c"
+            },
+            {
+              "part": "word/commentsIds.xml",
+              "sha256": "8079c4f0ce9c2c585c5b8400bd9ad1f7ef42a743e15eb9cf27547994ee840a3f"
+            },
+            {
+              "part": "word/commentsExtensible.xml",
+              "sha256": "6d1490c3473898d9d80d77bdf9b1ba6d6a903494bb09a0c3ee3e4c1ddde4fabe"
+            },
+            {
+              "part": "word/fontTable.xml",
+              "sha256": "b89a8f926de49c5bec0f5924d95b3bd76de04933c973afc646b333644cd7cb17"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "52d612b6a0464b29ca0886b4c785a32cbc7e7dc20d34f7693bebd4ebbce1d08e"
+            },
+            {
+              "part": "word/comments.xml",
+              "sha256": "e9b83fedd33edac97dc6751bb7ae16788686d1a902223633b857713cdecba6d8"
+            },
+            {
+              "part": "word/people.xml",
+              "sha256": "532103f5959cf2da4e84656f3fcb8fce2faaa94462b349ad4e746d08beb436e7"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "fc59a69ba33ea4c1b53bcf8e386ca66ccbc3a78fe076b6fa8b9e2b944170b354"
+            }
+          ],
+          "expectedTextVerified": true
+        }
+      },
+      {
+        "producerId": "wps-writer",
+        "beforeSha256": "0da9fad1284dcddc27689f381c26fd7f52d82f154e8a5cf152faebb7b206868b",
+        "source": {
+          "sha256": "eb470e4ba667f11729f869932475654a10fb3ae9e19570559cd520d9a853dabb",
+          "preservedParts": [
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "1313f52ad6eb20d0e412fbacdc6615b27bc98cebce716d242938754d9cc9ab3d"
+            },
+            {
+              "part": "_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "514e1846381cb6bcfff105a4b0a17d666cf0ed1f0c120bff73b82226ab7ed977"
+            },
+            {
+              "part": "docProps/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "docProps/custom.xml",
+              "sha256": "d1fe2346f242e0d1663c3a306f2041dba0c8db87ac18318a7c7205155e36e1fa"
+            },
+            {
+              "part": "word/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "word/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "word/_rels/document.xml.rels",
+              "sha256": "e1bf38cd99727c54d4ad6ed5bc9561a5b222c441f1ef2773029cc8fbba45776d"
+            },
+            {
+              "part": "word/fontTable.xml",
+              "sha256": "702a8a0e1b67804707918b8fa3649d5f04ca91e9958169e990879b08d0d0b84f"
+            },
+            {
+              "part": "word/media/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "word/media/image1.png",
+              "sha256": "823aa30104172218b08b71a0a6d7c2ad3cb5ea9abead5a04feed470e9ae40606"
+            },
+            {
+              "part": "word/numbering.xml",
+              "sha256": "17f01512127eb5ba6c9405010e6d1398e06b721c9f5bd9993c46867f1c2e91f6"
+            },
+            {
+              "part": "word/settings.xml",
+              "sha256": "d23e1f4e6015e6a85c29590970e383d168f54e70417e016faee57a8d24ef3b83"
+            },
+            {
+              "part": "word/styles.xml",
+              "sha256": "64a75b4deffefc03b65fb66052ecc01ac2013e0d2b7f9c10cf359e96e890ddf2"
+            },
+            {
+              "part": "word/theme/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "word/theme/theme1.xml",
+              "sha256": "51ae041ddfe2099423d0ee653b139c6236c3048fce172525e97d1b1087277901"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "47683721a1c9c0a27d0d8d3c1005da3048e51aab155668c1b4bf2b72de68ab10"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "4bb26cb9d8f3aecc4a476242763edc9621ef534dd0d18b56f47ddaa35b9d2ba3"
+            }
+          ],
+          "expectedTextVerified": true
+        },
+        "copy": {
+          "sha256": "1dbd97c6b9835ca6f7e95607102d46d2db7e08ab6dfa54835a28dccd2216a7fc",
+          "preservedParts": [
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "1313f52ad6eb20d0e412fbacdc6615b27bc98cebce716d242938754d9cc9ab3d"
+            },
+            {
+              "part": "_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "514e1846381cb6bcfff105a4b0a17d666cf0ed1f0c120bff73b82226ab7ed977"
+            },
+            {
+              "part": "docProps/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "docProps/custom.xml",
+              "sha256": "d1fe2346f242e0d1663c3a306f2041dba0c8db87ac18318a7c7205155e36e1fa"
+            },
+            {
+              "part": "word/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "word/_rels/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "word/_rels/document.xml.rels",
+              "sha256": "e1bf38cd99727c54d4ad6ed5bc9561a5b222c441f1ef2773029cc8fbba45776d"
+            },
+            {
+              "part": "word/fontTable.xml",
+              "sha256": "702a8a0e1b67804707918b8fa3649d5f04ca91e9958169e990879b08d0d0b84f"
+            },
+            {
+              "part": "word/media/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "word/media/image1.png",
+              "sha256": "823aa30104172218b08b71a0a6d7c2ad3cb5ea9abead5a04feed470e9ae40606"
+            },
+            {
+              "part": "word/numbering.xml",
+              "sha256": "17f01512127eb5ba6c9405010e6d1398e06b721c9f5bd9993c46867f1c2e91f6"
+            },
+            {
+              "part": "word/settings.xml",
+              "sha256": "d23e1f4e6015e6a85c29590970e383d168f54e70417e016faee57a8d24ef3b83"
+            },
+            {
+              "part": "word/styles.xml",
+              "sha256": "64a75b4deffefc03b65fb66052ecc01ac2013e0d2b7f9c10cf359e96e890ddf2"
+            },
+            {
+              "part": "word/theme/",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "part": "word/theme/theme1.xml",
+              "sha256": "51ae041ddfe2099423d0ee653b139c6236c3048fce172525e97d1b1087277901"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "47683721a1c9c0a27d0d8d3c1005da3048e51aab155668c1b4bf2b72de68ab10"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "4bb26cb9d8f3aecc4a476242763edc9621ef534dd0d18b56f47ddaa35b9d2ba3"
+            }
+          ],
+          "expectedTextVerified": true
+        }
+      },
+      {
+        "producerId": "libreoffice-writer",
+        "beforeSha256": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3",
+        "source": {
+          "sha256": "bd4a9132fd05750effa3c487432024f87d4d79603ba3570b473810f7ee7453f9",
+          "preservedParts": [
+            {
+              "part": "word/styles.xml",
+              "sha256": "c09d9bb055a68426bc356c0b8e277eb20c7d62eebed496763b5e6df067c04892"
+            },
+            {
+              "part": "word/numbering.xml",
+              "sha256": "c3d2a2cfcefb05d8640190a18b2e1f77cca44ca879bb90d731bd129b7b5da2ce"
+            },
+            {
+              "part": "word/media/image1.png",
+              "sha256": "bdfe4bdde29905113baa51657a3a74ff0748563ec4e73ab81bb8df9ad85c6e2f"
+            },
+            {
+              "part": "word/settings.xml",
+              "sha256": "bbad28cc91011f7a789e0707ede9dbdb29916ba5205d71068cdc9a753e59b505"
+            },
+            {
+              "part": "word/fontTable.xml",
+              "sha256": "386ea6bab0793a20bb263fa292f4ffe4b4cb5b865791c52bbf11c9895193e19a"
+            },
+            {
+              "part": "word/theme/theme1.xml",
+              "sha256": "8c817dba7260b1c6e49fc7937dd857b5f42d834bc8c33769d788ea824cb2c29f"
+            },
+            {
+              "part": "word/_rels/document.xml.rels",
+              "sha256": "0b3c7c8c2a8c6d0b8ad79aa0877a25d5da96a85b9c09c07f774190580806109b"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "9bf3397a7589bbff0c73db9349a0a6bb45b640c4e769b0fe613961beae62fd91"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "971fe7de80e232a10bff906cca1e43900acb98a9afa2d9552f1707828a63e45c"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "3bbb0ec7bcb9b27df1c2300b883c5a63fe80fb27f00f2abee6b911de6f767c26"
+            },
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "3041a4fb9438e51f0c6fc4004f81fe643959689e8efcdf4192701b37996131ee"
+            }
+          ],
+          "expectedTextVerified": true
+        },
+        "copy": {
+          "sha256": "8d0b5a3362fa14302fa8f198cd5434f6d4ebec7127f5d690bc6a8637485ef81c",
+          "preservedParts": [
+            {
+              "part": "word/styles.xml",
+              "sha256": "c09d9bb055a68426bc356c0b8e277eb20c7d62eebed496763b5e6df067c04892"
+            },
+            {
+              "part": "word/numbering.xml",
+              "sha256": "c3d2a2cfcefb05d8640190a18b2e1f77cca44ca879bb90d731bd129b7b5da2ce"
+            },
+            {
+              "part": "word/media/image1.png",
+              "sha256": "bdfe4bdde29905113baa51657a3a74ff0748563ec4e73ab81bb8df9ad85c6e2f"
+            },
+            {
+              "part": "word/settings.xml",
+              "sha256": "bbad28cc91011f7a789e0707ede9dbdb29916ba5205d71068cdc9a753e59b505"
+            },
+            {
+              "part": "word/fontTable.xml",
+              "sha256": "386ea6bab0793a20bb263fa292f4ffe4b4cb5b865791c52bbf11c9895193e19a"
+            },
+            {
+              "part": "word/theme/theme1.xml",
+              "sha256": "8c817dba7260b1c6e49fc7937dd857b5f42d834bc8c33769d788ea824cb2c29f"
+            },
+            {
+              "part": "word/_rels/document.xml.rels",
+              "sha256": "0b3c7c8c2a8c6d0b8ad79aa0877a25d5da96a85b9c09c07f774190580806109b"
+            },
+            {
+              "part": "docProps/core.xml",
+              "sha256": "9bf3397a7589bbff0c73db9349a0a6bb45b640c4e769b0fe613961beae62fd91"
+            },
+            {
+              "part": "docProps/app.xml",
+              "sha256": "971fe7de80e232a10bff906cca1e43900acb98a9afa2d9552f1707828a63e45c"
+            },
+            {
+              "part": "_rels/.rels",
+              "sha256": "3bbb0ec7bcb9b27df1c2300b883c5a63fe80fb27f00f2abee6b911de6f767c26"
+            },
+            {
+              "part": "[Content_Types].xml",
+              "sha256": "3041a4fb9438e51f0c6fc4004f81fe643959689e8efcdf4192701b37996131ee"
+            }
+          ],
+          "expectedTextVerified": true
+        }
+      }
+    ]
+  },
+  "unauthorizedExternalRejected": true,
+  "externalReadOnly": true,
+  "unselectedAfter": "7d817c42b055425992dc3a5639a1857b64dce9007ef13fb2c29b6f2202780c82",
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "path"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "path"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "svg"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "svg"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SELECT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SELECT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "SELECT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SELECT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "svg"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "svg"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "svg"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "svg"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s",
+      "target": "BODY"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "TEXTAREA"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "target": "INPUT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "target": "BUTTON"
+    }
+  ],
+  "runtimeErrors": [],
+  "uiMessages": [
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "未保存 DOCX：DOCX 已被外部修改，请重新打开后再验证补丁",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "DOCX 已可靠保存 2 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：wps-writer-copy.docx",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：wps-writer-copy.docx",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：wps-writer-copy.docx",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：wps-writer-copy.docx",
+    "已可靠另存并验证 1 项修改：microsoft-word-16-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取"
+  ],
+  "shortcutExclusive": true,
+  "errorOverlay": false
+}
