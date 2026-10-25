@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.2.33",
+  "developmentTargetVersion": "1.2.34",
   "runtimeBaseVersion": "1.2.33",
-  "publicVersion": "1.2.32",
-  "publicTag": "v1.2.32",
-  "publicTagCommit": "1585b5e175b01f4af53ea4d45083544aacfe5769",
+  "publicVersion": "1.2.33",
+  "publicTag": "v1.2.33",
+  "publicTagCommit": "a93aa47b7894ca98b5ffedd3b85553b6cc54495a",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-170-v1.2.33-toml-datetime-editing-candidate",
-  "binaryVersionTransition": "v1.2.33-release-ready",
-  "displayLabel": "v1.2.33 TOML 日期时间编辑候选 · 当前公开 v1.2.32",
+  "currentStage": "M8-171-v1.2.33-published",
+  "binaryVersionTransition": "v1.2.33-public-release-published",
+  "displayLabel": "v1.2.33 已发布 · 下一目标 v1.2.34",
   "activeSlice": {
     "id": "v1.2.33-toml-datetime-editing",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-and-remote-assets-verified",
     "document": "docs/V1_2_33_Unsigned_Community_Release_Audit_2026-10-25.md"
   }
 }
