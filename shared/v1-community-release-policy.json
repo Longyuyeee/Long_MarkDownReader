@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.32",
-  "releaseCandidate": true,
+  "appVersion": "1.2.33",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-25",
-  "currentStatus": "v1.2.32-community-release-published",
+  "currentStatus": "v1.2.33-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.31",
+    "previousPublicVersion": "1.2.32",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.31-to-1.2.32-pending",
-    "scope": "toml-field-ordering"
+    "managedUpdaterUpgradePath": "1.2.32-to-1.2.33-pending",
+    "scope": "toml-datetime-editing"
   },
   "targetRelease": {
-    "tag": "v1.2.32",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.32",
+    "tag": "v1.2.33",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.33",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "1585b5e175b01f4af53ea4d45083544aacfe5769",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40156337873,
-    "hostedInstalledLifecycleRunId": 40158971935,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.2.32_x64_zh-CN.msi",
-        "sizeBytes": 78135296,
-        "sha256": "a4efc9d74aa14570d354fddf45e2ea7a012345df9a628c84eb45a9ffaf3fc3c8",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.32_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.2.32_x64-setup.exe",
-        "sizeBytes": 68769851,
-        "sha256": "23ef8532e095c2770755b0f71091cbe71e527a9a8c5675b7fb8a69bde1160eb5",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.32_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.2.32",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.32",
-    "databaseId": 423141091,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "1585b5e175b01f4af53ea4d45083544aacfe5769",
-    "publishedAt": "2026-10-25T04:13:57Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -154,7 +123,8 @@
     "v1.2.28-to-v1.2.29-managed-update-observation-pending",
     "v1.2.29-to-v1.2.30-managed-update-observation-pending",
     "v1.2.30-to-v1.2.31-managed-update-observation-pending",
-    "v1.2.31-to-v1.2.32-managed-update-observation-pending"
+    "v1.2.31-to-v1.2.32-managed-update-observation-pending",
+    "v1.2.32-to-v1.2.33-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.33-toml-datetime-editing-planned"
+  "nextAction": "validate-and-build-v1.2.33-installers"
 }

@@ -7,7 +7,7 @@ export const listCopyEdited=Object.fromEntries(Object.entries(listCopyDrafts).ma
 export const listCopyConflicts=Object.fromEntries(Object.entries(listCopyEdited).map(([k,v])=>[k,v.replace("'内容'","'内容', '内容'")]))
 export const listCopyOutputFiles=['installed-v1226-copy-observations.json',...['yaml','toml'].flatMap(f=>['saved','copy','external'].map(k=>`installed-v1226-${f}-${k}.${f}`))]
 export function validateInstalledListCopy(r,m){
- assert.ok(['1.2.26','1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.26','1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-yaml-toml-item-copy-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const fmt of ['yaml','toml'])for(const prefix of ['locked','external']){assert.match(r[prefix+'Before'][fmt],/^[a-f0-9]{64}$/);assert.equal(r[prefix+'Before'][fmt],r[prefix+'After'][fmt])}

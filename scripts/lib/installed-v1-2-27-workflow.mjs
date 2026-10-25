@@ -7,7 +7,7 @@ import {nativeUserInput} from './v118-native-user-input.mjs'
 import {yamlOrderChecks,yamlOrderSource,yamlOrderDraft,yamlOrderEdited,yamlOrderConflict,yamlOrderOutputFiles,validateInstalledYamlOrder,assertYamlOrderOutputBytes} from './installed-v1-2-27-evidence.mjs'
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export async function runInstalledV1227YamlOrderWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
- assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(['1.2.27','1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32'].includes(appVersion))
+ assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(['1.2.27','1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33'].includes(appVersion))
  const folder=path.join(library,'000-v1227-order-'+crypto.randomUUID()),file=path.join(folder,'配置.yaml'),other=path.join(folder,'其他.yaml'),ui=nativeUserInput({send,evaluate},{timeoutMs:45000,stableMs:200}),obs={},bytes={}
  const r={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-yaml-adjacent-order-trusted-input-and-file-bytes',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[],runtimeErrors:[],inputTrace:[],viewportWidths:[]},mark=i=>{obs[yamlOrderChecks[i]]=true;r.checks.push({id:yamlOrderChecks[i],status:'passed'})}
  let failure,lock

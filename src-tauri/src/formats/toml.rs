@@ -221,7 +221,7 @@ fn inspect_item(
             edit_unavailable_reason: item
                 .as_value()
                 .filter(|v| !simple_value(v))
-                .map(|_| "数组、内联表和日期时间请在源码中修改，其他内容会保留".into()),
+                .map(|_| "数组可展开后修改，内联表请定位源码；当前内容会保留".into()),
         });
     } else {
         state.truncated = true;
@@ -430,7 +430,7 @@ fn key_path(parent: &str, key: &str) -> String {
 fn simple_value(value: &Value) -> bool {
     matches!(
         value,
-        Value::String(_) | Value::Integer(_) | Value::Float(_) | Value::Boolean(_)
+        Value::String(_) | Value::Integer(_) | Value::Float(_) | Value::Boolean(_) | Value::Datetime(_)
     )
 }
 
@@ -462,7 +462,7 @@ pub fn replace_toml_value_source(
     let prefix = "__value__ = ";
     let wrapper = format!("{prefix}{value}");
     let parsed = Document::parse(wrapper.as_str())
-        .map_err(|_| "请输入合法的 TOML 字符串、布尔或数字字面量；字符串需要引号".to_string())?;
+        .map_err(|_| "值的格式不正确：字符串需要引号；日期如 2026-10-25，时间如 14:30:00，日期时间如 2026-10-25T14:30:00+08:00。请检查日期、时间和时区；输入与草稿已保留".to_string())?;
     let valid = parsed.len() == 1
         && parsed
             .get("__value__")
@@ -535,6 +535,10 @@ fn failed(diagnostic: TomlDiagnostic) -> TomlSourceAnalysis {
         diagnostics: vec![diagnostic],
     }
 }
+
+#[cfg(test)]
+#[path = "toml_datetime_tests.rs"]
+mod datetime_tests;
 
 #[cfg(test)]
 mod tests {
@@ -645,7 +649,6 @@ mod tests {
             "1 # other",
             "[1,2]",
             "{x=1}",
-            "1979-05-27",
             "'x'\n[t]\ny=1",
         ] {
             assert!(edit("x=1\n", "x", v).is_err(), "{v}");
@@ -654,7 +657,7 @@ mod tests {
 
     #[test]
     fn complex_values_keep_source_fallback_and_are_never_replaced() {
-        let s = "array=[1,2]\ninline={x=1}\ndate=1979-05-27T07:32:00Z\n";
+        let s = "array=[1,2]\ninline={x=1}\n";
         for e in analyze_toml_source(s).outline {
             assert!(!e.editable);
             assert!(e.edit_unavailable_reason.is_some());
