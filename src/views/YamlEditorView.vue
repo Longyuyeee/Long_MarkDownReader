@@ -160,15 +160,15 @@
     </footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
-    <n-modal v-model:show="valueEditVisible" preset="card" class="yaml-value-edit-dialog" title="修改 YAML 值" :style="{width:'min(520px,94vw)'}"
+    <n-modal v-model:show="valueEditVisible" preset="card" class="yaml-value-edit-dialog" :title="valueEntry?.literal ? '修改 YAML 多行文字' : '修改 YAML 值'" :style="{width:'min(560px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
       :mask-closable="!valueEditPending" :closable="!valueEditPending" :close-on-esc="!valueEditPending"
       @after-enter="valueInput?.select()" @after-leave="finishValueDialog">
       <code>{{ valueEntry?.path }}</code>
       <n-input ref="valueInput" v-model:value="valueText" type="textarea" :autosize="{minRows:3,maxRows:8}"
         :disabled="valueEditPending" aria-label="YAML 字段值" :input-props="{'aria-label':'YAML 字段值'}" autofocus />
-      <p v-if="valueError" role="alert" class="value-edit-error">{{ valueError }}</p>
+      <p v-if="valueError" role="alert" class="value-edit-error">{{ valueError }} <n-button v-if="valueReadFailed" text :disabled="valueEditPending" @click="valueEntry && openValueEdit(valueEntry)">重新读取</n-button> <n-button text :disabled="valueEditPending" @click="revealValueSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
-        <n-button type="primary" :loading="valueEditPending" @click="previewValueEdit">预览修改</n-button></div></template>
+        <n-button type="primary" :loading="valueEditPending" :disabled="valueReadFailed" @click="previewValueEdit">预览修改</n-button></div></template>
     </n-modal>
     <n-modal v-model:show="renameVisible" preset="card" class="yaml-key-rename-dialog" title="重命名 YAML 字段"
       :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!renamePending" :closable="!renamePending" :close-on-esc="!renamePending"
@@ -284,6 +284,7 @@ interface YamlDiagnostic {
 }
 
 interface YamlOutlineEntry {
+  literal?: boolean
   field?: { name: string; start: number; end: number; renameUnavailableReason?: string }
   editable?: boolean
   editUnavailableReason?: string
@@ -403,7 +404,9 @@ const session = useStructuredSession({
 })
 const valueEditVisible = ref(false), valueEditPending = ref(false), valueText = ref(''), valueError = ref('')
 const valueInput = ref<InputInst | null>(null), valueEntry = ref<YamlOutlineEntry | null>(null)
-let valueOwner: ReturnType<typeof session.capture>, pendingValuePreview: (() => void) | undefined
+let valueOwner: ReturnType<typeof session.capture>, pendingValuePreview: (() => void) | undefined, resumeValue = false
+const valueOriginalText = ref('')
+const valueReadFailed = ref(false)
 const finishValueDialog = () => { const offer = pendingValuePreview; pendingValuePreview = undefined; offer?.() }
 const renameVisible = ref(false), renamePending = ref(false), renameName = ref(''), renameError = ref('')
 const renameInput = ref<InputInst | null>(null), renameEntry = ref<YamlOutlineEntry | null>(null)
@@ -640,28 +643,43 @@ const moveField=async(entry:YamlOutlineEntry,direction:'up'|'down')=>{
 }
 const revealMoveSource=()=>{const owner=moveOwner,entry=moveEntry.value;if(owner&&entry&&session.unchanged(owner))pendingMoveReveal=()=>{if(session.unchanged(owner))revealRange(entry)};moveError.value=''}
 const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || duplicatePending.value || fieldPending.value || sequencePending.value || copyPending.value || movePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
-const openValueEdit = (entry: YamlOutlineEntry) => {
+const revealValueSource = () => {
+  const owner=valueOwner,entry=valueEntry.value
+  if (!owner||!entry||!session.unchanged(owner)) return
+  resumeValue=true;pendingValuePreview=()=>{if(session.unchanged(owner))revealRange(entry)};valueEditVisible.value=false
+}
+const openValueEdit = async (entry: YamlOutlineEntry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); revealRange(entry); return }
-  valueOwner = session.capture()
-  if (!valueOwner) return
+  if(resumeValue&&valueOwner&&session.unchanged(valueOwner)&&valueEntry.value?.start===entry.start&&valueEntry.value.end===entry.end){resumeValue=false;valueEditVisible.value=true;return}
+  resumeValue=false;pendingValuePreview=undefined
+  const owner=session.capture();valueOwner=owner
+  if (!owner) return
   valueEntry.value = entry
-  valueText.value = new TextDecoder().decode(new TextEncoder().encode(valueOwner.source).slice(entry.start,entry.end))
-  valueError.value = ''; valueEditVisible.value = true
+  valueError.value='';valueReadFailed.value=false;valueEditPending.value=true
+  try {
+    const text=entry.literal ? await invoke<string>('inspect_yaml_literal_source',{content:owner.source,start:entry.start,end:entry.end}) : new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(owner.source).slice(entry.start,entry.end))
+    if(valueOwner!==owner||!session.unchanged(owner))return
+    valueText.value=text;valueOriginalText.value=text;valueEditVisible.value=true
+  } catch(cause){if(valueOwner===owner&&session.unchanged(owner)){valueText.value='';valueReadFailed.value=true;valueError.value=errorMessage(cause);valueEditVisible.value=true}}
+  finally{if(valueOwner===owner&&session.owns(owner))valueEditPending.value=false}
 }
 const previewValueEdit = async () => {
   const owner = valueOwner, entry = valueEntry.value
-  if (!owner || !entry || valueEditPending.value) return
+  if (!owner || !entry || valueEditPending.value || valueReadFailed.value) return
   if (!session.unchanged(owner)) { valueError.value = '当前文件或草稿已变化，请重新选择字段；内容未被修改'; return }
   valueEditPending.value = true; valueError.value = ''
   try {
     const target = await invoke<string>('replace_yaml_value_source',{content:owner.source,start:entry.start,end:entry.end,replacement:valueText.value})
-    if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择字段'; return }
+    if (valueOwner!==owner||!session.owns(owner))return
+    if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择字段；输入与内容仍保留'; return }
     const anchor = new TextDecoder().decode(new TextEncoder().encode(target).slice(0,entry.start)).length
-    pendingValuePreview = () => session.offerChange(owner,'修改 YAML 值',target,anchor)
+    const trailing=(text:string)=>text.match(/\n*$/)?.[0].length || 0
+    const title=entry.literal ? `修改 YAML 多行文字 · 结尾换行 ${trailing(valueOriginalText.value)} → ${trailing(valueText.value)}` : '修改 YAML 值'
+    pendingValuePreview = () => session.offerChange(owner,title,target,anchor)
     valueEditVisible.value = false
-  } catch (cause) { if (session.owns(owner)) valueError.value = errorMessage(cause) }
-  finally { if (session.owns(owner)) valueEditPending.value = false }
+  } catch (cause) { if (valueOwner===owner&&session.owns(owner)) valueError.value = errorMessage(cause) }
+  finally { if (valueOwner===owner&&session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<YamlOutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry),
   extra: entry => [...(entry.field ? [{key:'field-up',label:'上移',disabled:editDisabled.value||!canMoveField(entry,'up')},{key:'field-down',label:'下移',disabled:editDisabled.value||!canMoveField(entry,'down')}] : []),...(entry.kind==='sequence' ? [{key:'append-item',label:'追加列表项…',disabled:editDisabled.value}] : []), ...(!entry.field&&/\[\d+\]$/.test(entry.path) ? [{key:'move-up',label:'上移',disabled:editDisabled.value||!canMoveItem(entry,'up')},{key:'move-down',label:'下移',disabled:editDisabled.value||!canMoveItem(entry,'down')},{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除列表项…',disabled:editDisabled.value}] : []),...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'duplicate-field',label:'复制为新字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
@@ -782,7 +800,7 @@ const load = async (discardDraft = false) => {
   sequenceVisible.value=false;sequencePending.value=false;sequenceOwner=undefined;sequenceEntry.value=null;pendingSequence=undefined;resumeSequence=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
   renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined
-  valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined
+  valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined; resumeValue=false;valueOriginalText.value='';valueReadFailed.value=false
   loading.value = true; loadError.value = ''
   if (!hadPrior) analysis.value = null
 
@@ -851,6 +869,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .value-edit-actions{display:flex;justify-content:flex-end;gap:10px}
 .yaml-value-edit-dialog code{display:block;overflow-wrap:anywhere;margin-bottom:10px}
+.yaml-value-edit-dialog :deep(.n-card__content){overflow:auto}
 .value-edit-error{color:var(--theme-danger,#d03050)}
 .yaml-workspace {
   container-type: inline-size;

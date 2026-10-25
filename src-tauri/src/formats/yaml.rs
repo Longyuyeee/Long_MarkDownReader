@@ -15,11 +15,19 @@ mod field_copy_tests;
 mod sequences;
 pub use sequences::{add_yaml_sequence_item_source, remove_yaml_sequence_item_source, copy_yaml_sequence_item_source, move_yaml_sequence_item_source};
 
+#[path = "yaml_literal.rs"]
+mod literal;
+pub use literal::inspect_yaml_literal_source;
+
 const MAX_YAML_SOURCE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_YAML_NODES: usize = 100_000;
 const MAX_YAML_OUTLINE_ENTRIES: usize = 20_000;
 const MAX_YAML_DEPTH: usize = 128;
 const MAX_YAML_PREVIEW_CHARS: usize = 120;
+
+#[cfg(test)]
+#[path = "yaml_literal_tests.rs"]
+mod literal_tests;
 
 fn parser_source(content: &str) -> &str {
     content.strip_prefix('\u{feff}').unwrap_or(content)
@@ -41,6 +49,8 @@ pub struct YamlDiagnostic {
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct YamlOutlineEntry {
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub literal: bool,
     pub field: Option<YamlField>,
     pub document_index: usize,
     pub path: String,
@@ -77,6 +87,7 @@ pub struct YamlKeyChange {
 
 #[derive(Default)]
 struct YamlTokens {
+    literals: HashSet<(usize, usize)>,
     scalars: HashMap<(usize, usize), ScalarStyle>,
     aliases: HashSet<(usize, usize)>,
 }
@@ -167,6 +178,7 @@ pub fn analyze_yaml_source(content: &str) -> YamlSourceAnalysis {
 
     if documents.len() != 1 {
         for entry in &mut outline {
+            entry.literal = false;
             entry.editable = false;
             entry.edit_unavailable_reason =
                 Some("多文档 YAML 请在源码中修改，当前内容会保留".into());
@@ -257,11 +269,14 @@ fn inspect_node(
         } else {
             end
         };
+        let literal = key_tokens.literals.contains(&(start, end));
         let editable = editable_context
             && node_kind(node) == "scalar"
-            && start < end
-            && editable_spans.contains(&(start, end));
+            && (start < end || literal)
+            && editable_spans.contains(&(start, end))
+            && (!literal || literal::available(content, field.as_ref(), end));
         outline.push(YamlOutlineEntry {
+            literal: literal && editable,
             field,
             document_index,
             path: path.to_string(),
@@ -403,11 +418,11 @@ fn inspect_events(
                     && !blocked.last().copied().unwrap_or(false)
                     && matches!(
                         style,
-                        ScalarStyle::Plain | ScalarStyle::SingleQuoted | ScalarStyle::DoubleQuoted
+                        ScalarStyle::Plain | ScalarStyle::SingleQuoted | ScalarStyle::DoubleQuoted | ScalarStyle::Literal
                     )
                     && content
                         .get(start..end)
-                        .is_some_and(|raw| !raw.contains(['\r', '\n']))
+                        .is_some_and(|raw| style == ScalarStyle::Literal || !raw.contains(['\r', '\n']))
                 {
                     editable.insert((start, end));
                 }
@@ -513,6 +528,7 @@ pub fn replace_yaml_value_source(
             .clone()
             .unwrap_or_else(|| "当前内容请在源码中修改".into()));
     }
+    if entry.literal { return literal::replace(content, entry, replacement); }
     let value = replacement.trim();
     if value.is_empty() || value.len() > MAX_YAML_SOURCE_BYTES || value.contains(['\r', '\n']) {
         return Err("请输入一个单行 YAML 值；空值可输入 null，空字符串可输入引号".into());
@@ -600,6 +616,7 @@ fn key_tokens(content: &str, offsets: &[usize]) -> YamlTokens {
         if let Ok((Event::Scalar(_, style, 0, None), span)) = event {
             let start = byte_offset(offsets, span.start.index());
             let end = scalar_end(content, start, byte_offset(offsets, span.end.index()));
+            if style == ScalarStyle::Literal { tokens.literals.insert((start, end)); }
             if matches!(
                 style,
                 ScalarStyle::Plain | ScalarStyle::SingleQuoted | ScalarStyle::DoubleQuoted
@@ -1175,7 +1192,6 @@ mod tests {
         for path in [
             "$.base.title",
             "$.tagged",
-            "$.block",
             "$.quoted",
             "$.merged.title",
         ] {
