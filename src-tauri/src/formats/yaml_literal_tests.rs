@@ -108,10 +108,15 @@ fn preserves_nonsemantic_blank_separators_and_outdented_comments() {
     assert!(edit(s, "$.a.text", "新\n\n").ends_with("  # next field\n  next: keep\n"));
     // Exact installed-workflow outcome: the parser owns ignored blank rows
     // after a strip block; switching to keep must not append an extra one.
-    let installed = include_str!("../../tests/fixtures/formats/yaml-literal-edit.yaml").replace("原稿", "我的草稿");
+    let installed = include_str!("../../tests/fixtures/formats/yaml-literal-edit.yaml").replace("\r\n", "\n").replace("原稿", "我的草稿");
     let edited = installed.replace("  第二行\n", "  修改后的第二行\n");
-    assert_eq!(edit(&installed, "$.strip", "第一行😀\n修改后的第二行"), edited);
-    assert_eq!(edit(&edited, "$.strip", "第一行😀\n修改后的第二行\n\n"), edited.replace("strip: |- # 保留\n  第一行😀\n  修改后的第二行\n\n", "strip: |+ # 保留\n  第一行😀\n  修改后的第二行\n  \n"));
+    let conflict = edited.replace("strip: |- # 保留\n  第一行😀\n  修改后的第二行\n\n", "strip: |+ # 保留\n  第一行😀\n  修改后的第二行\n  \n");
+    for eol in ["\n", "\r\n"] {
+        let original = installed.replace('\n', eol);
+        let edited = edited.replace('\n', eol);
+        assert_eq!(edit(&original, "$.strip", "第一行😀\n修改后的第二行"), edited);
+        assert_eq!(edit(&edited, "$.strip", "第一行😀\n修改后的第二行\n\n"), conflict.replace('\n', eol));
+    }
 }
 
 #[test]
