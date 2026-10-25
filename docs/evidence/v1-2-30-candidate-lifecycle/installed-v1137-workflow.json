@@ -1,0 +1,203 @@
+{
+  "appVersion": "1.2.30",
+  "sourceCommit": "38b3566b69f5ad3071796d4c926e63ae18e345f8",
+  "installerSha256": "6da85fe5096c8e5c66b2aa6cfe5520bc1b93011c1653cf40255fe99900d1aa30",
+  "harnessSourceCommit": "38b3566b69f5ad3071796d4c926e63ae18e345f8",
+  "executableSha256": "95018aedab5865c82ee374ecc667c2c81e8c57de91078693755fedfa765d4ad6",
+  "status": "passed",
+  "evidenceLevel": "installed-pdf-view-reload-trusted-ui-and-sidecar-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "persist-bounded-view-without-annotation-text",
+      "status": "passed"
+    },
+    {
+      "id": "new-renderer-resumes-filters-selection-and-scroll",
+      "status": "passed"
+    },
+    {
+      "id": "deleted-annotation-ids-discarded",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-reference-overrides-saved-view",
+      "status": "passed"
+    },
+    {
+      "id": "immediate-comment-save-before-leaving",
+      "status": "passed"
+    },
+    {
+      "id": "changed-source-rejects-stale-view",
+      "status": "passed"
+    },
+    {
+      "id": "original-pdf-and-other-drafts-preserved",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1137-before.json",
+      "sizeBytes": 17096,
+      "sha256": "eb6532ba35a7dbb8d79c3c111b0e646c5c9d73824bce8f67ea4f648b30dc76f8"
+    },
+    {
+      "fileName": "installed-v1137-view.json",
+      "sizeBytes": 231,
+      "sha256": "58515ababe938e847f1ed7c1ea9fce339cd71845d10f52d319eb0268e5bcd412"
+    },
+    {
+      "fileName": "installed-v1137-after.json",
+      "sizeBytes": 26858,
+      "sha256": "3285bf0b3f84505d27f1b9ab813f1e74650a961e932187c19e70ed16bb470d2d"
+    },
+    {
+      "fileName": "installed-v1137-observations.json",
+      "sizeBytes": 518,
+      "sha256": "90d63b712a9490194da150e51a68af5d183dbfbb7390a3256ab461ade39082dc"
+    }
+  ],
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "rendererReloads": 1,
+  "pdfBefore": "e48f37c1a02de01eb66622334e83c0f3dd92f58d13da14a8f67f91702e03d366",
+  "pdfAfter": "e48f37c1a02de01eb66622334e83c0f3dd92f58d13da14a8f67f91702e03d366",
+  "errorOverlay": false
+}
