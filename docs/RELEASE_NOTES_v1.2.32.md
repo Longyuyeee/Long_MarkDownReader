@@ -6,4 +6,6 @@
 
 继续保护未保存内容、后续输入、延迟结果、旧差异、文件切换、保存失败重试与外部冲突完整副本。保留全部既有功能、风格和正常动效。
 
-未签名社区版；完整发布检查与 656 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察单独记录。
+未签名社区版；完整发布检查与 656 项安装版功能任务通过，NSIS、MSI 与 `SHA256SUMS.txt` 三份公开附件重新下载核对通过。应用内自动更新实际观察仍待完成，与手动安装升级分别记录。
+
+[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.32) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_32_Unsigned_Community_Release_Audit_2026-10-25.md)。
