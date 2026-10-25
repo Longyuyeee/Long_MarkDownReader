@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 
 #[path = "yaml_fields.rs"]
 mod fields;
-pub use fields::{add_yaml_field_source, remove_yaml_field_source, copy_yaml_field_source};
+pub use fields::{add_yaml_field_source, remove_yaml_field_source, copy_yaml_field_source, move_yaml_field_source};
 
 #[cfg(test)]
 #[path = "yaml_field_copy_tests.rs"]
@@ -1267,3 +1267,7 @@ mod tests {
         assert_eq!(analysis.diagnostics[0].code, "source-too-large");
     }
 }
+
+#[cfg(test)]
+#[path = "yaml_field_order_tests.rs"]
+mod field_order_tests;

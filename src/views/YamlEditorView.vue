@@ -611,6 +611,33 @@ const moveItem=async(entry:YamlOutlineEntry,direction:'up'|'down')=>{
   }catch(cause){if(moveRequest===request&&session.unchanged(owner))moveError.value=errorMessage(cause)}
   finally{if(moveRequest===request&&session.owns(owner))movePending.value=false}
 }
+const fieldSiblings=(entry:YamlOutlineEntry)=>{
+  const entries=analysis.value?.outline||[],i=entries.findIndex(e=>e.documentIndex===entry.documentIndex&&e.field?.start===entry.field?.start&&e.field?.end===entry.field?.end)
+  if(i<0||!entry.field)return []
+  let from=i,to=i+1
+  while(from>0&&entries[from-1]!.depth>=entry.depth)from--
+  while(to<entries.length&&entries[to]!.depth>=entry.depth)to++
+  return entries.slice(from,to).filter(e=>e.documentIndex===entry.documentIndex&&e.depth===entry.depth&&e.field)
+}
+const canMoveField=(entry:YamlOutlineEntry,direction:'up'|'down')=>{
+  const siblings=fieldSiblings(entry),i=siblings.findIndex(e=>e.field?.start===entry.field?.start)
+  return i>=0&&(direction==='up'?i>0:i+1<siblings.length)
+}
+const moveField=async(entry:YamlOutlineEntry,direction:'up'|'down')=>{
+  if(editDisabled.value||!canMoveField(entry,direction))return
+  const owner=session.capture();if(!owner)return
+  const request={};moveRequest=request;moveOwner=owner;pendingMoveReveal=undefined;movePending.value=true;moveError.value='';moveEntry.value=entry
+  try{
+    const result=await invoke<{content:string;start:number;end:number}>('move_yaml_field_source',{content:owner.source,start:entry.field!.start,end:entry.field!.end,direction})
+    if(moveRequest!==request||!session.unchanged(owner))return
+    const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
+    session.offerChange(owner,direction==='up'?'上移 YAML 字段':'下移 YAML 字段',result.content,point(result.start),()=>{
+      outlineQuery.value='';selectedFieldStart.value=result.start
+      owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
+    })
+  }catch(cause){if(moveRequest===request&&session.unchanged(owner))moveError.value=errorMessage(cause)}
+  finally{if(moveRequest===request&&session.owns(owner))movePending.value=false}
+}
 const revealMoveSource=()=>{const owner=moveOwner,entry=moveEntry.value;if(owner&&entry&&session.unchanged(owner))pendingMoveReveal=()=>{if(session.unchanged(owner))revealRange(entry)};moveError.value=''}
 const editDisabled = computed(() => loading.value || saving.value || readOnly.value || analysisPending.value || valueEditPending.value || renamePending.value || duplicatePending.value || fieldPending.value || sequencePending.value || copyPending.value || movePending.value || analyzedSource.value !== sourceContent.value || !analysis.value?.valid)
 const openValueEdit = (entry: YamlOutlineEntry) => {
@@ -637,8 +664,8 @@ const previewValueEdit = async () => {
   finally { if (session.owns(owner)) valueEditPending.value = false }
 }
 const nodeMenu = useSourceNodeMenu<YamlOutlineEntry>(session, { fresh: () => !analysisPending.value && analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry),
-  extra: entry => [...(entry.kind==='sequence' ? [{key:'append-item',label:'追加列表项…',disabled:editDisabled.value}] : []), ...(!entry.field&&/\[\d+\]$/.test(entry.path) ? [{key:'move-up',label:'上移',disabled:editDisabled.value||!canMoveItem(entry,'up')},{key:'move-down',label:'下移',disabled:editDisabled.value||!canMoveItem(entry,'down')},{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除列表项…',disabled:editDisabled.value}] : []),...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'duplicate-field',label:'复制为新字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
-  action: (key,entry) => { if(key==='move-up')void moveItem(entry,'up');if(key==='move-down')void moveItem(entry,'down');if(key==='copy-item')void copyItem(entry); if(key==='append-item')openSequenceChange(entry,'append');if(key==='after-item')openSequenceChange(entry,'after');if(key==='remove-item')openSequenceChange(entry,'remove');if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='duplicate-field')openDuplicate(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
+  extra: entry => [...(entry.field ? [{key:'field-up',label:'上移',disabled:editDisabled.value||!canMoveField(entry,'up')},{key:'field-down',label:'下移',disabled:editDisabled.value||!canMoveField(entry,'down')}] : []),...(entry.kind==='sequence' ? [{key:'append-item',label:'追加列表项…',disabled:editDisabled.value}] : []), ...(!entry.field&&/\[\d+\]$/.test(entry.path) ? [{key:'move-up',label:'上移',disabled:editDisabled.value||!canMoveItem(entry,'up')},{key:'move-down',label:'下移',disabled:editDisabled.value||!canMoveItem(entry,'down')},{key:'copy-item',label:'复制为新项…',disabled:editDisabled.value},{key:'after-item',label:'在此项后新增…',disabled:editDisabled.value},{key:'remove-item',label:'删除列表项…',disabled:editDisabled.value}] : []),...(entry.kind==='mapping'||entry.field||entry.path==='$' ? [{key:'add-field',label:'新增字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'remove-field',label:'删除字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'duplicate-field',label:'复制为新字段…',disabled:editDisabled.value}] : []), ...(entry.field ? [{key:'rename-key',label:'重命名字段…',disabled:editDisabled.value}] : []), ...(['scalar','alias','tagged'].includes(entry.kind) ? [{key:'edit-value',label:'修改值…',disabled:editDisabled.value}] : [])],
+  action: (key,entry) => { if(key==='field-up')void moveField(entry,'up');if(key==='field-down')void moveField(entry,'down');if(key==='move-up')void moveItem(entry,'up');if(key==='move-down')void moveItem(entry,'down');if(key==='copy-item')void copyItem(entry); if(key==='append-item')openSequenceChange(entry,'append');if(key==='after-item')openSequenceChange(entry,'after');if(key==='remove-item')openSequenceChange(entry,'remove');if(key==='edit-value')openValueEdit(entry); if(key==='rename-key')openRename(entry);if(key==='duplicate-field')openDuplicate(entry);if(key==='add-field')openFieldChange(entry,'add');if(key==='remove-field')openFieldChange(entry,'remove') } })
 const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
 const registerCurrentTab = (snapshot?: TextDocumentSnapshot) => session.bind(snapshot)
 

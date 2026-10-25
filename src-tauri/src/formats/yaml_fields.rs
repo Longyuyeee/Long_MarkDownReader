@@ -172,6 +172,183 @@ fn empty_document(content: &str) -> bool {
         .all(|line| line.trim().is_empty() || line.trim_start().starts_with('#'))
 }
 
+/// Move only two adjacent scalar fields in the same parser-owned mapping.
+pub fn move_yaml_field_source(
+    content: &str,
+    start: usize,
+    end: usize,
+    direction: &str,
+) -> Result<YamlKeyChange, String> {
+    let fallback = "此字段的结构、缩进或注释归属无法准确移动，请定位源码；草稿仍保留";
+    if !matches!(direction, "up" | "down") {
+        return Err("请选择上移或下移；草稿仍保留".into());
+    }
+    let (mut docs, offsets, maps) = prepare(content)?;
+    let target = docs
+        .first()
+        .and_then(|d| find_target(d, content, &offsets, &maps, (start, end), false))
+        .ok_or(fallback)?;
+    let YamlDataOwned::Mapping(mapping) = &target.node.data else {
+        unreachable!()
+    };
+    let pairs: Vec<_> = mapping.iter().collect();
+    let index = pairs
+        .iter()
+        .position(|(k, _)| bounds(k, content, &offsets) == (start, end))
+        .ok_or(fallback)?;
+    let neighbor = if direction == "up" {
+        index.checked_sub(1)
+    } else {
+        index.checked_add(1).filter(|i| *i < pairs.len())
+    }
+    .ok_or("已经是第一个或最后一个字段；草稿仍保留")?;
+    let left = index.min(neighbor);
+    let tokens = key_tokens(content, &offsets);
+    let unit = |i: usize| -> Result<(usize, usize, usize), String> {
+        let (key, value) = pairs[i];
+        let k = bounds(key, content, &offsets);
+        let v = bounds(value, content, &offsets);
+        if !matches!(value.data, YamlDataOwned::Value(_))
+            || !tokens.scalars.contains_key(&k)
+            || !tokens.scalars.contains_key(&v)
+            || content
+                .get(k.0..v.1)
+                .is_none_or(|s| s.contains(['\r', '\n']))
+            || content.get(k.1..v.0).is_none_or(|s| s.trim() != ":")
+        {
+            return Err(fallback.into());
+        }
+        Ok((k.0, k.1, v.1))
+    };
+    let a = unit(left)?;
+    let b = unit(left + 1)?;
+    let range = (target.start, target.end);
+    let (ua, ub) = if content[range.0..].starts_with('{') {
+        let close = flow_close(content, range.1).ok_or(fallback)?;
+        let mut previous = range.0;
+        for (k, v) in &pairs {
+            let ks = bounds(k, content, &offsets).0;
+            let ve = bounds(v, content, &offsets).1;
+            if content[previous..ks].contains('#') {
+                return Err(fallback.into());
+            }
+            previous = ve;
+        }
+        if content[previous..close].contains('#') {
+            return Err(fallback.into());
+        }
+        ((a.0, a.2), (b.0, b.2))
+    } else {
+        let line = |p: (usize, usize, usize)| -> Result<(usize, usize), String> {
+            let from = content[..p.0]
+                .rfind('\n')
+                .map_or(usize::from(content.starts_with('\u{feff}')) * 3, |i| i + 1);
+            if !content[from..p.0].chars().all(|c| c == ' ') {
+                return Err(fallback.into());
+            }
+            let newline = content[p.2..].find('\n').map_or(content.len(), |i| p.2 + i);
+            let to = if content.as_bytes().get(newline.wrapping_sub(1)) == Some(&b'\r') {
+                newline - 1
+            } else {
+                newline
+            };
+            let tail = &content[p.2..to];
+            if !tail.trim().is_empty()
+                && (!tail.starts_with([' ', '\t']) || !tail.trim_start().starts_with('#'))
+            {
+                return Err(fallback.into());
+            }
+            Ok((from, to))
+        };
+        let ua = line(a)?;
+        let ub = line(b)?;
+        if a.0 - ua.0 != b.0 - ub.0 || ua.1 > ub.0 {
+            return Err(fallback.into());
+        }
+        let gap = &content[ua.1..ub.0];
+        // Comments separated from both fields by blank lines keep their slot.
+        let inner = gap
+            .strip_prefix("\r\n")
+            .or_else(|| gap.strip_prefix('\n'))
+            .unwrap_or(gap);
+        let lines: Vec<_> = inner.lines().collect();
+        if !inner.trim().is_empty()
+            && !(lines.first().is_some_and(|s| s.trim().is_empty())
+                && lines.last().is_some_and(|s| s.trim().is_empty())
+                && lines
+                    .iter()
+                    .all(|s| s.trim().is_empty() || s.trim_start().starts_with('#')))
+        {
+            return Err(fallback.into());
+        }
+        let before = content[..ua.0]
+            .strip_suffix('\n')
+            .unwrap_or(&content[..ua.0]);
+        if before.rsplit('\n').next().is_some_and(|s| {
+            s.trim_start_matches('\u{feff}')
+                .trim_start()
+                .starts_with('#')
+        }) {
+            return Err(fallback.into());
+        }
+        (ua, ub)
+    };
+    if ua.1 > ub.0 {
+        return Err(fallback.into());
+    }
+    let raw_a = &content[ua.0..ua.1];
+    let raw_b = &content[ub.0..ub.1];
+    let gap = &content[ua.1..ub.0];
+    let candidate = format!(
+        "{}{}{}{}{}",
+        &content[..ua.0],
+        raw_b,
+        gap,
+        raw_a,
+        &content[ub.1..]
+    );
+    let point = if direction == "up" {
+        ua.0 + b.0 - ub.0
+    } else {
+        ua.0 + raw_b.len() + gap.len() + a.0 - ua.0
+    };
+    if swap_fields(&mut docs[0], content, &offsets, range, left) != 1 {
+        return Err(fallback.into());
+    }
+    checked(candidate, docs, point, point + end - start).map_err(|_| fallback.into())
+}
+
+fn swap_fields(
+    node: &mut MarkedYamlOwned,
+    source: &str,
+    offsets: &[usize],
+    range: (usize, usize),
+    left: usize,
+) -> usize {
+    if bounds(node, source, offsets) == range {
+        if let YamlDataOwned::Mapping(map) = &mut node.data {
+            let original = std::mem::take(map);
+            let mut pairs: Vec<_> = original.into_iter().collect();
+            pairs.swap(left, left + 1);
+            for (k, v) in pairs {
+                map.insert(k, v);
+            }
+            return 1;
+        }
+    }
+    match &mut node.data {
+        YamlDataOwned::Mapping(map) => map
+            .values_mut()
+            .map(|v| swap_fields(v, source, offsets, range, left))
+            .sum(),
+        YamlDataOwned::Sequence(items) => items
+            .iter_mut()
+            .map(|v| swap_fields(v, source, offsets, range, left))
+            .sum(),
+        _ => 0,
+    }
+}
+
 /// Duplicate one parser-owned scalar field without serializing its neighbours.
 pub fn copy_yaml_field_source(
     content: &str,

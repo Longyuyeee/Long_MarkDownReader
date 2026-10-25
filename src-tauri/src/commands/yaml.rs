@@ -97,6 +97,22 @@ pub fn remove_yaml_field_source(
 }
 
 #[tauri::command]
+pub fn move_yaml_field_source(
+    content: String,
+    start: usize,
+    end: usize,
+    direction: String,
+) -> Result<YamlKeyChange, TextDocumentError> {
+    crate::formats::yaml::move_yaml_field_source(&content, start, end, &direction).map_err(|message| {
+        TextDocumentError::recoverable(
+            "yaml-field-move-rejected",
+            message,
+            "调整名称后重试，或定位源码；当前输入与草稿仍保留",
+        )
+    })
+}
+
+#[tauri::command]
 pub fn copy_yaml_field_source(
     content: String,
     start: usize,
