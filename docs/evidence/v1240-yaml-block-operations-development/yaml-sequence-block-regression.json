@@ -1,0 +1,56 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "readable-prefill-diff-draft-and-one-step-history",
+      "status": "passed"
+    },
+    {
+      "id": "clip-keep-explicit-indent-and-sequence-field-ownership",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-text-retained-and-source-resume",
+      "status": "passed"
+    },
+    {
+      "id": "existing-literal-and-tagged-local-source-fallback",
+      "status": "passed"
+    },
+    {
+      "id": "failed-prefill-disables-preview-and-retry-restores-original-text",
+      "status": "passed"
+    },
+    {
+      "id": "late-literal-read-cannot-open-old-form-or-replace-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "late-result-cannot-replace-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "old-diff-cannot-replace-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "file-switch-keeps-drafts-and-new-preview-but-clears-old-menu-diff",
+      "status": "passed"
+    },
+    {
+      "id": "switch-clears-old-value-form-and-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "save-retry-and-external-conflict-preserve-original-and-complete-order",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-whole-page-and-diff-wide-narrow-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

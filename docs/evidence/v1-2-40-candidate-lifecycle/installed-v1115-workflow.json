@@ -1,0 +1,293 @@
+{
+  "appVersion": "1.2.40",
+  "sourceCommit": "85687429cc36b336b846920954b56483b97e06a9",
+  "installerSha256": "8d7cea7d0e1758ef63a25add75cca98a1fc0d260976a1f9526a46c5ec2525022",
+  "harnessSourceCommit": "85687429cc36b336b846920954b56483b97e06a9",
+  "executableSha256": "64273b87868c1a9a6960c14ce4e6f99b9551c1642a5dd6743d665a9b249b0bdf",
+  "evidenceLevel": "installed-table-real-clipboard-native-save-export-and-independent-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "owned-fixture-and-installed-identity",
+      "status": "passed"
+    },
+    {
+      "id": "real-filtered-paste-no-hidden-row-write",
+      "status": "passed"
+    },
+    {
+      "id": "stable-sort-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "real-range-copy-and-atomic-clear",
+      "status": "passed"
+    },
+    {
+      "id": "append-undo-and-column-continuity",
+      "status": "passed"
+    },
+    {
+      "id": "native-multiline-draft-editor",
+      "status": "passed"
+    },
+    {
+      "id": "native-csv-save-and-reopen-exact-values",
+      "status": "passed"
+    },
+    {
+      "id": "native-table-copy-original-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "native-xlsx-identifier-and-formula-text",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-input-no-errors-and-unselected-preserved",
+      "status": "passed"
+    }
+  ],
+  "unselectedBefore": "e4cc9aa743710d91bb17da5b085a778fd621d9f2c9753f8e691fac52bd7b3c0b",
+  "filteredPasteExact": true,
+  "hiddenRowProtected": true,
+  "sortUndoRedoExact": true,
+  "rangeCopyExact": true,
+  "clearUndoExact": true,
+  "appendUndoExact": true,
+  "columnSurvivesUndo": true,
+  "multilineDraftOnly": true,
+  "csvInspection": {
+    "status": "passed",
+    "sha256": "d304b018187c186304746ca27d000438987122cf9e7377f161c8d01e544aa6a7",
+    "reader": "independent-dotnet-powershell-no-extraction",
+    "nativeBridgeMocked": false,
+    "sourceUserContentIncluded": false,
+    "hasBom": true,
+    "endsCrlf": true,
+    "rows": [
+      [
+        "会议\r\n备注",
+        "可见",
+        "00123",
+        ""
+      ],
+      [
+        "保持原样",
+        "隐藏",
+        "9007199254740993123",
+        ""
+      ],
+      [
+        "核对文档",
+        "可见",
+        "9007199254740993124",
+        ""
+      ],
+      [
+        "=SUM(A1:A2)",
+        "已完成",
+        "42",
+        ""
+      ]
+    ]
+  },
+  "csvReopenExact": true,
+  "tableCopyPreservesSource": true,
+  "xlsxInspection": {
+    "status": "passed",
+    "sha256": "803ac30a3254a601a9ab637ed832939250f564c7d500b5683d5a9b8d8d51f687",
+    "reader": "independent-dotnet-powershell-no-extraction",
+    "nativeBridgeMocked": false,
+    "sourceUserContentIncluded": false,
+    "cells": {
+      "B2": "可见",
+      "C4": "9007199254740993124",
+      "C1": "编号",
+      "B3": "隐藏",
+      "B1": "状态",
+      "A3": "保持原样",
+      "A5": "=SUM(A1:A2)",
+      "A2": "会议_x000D_\n备注",
+      "B4": "可见",
+      "A4": "核对文档",
+      "D1": "列 4",
+      "C3": "9007199254740993123",
+      "C5": "42",
+      "B5": "已完成",
+      "C2": "00123",
+      "A1": "任务"
+    },
+    "types": {
+      "B2": "s",
+      "C4": "s",
+      "C1": "s",
+      "B3": "s",
+      "B1": "s",
+      "A3": "s",
+      "A5": "s",
+      "A2": "s",
+      "B4": "s",
+      "A4": "s",
+      "D1": "s",
+      "C3": "s",
+      "C5": "n",
+      "B5": "s",
+      "C2": "s",
+      "A1": "s"
+    },
+    "hasFormula": false
+  },
+  "unselectedAfter": "e4cc9aa743710d91bb17da5b085a778fd621d9f2c9753f8e691fac52bd7b3c0b",
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "paste",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "paste",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "paste",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "paste",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}

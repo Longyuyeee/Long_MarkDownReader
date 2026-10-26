@@ -1,0 +1,10 @@
+{
+  "exact-prefill-type-preview-draft-and-independent-undo-redo": true,
+  "type-changes-quoted-values-and-reserved-names": true,
+  "invalid-input-retained-with-source-location-and-resume": true,
+  "complex-item-source-fallback-keeps-draft": true,
+  "source-switch-clears-form-preview-menu-and-retains-draft": true,
+  "real-locked-save-retry-and-bom-crlf-reopen": true,
+  "external-conflict-copy-keeps-source-and-draft": true,
+  "all-owned-fixtures-clean-and-no-runtime-error": true
+}

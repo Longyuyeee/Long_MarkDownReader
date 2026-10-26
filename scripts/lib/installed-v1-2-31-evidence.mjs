@@ -7,7 +7,7 @@ export const yamlFieldOrderEdited=yamlFieldOrderDraft.replace("first: 0xFF # fir
 export const yamlFieldOrderConflict=yamlFieldOrderEdited.replace("first: 0xFF # first\nthird: true\n","third: true\nfirst: 0xFF # first\n")
 export const yamlFieldOrderOutputFiles=['installed-v1231-order-observations.json','installed-v1231-yaml-saved.yaml','installed-v1231-yaml-copy.yaml','installed-v1231-yaml-external.yaml']
 export function validateInstalledYamlFieldOrder(r,m){
- assert.ok(['1.2.31','1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.31','1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-yaml-field-adjacent-order-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const prefix of ['locked','external']){assert.match(r[prefix+'Before'],/^[a-f0-9]{64}$/);assert.equal(r[prefix+'Before'],r[prefix+'After'])}

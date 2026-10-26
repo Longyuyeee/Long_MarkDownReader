@@ -3,6 +3,9 @@ use super::*;
 
 const FALLBACK: &str = "此列表的缩进、注释或引用关系无法可靠接续，请定位源码；输入与草稿仍保留";
 
+#[path = "yaml_sequence_blocks.rs"]
+mod blocks;
+
 fn ordinary_sequences(content: &str, offsets: &[usize]) -> HashSet<(usize, usize)> {
     let mut stack = Vec::new();
     let mut ranges = HashSet::new();
@@ -337,6 +340,9 @@ pub fn copy_yaml_sequence_item_source(
     start: usize,
     end: usize,
 ) -> Result<YamlKeyChange, String> {
+    if let Some(result) = blocks::change(content, start, end, None) {
+        return result;
+    }
     let literal = content
         .get(start..end)
         .ok_or("条目位置已变化，请重新选择；草稿仍保留")?;
@@ -404,6 +410,9 @@ pub fn move_yaml_sequence_item_source(
 ) -> Result<YamlKeyChange, String> {
     if !matches!(direction, "up" | "down") {
         return Err("请选择上移或下移；草稿仍保留".into());
+    }
+    if let Some(result) = blocks::change(content, start, end, Some(direction)) {
+        return result;
     }
     let (mut docs, offsets, _) = prepare(content)?;
     let ranges = ordinary_sequences(content, &offsets);
@@ -699,7 +708,6 @@ mod tests {
             ("<<: {a: 1}\nx: [1]", "$.x[0]"),
             ("x: [1]\n---\nx: [2]", "$.x[0]"),
             ("x: [1, # attached\n 2]", "$.x[0]"),
-            ("x:\n - |\n   text\n", "$.x[0]"),
         ] {
             assert!(copy_item(s, p).is_err(), "{s}");
         }
@@ -850,7 +858,6 @@ mod tests {
             ("base: &a 1\nx: [*a, 2]", "$.x[0]"),
             ("<<: {a: 1}\nx: [1, 2]", "$.x[0]"),
             ("x: [1, 2]\n---\nx: [3]", "$.x[0]"),
-            ("x:\n - |\n   text\n - 2\n", "$.x[0]"),
             ("x: ['one\n two', 2]", "$.x[0]"),
             ("- - one\n  - two\n", "$[0][0]"),
         ] {
