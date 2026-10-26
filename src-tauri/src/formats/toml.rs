@@ -7,6 +7,9 @@ pub use literal::{inspect_toml_literal_source, replace_toml_literal_source};
 #[cfg(test)]
 #[path = "toml_literal_tests.rs"]
 mod literal_tests;
+#[cfg(test)]
+#[path = "toml_basic_tests.rs"]
+mod basic_tests;
 
 #[path = "toml_fields.rs"]
 mod fields;
@@ -38,6 +41,8 @@ pub struct TomlDiagnostic {
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct TomlOutlineEntry {
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub multiline_basic: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub literal: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
@@ -212,6 +217,7 @@ fn inspect_item(
     if state.outline.len() < MAX_TOML_OUTLINE_ENTRIES {
         let (line, column) = line_column(content, span.start);
         state.outline.push(TomlOutlineEntry {
+            multiline_basic: item.as_value().is_some_and(|v| v.is_str() && v.span().and_then(|s| content.get(s)).is_some_and(|s| s.starts_with("\"\"\""))),
             literal: item.as_value().is_some_and(|v| v.is_str() && v.span().and_then(|s| content.get(s)).is_some_and(|s| s.starts_with("'''"))),
             array: item.as_value().is_some_and(Value::is_array),
             field: parent.key(label).and_then(|key| {
