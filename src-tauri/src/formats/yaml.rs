@@ -37,6 +37,10 @@ mod folded_tests;
 #[path = "yaml_sequence_block_tests.rs"]
 mod sequence_block_tests;
 
+#[cfg(test)]
+#[path = "yaml_block_operation_tests.rs"]
+mod block_operation_tests;
+
 fn parser_source(content: &str) -> &str {
     content.strip_prefix('\u{feff}').unwrap_or(content)
 }

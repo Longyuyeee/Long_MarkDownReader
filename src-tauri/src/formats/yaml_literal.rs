@@ -153,6 +153,26 @@ pub(super) fn available(
     }
 }
 
+// Shared physical ownership for existing sequence copy/order operations. Keep
+// meaningful trailing empty lines with `+`; other trailing blanks stay in the
+// separator slot. The final parse-tree check still proves exact scalar values.
+pub(super) fn sequence_unit(content: &str, start: usize, end: usize) -> Option<(usize, usize, usize)> {
+    let owned = sequence_layout(content, start, end)?;
+    let from = content[..owned.marker_start].rfind('\n').map_or(
+        usize::from(content.starts_with('\u{feff}')) * 3,
+        |n| n + 1,
+    );
+    let mut finish = owned.body_end;
+    if !content[owned.marker_start..owned.marker_end].contains('+') {
+        let body = &content[owned.body_start..finish];
+        let blanks = body.split_inclusive('\n').rev()
+            .take_while(|line| line.trim_matches([' ', '\t', '\r', '\n']).is_empty())
+            .map(str::len).sum::<usize>();
+        finish -= blanks;
+    }
+    Some((from, finish.max(owned.body_start), owned.key_indent))
+}
+
 fn decoded(content: &str, start: usize, end: usize) -> Option<String> {
     let offsets = source_offsets(content);
     Parser::new_from_str(parser_source(content)).find_map(|event| match event.ok()? {

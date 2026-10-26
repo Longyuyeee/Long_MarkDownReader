@@ -1,0 +1,17 @@
+import {parseDocument,isMap,isSeq,isScalar} from 'yaml'
+import {fixtureYamlMove} from './v1227-yaml-order-analysis.mjs'
+import {fixtureYamlSequence} from './v1223-yaml-analysis.mjs'
+// Simulated browser transform IPC only; Saphyr and installed-file proof run separately.
+export function fixtureYamlBlockOperation({content,start,end,direction}){
+ const byte=n=>new TextEncoder().encode(content.slice(0,n)).length,doc=parseDocument(content);let parent,index,route
+ const visit=(n,blocked=false,path=[])=>{if(!n)return;blocked ||=!!n.anchor||!!n.tag;if(isMap(n)){blocked ||=n.items.some(p=>p.key?.value==='<<');n.items.forEach(p=>visit(p.value,blocked||typeof p.key?.value!=='string',[...path,p.key?.value]))}else if(isSeq(n)){const i=n.items.findIndex(v=>v?.range&&byte(v.range[0])===start&&byte(v.range[1])===end);if(i>=0&&!blocked){parent=n;index=i;route=path}n.items.forEach((v,i)=>visit(v,blocked,[...path,i]))}};visit(doc.contents)
+ if(parent?.flow){if(direction)return fixtureYamlMove({content,start,end,direction});return fixtureYamlSequence({content,start,end,after:true,value:content.slice(parent.items[index].range[0],parent.items[index].range[1])})}
+ if(doc.errors.length||!parent||parent.items.some(n=>!isScalar(n)||n.anchor||n.tag))throw Error('此列表的缩进或引用请定位源码；草稿仍保留')
+ const unit=n=>{const [a,b]=n.range,from=content.lastIndexOf('\n',a-1)+1,block=['BLOCK_LITERAL','BLOCK_FOLDED'].includes(n.type);if(!/^ *- +/.test(content.slice(from,a))||!block&&content.slice(a,b).includes('\n'))throw Error('条目归属不明确，请定位源码');let finish=block?b:content.indexOf('\n',b)+1;if(finish===0)finish=content.length;if(block&&!content.slice(a,content.indexOf('\n',a)).includes('+')){while(finish>content.indexOf('\n',a)+1){const p=content.lastIndexOf('\n',finish-2)+1;if(content.slice(p,finish).trim())break;finish=p}}const to=finish-(content.slice(0,finish).endsWith('\r\n')?2:content.slice(0,finish).endsWith('\n')?1:0);return[from,to]}
+ const units=parent.items.map(unit),clear=i=>{const end=units[i][0]-1,from=content.lastIndexOf('\n',end-1)+1;if(i>0&&from>=units[i-1][0]&&end<=units[i-1][1])return true;return!content.slice(from,end).trimStart().startsWith('#')},expected=doc.toJS();let array=expected;for(const key of route)array=array[key]
+ let result,next
+ if(direction){next=index+(direction==='up'?-1:1);if(next<0||next>=units.length)throw Error('已经是第一项或最后一项');const left=Math.min(index,next),a=units[left],b=units[left+1],gap=content.slice(a[1],b[0]),lines=gap.split('\n');if(!clear(left)||!clear(left+1)||gap.trim()&&(lines[0].trim()||lines.at(-1).trim()||lines.some(l=>l.trim()&&!l.trimStart().startsWith('#'))))throw Error('注释归属不明确，请定位源码；草稿仍保留');result=content.slice(0,a[0])+content.slice(...b)+gap+content.slice(...a)+content.slice(b[1]);[array[left],array[left+1]]=[array[left+1],array[left]]}
+ else{if(!clear(index))throw Error('注释归属不明确，请定位源码；草稿仍保留');const u=units[index];result=content.slice(0,u[1])+'\n'+content.slice(...u)+content.slice(u[1]);next=index+1;array.splice(next,0,array[index])}
+ const after=parseDocument(result);if(after.errors.length||JSON.stringify(after.toJS())!==JSON.stringify(expected))throw Error('此位置无法保留原有文字，请定位源码；草稿仍保留');let node=after.contents;for(const key of route)node=isSeq(node)?node.items[key]:node.items.find(p=>p.key.value===key).value;const selected=node.items[next];return{content:result,start:byteFor(result,selected.range[0]),end:byteFor(result,selected.range[1])}
+}
+const byteFor=(s,n)=>new TextEncoder().encode(s.slice(0,n)).length

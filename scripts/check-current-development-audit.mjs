@@ -535,6 +535,12 @@ if (pkg.version === '1.2.39') {
   required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.39' : '1.2.38') && development.publicTag === `v${development.publicVersion}`]
   required[9] = [published ? '当前阶段：**v1.2.39 已发布**' : '当前阶段：**v1.2.39 TOML 数组多行正文编辑候选**', development.currentStage === (published ? 'M8-183-v1.2.39-published' : 'M8-182-v1.2.39-toml-array-multiline-text-editing-candidate') && development.activeSlice?.id === 'v1.2.39-toml-array-multiline-text-editing' && fs.existsSync(development.activeSlice.document)]
 }
+if (pkg.version === '1.2.40') {
+  const published = policy.gates?.githubReleasePublished === true
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.2.41' : '1.2.40')]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.40' : '1.2.39') && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? '当前阶段：**v1.2.40 已发布**' : '当前阶段：**v1.2.40 YAML 多行条目复制排序候选**', development.currentStage === (published ? 'M8-185-v1.2.40-published' : 'M8-184-v1.2.40-yaml-block-item-operations-candidate') && development.activeSlice?.id === 'v1.2.40-yaml-block-item-operations' && fs.existsSync(development.activeSlice.document)]
+}
 
 for (const [token, condition] of required) {
   if (!condition) throw new Error(`[current-development-audit] source-of-truth no longer supports: ${token}`)
