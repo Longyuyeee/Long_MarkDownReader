@@ -1,0 +1,47 @@
+{
+  "status": "whole-run-failed-not-accepted",
+  "runId": 40304278350,
+  "sourceCommit": "014a038ee48c476c61f1081f55aa4d4558e05524",
+  "installerSha256": "c61f6aa5b4a8557e1bfca61c3780439753558a2c1bdd01e7d2b7c62870689839",
+  "passedPartialGroups": 56,
+  "passedPartialTasks": 515,
+  "newFeatureChecksPassed": 9,
+  "failure": {
+    "sourceCommit": "014a038ee48c476c61f1081f55aa4d4558e05524",
+    "installerSha256": "c61f6aa5b4a8557e1bfca61c3780439753558a2c1bdd01e7d2b7c62870689839",
+    "appVersion": "1.2.38",
+    "evidenceLevel": "installed-webview-input-events",
+    "sourceUserContentIncluded": false,
+    "status": "failed",
+    "observations": {
+      "nativeVersion": "1.2.38",
+      "badge": " v1.2.38",
+      "badgeLabel": "当前软件版本 v1.2.38，尚未检查更新，点击查看更新",
+      "settingsRoute": "#/settings?category=system&focus=software-update",
+      "settings": "软件更新\n当前版本 v1.2.38 · 每 24 小时自动检查，也可随时手动检查\n自动检查已启用；安装前会校验官方附件的 SHA-256。\n检查更新",
+      "failureSurface": {
+        "route": "#/settings?category=system&focus=software-update",
+        "settings": "软件更新\n当前版本 v1.2.38 · 每 24 小时自动检查，也可随时手动检查\n更新失败：GitHub 更新检查失败：HTTP status client error (403 rate limit exceeded) for url (https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest)\n检查更新",
+        "status": "<div data-v-754328e2=\"\" class=\"update-status error\">更新失败：GitHub 更新检查失败：HTTP status client error (403 rate limit exceeded) for url (https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest)</div>",
+        "buttons": [
+          {
+            "text": " 检查更新 ",
+            "disabled": false,
+            "loading": false
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "loading": false
+          }
+        ]
+      }
+    },
+    "checks": [],
+    "error": "Error: Timed out waiting for completed real official update check with enabled control"
+  },
+  "retryRunId": 40309010736,
+  "productAndHarnessChanged": false,
+  "installerRebuilt": false,
+  "previousEvidenceInheritedAsCurrent": false
+}

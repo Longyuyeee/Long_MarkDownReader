@@ -24,15 +24,59 @@ fn layout(content: &str, field: &YamlField, end: usize) -> Option<Layout> {
         return None;
     }
     let header_end = field.end + content.get(field.end..)?.find('\n')?;
+    let tail = content.get(field.end..header_end)?.trim_end_matches('\r');
+    let after_colon = tail.strip_prefix(':')?;
+    let white = after_colon.len() - after_colon.trim_start_matches(' ').len();
+    block_layout(content, field.end + 1 + white, prefix.len(), end)
+}
+
+// A standalone sequence block owns the nearest preceding nonblank header.
+// Parser spans start in the body (or at the following boundary for empty
+// blocks); only whitespace may occur between that header and the span start.
+// Compact nested dashes and mapping headers cannot pass this physical check.
+fn sequence_layout(content: &str, start: usize, end: usize) -> Option<Layout> {
+    // For an empty final block Saphyr points at the indicator itself.
+    let point = start + usize::from(content.get(start..)?.starts_with(['|', '>']));
+    let before = content
+        .get(..point)?
+        .trim_end_matches([' ', '\t', '\r', '\n']);
+    let line = before.rfind('\n').map_or(0, |n| n + 1);
+    let header = content
+        .get(line..before.len())?
+        .trim_start_matches('\u{feff}');
+    let indent = header.bytes().take_while(|b| *b == b' ').count();
+    let rest = header.get(indent..)?.strip_prefix('-')?;
+    if !rest.starts_with(' ') {
+        return None;
+    }
+    let white = rest.len() - rest.trim_start_matches(' ').len();
+    let marker =
+        line + (content.get(line..)?.starts_with('\u{feff}') as usize * 3) + indent + 1 + white;
+    let owned = block_layout(content, marker, indent, end)?;
+    if start != marker
+        && (start < owned.body_start
+            || !content
+                .get(owned.body_start..start)?
+                .chars()
+                .all(char::is_whitespace))
+    {
+        return None;
+    }
+    Some(owned)
+}
+
+fn block_layout(
+    content: &str,
+    marker_start: usize,
+    key_indent: usize,
+    end: usize,
+) -> Option<Layout> {
+    let header_end = marker_start + content.get(marker_start..)?.find('\n')?;
     let eol = if content.as_bytes().get(header_end.wrapping_sub(1)) == Some(&b'\r') {
         "\r\n"
     } else {
         "\n"
     };
-    let tail = content.get(field.end..header_end)?.trim_end_matches('\r');
-    let after_colon = tail.strip_prefix(':')?;
-    let white = after_colon.len() - after_colon.trim_start_matches(' ').len();
-    let marker_start = field.end + 1 + white;
     let indicator = content
         .get(marker_start..header_end)?
         .split([' ', '\r', '\t', '#'])
@@ -62,7 +106,6 @@ fn layout(content: &str, field: &YamlField, end: usize) -> Option<Layout> {
         }
     }
     let body = content.get(body_start..body_end)?;
-    let key_indent = prefix.len();
     let explicit = flags
         .chars()
         .find_map(|c| c.to_digit(10))
@@ -96,8 +139,18 @@ fn layout(content: &str, field: &YamlField, end: usize) -> Option<Layout> {
     })
 }
 
-pub(super) fn available(content: &str, field: Option<&YamlField>, end: usize) -> bool {
-    field.is_some_and(|f| layout(content, f, end).is_some())
+pub(super) fn available(
+    content: &str,
+    field: Option<&YamlField>,
+    start: usize,
+    end: usize,
+    sequence_item: bool,
+) -> bool {
+    if let Some(field) = field {
+        layout(content, field, end).is_some()
+    } else {
+        sequence_item && sequence_layout(content, start, end).is_some()
+    }
 }
 
 fn decoded(content: &str, start: usize, end: usize) -> Option<String> {
@@ -152,11 +205,12 @@ pub(super) fn replace(
     if original == value {
         return Ok(content.into());
     }
-    let owned = entry
-        .field
-        .as_ref()
-        .and_then(|field| layout(content, field, entry.end))
-        .ok_or("块文本归属无法确认，请定位源码；输入与草稿仍保留")?;
+    let owned = if let Some(field) = entry.field.as_ref() {
+        layout(content, field, entry.end)
+    } else {
+        sequence_layout(content, entry.start, entry.end)
+    }
+    .ok_or("块文本归属无法确认，请定位源码；输入与草稿仍保留")?;
     let old_marker = &content[owned.marker_start..owned.marker_end];
     let trailing = value.bytes().rev().take_while(|b| *b == b'\n').count();
     let mode = if trailing == 0 {
@@ -180,11 +234,13 @@ pub(super) fn replace(
     {
         marker = old_marker.into();
     }
-    // Folded paragraphs keep their `>` form. An explicit indent is required
+    // Both block styles keep their form. An explicit indent is required
     // when the first nonempty content line itself starts with whitespace;
     // otherwise YAML would absorb that whitespace into its auto indentation.
-    if entry.folded && !marker.chars().any(|c| c.is_ascii_digit())
-        && value.split('\n').find(|line| !line.is_empty())
+    if !marker.chars().any(|c| c.is_ascii_digit())
+        && value
+            .split('\n')
+            .find(|line| !line.is_empty())
             .is_some_and(|line| line.starts_with([' ', '\t']))
     {
         let width = owned.indent - owned.key_indent;
@@ -195,7 +251,11 @@ pub(super) fn replace(
     }
     let indent = " ".repeat(owned.indent);
     let mut body = String::new();
-    let encoded = if entry.folded { folded_lines(&value) } else { value.clone() };
+    let encoded = if entry.folded {
+        folded_lines(&value)
+    } else {
+        value.clone()
+    };
     for line in encoded.split_inclusive('\n') {
         let text = line.strip_suffix('\n').unwrap_or(line);
         if body

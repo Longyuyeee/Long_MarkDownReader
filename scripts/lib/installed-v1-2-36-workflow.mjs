@@ -7,7 +7,7 @@ import {nativeUserInput} from './v118-native-user-input.mjs'
 import {yamlFoldedChecks,yamlFoldedSource,yamlFoldedDraft,yamlFoldedEdited,yamlFoldedConflict,yamlFoldedOutputFiles,validateInstalledYamlFolded,assertYamlFoldedOutputBytes} from './installed-v1-2-36-evidence.mjs'
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export async function runInstalledV1236YamlFoldedWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
- assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(['1.2.36','1.2.37'].includes(appVersion))
+ assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(['1.2.36','1.2.37', '1.2.38'].includes(appVersion))
  const folder=path.join(library,'000-v1236-folded-'+crypto.randomUUID()),file=path.join(folder,'配置.yaml'),other=path.join(folder,'其他.yaml'),ui=nativeUserInput({send,evaluate},{timeoutMs:45000,stableMs:200}),obs={},bytes={}
  const r={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-yaml-folded-text-editing-trusted-input-and-file-bytes',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[],runtimeErrors:[],inputTrace:[],viewportWidths:[]},mark=i=>{obs[yamlFoldedChecks[i]]=true;r.checks.push({id:yamlFoldedChecks[i],status:'passed'})}
  let failure,lock
