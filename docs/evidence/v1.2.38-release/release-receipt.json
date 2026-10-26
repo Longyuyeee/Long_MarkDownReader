@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "status": "published-and-remote-assets-verified",
+  "release": {
+    "tag": "v1.2.38",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.38",
+    "databaseId": 424159868,
+    "isDraft": false,
+    "isPrerelease": false,
+    "taggedCommit": "014a038ee48c476c61f1081f55aa4d4558e05524",
+    "publishedAt": "2026-10-26T11:22:07Z"
+  },
+  "assets": [
+    {
+      "name": "LongEdit_1.2.38_x64_zh-CN.msi",
+      "sizeBytes": 78204928,
+      "sha256": "adb08e8cb7fd21b7439609609c9a557341a8bb56a9f6510bd24408ab9b87d64b",
+      "assetId": 677940913,
+      "remoteDownloadVerified": true
+    },
+    {
+      "name": "LongEdit_1.2.38_x64-setup.exe",
+      "sizeBytes": 68822182,
+      "sha256": "c61f6aa5b4a8557e1bfca61c3780439753558a2c1bdd01e7d2b7c62870689839",
+      "assetId": 677940916,
+      "remoteDownloadVerified": true
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "sizeBytes": 192,
+      "sha256": "10fde5c42cf5b1128aba046f64b70f2653b650cdd49d06aa2901d5b701bd63d2",
+      "assetId": 677940917,
+      "remoteDownloadVerified": true
+    }
+  ],
+  "publicDownloadVerificationRunId": 40314347073,
+  "authenticodeStatus": "NotSigned",
+  "sourceUserContentIncluded": false,
+  "managedUpdaterObservation": "1.2.37-to-1.2.38-pending"
+}
