@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.2.36",
+  "developmentTargetVersion": "1.2.37",
   "runtimeBaseVersion": "1.2.36",
-  "publicVersion": "1.2.35",
-  "publicTag": "v1.2.35",
-  "publicTagCommit": "a56bf4fb4af2cfecf26d003950ee60f837401c66",
+  "publicVersion": "1.2.36",
+  "publicTag": "v1.2.36",
+  "publicTagCommit": "81dedde236ae22e7fd15e750d5ea392c040640d1",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-176-v1.2.36-yaml-folded-text-editing-candidate",
-  "binaryVersionTransition": "v1.2.36-release-ready",
-  "displayLabel": "v1.2.36 YAML 段落文字编辑候选 · 当前公开 v1.2.35",
+  "currentStage": "M8-177-v1.2.36-published",
+  "binaryVersionTransition": "v1.2.36-public-release-published",
+  "displayLabel": "v1.2.36 已发布 · 下一目标 v1.2.37",
   "activeSlice": {
     "id": "v1.2.36-yaml-folded-text-editing",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-and-remote-assets-verified",
     "document": "docs/V1_2_36_Unsigned_Community_Release_Audit_2026-10-26.md"
   }
 }
