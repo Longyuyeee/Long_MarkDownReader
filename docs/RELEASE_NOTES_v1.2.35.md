@@ -6,6 +6,6 @@ TOML 三单引号多行文字字段现在可右键“修改值…”，直接编
 
 继续保护未保存内容、迟到结果、旧差异、文件切换、保存失败重试和外部冲突完整副本。保留全部既有功能、风格和正常动效。
 
-未签名社区版；完整检查与实际安装检查仍待完成，尚未发布。应用内自动更新实际观察独立记录。
+未签名社区版；完整发布检查与 683 项安装版功能任务通过，公开附件核对尚待完成。应用内自动更新实际观察独立记录。
 
 [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.35) · [完整发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_2_35_Unsigned_Community_Release_Audit_2026-10-26.md)。
