@@ -1,0 +1,12 @@
+{
+  "command": "npm run ci:patch-release",
+  "initialAttempt": "full-quality-r1",
+  "initialActualExit": 1,
+  "initialStop": "check:v1-installed-hotfix",
+  "continuedAttempt": "quality-resume-r1",
+  "continuedActualExit": 0,
+  "continuedFrom": "check:v1-installed-hotfix through the remaining commands of the same package script",
+  "status": "all-steps-completed-after-version-boundary-script-correction",
+  "source": "actual-local-command-exits",
+  "wholeFirstRunPassed": false
+}
