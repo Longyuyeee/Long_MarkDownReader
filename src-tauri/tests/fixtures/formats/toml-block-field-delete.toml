@@ -1,0 +1,38 @@
+# 配置 中文😀
+label = '原稿'
+[items]
+first = '''第一行😀
+第二行''' # 第一段
+
+# independent
+
+second = """后一段
+转义\n折叠""" # 第二段
+third = 0xFF # number
+[kept]
+text = """
+# 正文
+text
+""" # keep
+
+other = true
+[empty]
+text = """
+"""
+other = false
+[blocked]
+text = [
+1,
+2
+]
+other = false
+[ambiguous]
+# attached?
+text = '''old
+body'''
+other = false
+[unique]
+text = """
+""" # unique
+[unchanged]
+last = 8_080

@@ -454,8 +454,13 @@ pub fn remove_toml_field_source(
         .as_value()
         .and_then(Value::span)
         .ok_or("表头请在源码中修改；草稿仍保留")?;
-    if content[start..span.end].contains(['\r', '\n']) {
-        return Err("多行字段请在源码中删除；当前草稿仍保留".into());
+    // Only parser-owned triple-quoted strings may cross physical lines.
+    // Collections still need source editing; never infer their comment ownership.
+    if content[start..span.start].contains(['\r', '\n'])
+        || (content[span.clone()].contains(['\r', '\n'])
+            && !item.as_value().is_some_and(|v| blocks::is_string(content, v)))
+    {
+        return Err("复杂多行字段请定位源码删除；当前草稿仍保留".into());
     }
     let first = line_start(content, start);
     let from = first.max(usize::from(content.starts_with('\u{feff}')) * 3);
@@ -474,8 +479,30 @@ pub fn remove_toml_field_source(
     fields_at(&mut expected, &path)
         .ok_or("无法确认表归属")?
         .remove(name);
-    checked(&candidate, &expected, from, from, None)
+    let after = prepare(&candidate)?;
+    let changed = table_at(after.as_table(), &path).ok_or("字段归属已变化")?;
+    // Prefer the next direct field, then the preceding one. Never select a
+    // descendant from the next table just because it occupies the old offset.
+    let fields: Vec<_> = table.iter().filter(|(_, item)| item.is_value()).collect();
+    let index = fields
+        .iter()
+        .position(|(key, _)| *key == name)
+        .ok_or("字段位置已过期")?;
+    let neighbor = fields
+        .get(index + 1)
+        .or_else(|| index.checked_sub(1).and_then(|i| fields.get(i)));
+    let root = usize::from(candidate.starts_with('\u{feff}')) * 3;
+    let selection = neighbor
+        .and_then(|(name, _)| changed.key(name))
+        .and_then(Key::span)
+        .or_else(|| (!path.is_empty()).then(|| changed.span()).flatten())
+        .unwrap_or(root..root);
+    checked(&candidate, &expected, selection.start, selection.end, None)
 }
+
+#[cfg(test)]
+#[path = "toml_field_delete_tests.rs"]
+mod delete_tests;
 
 #[cfg(test)]
 mod tests {
@@ -601,7 +628,7 @@ mod tests {
             s.replace("[a.child]", "z = 2\n[a.child]")
         );
         assert!(remove(s, "a.x").is_err());
-        assert!(remove(s, "title").is_err());
+        assert_eq!(remove(s, "title").unwrap().content, "[a]\nx=[\n 1,\n 2\n]\n[a.child]\ny=3\n");
     }
     #[test]
     fn delete_keeps_independent_comments_and_unselected_values_exact() {
