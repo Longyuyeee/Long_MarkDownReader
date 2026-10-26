@@ -1,0 +1,14 @@
+# 配置 中文😀
+label = '原稿'
+text = '''第一行😀
+第二行''' # 保留
+opened = '''
+  原有缩进
+'''
+quotes = '''末尾'''''
+number = 0xFF
+date = 2026-10-26
+basic = """转义\n文字"""
+[nested]
+text = '''嵌套'''
+next = '保留'

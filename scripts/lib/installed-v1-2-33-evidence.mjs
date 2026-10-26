@@ -7,7 +7,7 @@ export const tomlDatetimeEdited=tomlDatetimeDraft.replace('1979-05-27t07:32:00.1
 export const tomlDatetimeConflict=tomlDatetimeEdited.replace('date = 2024-02-29 # 日期','date = 2026-10-25 # 日期')
 export const tomlDatetimeOutputFiles=['installed-v1233-datetime-observations.json','installed-v1233-toml-saved.toml','installed-v1233-toml-copy.toml','installed-v1233-toml-external.toml']
 export function validateInstalledTomlDatetime(r,m){
- assert.ok(['1.2.33','1.2.34'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.33','1.2.34', '1.2.35'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-toml-datetime-editing-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const prefix of ['locked','external']){assert.match(r[prefix+'Before'],/^[a-f0-9]{64}$/);assert.equal(r[prefix+'Before'],r[prefix+'After'])}

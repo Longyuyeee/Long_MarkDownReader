@@ -63,15 +63,15 @@
     <footer><span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span><span>{{ encoding.toUpperCase() }}</span><span>{{ lines }} 行</span><span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span></footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
-    <n-modal v-model:show="valueEditVisible" preset="card" class="toml-value-edit-dialog" :title="valueEntry?.kind==='array-item' ? '修改 TOML 数组项' : valueDatetimeKind ? '修改 TOML '+valueDatetimeKind : '修改 TOML 值'" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
+    <n-modal v-model:show="valueEditVisible" preset="card" class="toml-value-edit-dialog" :title="valueEntry?.literal ? '修改 TOML 多行文字' : valueEntry?.kind==='array-item' ? '修改 TOML 数组项' : valueDatetimeKind ? '修改 TOML '+valueDatetimeKind : '修改 TOML 值'" :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
       :mask-closable="!valueEditPending" :closable="!valueEditPending" :close-on-esc="!valueEditPending"
       @after-enter="valueInput?.select()" @after-leave="finishValueDialog">
       <code>{{ valueEntry?.path }}</code>
       <n-input ref="valueInput" v-model:value="valueText" :type="valueEntry?.kind==='array-item'||valueDatetimeKind ? 'text' : 'textarea'" :autosize="valueEntry?.kind==='array-item'||valueDatetimeKind ? false : {minRows:3,maxRows:8}" style="width:100%"
         :disabled="valueEditPending" :input-props="{'aria-label':valueEntry?.kind==='array-item' ? 'TOML 数组项值' : 'TOML 字段值'}" autofocus @keydown.enter="onValueEnter" />
-      <p v-if="valueError" role="alert" class="error">{{ valueError }} <n-button text :disabled="valueEditPending" @click="revealValueSource">定位源码</n-button></p>
+      <p v-if="valueError" role="alert" class="error">{{ valueError }} <n-button v-if="valueReadFailed" text :disabled="valueEditPending" @click="valueEntry && openValueEdit(valueEntry)">重新读取</n-button> <n-button text :disabled="valueEditPending" @click="revealValueSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
-        <n-button type="primary" :loading="valueEditPending" @click="previewValueEdit">预览修改</n-button></div></template>
+        <n-button type="primary" :loading="valueEditPending" :disabled="valueReadFailed" @click="previewValueEdit">预览修改</n-button></div></template>
     </n-modal>
     <n-modal v-model:show="renameVisible" preset="card" class="toml-key-rename-dialog" title="重命名 TOML 字段"
       :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!renamePending" :closable="!renamePending" :close-on-esc="!renamePending"
@@ -156,7 +156,7 @@ import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../u
 interface Snapshot { path: string; content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
 interface Range { start: number; end: number }
 interface Diagnostic extends Range { code: string; message: string; line: number; column: number }
-interface Entry extends Range { index?:number; array?:boolean; childCount?:number; arrayParent?:Range; field?: { name:string;start:number;end:number;renameUnavailableReason?:string }; path: string; label: string; kind: string; depth: number; preview: string; editable?: boolean; editUnavailableReason?: string }
+interface Entry extends Range { literal?:boolean; index?:number; array?:boolean; childCount?:number; arrayParent?:Range; field?: { name:string;start:number;end:number;renameUnavailableReason?:string }; path: string; label: string; kind: string; depth: number; preview: string; editable?: boolean; editUnavailableReason?: string }
 interface Analysis { valid: boolean; tableCount: number; arrayOfTablesCount: number; valueCount: number; maxDepth: number; outline: Entry[]; outlineTruncated: boolean; diagnostics: Diagnostic[] }
 
 const route = useRoute(), router = useRouter(), store = useAppStore(), dialog = useDialog(), message = useMessage()
@@ -194,7 +194,7 @@ const session = useStructuredSession({
   analyze: source => analyze(source), clearAnalysis: () => clearTimer(), scheduleAnalysis: () => schedule(),
   applySnapshot: snapshot => apply(snapshot), load: discard => load(discard),
 })
-const valueEditVisible = ref(false), valueEditPending = ref(false), valueText = ref(''), valueError = ref('')
+const valueEditVisible = ref(false), valueEditPending = ref(false), valueText = ref(''), valueError = ref(''), valueReadFailed = ref(false)
 const valueInput = ref<InputInst | null>(null), valueEntry = ref<Entry | null>(null)
 let valueOwner: ReturnType<typeof session.capture>, pendingValuePreview: (() => void) | undefined, resumeValue = false
 const finishValueDialog = () => { const offer = pendingValuePreview; pendingValuePreview = undefined; offer?.() }
@@ -462,18 +462,25 @@ const valueDatetimeKind = computed(() => {
   if (/^\d{4}-\d{2}-\d{2}[Tt ]\d{2}:/.test(raw)) return /(?:[Zz]|[+-]\d{2}:\d{2})$/.test(raw) ? '带时区日期时间' : '本地日期时间'
   return ''
 })
-const openValueEdit = (entry: Entry) => {
+const openValueEdit = async (entry: Entry) => {
   if (editDisabled.value) return
   if (!entry.editable) { message.info(entry.editUnavailableReason || '此内容请在源码中修改'); reveal(entry); return }
   if (resumeValue && valueOwner && session.unchanged(valueOwner) && valueEntry.value?.path===entry.path && valueEntry.value.start===entry.start) {
     resumeValue=false; valueEditVisible.value=true; return
   }
   resumeValue=false; pendingValuePreview=undefined
-  valueOwner = session.capture()
-  if (!valueOwner) return
-  valueEntry.value = entry
-  valueText.value = new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(valueOwner.source).slice(entry.start,entry.end))
-  valueError.value = ''; valueEditVisible.value = true
+  const owner = session.capture(); valueOwner = owner
+  if (!owner) return
+  valueEntry.value = entry; valueError.value = ''; valueReadFailed.value = false; valueEditPending.value = true
+  try {
+    const text = entry.literal
+      ? await invoke<string>('inspect_toml_literal_source',{content:owner.source,start:entry.start,end:entry.end})
+      : new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(owner.source).slice(entry.start,entry.end))
+    if(valueOwner!==owner||!session.unchanged(owner))return
+    valueText.value = text; valueEditVisible.value = true
+  } catch(cause) {
+    if(valueOwner===owner&&session.unchanged(owner)){valueText.value='';valueReadFailed.value=true;valueError.value=errorText(cause);valueEditVisible.value=true}
+  } finally { if(valueOwner===owner&&session.owns(owner))valueEditPending.value=false }
 }
 const revealValueSource = () => {
   const owner=valueOwner,entry=valueEntry.value
@@ -486,18 +493,18 @@ const onValueEnter = (event:KeyboardEvent) => {
 }
 const previewValueEdit = async () => {
   const owner = valueOwner, entry = valueEntry.value
-  if (!owner || !entry || valueEditPending.value) return
+  if (!owner || !entry || valueEditPending.value || valueReadFailed.value) return
   if (!session.unchanged(owner)) { valueError.value = '当前文件或草稿已变化，请重新选择；当前输入与内容仍保留'; return }
   valueEditPending.value = true; valueError.value = ''
   try {
     const item=entry.kind==='array-item'&&entry.arrayParent
     const result=item
       ? await invoke<{content:string;start:number;end:number;valueType?:string}>('replace_toml_array_item_source',{content:owner.source,start:item.start,end:item.end,itemStart:entry.start,itemEnd:entry.end,replacement:valueText.value})
-      : {content:await invoke<string>('replace_toml_value_source',{content:owner.source,start:entry.start,end:entry.end,replacement:valueText.value}),start:entry.start,end:entry.end,valueType:undefined}
+      : {content:await invoke<string>(entry.literal?'replace_toml_literal_source':'replace_toml_value_source',{content:owner.source,start:entry.start,end:entry.end,replacement:valueText.value}),start:entry.start,end:entry.end,valueType:undefined}
     if(valueOwner!==owner||!session.owns(owner))return
     if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择；当前输入与内容仍保留'; return }
     const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
-    pendingValuePreview = () => session.offerChange(owner,item?`修改 TOML 数组项${result.valueType?' · '+result.valueType:''}`:'修改 TOML 值',result.content,point(result.start),item?()=>{
+    pendingValuePreview = () => session.offerChange(owner,item?`修改 TOML 数组项${result.valueType?' · '+result.valueType:''}`:entry.literal?'修改 TOML 多行文字':'修改 TOML 值',result.content,point(result.start),item?()=>{
       query.value='';selectedFieldStart.value=result.start
       owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
     }:undefined)
@@ -538,7 +545,7 @@ const load = async (discardDraft = false) => {
   session.cancelChange(); session.closeConflict(); nodeMenu.close()
   copyRequest=undefined;copyOwner=undefined;pendingCopyReveal=undefined;copyPending.value=false;copyError.value='';copyEntry.value=null
   moveRequest=undefined;moveOwner=undefined;pendingMoveReveal=undefined;movePending.value=false;moveError.value='';moveEntry.value=null
-  valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined; resumeValue=false
+  valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined; resumeValue=false;valueReadFailed.value=false
   resetArrayOutline();arrayVisible.value=false;arrayPending.value=false;arrayOwner=undefined;arrayEntry.value=null;pendingArray=undefined;resumeArray=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
   duplicateVisible.value=false;duplicatePending.value=false;duplicateOwner=undefined;duplicateEntry.value=null;pendingDuplicate=undefined;resumeDuplicate=false
