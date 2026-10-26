@@ -6,6 +6,7 @@ struct Layout {
     body_start: usize,
     body_end: usize,
     indent: usize,
+    key_indent: usize,
     eol: &'static str,
 }
 
@@ -36,7 +37,7 @@ fn layout(content: &str, field: &YamlField, end: usize) -> Option<Layout> {
         .get(marker_start..header_end)?
         .split([' ', '\r', '\t', '#'])
         .next()?;
-    if !indicator.starts_with('|') || indicator.len() > 3 {
+    if !indicator.starts_with(['|', '>']) || indicator.len() > 3 {
         return None;
     }
     let flags = &indicator[1..];
@@ -90,6 +91,7 @@ fn layout(content: &str, field: &YamlField, end: usize) -> Option<Layout> {
         body_start,
         body_end,
         indent,
+        key_indent,
         eol,
     })
 }
@@ -101,7 +103,7 @@ pub(super) fn available(content: &str, field: Option<&YamlField>, end: usize) ->
 fn decoded(content: &str, start: usize, end: usize) -> Option<String> {
     let offsets = source_offsets(content);
     Parser::new_from_str(parser_source(content)).find_map(|event| match event.ok()? {
-        (Event::Scalar(value, ScalarStyle::Literal, 0, None), span)
+        (Event::Scalar(value, ScalarStyle::Literal | ScalarStyle::Folded, 0, None), span)
             if byte_offset(&offsets, span.start.index()) == start
                 && byte_offset(&offsets, span.end.index()) == end =>
         {
@@ -123,7 +125,7 @@ pub fn inspect_yaml_literal_source(
     if !analysis
         .outline
         .iter()
-        .any(|e| e.start == start && e.end == end && e.literal && e.editable)
+        .any(|e| e.start == start && e.end == end && (e.literal || e.folded) && e.editable)
     {
         return Err("多行文字的位置或归属已变化，请重新选择；当前草稿仍保留".into());
     }
@@ -178,9 +180,23 @@ pub(super) fn replace(
     {
         marker = old_marker.into();
     }
+    // Folded paragraphs keep their `>` form. An explicit indent is required
+    // when the first nonempty content line itself starts with whitespace;
+    // otherwise YAML would absorb that whitespace into its auto indentation.
+    if entry.folded && !marker.chars().any(|c| c.is_ascii_digit())
+        && value.split('\n').find(|line| !line.is_empty())
+            .is_some_and(|line| line.starts_with([' ', '\t']))
+    {
+        let width = owned.indent - owned.key_indent;
+        if !(1..=9).contains(&width) {
+            return Err("这些文字的缩进无法沿当前块表达，请定位源码；输入与草稿仍保留".into());
+        }
+        marker.insert(1, char::from_digit(width as u32, 10).unwrap());
+    }
     let indent = " ".repeat(owned.indent);
     let mut body = String::new();
-    for line in value.split_inclusive('\n') {
+    let encoded = if entry.folded { folded_lines(&value) } else { value.clone() };
+    for line in encoded.split_inclusive('\n') {
         let text = line.strip_suffix('\n').unwrap_or(line);
         if body
             .len()
@@ -251,4 +267,25 @@ pub(super) fn replace(
         return Err("这些文字会改变其他内容或结尾换行，请定位源码；输入与草稿仍保留".into());
     }
     Ok(candidate)
+}
+
+// A physical break between ordinary lines folds to a space. Between two
+// ordinary paragraphs, insert one additional empty physical line; breaks
+// adjacent to more-indented lines and leading/trailing breaks already survive.
+// Full parsed-tree comparison remains the authority for every encoded result.
+fn folded_lines(value: &str) -> String {
+    let mut encoded = String::with_capacity(value.len());
+    let mut previous_normal = false;
+    for line in value.split_inclusive('\n') {
+        let text = line.strip_suffix('\n').unwrap_or(line);
+        if !text.is_empty() {
+            let normal = !text.starts_with([' ', '\t']);
+            if normal && previous_normal {
+                encoded.push('\n');
+            }
+            previous_normal = normal;
+        }
+        encoded.push_str(line);
+    }
+    encoded
 }

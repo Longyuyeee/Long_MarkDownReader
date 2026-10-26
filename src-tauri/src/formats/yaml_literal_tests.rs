@@ -120,9 +120,8 @@ fn preserves_nonsemantic_blank_separators_and_outdented_comments() {
 }
 
 #[test]
-fn folded_anchored_tagged_merged_complex_and_multidoc_stay_local_fallback() {
+fn anchored_tagged_merged_complex_and_multidoc_stay_local_fallback() {
     for s in [
-        "text: >\n  folded\n",
         "text: &id |\n  anchor\ncopy: *id\n",
         "text: !custom |\n  tagged\n",
         "base: &id {other: x}\nm:\n  <<: *id\n  text: |\n    merged\n",
