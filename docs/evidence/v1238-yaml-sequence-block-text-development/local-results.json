@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "candidateCommit": "014a038ee48c476c61f1081f55aa4d4558e05524",
+  "formatsPassed": 544,
+  "formatsIgnored": 2,
+  "newRustTests": 9,
+  "bodyCorpusCases": 512,
+  "browserChecks": 12,
+  "yamlFoldedRegressionChecks": 12,
+  "tomlBasicRegressionChecks": 12,
+  "actualCommandExits": {
+    "formats-r2": 0,
+    "quality-r1": 0,
+    "browser-build-r2": 0,
+    "sequence-block-browser-r1": 0,
+    "yaml-folded-regression-browser-r1": 0,
+    "toml-basic-regression-browser-r1": 0
+  },
+  "nativeBridgeMockedForBrowser": true,
+  "desktopInputUsed": false,
+  "note": "Initial development tests found two boundaries: leading whitespace needs an explicit indentation indicator; an empty final sequence block uses the header indicator as its parser span start. Corrected both, fast actual parser9 passed, complete application formats r2 rerun passed. Formats r1 failed543/1 and is not counted as passed. Browser r2 rebuild included final fixture indentation and literal item before the first browser run."
+}
