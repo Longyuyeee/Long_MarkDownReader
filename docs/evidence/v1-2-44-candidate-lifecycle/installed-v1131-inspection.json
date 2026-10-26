@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "beforeSha256": "f1142bd673d060a3e7f009ad10004cbaf4db849af22d65a67cd48a6c80706c25",
+  "sha256": "5611120a25fab672cd23392397a4ad266e5c9e9aa565cf12be6b9ff09d74b1e3",
+  "changedParts": [
+    "xl/worksheets/sheet1.xml"
+  ],
+  "sheetNames": [
+    "录入",
+    "保留",
+    "Options"
+  ],
+  "values": {
+    "A2": 1.5,
+    "B2": 0.1,
+    "C2": "😀字",
+    "D2": "2026-10-23 00:00:00",
+    "A5": "未保存保护三一",
+    "E4": "=A4"
+  }
+}
