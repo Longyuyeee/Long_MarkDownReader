@@ -72,7 +72,6 @@ fn bom_crlf_blank_lines_and_missing_final_newline_remain_exact() {
 fn rejects_complex_multiline_anchors_tags_merge_multidoc_and_compact_rows() {
     for (s, p) in [
         ("a: [1]\nb: 2\n", "$.a"),
-        ("a: |\n  line\nb: 2\n", "$.a"),
         ("a: &id 1\nb: 2\n", "$.a"),
         ("a: !tag 1\nb: 2\n", "$.a"),
         ("<<: {x: 1}\na: 1\nb: 2\n", "$.a"),

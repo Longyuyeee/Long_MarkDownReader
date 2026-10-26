@@ -158,6 +158,24 @@ pub(super) fn available(
 // separator slot. The final parse-tree check still proves exact scalar values.
 pub(super) fn sequence_unit(content: &str, start: usize, end: usize) -> Option<(usize, usize, usize)> {
     let owned = sequence_layout(content, start, end)?;
+    physical_unit(content, owned)
+}
+
+// A mapping field owns its proven key header and full block body. Compact
+// sequence/mapping headers remain source-only for field copy and ordering.
+pub(super) fn field_unit(content: &str, field: &YamlField, end: usize) -> Option<(usize, usize, usize)> {
+    let owned = layout(content, field, end)?;
+    let from = content[..field.start].rfind('\n').map_or(
+        usize::from(content.starts_with('\u{feff}')) * 3,
+        |n| n + 1,
+    );
+    if !content[from..field.start].bytes().all(|b| b == b' ') {
+        return None;
+    }
+    physical_unit(content, owned)
+}
+
+fn physical_unit(content: &str, owned: Layout) -> Option<(usize, usize, usize)> {
     let from = content[..owned.marker_start].rfind('\n').map_or(
         usize::from(content.starts_with('\u{feff}')) * 3,
         |n| n + 1,

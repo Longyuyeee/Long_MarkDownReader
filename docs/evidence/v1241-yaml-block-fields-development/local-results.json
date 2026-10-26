@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "candidateCommit": "324c721193d4e0dacc582c183da039b14eb63047",
+  "formatsPassed": 577,
+  "formatsIgnored": 2,
+  "newRustTests": 11,
+  "yamlTests": 114,
+  "bodyCorpusCases": 48,
+  "browserChecks": 12,
+  "yamlBlockOperationsRegressionChecks": 12,
+  "tomlArrayMultilineRegressionChecks": 12,
+  "actualCommandExits": {
+    "yaml-probe-all-r1": 0,
+    "formats-r1": 0,
+    "quality-r1": 0,
+    "browser-build-r1": 0,
+    "block-fields-browser-r2": 0,
+    "yaml-block-operations-regression-browser-r1": 0,
+    "toml-array-multiline-regression-browser-r1": 0
+  },
+  "nativeBridgeMockedForBrowser": true,
+  "desktopInputUsed": false,
+  "note": "Added11 production parser tests and48 form/body combinations. Retired2 obsolete Rust block rejection cases. Native29 retires its block-only rejection for41; the new native group independently proves the newly supported operations. All other complex restrictions retained. Existing literal physical ownership is shared without changing sequence behavior. Initial browser run stopped after7 checks because the driver tried opening another menu while the intentionally retained late-copy name dialog was still open. Driver now asserts preserved name and explicitly cancels; full12 checks passed. Failed development runs are not accepted. Browser IPC/disk are simulated; native and file-byte proof remain separate."
+}
