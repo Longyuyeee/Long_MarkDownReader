@@ -1200,6 +1200,14 @@ export function assertV121DevelopmentBoundary(development, community) {
 }
 
 export function assertV121UpdaterStatus(policy, community, receipt) {
+  if (community.appVersion === '1.2.36') {
+    if (policy.status !== 'hosted-managed-update-passed'
+      || receipt.managedUpdaterObservation !== '1.0.20-to-1.0.21-passed'
+      || community.targetRelease?.tag !== 'v1.2.36'
+      || community.patchValidation?.previousPublicVersion !== '1.2.35'
+      || !['1.2.35-to-1.2.36-pending','1.2.35-to-1.2.36-passed'].includes(community.patchValidation?.managedUpdaterUpgradePath)) throw Error('1.2.36 must retain its separate update observation and immutable predecessor')
+    return
+  }
   if (community.appVersion === '1.2.35') {
     if (policy.status !== 'hosted-managed-update-passed'
       || receipt.managedUpdaterObservation !== '1.0.20-to-1.0.21-passed'
