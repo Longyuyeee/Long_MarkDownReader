@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.2.37",
-  "runtimeBaseVersion": "1.2.36",
+  "runtimeBaseVersion": "1.2.37",
   "publicVersion": "1.2.36",
   "publicTag": "v1.2.36",
   "publicTagCommit": "81dedde236ae22e7fd15e750d5ea392c040640d1",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-177-v1.2.36-published",
-  "binaryVersionTransition": "v1.2.36-public-release-published",
-  "displayLabel": "v1.2.36 已发布 · 下一目标 v1.2.37",
+  "currentStage": "M8-178-v1.2.37-toml-basic-multiline-text-editing-candidate",
+  "binaryVersionTransition": "v1.2.37-quality-gate-pending",
+  "displayLabel": "v1.2.37 TOML 多行正文编辑候选 · 当前公开 v1.2.36",
   "activeSlice": {
-    "id": "v1.2.36-yaml-folded-text-editing",
-    "status": "published-and-remote-assets-verified",
-    "document": "docs/V1_2_36_Unsigned_Community_Release_Audit_2026-10-26.md"
+    "id": "v1.2.37-toml-basic-multiline-text-editing",
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_2_37_Unsigned_Community_Release_Audit_2026-10-26.md"
   }
 }

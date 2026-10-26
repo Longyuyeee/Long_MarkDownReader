@@ -9,7 +9,7 @@ fn selected(content: &str, start: usize, end: usize) -> Result<Document<&str>, S
     if !analysis
         .outline
         .iter()
-        .any(|e| e.literal && e.start == start && e.end == end)
+        .any(|e| (e.literal || e.multiline_basic) && e.start == start && e.end == end)
     {
         return Err("多行文字的位置已变化，请重新选择字段；输入与草稿仍保留".into());
     }
@@ -98,21 +98,23 @@ pub fn replace_toml_literal_source(
         return Err("文字超过编辑大小上限；输入与草稿仍保留".into());
     }
     let text = replacement.replace("\r\n", "\n");
-    if text.contains("'''") {
+    let raw = &content[start..end];
+    let basic = raw.starts_with("\"\"\"");
+    if !basic && text.contains("'''") {
         return Err(
             "文字包含连续三个单引号，无法沿用当前格式；请定位源码修改，输入与草稿仍保留".into(),
         );
     }
-    if text
-        .chars()
-        .any(|c| matches!(c, '\u{0}'..='\u{8}' | '\u{b}'..='\u{1f}' | '\u{7f}'))
+    if !basic
+        && text
+            .chars()
+            .any(|c| matches!(c, '\u{0}'..='\u{8}' | '\u{b}'..='\u{1f}' | '\u{7f}'))
     {
         return Err("文字包含不支持的控制字符，请移除后重试；输入与草稿仍保留".into());
     }
     if original.replace("\r\n", "\n") == text {
         return Ok(content.into());
     }
-    let raw = &content[start..end];
     let newline = raw
         .find('\n')
         .map(|n| n > 0 && raw.as_bytes()[n - 1] == b'\r')
@@ -123,15 +125,21 @@ pub fn replace_toml_literal_source(
         })
         .unwrap_or(false);
     let eol = if newline { "\r\n" } else { "\n" };
-    // TOML trims exactly the first newline immediately following '''. Keep an
-    // existing opening newline; add one when needed to represent leading LF.
+    let delimiter = if basic { "\"\"\"" } else { "'''" };
+    // Both multiline forms trim the first opening newline. Preserve the source
+    // form and add that trimmed newline when the actual text starts with LF.
     let opening =
-        if raw.starts_with("'''\r\n") || raw.starts_with("'''\n") || text.starts_with('\n') {
+        if raw[3..].starts_with("\r\n") || raw[3..].starts_with('\n') || text.starts_with('\n') {
             eol
         } else {
             ""
         };
-    let token = format!("'''{opening}{}'''", text.replace('\n', eol));
+    let body = if basic {
+        encode_basic(&text)
+    } else {
+        text.clone()
+    };
+    let token = format!("{delimiter}{opening}{}{delimiter}", body.replace('\n', eol));
     let candidate = format!("{}{token}{}", &content[..start], &content[end..]);
     if candidate.len() > MAX_TOML_SOURCE_BYTES || !analyze_toml_source(&candidate).valid {
         return Err("当前文字无法沿用原格式，请定位源码修改；输入与草稿仍保留".into());
@@ -144,4 +152,24 @@ pub fn replace_toml_literal_source(
         return Err("无法确认只修改当前文字，请定位源码修改；输入与草稿仍保留".into());
     }
     Ok(candidate)
+}
+
+// Do not interpret user text as TOML escapes. Escape every quote/backslash,
+// including closing delimiter runs and a backslash just before a newline.
+// LF stays readable; other controls have lossless TOML Unicode escapes.
+fn encode_basic(text: &str) -> String {
+    let mut body = String::with_capacity(text.len());
+    for c in text.chars() {
+        match c {
+            '"' => body.push_str("\\\""),
+            '\\' => body.push_str("\\\\"),
+            '\n' | '\t' => body.push(c),
+            '\u{0}'..='\u{1f}' | '\u{7f}' => {
+                use std::fmt::Write;
+                write!(body, "\\u{:04X}", c as u32).expect("writing a string cannot fail");
+            }
+            _ => body.push(c),
+        }
+    }
+    body
 }
