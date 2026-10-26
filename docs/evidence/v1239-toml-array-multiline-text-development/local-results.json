@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "candidateCommit": "8dfd82c827c5d06918cb1f667fdce0a2a365a929",
+  "formatsPassed": 555,
+  "formatsIgnored": 2,
+  "newRustTests": 11,
+  "tomlTests": 108,
+  "bodyCorpusCases": 512,
+  "browserChecks": 12,
+  "yamlSequenceBlockRegressionChecks": 12,
+  "tomlBasicRegressionChecks": 12,
+  "actualCommandExits": {
+    "toml-probe-all-r2": 0,
+    "formats-r1": 0,
+    "quality-r1": 0,
+    "browser-build-r1": 0,
+    "array-multiline-browser-r1": 0,
+    "yaml-sequence-block-regression-browser-r1": 0,
+    "toml-basic-regression-browser-r1": 0
+  },
+  "nativeBridgeMockedForBrowser": true,
+  "desktopInputUsed": false,
+  "note": "Initial development compile used unsupported Array indexing; corrected to get(). Initial TOML-only suite retained one obsolete expectation that primitive neighbors of multiline strings cannot edit; updated only that assertion to match the intended new behavior. New and complete TOML checks reran passed before source freeze. Full formats and release sequence passed, browser all first runs passed; no failed development run counted as passed."
+}

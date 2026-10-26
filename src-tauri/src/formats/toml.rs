@@ -11,6 +11,10 @@ mod literal_tests;
 #[path = "toml_basic_tests.rs"]
 mod basic_tests;
 
+#[cfg(test)]
+#[path = "toml_array_multiline_tests.rs"]
+mod array_multiline_tests;
+
 #[path = "toml_fields.rs"]
 mod fields;
 pub use fields::{add_toml_field_source, remove_toml_field_source, copy_toml_field_source, move_toml_field_source};

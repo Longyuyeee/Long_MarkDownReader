@@ -67,7 +67,7 @@
       :mask-closable="!valueEditPending" :closable="!valueEditPending" :close-on-esc="!valueEditPending"
       @after-enter="valueInput?.select()" @after-leave="finishValueDialog">
       <code>{{ valueEntry?.path }}</code>
-      <n-input ref="valueInput" v-model:value="valueText" :type="valueEntry?.kind==='array-item'||valueDatetimeKind ? 'text' : 'textarea'" :autosize="valueEntry?.kind==='array-item'||valueDatetimeKind ? false : {minRows:3,maxRows:8}" style="width:100%"
+      <n-input ref="valueInput" v-model:value="valueText" :type="!valueIsMultiline && (valueEntry?.kind==='array-item'||valueDatetimeKind) ? 'text' : 'textarea'" :autosize="!valueIsMultiline && (valueEntry?.kind==='array-item'||valueDatetimeKind) ? false : {minRows:3,maxRows:8}" style="width:100%"
         :disabled="valueEditPending || valueReadFailed" :input-props="{'aria-label':valueEntry?.kind==='array-item' ? 'TOML 数组项值' : 'TOML 字段值'}" autofocus @keydown.enter="onValueEnter" />
       <p v-if="valueError" role="alert" class="error">{{ valueError }} <n-button v-if="valueReadFailed" text :disabled="valueEditPending" @click="valueEntry && openValueEdit(valueEntry)">重新读取</n-button> <n-button text :disabled="valueEditPending" @click="revealValueSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
@@ -366,7 +366,7 @@ const loadArrayItems=async(entry:Entry)=>{
   const request={};arrayRequests[entry.path]=request
   arrayLoading.value=updateArrayRecord(arrayLoading.value,entry.path,true);arrayErrors.value=updateArrayRecord(arrayErrors.value,entry.path,'')
   try{
-    const items=await invoke<{index:number;start:number;end:number;preview:string;editable:boolean}[]>('inspect_toml_array_items_source',{content:owner.source,start:entry.start,end:entry.end})
+    const items=await invoke<{index:number;start:number;end:number;preview:string;editable:boolean;literal?:boolean;multilineBasic?:boolean}[]>('inspect_toml_array_items_source',{content:owner.source,start:entry.start,end:entry.end})
     if(arrayRequests[entry.path]!==request||!session.unchanged(owner))return
     arraySource.value=owner.source;arrayItems.value=updateArrayRecord(arrayItems.value,entry.path,items.map(item=>({...item,path:`${entry.path}[${item.index}]`,label:`[${item.index}]`,kind:'array-item',depth:entry.depth+1,arrayParent:{start:entry.start,end:entry.end}})))
   }catch(cause){if(arrayRequests[entry.path]===request&&session.unchanged(owner))arrayErrors.value=updateArrayRecord(arrayErrors.value,entry.path,errorText(cause))}
@@ -489,7 +489,7 @@ const revealValueSource = () => {
   resumeValue=true;pendingValuePreview=()=>{if(session.unchanged(owner))reveal(entry)};valueEditVisible.value=false
 }
 const onValueEnter = (event:KeyboardEvent) => {
-  if((valueEntry.value?.kind!=='array-item'&&!valueDatetimeKind.value)||event.isComposing||event.keyCode===229)return
+  if(valueIsMultiline.value||(valueEntry.value?.kind!=='array-item'&&!valueDatetimeKind.value)||event.isComposing||event.keyCode===229)return
   event.preventDefault();void previewValueEdit()
 }
 const previewValueEdit = async () => {
@@ -499,13 +499,14 @@ const previewValueEdit = async () => {
   valueEditPending.value = true; valueError.value = ''
   try {
     const item=entry.kind==='array-item'&&entry.arrayParent
-    const result=item
+    const result=item && !valueIsMultiline.value
       ? await invoke<{content:string;start:number;end:number;valueType?:string}>('replace_toml_array_item_source',{content:owner.source,start:item.start,end:item.end,itemStart:entry.start,itemEnd:entry.end,replacement:valueText.value})
       : {content:await invoke<string>(entry.literal||entry.multilineBasic?'replace_toml_literal_source':'replace_toml_value_source',{content:owner.source,start:entry.start,end:entry.end,replacement:valueText.value}),start:entry.start,end:entry.end,valueType:undefined}
     if(valueOwner!==owner||!session.owns(owner))return
     if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择；当前输入与内容仍保留'; return }
+    if(entry.literal||entry.multilineBasic) result.end=entry.end+new TextEncoder().encode(result.content).length-new TextEncoder().encode(owner.source).length
     const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
-    pendingValuePreview = () => session.offerChange(owner,item?`修改 TOML 数组项${result.valueType?' · '+result.valueType:''}`:valueIsMultiline.value?'修改 TOML 多行文字':'修改 TOML 值',result.content,point(result.start),item?()=>{
+    pendingValuePreview = () => session.offerChange(owner,item?(valueIsMultiline.value?'修改 TOML 数组多行文字':`修改 TOML 数组项${result.valueType?' · '+result.valueType:''}`):valueIsMultiline.value?'修改 TOML 多行文字':'修改 TOML 值',result.content,point(result.start),item?()=>{
       query.value='';selectedFieldStart.value=result.start
       owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
     }:undefined)

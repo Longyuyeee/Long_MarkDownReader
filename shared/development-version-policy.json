@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.2.39",
-  "runtimeBaseVersion": "1.2.38",
+  "runtimeBaseVersion": "1.2.39",
   "publicVersion": "1.2.38",
   "publicTag": "v1.2.38",
   "publicTagCommit": "014a038ee48c476c61f1081f55aa4d4558e05524",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-181-v1.2.38-published",
-  "binaryVersionTransition": "v1.2.38-public-release-published",
-  "displayLabel": "v1.2.38 已发布 · 下一目标 v1.2.39",
+  "currentStage": "M8-182-v1.2.39-toml-array-multiline-text-editing-candidate",
+  "binaryVersionTransition": "v1.2.39-release-ready",
+  "displayLabel": "v1.2.39 TOML 数组多行正文编辑候选 · 当前公开 v1.2.38",
   "activeSlice": {
-    "id": "v1.2.38-yaml-sequence-block-text-editing",
-    "status": "published-and-remote-assets-verified",
-    "document": "docs/V1_2_38_Unsigned_Community_Release_Audit_2026-10-26.md"
+    "id": "v1.2.39-toml-array-multiline-text-editing",
+    "status": "installed-workflows-passed-ready-to-publish",
+    "document": "docs/V1_2_39_Unsigned_Community_Release_Audit_2026-10-26.md"
   }
 }

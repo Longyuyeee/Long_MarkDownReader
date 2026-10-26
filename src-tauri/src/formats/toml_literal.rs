@@ -1,4 +1,4 @@
-use super::{analyze_toml_source, Document, Item, Value, MAX_TOML_SOURCE_BYTES};
+use super::{analyze_toml_source, arrays, Document, Item, Value, MAX_TOML_SOURCE_BYTES};
 use serde_json::{json, Value as Json};
 
 fn selected(content: &str, start: usize, end: usize) -> Result<Document<&str>, String> {
@@ -6,19 +6,25 @@ fn selected(content: &str, start: usize, end: usize) -> Result<Document<&str>, S
     if !analysis.valid {
         return Err("TOML 语法存在错误，请先在源码中修复；草稿仍保留".into());
     }
+    let doc = Document::parse(content).map_err(|_| "无法读取多行文字；草稿仍保留")?;
     if !analysis
         .outline
         .iter()
         .any(|e| (e.literal || e.multiline_basic) && e.start == start && e.end == end)
+        && !arrays::multiline_item_available(content, &doc, &analysis, start, end)
     {
         return Err("多行文字的位置已变化，请重新选择字段；输入与草稿仍保留".into());
     }
-    Document::parse(content).map_err(|_| "无法读取多行文字；草稿仍保留".into())
+    Ok(doc)
 }
 
 fn find(item: &Item, start: usize, end: usize) -> Option<&str> {
     match item {
         Item::Value(v) if v.span() == Some(start..end) => v.as_str(),
+        Item::Value(Value::Array(a)) => a
+            .iter()
+            .find(|v| v.span() == Some(start..end))
+            .and_then(Value::as_str),
         Item::Table(t) => t.iter().find_map(|(_, v)| find(v, start, end)),
         Item::ArrayOfTables(a) => a
             .iter()

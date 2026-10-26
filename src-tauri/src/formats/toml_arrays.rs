@@ -7,6 +7,10 @@ const FALLBACK: &str = "此数组的结构或注释归属无法可靠修改，�
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TomlArrayItem {
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub literal: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub multiline_basic: bool,
     pub index: usize,
     pub start: usize,
     pub end: usize,
@@ -50,6 +54,48 @@ fn scalar(content: &str, v: &Value) -> bool {
         })
 }
 
+fn multiline(content: &str, value: &Value) -> bool {
+    value.is_str()
+        && value
+            .span()
+            .and_then(|r| content.get(r))
+            .is_some_and(|raw| raw.starts_with("'''") || raw.starts_with("\"\"\""))
+}
+
+fn simple_array(content: &str, array: &Array) -> bool {
+    array.len() <= 2000
+        && array
+            .iter()
+            .all(|v| scalar(content, v) || multiline(content, v))
+}
+
+pub(super) fn multiline_item_available(
+    content: &str,
+    doc: &Document<&str>,
+    analysis: &TomlSourceAnalysis,
+    start: usize,
+    end: usize,
+) -> bool {
+    analysis
+        .outline
+        .iter()
+        .filter(|e| {
+            e.array
+                && e.start < start
+                && e.end > end
+                && e.field
+                    .as_ref()
+                    .is_some_and(|f| f.rename_unavailable_reason.is_none())
+        })
+        .any(|e| {
+            find_array(doc.as_item(), &(e.start..e.end)).is_some_and(|a| {
+                simple_array(content, a)
+                    && a.iter()
+                        .any(|v| v.span() == Some(start..end) && multiline(content, v))
+            })
+        })
+}
+
 pub fn inspect_toml_array_items_source(
     content: &str,
     start: usize,
@@ -61,17 +107,24 @@ pub fn inspect_toml_array_items_source(
     if array.len() > 2000 {
         return Err("数组超过 2000 项，请定位源码查看；草稿仍保留".into());
     }
+    let allow_multiline = simple_array(content, array);
     array
         .iter()
         .enumerate()
         .map(|(index, v)| {
             let r = v.span().ok_or(FALLBACK)?;
             Ok(TomlArrayItem {
+                literal: allow_multiline
+                    && multiline(content, v)
+                    && content[r.clone()].starts_with("'''"),
+                multiline_basic: allow_multiline
+                    && multiline(content, v)
+                    && content[r.clone()].starts_with("\"\"\""),
                 index,
                 start: r.start,
                 end: r.end,
                 preview: value_preview(content, v),
-                editable: scalar(content, v),
+                editable: scalar(content, v) || (allow_multiline && multiline(content, v)),
             })
         })
         .collect()
@@ -501,13 +554,16 @@ pub fn replace_toml_array_item_source(
     if array.len() > 2000 {
         return Err("数组超过 2000 项，请定位源码修改；输入与草稿仍保留".into());
     }
-    if array.iter().any(|v| !scalar(content, v)) {
+    if !simple_array(content, array) {
         return Err("嵌套数组、内联表和多行值请定位源码；输入与草稿仍保留".into());
     }
     let index = array
         .iter()
         .position(|v| v.span() == Some(item_start..item_end))
         .ok_or("条目位置已变化，请重新选择；输入与草稿仍保留")?;
+    if !array.get(index).is_some_and(|v| scalar(content, v)) {
+        return Err("多行文字请通过正文弹窗修改；输入与草稿仍保留".into());
+    }
     let value = replacement.trim();
     if value.is_empty() || value.len() > MAX_TOML_SOURCE_BYTES || value.contains(['\r', '\n']) {
         return Err("请输入单行 TOML 值；字符串需要引号，输入仍保留".into());
@@ -751,7 +807,6 @@ mod tests {
         for (s, p) in [
             ("items = [1, [2]]", "items"),
             ("items = [1, {a=2}]", "items"),
-            ("items = [1, '''text''']", "items"),
             ("a.b = [1]", "a.b"),
             ("[[a]]\nitems = [1]", "a[0].items"),
         ] {
