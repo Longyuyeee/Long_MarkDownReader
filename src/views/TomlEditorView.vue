@@ -45,7 +45,7 @@
         <div class="outline" @contextmenu.self="openRootFieldMenu">
           <template v-for="item in filteredOutline" :key="`${item.start}:${item.path}`">
             <div class="outline-node">
-              <button :aria-current="selectedFieldStart !== undefined && selectedFieldStart === (item.kind==='array-item' ? item.start : item.field?.start) ? 'true' : undefined" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
+              <button :aria-current="selectedFieldStart !== undefined && (selectedFieldStart === (item.kind==='array-item' ? item.start : item.field?.start) || item.array && selectedFieldStart === item.start) ? 'true' : undefined" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
                 <n-icon :component="item.array || item.kind==='array-item' ? ArrayIcon : item.kind === 'value' ? KeyIcon : TableIcon" />
                 <span><strong>{{ item.label }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
               </button>
@@ -107,7 +107,8 @@
       :style="{width:'min(520px,94vw)',maxHeight:'calc(100dvh - 24px)'}" :mask-closable="!arrayPending" :closable="!arrayPending" :close-on-esc="!arrayPending"
       @after-enter="arrayInput?.select()" @after-leave="finishArrayDialog">
       <code>{{ arrayEntry?.path || '$' }}</code>
-      <template v-if="arrayMode!=='remove'">
+      <p v-if="arrayMode==='remove'">保留注释和其他项，只修改草稿。</p>
+      <template v-else>
         <label for="toml-array-value">值</label><n-input ref="arrayInput" v-model:value="arrayValue" :disabled="arrayPending" placeholder="例如：'内容'、42、true、2026-10-24" :input-props="{id:'toml-array-value','aria-label':'新增 TOML 数组项值'}" @keydown.enter="onArrayEnter" />
       </template>
       <p v-if="arrayError" role="alert" class="error">{{ arrayError }} <n-button text :disabled="arrayPending" @click="revealArraySource">定位源码</n-button></p>
@@ -326,7 +327,7 @@ const previewFieldChange=async()=>{
 const arrayVisible=ref(false), arrayPending=ref(false), arrayMode=ref<'append'|'after'|'remove'>('append'), arrayValue=ref("''"), arrayError=ref('')
 const arrayInput=ref<InputInst|null>(null), arrayEntry=ref<Entry|null>(null)
 let arrayOwner:ReturnType<typeof session.capture>, pendingArray:(()=>void)|undefined, resumeArray=false
-const finishArrayDialog=()=>{const offer=pendingArray;pendingArray=undefined;offer?.()}
+const finishArrayDialog=()=>{const offer=pendingArray;pendingArray=undefined;if(offer)void nextTick(offer)}
 const revealArraySource=()=>{
   const owner=arrayOwner,entry=arrayEntry.value
   if(!owner||!entry||!session.unchanged(owner))return
@@ -353,7 +354,7 @@ const previewArrayChange=async()=>{
     if(!session.unchanged(owner)){arrayError.value='草稿已继续编辑，未应用旧结果；当前输入与内容仍保留';arrayVisible.value=true;return}
     const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
     const offer=()=>session.offerChange(owner,mode!=='remove'?`新增 TOML 数组项${result.valueType?' · '+result.valueType:''}`:'删除 TOML 数组项',result.content,point(result.start),()=>{
-      query.value='';selectedFieldStart.value=undefined
+      query.value='';selectedFieldStart.value=mode==='remove'?result.start:undefined
       owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
     })
     if(arrayVisible.value){pendingArray=offer;arrayVisible.value=false}else offer()

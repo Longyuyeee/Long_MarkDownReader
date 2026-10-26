@@ -559,6 +559,12 @@ if (pkg.version === '1.2.43') {
   required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.43' : '1.2.42') && development.publicTag === `v${development.publicVersion}`]
   required[9] = [published ? '当前阶段：**v1.2.43 已发布**' : '当前阶段：**v1.2.43 TOML 多行字段复制排序候选**', development.currentStage === (published ? 'M8-191-v1.2.43-published' : 'M8-190-v1.2.43-toml-block-field-operations-candidate') && development.activeSlice?.id === 'v1.2.43-toml-block-field-operations' && fs.existsSync(development.activeSlice.document)]
 }
+if (pkg.version === '1.2.44') {
+  const published = policy.gates?.githubReleasePublished === true
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.2.45' : '1.2.44')]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.44' : '1.2.43') && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? '当前阶段：**v1.2.44 已发布**' : '当前阶段：**v1.2.44 TOML 多行数组项删除候选**', development.currentStage === (published ? 'M8-193-v1.2.44-published' : 'M8-192-v1.2.44-toml-block-array-deletion-candidate') && development.activeSlice?.id === 'v1.2.44-toml-block-array-deletion' && fs.existsSync(development.activeSlice.document)]
+}
 
 for (const [token, condition] of required) {
   if (!condition) throw new Error(`[current-development-audit] source-of-truth no longer supports: ${token}`)
