@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "candidateCommit": "85687429cc36b336b846920954b56483b97e06a9",
+  "formatsPassed": 566,
+  "formatsIgnored": 2,
+  "newRustTests": 11,
+  "yamlTests": 103,
+  "bodyCorpusCases": 48,
+  "browserChecks": 12,
+  "yamlSequenceBlockRegressionChecks": 12,
+  "tomlArrayMultilineRegressionChecks": 12,
+  "actualCommandExits": {
+    "yaml-probe-all-r2": 0,
+    "formats-r1": 0,
+    "quality-r1": 0,
+    "browser-build-r1": 0,
+    "block-operations-browser-r3": 0,
+    "yaml-sequence-block-regression-browser-r1": 0,
+    "toml-array-multiline-regression-browser-r1": 0
+  },
+  "nativeBridgeMockedForBrowser": true,
+  "desktopInputUsed": false,
+  "note": "Development tests exposed an EOF empty clipped-block value change; retained strict semantic guard and local fallback, and verified supported non-EOF empties. Corrected hash body-line ownership to avoid mistaking text for standalone comments. Removed only two obsolete reject assertions for the newly supported block cases. One new driver syntax typo was corrected before freeze. Initial new browser11 checks passed; added copy-error flow initially chose a safely copyable preceding block, then selected the item under the ambiguous comment and full12 checks passed. The real parser also asserts the safe copy is allowed and the ambiguous selected item is rejected. Final whole YAML103, formats566 and full quality passed; failed development runs are never counted as passed."
+}
