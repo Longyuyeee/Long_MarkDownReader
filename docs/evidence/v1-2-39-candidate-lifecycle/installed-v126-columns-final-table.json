@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 2,
+  "kind": "longedit.table",
+  "data": {
+    "columns": [
+      {
+        "id": "task",
+        "name": "任务",
+        "type": "text"
+      },
+      {
+        "id": "code",
+        "name": "编号",
+        "type": "text"
+      },
+      {
+        "id": "state",
+        "name": "状态",
+        "type": "text",
+        "validation": {
+          "kind": "options",
+          "required": true,
+          "options": [
+            "待处理",
+            "已完成"
+          ]
+        }
+      },
+      {
+        "id": "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5",
+        "name": "列 5",
+        "type": "text"
+      },
+      {
+        "id": "scope",
+        "name": "范围",
+        "type": "text"
+      }
+    ],
+    "rows": [
+      {
+        "id": "r-a",
+        "values": {
+          "code": "00077",
+          "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5": "",
+          "scope": "可见",
+          "state": "待处理",
+          "task": "复用\r\n记录"
+        }
+      },
+      {
+        "id": "r-hidden",
+        "values": {
+          "code": "9007199254740993123",
+          "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5": "",
+          "scope": "隐藏",
+          "state": "隐藏",
+          "task": "外部保留"
+        }
+      },
+      {
+        "id": "r-c",
+        "values": {
+          "code": " 00002 ",
+          "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5": "额外原文",
+          "scope": "可见",
+          "state": "待处理",
+          "task": "已有备注"
+        }
+      },
+      {
+        "id": "row-333a19ef-1813-48e9-b59e-d5784457366b",
+        "values": {
+          "code": " 00002 ",
+          "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5": "额外原文",
+          "scope": "可见",
+          "state": "待处理",
+          "task": "已有备注"
+        }
+      },
+      {
+        "id": "r-d",
+        "values": {
+          "code": "=SUM(A1:A2)",
+          "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5": "",
+          "scope": "其他",
+          "state": "已完成",
+          "task": "保持"
+        }
+      }
+    ]
+  },
+  "views": [
+    {
+      "id": "grid",
+      "name": "grid",
+      "kind": "grid",
+      "config": {
+        "filter": "",
+        "sort": null,
+        "frozenColumns": 1,
+        "columnWidths": {
+          "code": 180,
+          "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5": 160,
+          "scope": 210,
+          "state": 150,
+          "task": 120
+        },
+        "groupBy": "state",
+        "titleColumn": "task",
+        "cardColumns": [
+          "code"
+        ],
+        "categoryColumn": "state",
+        "valueColumn": "code",
+        "aggregation": "count",
+        "chartType": "bar",
+        "seriesColumn": null,
+        "nullStrategy": "skip",
+        "showLegend": true,
+        "dashboardItems": []
+      }
+    },
+    {
+      "id": "board",
+      "name": "board",
+      "kind": "board",
+      "config": {
+        "filter": "",
+        "sort": null,
+        "frozenColumns": 1,
+        "columnWidths": {
+          "code": 200,
+          "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5": 160,
+          "scope": 230,
+          "state": 170,
+          "task": 140
+        },
+        "groupBy": "state",
+        "titleColumn": "task",
+        "cardColumns": [
+          "code"
+        ],
+        "categoryColumn": "state",
+        "valueColumn": "code",
+        "aggregation": "count",
+        "chartType": "bar",
+        "seriesColumn": null,
+        "nullStrategy": "skip",
+        "showLegend": true,
+        "dashboardItems": []
+      }
+    },
+    {
+      "id": "chart",
+      "name": "chart",
+      "kind": "chart",
+      "config": {
+        "filter": "",
+        "sort": null,
+        "frozenColumns": 1,
+        "columnWidths": {
+          "code": 220,
+          "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5": 160,
+          "scope": 250,
+          "state": 190,
+          "task": 160
+        },
+        "groupBy": "state",
+        "titleColumn": "task",
+        "cardColumns": [
+          "code"
+        ],
+        "categoryColumn": "state",
+        "valueColumn": "code",
+        "aggregation": "count",
+        "chartType": "bar",
+        "seriesColumn": null,
+        "nullStrategy": "skip",
+        "showLegend": true,
+        "dashboardItems": []
+      }
+    },
+    {
+      "id": "dashboard",
+      "name": "dashboard",
+      "kind": "dashboard",
+      "config": {
+        "filter": "",
+        "sort": null,
+        "frozenColumns": 1,
+        "columnWidths": {
+          "code": 240,
+          "column-1ea43be3-0277-4b95-b89e-9d861c13c1d5": 160,
+          "scope": 270,
+          "state": 210,
+          "task": 180
+        },
+        "groupBy": "state",
+        "titleColumn": "task",
+        "cardColumns": [
+          "code"
+        ],
+        "categoryColumn": "state",
+        "valueColumn": "code",
+        "aggregation": "count",
+        "chartType": "bar",
+        "seriesColumn": null,
+        "nullStrategy": "skip",
+        "showLegend": true,
+        "dashboardItems": []
+      }
+    }
+  ],
+  "activeView": "grid"
+}
