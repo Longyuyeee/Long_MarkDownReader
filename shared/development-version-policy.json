@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-186-v1.2.41-yaml-block-field-operations-candidate",
-  "binaryVersionTransition": "v1.2.41-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.41-release-ready",
   "displayLabel": "v1.2.41 YAML 多行字段复制排序候选 · 当前公开 v1.2.40",
   "activeSlice": {
     "id": "v1.2.41-yaml-block-field-operations",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_41_Unsigned_Community_Release_Audit_2026-10-26.md"
   }
 }
