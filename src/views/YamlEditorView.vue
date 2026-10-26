@@ -160,7 +160,7 @@
     </footer>
 
     <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
-    <n-modal v-model:show="valueEditVisible" preset="card" class="yaml-value-edit-dialog" :title="valueEntry?.literal ? '修改 YAML 多行文字' : '修改 YAML 值'" :style="{width:'min(560px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
+    <n-modal v-model:show="valueEditVisible" preset="card" class="yaml-value-edit-dialog" :title="valueEntry?.folded ? '修改 YAML 段落文字' : valueEntry?.literal ? '修改 YAML 多行文字' : '修改 YAML 值'" :style="{width:'min(560px,94vw)',maxHeight:'calc(100dvh - 24px)'}"
       :mask-closable="!valueEditPending" :closable="!valueEditPending" :close-on-esc="!valueEditPending"
       @after-enter="valueInput?.select()" @after-leave="finishValueDialog">
       <code>{{ valueEntry?.path }}</code>
@@ -285,6 +285,7 @@ interface YamlDiagnostic {
 
 interface YamlOutlineEntry {
   literal?: boolean
+  folded?: boolean
   field?: { name: string; start: number; end: number; renameUnavailableReason?: string }
   editable?: boolean
   editUnavailableReason?: string
@@ -658,7 +659,7 @@ const openValueEdit = async (entry: YamlOutlineEntry) => {
   valueEntry.value = entry
   valueError.value='';valueReadFailed.value=false;valueEditPending.value=true
   try {
-    const text=entry.literal ? await invoke<string>('inspect_yaml_literal_source',{content:owner.source,start:entry.start,end:entry.end}) : new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(owner.source).slice(entry.start,entry.end))
+    const text=entry.literal || entry.folded ? await invoke<string>('inspect_yaml_literal_source',{content:owner.source,start:entry.start,end:entry.end}) : new TextDecoder('utf-8',{ignoreBOM:true}).decode(new TextEncoder().encode(owner.source).slice(entry.start,entry.end))
     if(valueOwner!==owner||!session.unchanged(owner))return
     valueText.value=text;valueOriginalText.value=text;valueEditVisible.value=true
   } catch(cause){if(valueOwner===owner&&session.unchanged(owner)){valueText.value='';valueReadFailed.value=true;valueError.value=errorMessage(cause);valueEditVisible.value=true}}
@@ -675,7 +676,7 @@ const previewValueEdit = async () => {
     if (!session.unchanged(owner)) { valueError.value = '当前草稿已变化，请重新选择字段；输入与内容仍保留'; return }
     const anchor = new TextDecoder().decode(new TextEncoder().encode(target).slice(0,entry.start)).length
     const trailing=(text:string)=>text.match(/\n*$/)?.[0].length || 0
-    const title=entry.literal ? `修改 YAML 多行文字 · 结尾换行 ${trailing(valueOriginalText.value)} → ${trailing(valueText.value)}` : '修改 YAML 值'
+    const title=entry.literal || entry.folded ? `修改 YAML ${entry.folded ? '段落文字' : '多行文字'} · 结尾换行 ${trailing(valueOriginalText.value)} → ${trailing(valueText.value)}` : '修改 YAML 值'
     pendingValuePreview = () => session.offerChange(owner,title,target,anchor)
     valueEditVisible.value = false
   } catch (cause) { if (valueOwner===owner&&session.owns(owner)) valueError.value = errorMessage(cause) }

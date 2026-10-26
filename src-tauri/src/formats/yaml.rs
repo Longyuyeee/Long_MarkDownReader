@@ -29,6 +29,10 @@ const MAX_YAML_PREVIEW_CHARS: usize = 120;
 #[path = "yaml_literal_tests.rs"]
 mod literal_tests;
 
+#[cfg(test)]
+#[path = "yaml_folded_tests.rs"]
+mod folded_tests;
+
 fn parser_source(content: &str) -> &str {
     content.strip_prefix('\u{feff}').unwrap_or(content)
 }
@@ -49,6 +53,8 @@ pub struct YamlDiagnostic {
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct YamlOutlineEntry {
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub folded: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub literal: bool,
     pub field: Option<YamlField>,
@@ -87,6 +93,7 @@ pub struct YamlKeyChange {
 
 #[derive(Default)]
 struct YamlTokens {
+    folded: HashSet<(usize, usize)>,
     literals: HashSet<(usize, usize)>,
     scalars: HashMap<(usize, usize), ScalarStyle>,
     aliases: HashSet<(usize, usize)>,
@@ -179,6 +186,7 @@ pub fn analyze_yaml_source(content: &str) -> YamlSourceAnalysis {
     if documents.len() != 1 {
         for entry in &mut outline {
             entry.literal = false;
+            entry.folded = false;
             entry.editable = false;
             entry.edit_unavailable_reason =
                 Some("多文档 YAML 请在源码中修改，当前内容会保留".into());
@@ -270,12 +278,14 @@ fn inspect_node(
             end
         };
         let literal = key_tokens.literals.contains(&(start, end));
+        let folded = key_tokens.folded.contains(&(start, end));
         let editable = editable_context
             && node_kind(node) == "scalar"
-            && (start < end || literal)
+            && (start < end || literal || folded)
             && editable_spans.contains(&(start, end))
-            && (!literal || literal::available(content, field.as_ref(), end));
+            && (!(literal || folded) || literal::available(content, field.as_ref(), end));
         outline.push(YamlOutlineEntry {
+            folded: folded && editable,
             literal: literal && editable,
             field,
             document_index,
@@ -418,11 +428,11 @@ fn inspect_events(
                     && !blocked.last().copied().unwrap_or(false)
                     && matches!(
                         style,
-                        ScalarStyle::Plain | ScalarStyle::SingleQuoted | ScalarStyle::DoubleQuoted | ScalarStyle::Literal
+                        ScalarStyle::Plain | ScalarStyle::SingleQuoted | ScalarStyle::DoubleQuoted | ScalarStyle::Literal | ScalarStyle::Folded
                     )
                     && content
                         .get(start..end)
-                        .is_some_and(|raw| style == ScalarStyle::Literal || !raw.contains(['\r', '\n']))
+                        .is_some_and(|raw| matches!(style, ScalarStyle::Literal | ScalarStyle::Folded) || !raw.contains(['\r', '\n']))
                 {
                     editable.insert((start, end));
                 }
@@ -528,7 +538,7 @@ pub fn replace_yaml_value_source(
             .clone()
             .unwrap_or_else(|| "当前内容请在源码中修改".into()));
     }
-    if entry.literal { return literal::replace(content, entry, replacement); }
+    if entry.literal || entry.folded { return literal::replace(content, entry, replacement); }
     let value = replacement.trim();
     if value.is_empty() || value.len() > MAX_YAML_SOURCE_BYTES || value.contains(['\r', '\n']) {
         return Err("请输入一个单行 YAML 值；空值可输入 null，空字符串可输入引号".into());
@@ -617,6 +627,7 @@ fn key_tokens(content: &str, offsets: &[usize]) -> YamlTokens {
             let start = byte_offset(offsets, span.start.index());
             let end = scalar_end(content, start, byte_offset(offsets, span.end.index()));
             if style == ScalarStyle::Literal { tokens.literals.insert((start, end)); }
+            if style == ScalarStyle::Folded { tokens.folded.insert((start, end)); }
             if matches!(
                 style,
                 ScalarStyle::Plain | ScalarStyle::SingleQuoted | ScalarStyle::DoubleQuoted

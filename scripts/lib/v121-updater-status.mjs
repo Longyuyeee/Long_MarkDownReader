@@ -1,6 +1,21 @@
 // Published installer verification and post-publication in-app update observation
 // are separate gates. Never infer the latter from a successful release alone.
 export function assertV121DevelopmentBoundary(development, community) {
+  if (community.appVersion === '1.2.36'
+    && community.patchValidation?.previousPublicVersion === '1.2.35'
+    && development.runtimeBaseVersion === '1.2.36'
+    && development.releaseCandidate === false
+    && community.targetRelease?.tag === 'v1.2.36'
+    && /^(?!0{40})[0-9a-f]{40}$/.test(development.publicTagCommit)
+    && (community.gates?.githubReleasePublished === true
+      ? development.publicVersion === '1.2.36' && development.publicTag === 'v1.2.36'
+        && development.developmentTargetVersion === '1.2.37'
+        && community.release?.tag === 'v1.2.36'
+        && community.release?.taggedCommit === development.publicTagCommit
+      : community.gates?.githubReleasePublished === false && community.release === null
+        && development.publicVersion === '1.2.35' && development.publicTag === 'v1.2.35'
+        && development.publicTagCommit === 'a56bf4fb4af2cfecf26d003950ee60f837401c66'
+        && development.developmentTargetVersion === '1.2.36')) return
   if (community.appVersion === '1.2.35'
     && community.patchValidation?.previousPublicVersion === '1.2.34'
     && development.runtimeBaseVersion === '1.2.35'
