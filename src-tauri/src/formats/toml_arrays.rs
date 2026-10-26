@@ -2,6 +2,9 @@ use super::*;
 use std::ops::Range;
 use toml_edit::Array;
 
+#[path = "toml_array_blocks.rs"]
+mod blocks;
+
 const FALLBACK: &str = "此数组的结构或注释归属无法可靠修改，请定位源码；输入与草稿仍保留";
 
 #[derive(Debug, Clone, Serialize)]
@@ -366,6 +369,12 @@ pub fn copy_toml_array_item_source(
     item_start: usize,
     item_end: usize,
 ) -> Result<TomlKeyChange, String> {
+    let range = start..end;
+    let doc = prepare(content, &range)?;
+    let array = find_array(doc.as_item(), &range).ok_or(FALLBACK)?;
+    if array.iter().any(|v| multiline(content, v)) {
+        return blocks::copy(content, &doc, array, range, item_start..item_end);
+    }
     let literal = content
         .get(item_start..item_end)
         .ok_or("条目位置已变化，请重新选择；草稿仍保留")?;
@@ -446,7 +455,7 @@ pub fn move_toml_array_item_source(
     if array.len() > 2000 {
         return Err("数组超过 2000 项，请定位源码修改；草稿仍保留".into());
     }
-    if array.iter().any(|v| !scalar(content, v)) {
+    if !simple_array(content, array) {
         return Err("嵌套数组、内联表和多行值请定位源码；草稿仍保留".into());
     }
     let spans = array
@@ -506,11 +515,6 @@ pub fn move_toml_array_item_source(
         )
     };
     let middle = &content[unit_a.end..unit_b.start];
-    let point = if direction == "up" {
-        unit_a.start
-    } else {
-        unit_a.start + replacement_a.len() + middle.len()
-    };
     let candidate = format!(
         "{}{}{}{}{}",
         &content[..unit_a.start],
@@ -532,10 +536,11 @@ pub fn move_toml_array_item_source(
     {
         return Err("无法确认只移动当前相邻项，请定位源码；草稿仍保留".into());
     }
+    let selection = changed.get(neighbor).and_then(Value::span).ok_or(FALLBACK)?;
     Ok(TomlKeyChange {
         content: candidate,
-        start: point,
-        end: point + item_end - item_start,
+        start: selection.start,
+        end: selection.end,
         value_type: None,
     })
 }
@@ -928,7 +933,6 @@ mod tests {
             ("items = [{x=1}]", "items"),
             ("x.items = [1]", "x.items"),
             ("[[x]]\nitems = [1]", "x[0].items"),
-            ("items = ['''text''']", "items"),
         ] {
             assert!(copy_item(s, p, 0).is_err(), "{s}");
         }

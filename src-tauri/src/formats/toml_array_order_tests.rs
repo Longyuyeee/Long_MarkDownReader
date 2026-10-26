@@ -71,8 +71,6 @@ fn rejects_complex_dotted_array_tables_and_wrong_ownership() {
     for (s, p) in [
         ("x = [[1], 2]", "x"),
         ("x = [{a=1}, 2]", "x"),
-        ("x = ['''text''', 2]", "x"),
-        ("x = [\"\"\"a\nb\"\"\", 2]", "x"),
         ("a.b = [1,2]", "a.b"),
         ("[[a]]\nx = [1,2]\n", "a[0].x"),
     ] {

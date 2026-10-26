@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "candidateCommit": "a1910e9ac58aef531b85b087cfdad168ae0a9797",
+  "formatsPassed": 588,
+  "formatsIgnored": 2,
+  "newRustTests": 11,
+  "tomlTests": 119,
+  "bodyCorpusCases": 32,
+  "browserChecks": 12,
+  "yamlBlockFieldsRegressionChecks": 12,
+  "tomlArrayMultilineRegressionChecks": 12,
+  "actualCommandExits": {
+    "toml-probe-all-r2": 0,
+    "formats-r1": 0,
+    "quality-r1": 0,
+    "browser-build": 0,
+    "block-arrays-browser-r1": 0,
+    "yaml-block-fields-regression-browser-r1": 0,
+    "toml-array-multiline-regression-browser-r1": 0
+  },
+  "nativeBridgeMockedForBrowser": true,
+  "desktopInputUsed": false,
+  "note": "Added11 production parser tests and32 combinations of physical raw forms, BOM/EOL and trailing comma. Initial production probe passed117 and failed2 old rejection test groups containing3 now-supported multiline cases; removed only those obsolete cases. Production TOML119 and all new tests pass. New real Vue12 flows and two regressions12 each passed first complete run; browser IPC/disk are explicitly simulated, native and bytes remain separate."
+}
