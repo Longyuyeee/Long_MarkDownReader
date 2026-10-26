@@ -1,0 +1,29 @@
+{
+  "status": "all-required-local-steps-completed",
+  "candidateCommit": "0ed29e9a7437ac424da8a53fa43b4170bf373e7e",
+  "nativeBridgeMockedForBrowser": true,
+  "desktopInputUsed": false,
+  "newRustTests": 12,
+  "formatsPassed": 535,
+  "formatsIgnored": 2,
+  "browserChecks": 12,
+  "tomlLiteralRegressionChecks": 12,
+  "yamlFoldedRegressionChecks": 12,
+  "actualCommandExits": {
+    "basic-r1": 0,
+    "formats-r1": 0,
+    "quality-r1": 1,
+    "quality-continuation-r1": 1,
+    "quality-continuation-r2": 0,
+    "browser-build-r3": 0,
+    "basic-browser-r3": 0,
+    "toml-literal-regression-browser-r1": 0,
+    "yaml-folded-regression-browser-r1": 0
+  },
+  "originalWholeQualityRunPassed": false,
+  "continuationsFrom": [
+    "npm run check:ui4c-release-fact-alignment",
+    "npm run check:v1-community-release"
+  ],
+  "note": "First whole local run stopped on a missing manual-download phrase in the release audit. The first continuation stopped on the missing README v1.2.37 candidate disclosure. Both documentation assertions were corrected, the obsolete source runs cancelled without acceptance, and the same remaining command sequence completed from the second failed item. Complete corrected frozen-source QA and builder independently rerun the entire sequence. Browser fixture failures r1/r2 were corrected and the full r3 passed; no failed run is reported as passed."
+}

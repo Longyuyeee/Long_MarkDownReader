@@ -1,0 +1,256 @@
+{
+  "appVersion": "1.2.37",
+  "sourceCommit": "0ed29e9a7437ac424da8a53fa43b4170bf373e7e",
+  "installerSha256": "afc740017d56f939ad62b85faac8028b8cfffd46a74950610f615301e5f06b6d",
+  "harnessSourceCommit": "0ed29e9a7437ac424da8a53fa43b4170bf373e7e",
+  "executableSha256": "be05cca6251ff6e0191ec4f0143a834bc32ddca0983cfb06d1a6bfb0288f8809",
+  "status": "passed",
+  "evidenceLevel": "installed-table-row-actions-trusted-input-and-file-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "stable-row-insert-one-undo-preserves-other-draft",
+      "status": "passed"
+    },
+    {
+      "id": "duplicate-multiline-current-draft-independent-history",
+      "status": "passed"
+    },
+    {
+      "id": "sorted-menu-refuses-position-and-copies-exact-row",
+      "status": "passed"
+    },
+    {
+      "id": "filtered-insert-reveals-new-row-keeps-hidden-records",
+      "status": "passed"
+    },
+    {
+      "id": "row-delete-confirm-cancel-and-undo",
+      "status": "passed"
+    },
+    {
+      "id": "real-locked-save-retains-rows-retries-and-reopens",
+      "status": "passed"
+    },
+    {
+      "id": "csv-tsv-row-copy-preserves-original-text-and-encoding",
+      "status": "passed"
+    },
+    {
+      "id": "external-conflict-keeps-file-and-new-row-draft",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v125-rows-observations.json",
+      "sizeBytes": 564,
+      "sha256": "8cac44f1b242d87da702a6b45ad08049f137be8e3160513df8cb9e4c75980eda"
+    },
+    {
+      "fileName": "installed-v125-rows-final-table.json",
+      "sizeBytes": 2149,
+      "sha256": "02adc81fd4f78572fa3ae2f412276924d7ce06ea96927c52f2700ca05412fb59"
+    },
+    {
+      "fileName": "installed-v125-rows-csv.csv",
+      "sizeBytes": 97,
+      "sha256": "8cdf1445c23dc85ba0ce7e1c172d73c03535ec1b1d8c3c04c2b683819571d449"
+    },
+    {
+      "fileName": "installed-v125-rows-tsv.tsv",
+      "sizeBytes": 97,
+      "sha256": "9f859a6cfb87075362cb64b57971283ee24c2a204b21958a573f96deeb4a4153"
+    }
+  ],
+  "runtimeErrors": [],
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "lockedBefore": "da76ecd7692e1b6e98f77520e4a68455b99e96699db00f2e588da46f22f8b36a",
+  "lockedAfter": "da76ecd7692e1b6e98f77520e4a68455b99e96699db00f2e588da46f22f8b36a",
+  "externalBefore": "02adc81fd4f78572fa3ae2f412276924d7ce06ea96927c52f2700ca05412fb59",
+  "externalAfter": "02adc81fd4f78572fa3ae2f412276924d7ce06ea96927c52f2700ca05412fb59",
+  "errorOverlay": false
+}
