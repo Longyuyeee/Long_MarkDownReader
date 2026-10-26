@@ -1,0 +1,15 @@
+﻿# 配置 中文😀
+label = '外部保留'
+title = '内容😀' # field note
+title_copy2 = '内容😀' # field note
+
+# independent
+title_copy = 'reserved'
+blocked = [1, 2]
+multiline = '''
+保留原文
+'''
+other = 8_080
+[flow]
+first = 0xFF # hex
+other = true

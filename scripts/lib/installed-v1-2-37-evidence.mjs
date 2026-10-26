@@ -7,7 +7,7 @@ export const tomlBasicEdited=tomlBasicDraft.replace('第二行','修改后的第
 export const tomlBasicConflict=tomlBasicEdited.replace('修改后的第二行"""','修改后的第二行\n\n"""')
 export const tomlBasicOutputFiles=['installed-v1237-basic-observations.json','installed-v1237-toml-saved.toml','installed-v1237-toml-copy.toml','installed-v1237-toml-external.toml']
 export function validateInstalledTomlBasic(r,m){
- assert.ok(['1.2.37','1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.37','1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-toml-basic-multiline-text-editing-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const prefix of ['locked','external']){assert.match(r[prefix+'Before'],/^[a-f0-9]{64}$/);assert.equal(r[prefix+'Before'],r[prefix+'After'])}

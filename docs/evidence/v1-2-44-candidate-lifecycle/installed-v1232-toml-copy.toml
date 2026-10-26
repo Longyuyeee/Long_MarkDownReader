@@ -1,0 +1,23 @@
+# 配置 中文😀
+label = '我的草稿'
+second = '内容😀' # second
+third = true
+first = 0xFF # first
+
+# independent
+
+other = 8_080
+[section]
+one = 0xFF
+two = '流'
+three = 1979-05-27T07:32:00Z
+[blocked]
+a = [1]
+b = 2
+[ambiguous]
+a = 1
+# attached
+b = 2
+[dotted]
+one.x = 1
+one.y = 2

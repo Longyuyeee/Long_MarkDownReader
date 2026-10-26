@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.2.44",
-  "runtimeBaseVersion": "1.2.43",
+  "runtimeBaseVersion": "1.2.44",
   "publicVersion": "1.2.43",
   "publicTag": "v1.2.43",
   "publicTagCommit": "65f25d7d954161002cecadff38c7bac1b15ffaa8",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-191-v1.2.43-published",
-  "binaryVersionTransition": "v1.2.43-public-release-published",
-  "displayLabel": "v1.2.43 已发布 · 下一目标 v1.2.44",
+  "currentStage": "M8-192-v1.2.44-toml-block-array-deletion-candidate",
+  "binaryVersionTransition": "v1.2.44-release-ready",
+  "displayLabel": "v1.2.44 TOML 多行数组项删除候选 · 当前公开 v1.2.43",
   "activeSlice": {
-    "id": "v1.2.43-toml-block-field-operations",
-    "status": "published-and-remote-assets-verified",
-    "document": "docs/V1_2_43_Unsigned_Community_Release_Audit_2026-10-27.md"
+    "id": "v1.2.44-toml-block-array-deletion",
+    "status": "installed-workflows-passed-ready-to-publish",
+    "document": "docs/V1_2_44_Unsigned_Community_Release_Audit_2026-10-27.md"
   }
 }

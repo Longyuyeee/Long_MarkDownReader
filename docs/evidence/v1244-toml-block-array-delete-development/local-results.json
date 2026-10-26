@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "candidateCommit": "c1848f55ab616ce40793fa3302a92db04cb6f645",
+  "formatsPassed": 610,
+  "formatsIgnored": 2,
+  "newRustTests": 11,
+  "tomlTests": 141,
+  "bodyCorpusCases": 32,
+  "browserChecks": 12,
+  "tomlBlockArraysRegressionChecks": 12,
+  "tomlBlockFieldsRegressionChecks": 12,
+  "actualCommandExits": {
+    "toml-probe-all-r2": 0,
+    "formats-r1": 0,
+    "quality-r1": 0,
+    "browser-build-r3": 0,
+    "block-array-delete-browser-r3": 0,
+    "toml-block-arrays-regression-browser-r3": 0,
+    "toml-block-fields-regression-browser-r3": 0
+  },
+  "nativeBridgeMockedForBrowser": true,
+  "desktopInputUsed": false,
+  "note": "Added11 production parser tests and32 physical-form combinations; all existing tests retained, production141 passed. BrowserR1 found missing outline highlight after deletion; R2 found source focus lost to modal restoration. Both product issues fixed; finalR3 all12 pass, prior failed rounds excluded. Deletion preserves all comments outside the target and never joins them to surviving values. Browser IPC/disk explicitly simulated; native file bytes checked separately."
+}

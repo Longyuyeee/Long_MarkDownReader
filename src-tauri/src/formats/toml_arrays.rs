@@ -5,6 +5,9 @@ use toml_edit::Array;
 #[path = "toml_array_blocks.rs"]
 mod blocks;
 
+#[path = "toml_array_delete.rs"]
+mod delete;
+
 const FALLBACK: &str = "此数组的结构或注释归属无法可靠修改，请定位源码；输入与草稿仍保留";
 
 #[derive(Debug, Clone, Serialize)]
@@ -201,6 +204,10 @@ fn change(
     if array.len() > 2000 || (value.is_some() && array.len() == 2000) {
         return Err("数组已达到 2000 项上限，请定位源码修改；输入与草稿仍保留".into());
     }
+    if value.is_none() && array.iter().any(|v| multiline(content, v)) {
+        let (a, b) = after.ok_or("请先选择要删除的数组项")?;
+        return delete::remove(content, &doc, array, range, a..b);
+    }
     if array.iter().any(|v| !scalar(content, v)) {
         return Err("嵌套数组、内联表和多行值请定位源码；输入与草稿仍保留".into());
     }
@@ -329,10 +336,18 @@ fn change(
     if literals(&candidate, changed).as_ref() != Some(&expected) || before_tree != after_tree {
         return Err("无法确认只改变当前数组项，请定位源码；输入与草稿仍保留".into());
     }
+    let selection = if value.is_none() {
+        changed
+            .get(index.min(changed.len().saturating_sub(1)))
+            .and_then(Value::span)
+            .unwrap_or(start..new_end)
+    } else {
+        point..point + length
+    };
     Ok(TomlKeyChange {
         content: candidate,
-        start: point,
-        end: point + length,
+        start: selection.start,
+        end: selection.end,
         value_type,
     })
 }
