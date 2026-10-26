@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.2.35",
+  "developmentTargetVersion": "1.2.36",
   "runtimeBaseVersion": "1.2.35",
-  "publicVersion": "1.2.34",
-  "publicTag": "v1.2.34",
-  "publicTagCommit": "774e3e39353ef4d45ee3e84887d012a21a607fc2",
+  "publicVersion": "1.2.35",
+  "publicTag": "v1.2.35",
+  "publicTagCommit": "a56bf4fb4af2cfecf26d003950ee60f837401c66",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-174-v1.2.35-toml-literal-text-editing-candidate",
-  "binaryVersionTransition": "v1.2.35-release-ready",
-  "displayLabel": "v1.2.35 TOML 多行文字编辑候选 · 当前公开 v1.2.34",
+  "currentStage": "M8-175-v1.2.35-published",
+  "binaryVersionTransition": "v1.2.35-public-release-published",
+  "displayLabel": "v1.2.35 已发布 · 下一目标 v1.2.36",
   "activeSlice": {
     "id": "v1.2.35-toml-literal-text-editing",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-and-remote-assets-verified",
     "document": "docs/V1_2_35_Unsigned_Community_Release_Audit_2026-10-26.md"
   }
 }
