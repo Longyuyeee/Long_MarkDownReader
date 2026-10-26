@@ -165,7 +165,7 @@
       @after-enter="valueInput?.select()" @after-leave="finishValueDialog">
       <code>{{ valueEntry?.path }}</code>
       <n-input ref="valueInput" v-model:value="valueText" type="textarea" :autosize="{minRows:3,maxRows:8}"
-        :disabled="valueEditPending" aria-label="YAML 字段值" :input-props="{'aria-label':'YAML 字段值'}" autofocus />
+        :disabled="valueEditPending || valueReadFailed" aria-label="YAML 字段值" :input-props="{'aria-label':'YAML 字段值'}" autofocus />
       <p v-if="valueError" role="alert" class="value-edit-error">{{ valueError }} <n-button v-if="valueReadFailed" text :disabled="valueEditPending" @click="valueEntry && openValueEdit(valueEntry)">重新读取</n-button> <n-button text :disabled="valueEditPending" @click="revealValueSource">定位源码</n-button></p>
       <template #footer><div class="value-edit-actions"><n-button :disabled="valueEditPending" @click="valueEditVisible=false">取消</n-button>
         <n-button type="primary" :loading="valueEditPending" :disabled="valueReadFailed" @click="previewValueEdit">预览修改</n-button></div></template>

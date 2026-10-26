@@ -33,6 +33,10 @@ mod literal_tests;
 #[path = "yaml_folded_tests.rs"]
 mod folded_tests;
 
+#[cfg(test)]
+#[path = "yaml_sequence_block_tests.rs"]
+mod sequence_block_tests;
+
 fn parser_source(content: &str) -> &str {
     content.strip_prefix('\u{feff}').unwrap_or(content)
 }
@@ -283,7 +287,7 @@ fn inspect_node(
             && node_kind(node) == "scalar"
             && (start < end || literal || folded)
             && editable_spans.contains(&(start, end))
-            && (!(literal || folded) || literal::available(content, field.as_ref(), end));
+            && (!(literal || folded) || literal::available(content, field.as_ref(), start, end, path.ends_with(']')));
         outline.push(YamlOutlineEntry {
             folded: folded && editable,
             literal: literal && editable,

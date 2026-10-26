@@ -1,3 +1,5 @@
+> v1.2.38 YAML 清单正文编辑候选正在检查；当前公开版本仍为 v1.2.37。
+
 <p align="center">
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.37",
-  "releaseCandidate": true,
+  "appVersion": "1.2.38",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-26",
-  "currentStatus": "v1.2.37-community-release-published",
+  "currentStatus": "v1.2.38-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.36",
+    "previousPublicVersion": "1.2.37",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.36-to-1.2.37-pending",
-    "scope": "toml-basic-multiline-text-editing"
+    "managedUpdaterUpgradePath": "1.2.37-to-1.2.38-pending",
+    "scope": "yaml-sequence-block-text-editing"
   },
   "targetRelease": {
-    "tag": "v1.2.37",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.37",
+    "tag": "v1.2.38",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.38",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "0ed29e9a7437ac424da8a53fa43b4170bf373e7e",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40284593505,
-    "hostedInstalledLifecycleRunId": 40289062490,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.2.37_x64_zh-CN.msi",
-        "sizeBytes": 78196736,
-        "sha256": "8ded4516b90ed8d49a69272a34fb700cdf5da751a8ffe6002db5a41b9288f623",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.37_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.2.37_x64-setup.exe",
-        "sizeBytes": 68806205,
-        "sha256": "afc740017d56f939ad62b85faac8028b8cfffd46a74950610f615301e5f06b6d",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.37_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.2.37",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.37",
-    "databaseId": 424010390,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "0ed29e9a7437ac424da8a53fa43b4170bf373e7e",
-    "publishedAt": "2026-10-26T08:41:13Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -159,7 +128,8 @@
     "v1.2.33-to-v1.2.34-managed-update-observation-pending",
     "v1.2.34-to-v1.2.35-managed-update-observation-pending",
     "v1.2.35-to-v1.2.36-managed-update-observation-pending",
-    "v1.2.36-to-v1.2.37-managed-update-observation-pending"
+    "v1.2.36-to-v1.2.37-managed-update-observation-pending",
+    "v1.2.37-to-v1.2.38-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.38-yaml-sequence-block-text-editing-planned"
+  "nextAction": "validate-and-build-v1.2.38-installers"
 }
