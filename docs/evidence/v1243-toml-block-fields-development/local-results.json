@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "candidateCommit": "65f25d7d954161002cecadff38c7bac1b15ffaa8",
+  "formatsPassed": 599,
+  "formatsIgnored": 2,
+  "newRustTests": 11,
+  "tomlTests": 130,
+  "bodyCorpusCases": 32,
+  "browserChecks": 12,
+  "tomlBlockArraysRegressionChecks": 12,
+  "tomlArrayMultilineRegressionChecks": 12,
+  "actualCommandExits": {
+    "toml-probe-all-r1": 0,
+    "formats-r1": 0,
+    "quality-r1": 0,
+    "browser-build": 0,
+    "block-fields-browser-r1": 0,
+    "toml-block-arrays-regression-browser-r1": 0,
+    "toml-array-multiline-regression-browser-r1": 0
+  },
+  "nativeBridgeMockedForBrowser": true,
+  "desktopInputUsed": false,
+  "note": "Added11 production parser tests and32 BOM/EOL/EOF/raw-string combinations. Retired only3 old multiline rejection cases in2 groups and the obsolete native30 rejection for this newly-supported field. A new test helper type typo was corrected before accepting tests; final production TOML130 passes. Browser IPC/disk are explicitly simulated; installed proof and actual bytes remain separate."
+}

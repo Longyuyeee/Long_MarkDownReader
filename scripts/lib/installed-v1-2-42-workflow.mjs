@@ -7,7 +7,7 @@ import {nativeUserInput} from './v118-native-user-input.mjs'
 import {tomlBlockArraysChecks,tomlBlockArraysSource,tomlBlockArraysDraft,tomlBlockArraysMoved,tomlBlockArraysEdited,tomlBlockArraysConflict,tomlBlockArraysOutputFiles,validateInstalledTomlBlockArrays,assertTomlBlockArraysOutputBytes} from './installed-v1-2-42-evidence.mjs'
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export async function runInstalledV1242TomlBlockArraysWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
- assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.equal(appVersion,'1.2.42')
+ assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(['1.2.42','1.2.43'].includes(appVersion))
  const folder=path.join(library,'000-v1242-block-arrays-'+crypto.randomUUID()),file=path.join(folder,'配置.toml'),other=path.join(folder,'其他.toml'),ui=nativeUserInput({send,evaluate},{timeoutMs:45000,stableMs:200}),obs={},bytes={}
  const r={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-toml-block-array-operations-trusted-input-and-file-bytes',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[],runtimeErrors:[],inputTrace:[],viewportWidths:[]},mark=i=>{obs[tomlBlockArraysChecks[i]]=true;r.checks.push({id:tomlBlockArraysChecks[i],status:'passed'})}
  let failure,lock

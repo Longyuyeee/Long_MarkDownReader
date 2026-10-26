@@ -68,7 +68,6 @@ fn rejects_collections_multiline_dotted_and_array_tables_without_rewriting() {
     for (s, p) in [
         ("x=[1]\ny=2\n", "x"),
         ("x={a=1}\ny=2\n", "x"),
-        ("x='''a\nb'''\ny=2\n", "x"),
         ("a.x=1\na.y=2\n", "a.x"),
         ("[[a]]\nx=1\ny=2\n", "a[0].x"),
     ] {
