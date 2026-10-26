@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "yaml_field_blocks.rs"]
+mod blocks;
+
 #[derive(Clone)]
 struct Target<'a> {
     node: &'a MarkedYamlOwned,
@@ -183,6 +186,9 @@ pub fn move_yaml_field_source(
     if !matches!(direction, "up" | "down") {
         return Err("请选择上移或下移；草稿仍保留".into());
     }
+    if let Some(result) = blocks::change(content, start, end, None, Some(direction)) {
+        return result;
+    }
     let (mut docs, offsets, maps) = prepare(content)?;
     let target = docs
         .first()
@@ -360,6 +366,9 @@ pub fn copy_yaml_field_source(
     let fallback = "此字段的结构或注释归属无法准确接续，请定位源码；输入与草稿仍保留";
     if name.is_empty() || name.len() > 4096 || name.contains(['\r', '\n']) || name == "<<" {
         return Err("请输入单行字段名（最多 4096 字节）；合并键请在源码中修改".into());
+    }
+    if let Some(result) = blocks::change(content, start, end, Some(name), None) {
+        return result;
     }
     let target = docs
         .first()

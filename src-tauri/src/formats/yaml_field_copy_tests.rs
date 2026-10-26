@@ -92,7 +92,6 @@ fn rejects_complex_references_multiline_keys_values_and_ambiguous_comments() {
     for (source, path) in [
         ("first: [1, 2]\n", "$.first"),
         ("first: {a: 1}\n", "$.first"),
-        ("first: |\n  text\n", "$.first"),
         ("first: 'a\n  b'\n", "$.first"),
         ("first: &a value\nother: *a\n", "$.first"),
         ("first: &a value\nother: *a\n", "$.other"),

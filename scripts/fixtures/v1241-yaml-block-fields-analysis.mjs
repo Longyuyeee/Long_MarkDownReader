@@ -1,0 +1,20 @@
+import {parseDocument,isMap,isSeq,isScalar} from 'yaml'
+import {fixtureYamlFieldMove} from './v1231-yaml-field-order-analysis.mjs'
+import {fixtureYamlFieldCopy} from './v1229-yaml-field-copy-analysis.mjs'
+// Browser-only simulated transform IPC. Production Saphyr and installed bytes
+// are checked independently; this fixture is never installation evidence.
+export function fixtureYamlBlockField(args){
+ const {content,start,end,direction,name}=args,byte=(s,n)=>new TextEncoder().encode(s.slice(0,n)).length,doc=parseDocument(content);let parent,index,route
+ const visit=(n,path=[],blocked=false)=>{if(!n)return;blocked ||=!!n.anchor||!!n.tag;if(isMap(n)){blocked ||=n.items.some(p=>typeof p.key?.value!=='string'||p.key?.value==='<<');n.items.forEach((p,i)=>{if(!blocked&&byte(content,p.key.range[0])===start&&byte(content,p.key.range[1])===end){parent=n;index=i;route=path}visit(p.value,[...path,p.key?.value],blocked)})}else if(isSeq(n))n.items.forEach((v,i)=>visit(v,[...path,i],blocked))};visit(doc.contents)
+ if(doc.errors.length||!parent)throw Error('字段归属不明确，请定位源码；输入与草稿仍保留')
+ const block=p=>['BLOCK_LITERAL','BLOCK_FOLDED'].includes(p.value?.type),neighbor=index+(direction==='up'?-1:1)
+ if(!block(parent.items[index])&&(!direction||!block(parent.items[neighbor]||{})))return direction?fixtureYamlFieldMove(args):fixtureYamlFieldCopy(args)
+ if(name!==undefined&&parent.items.some(p=>p.key.value===name))throw Error('同一层级已有这个字段名，请换一个名称；输入与草稿仍保留')
+ const unit=p=>{if(!isScalar(p.value)||p.key.anchor||p.key.tag||p.value.anchor||p.value.tag)throw Error('字段结构无法准确接续，请定位源码');const a=p.key.range[0],b=p.value.range[1],from=content.lastIndexOf('\n',a-1)+1;if(!/^ *$/.test(content.slice(from,a)))throw Error('缩进归属不明确，请定位源码');let finish=block(p)?b:content.indexOf('\n',b)+1;if(!finish)finish=content.length;if(block(p)&&!content.slice(p.value.range[0],content.indexOf('\n',p.value.range[0])).includes('+')){while(finish>content.indexOf('\n',p.value.range[0])+1){const prev=content.lastIndexOf('\n',finish-2)+1;if(content.slice(prev,finish).trim())break;finish=prev}}return[from,finish-(content.slice(0,finish).endsWith('\r\n')?2:content.slice(0,finish).endsWith('\n')?1:0)]}
+ const clear=(i,u)=>{const e=u[0]-1,f=content.lastIndexOf('\n',e-1)+1;if(i>0){try{const p=unit(parent.items[i-1]);if(f>=p[0]&&e<=p[1])return true}catch{}}return !content.slice(f,e).trimStart().startsWith('#')}
+ const expected=doc.toJS(),get=(root,path)=>path.reduce((r,k)=>r[k],root),oldMap=get(expected,route),pairs=Object.entries(oldMap);let result,next
+ if(direction){if(neighbor<0||neighbor>=parent.items.length)throw Error('已经是第一个或最后一个字段');const left=Math.min(index,neighbor),a=unit(parent.items[left]),b=unit(parent.items[left+1]),gap=content.slice(a[1],b[0]),inner=gap.replace(/^\r?\n/,''),lines=inner.split('\n');if(!clear(left,a)||!clear(left+1,b)||gap.trim()&&(lines[0].trim()||lines.at(-2)?.trim()||lines.some(l=>l.trim()&&!l.trimStart().startsWith('#'))))throw Error('注释归属不明确，请定位源码；输入与草稿仍保留');result=content.slice(0,a[0])+content.slice(...b)+gap+content.slice(...a)+content.slice(b[1]);[pairs[left],pairs[left+1]]=[pairs[left+1],pairs[left]];next=neighbor}
+ else{const p=parent.items[index],u=unit(p);if(!clear(index,u))throw Error('注释归属不明确，请定位源码；输入与草稿仍保留');const key=/^[a-zA-Z_][\w]*$/.test(name)?name:JSON.stringify(name),raw=content.slice(u[0],p.key.range[0])+key+content.slice(p.key.range[1],u[1]);result=content.slice(0,u[1])+'\n'+raw+content.slice(u[1]);next=index+1;pairs.splice(next,0,[name,p.value.value])}
+ const nextMap=Object.fromEntries(pairs);let expectedRoot=expected;if(route.length)get(expected,route.slice(0,-1))[route.at(-1)]=nextMap;else expectedRoot=nextMap
+ const after=parseDocument(result);if(after.errors.length||JSON.stringify(after.toJS())!==JSON.stringify(expectedRoot))throw Error('此位置无法保留原有文字，请定位源码；输入与草稿仍保留');let n=after.contents;for(const key of route)n=isSeq(n)?n.items[key]:n.items.find(p=>p.key.value===key).value;const selected=n.items[next].key;return{content:result,start:byte(result,selected.range[0]),end:byte(result,selected.range[1])}
+}
