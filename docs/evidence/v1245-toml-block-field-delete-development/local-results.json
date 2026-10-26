@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "candidateCommit": "1a5b2fcda4068ee14deab83665071c6b3653581b",
+  "formatsPassed": 621,
+  "formatsIgnored": 2,
+  "newRustTests": 11,
+  "tomlTests": 152,
+  "bodyCorpusCases": 32,
+  "browserChecks": 12,
+  "tomlBlockArraysRegressionChecks": 12,
+  "tomlBlockFieldsRegressionChecks": 12,
+  "actualCommandExits": {
+    "toml-probe-all-r1": 0,
+    "formats-r1": 0,
+    "quality-r1": 0,
+    "browser-build-r3": 0,
+    "block-field-delete-browser-r2": 0,
+    "toml-block-array-delete-regression-browser-r1": 0,
+    "toml-block-fields-regression-browser-r1": 0
+  },
+  "nativeBridgeMockedForBrowser": true,
+  "desktopInputUsed": false,
+  "note": "Added11 production parser tests with32 physical forms; updated one obsolete title deletion rejection now supported, retained collection fallback and all other tests. Production152 passed. Initial browserR1 found the simulated analysis truncated a multiline collection; fixture-only correction made, production complex-collection fallback passed Rust. Final VueR2 includes zero-length root selection regression; runtime and file bytes independently checked by native."
+}
