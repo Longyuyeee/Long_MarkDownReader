@@ -52,7 +52,7 @@ fn validates_names_and_quotes_literal_names_without_new_paths() {
 
 #[test]
 fn rejects_complex_multiline_dotted_keys_and_array_tables_locally() {
-    for s in ["x=[1,2]\n", "x={a=1}\n", "x='''\nline\n'''\n", "x=\"\"\"one\nline\"\"\"\n"] { assert!(copy(s,"x","next").is_err()); }
+    for s in ["x=[1,2]\n", "x={a=1}\n"] { assert!(copy(s,"x","next").is_err()); }
     for (s,p) in [("a.x=1\n","a.x"),("[[a]]\nx=1\n","a[0].x")] {
         let e=analyze_toml_source(s).outline.into_iter().find(|e|e.path==p).unwrap();
         let f=e.field.unwrap(); assert!(copy_toml_field_source(s,f.start,f.end,"next").is_err());

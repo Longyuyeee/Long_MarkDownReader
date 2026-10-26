@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.2.42",
-  "releaseCandidate": true,
+  "appVersion": "1.2.43",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-27",
-  "currentStatus": "v1.2.42-community-release-published",
+  "currentStatus": "v1.2.43-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.2.41",
+    "previousPublicVersion": "1.2.42",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.2.41-to-1.2.42-pending",
-    "scope": "toml-block-array-operations"
+    "managedUpdaterUpgradePath": "1.2.42-to-1.2.43-pending",
+    "scope": "toml-block-field-operations"
   },
   "targetRelease": {
-    "tag": "v1.2.42",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.42",
+    "tag": "v1.2.43",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.43",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "a1910e9ac58aef531b85b087cfdad168ae0a9797",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40363646723,
-    "hostedInstalledLifecycleRunId": 40370741463,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.2.42_x64_zh-CN.msi",
-        "sizeBytes": 78188544,
-        "sha256": "ea93e16774d54eefa0c46e80c3c71155a50da9ad9f8b3a96da44567410ae489c",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.42_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.2.42_x64-setup.exe",
-        "sizeBytes": 68797044,
-        "sha256": "f7871ff5804aa67e7cc8ef98f2cf4b97e63e5538bcd0b9d81e982beb30a3646d",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.2.42_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.2.42",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.42",
-    "databaseId": 424609701,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "a1910e9ac58aef531b85b087cfdad168ae0a9797",
-    "publishedAt": "2026-10-26T18:27:10Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -164,7 +133,8 @@
     "v1.2.38-to-v1.2.39-managed-update-observation-pending",
     "v1.2.39-to-v1.2.40-managed-update-observation-pending",
     "v1.2.40-to-v1.2.41-managed-update-observation-pending",
-    "v1.2.41-to-v1.2.42-managed-update-observation-pending"
+    "v1.2.41-to-v1.2.42-managed-update-observation-pending",
+    "v1.2.42-to-v1.2.43-managed-update-observation-pending"
   ],
-  "nextAction": "v1.2.43-toml-block-field-operations-planned"
+  "nextAction": "validate-and-build-v1.2.43-installers"
 }

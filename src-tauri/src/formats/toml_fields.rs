@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "toml_field_blocks.rs"]
+mod blocks;
+
 fn prepare(content: &str) -> Result<Document<&str>, String> {
     if !analyze_toml_source(content).valid {
         return Err("TOML 语法或分析范围暂不支持此操作，请定位源码；草稿仍保留".into());
@@ -96,7 +99,7 @@ pub fn move_toml_field_source(
     direction: &str,
 ) -> Result<TomlKeyChange, String> {
     let fallback =
-        "此字段的结构或注释归属无法准确移动，点键、数组表、集合和多行值请定位源码；草稿仍保留";
+        "此字段的结构或注释归属无法准确移动，点键、数组表和复杂集合请定位源码；草稿仍保留";
     if !matches!(direction, "up" | "down") {
         return Err("请选择上移或下移；草稿仍保留".into());
     }
@@ -127,9 +130,8 @@ pub fn move_toml_field_source(
         let span = v.span().ok_or(fallback)?;
         if f.rename_unavailable_reason.is_some()
             || matches!(v, Value::Array(_) | Value::InlineTable(_))
-            || content
-                .get(f.start..span.end)
-                .is_none_or(|s| s.contains(['\r', '\n']))
+            || content[f.start..span.start].contains(['\r', '\n'])
+            || (content[span.clone()].contains(['\r', '\n']) && !blocks::is_string(content, v))
         {
             return Err(fallback.into());
         }
@@ -156,6 +158,12 @@ pub fn move_toml_field_source(
     };
     let a = unit(left)?;
     let b = unit(left + 1)?;
+    if (blocks::is_string(content, fields[left].1.as_value().ok_or(fallback)?)
+        || blocks::is_string(content, fields[left + 1].1.as_value().ok_or(fallback)?))
+        && !blocks::clear_after(content, line_end(content, b.1))
+    {
+        return Err(fallback.into());
+    }
     if a.1 > b.0 {
         return Err(fallback.into());
     }
@@ -208,15 +216,14 @@ pub fn move_toml_field_source(
     if actual != order {
         return Err(fallback.into());
     }
-    let point = if direction == "up" {
-        a.0 + b.2 - b.0
-    } else {
-        a.0 + raw_b.len() + gap.len() + a.2 - a.0
-    };
+    let selection = table_at(after.as_table(), &path)
+        .and_then(|t| t.key(fields[index].0))
+        .and_then(Key::span)
+        .ok_or(fallback)?;
     Ok(TomlKeyChange {
         content: candidate,
-        start: point,
-        end: point + end - start,
+        start: selection.start,
+        end: selection.end,
         value_type: None,
     })
 }
@@ -229,7 +236,7 @@ pub fn copy_toml_field_source(
 ) -> Result<TomlKeyChange, String> {
     let doc = prepare(content)?;
     let fallback =
-        "此字段的结构无法准确复制，点键、数组表、集合和多行值请定位源码；名称与草稿仍保留";
+        "此字段的结构或注释归属无法准确复制，点键、数组表和复杂集合请定位源码；名称与草稿仍保留";
     let path = target(doc.as_table(), start, end, false, &mut vec![]).ok_or(fallback)?;
     let table = table_at(doc.as_table(), &path).ok_or(fallback)?;
     let (original, item) = table
@@ -257,7 +264,9 @@ pub fn copy_toml_field_source(
         return Err(fallback.into());
     }
     let span = value.span().ok_or(fallback)?;
-    if content[start..span.end].contains(['\r', '\n']) {
+    if content[start..span.start].contains(['\r', '\n'])
+        || (content[span.clone()].contains(['\r', '\n']) && !blocks::is_string(content, value))
+    {
         return Err(fallback.into());
     }
     let key = if name
@@ -272,6 +281,11 @@ pub fn copy_toml_field_source(
     };
     let from = line_start(content, start).max(usize::from(content.starts_with('\u{feff}')) * 3);
     let at = line_end(content, span.end);
+    if blocks::is_string(content, value)
+        && (!blocks::clear_before(content, from) || !blocks::clear_after(content, at))
+    {
+        return Err(fallback.into());
+    }
     let tail = &content[span.end..at];
     if !tail.trim().is_empty() && !tail.trim_start_matches([' ', '\t']).starts_with('#') {
         return Err(fallback.into());
@@ -299,14 +313,13 @@ pub fn copy_toml_field_source(
     fields_at(&mut expected, &path)
         .ok_or(fallback)?
         .insert(name.into(), serde_json::json!(["value", &content[span]]));
-    let point = at + separator.len() + start - from;
-    checked(
-        &format!("{}{}{}", &content[..at], insertion, &content[at..]),
-        &expected,
-        point,
-        point + key.len(),
-        None,
-    )
+    let candidate = format!("{}{}{}", &content[..at], insertion, &content[at..]);
+    let after = prepare(&candidate)?;
+    let selection = table_at(after.as_table(), &path)
+        .and_then(|t| t.key(name))
+        .and_then(Key::span)
+        .ok_or(fallback)?;
+    checked(&candidate, &expected, selection.start, selection.end, None)
 }
 
 pub fn add_toml_field_source(
