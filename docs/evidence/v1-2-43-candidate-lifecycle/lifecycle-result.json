@@ -1,0 +1,136 @@
+{
+    "schemaVersion":  1,
+    "stage":  "R5I",
+    "capturedAt":  "2026-10-26T20:15:49.1189558Z",
+    "environment":  "disposable-windows-guest",
+    "currentVersion":  "1.2.43",
+    "previousVersion":  "1.2.42",
+    "currentInstallerSha256":  "d7291cb44e2f0d0bd399f1d469f522f9980e309f4774dd5db3e7cf874470ab44",
+    "previousInstallerSha256":  "f7871ff5804aa67e7cc8ef98f2cf4b97e63e5538bcd0b9d81e982beb30a3646d",
+    "status":  "passed",
+    "releaseCandidate":  false,
+    "promotionEligible":  false,
+    "signedArtifactRuntimeProven":  false,
+    "signature":  {
+                      "status":  "NotSigned",
+                      "valid":  false,
+                      "timestamped":  false,
+                      "signerCertificateSha256":  null,
+                      "timestampCertificateSha256":  null
+                  },
+    "sourceUserContentIncluded":  false,
+    "checks":  [
+                   {
+                       "id":  "previous-version-fresh-install",
+                       "status":  "passed",
+                       "version":  "1.2.42"
+                   },
+                   {
+                       "id":  "controlled-upgrade",
+                       "status":  "passed",
+                       "from":  "1.2.42",
+                       "to":  "1.2.43"
+                   },
+                   {
+                       "id":  "file-association-registration",
+                       "status":  "passed",
+                       "defaultSelectionChanged":  false,
+                       "previousMdDefault":  "",
+                       "previousMarkdownDefault":  ""
+                   },
+                   {
+                       "id":  "default-app-candidate-registration",
+                       "status":  "passed",
+                       "selectedFormats":  [
+                                               "opml",
+                                               "raster-image"
+                                           ],
+                       "unselectedFormat":  "json"
+                   },
+                   {
+                       "id":  "external-cold-launch-unicode-space-path",
+                       "status":  "passed",
+                       "sourceUserContentIncluded":  false
+                   },
+                   {
+                       "id":  "single-instance-secondary-file-handoff",
+                       "status":  "passed",
+                       "sourceUserContentIncluded":  false
+                   },
+                   {
+                       "id":  "first-launch-after-upgrade",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "installed-artifact-route-and-io-smoke",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "management-backup-and-index-prepare",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "legacy-downgrade-detected",
+                       "status":  "passed",
+                       "version":  "1.2.42",
+                       "reason":  "historical-installer-predates-downgrade-policy"
+                   },
+                   {
+                       "id":  "controlled-downgrade-safety",
+                       "status":  "passed",
+                       "mode":  "legacy-downgrade-detected-and-current-restored",
+                       "installerExitCode":  0,
+                       "currentVersionRestored":  true,
+                       "restoredBinarySha256":  "47a87a83159f2843c6afdb8a9cbc1802476b393b4f035707d6eefb38dab8966d"
+                   },
+                   {
+                       "id":  "silent-uninstall",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "file-association-recovery",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "default-app-candidate-uninstall-recovery",
+                       "status":  "passed",
+                       "defaultSelectionChanged":  false
+                   },
+                   {
+                       "id":  "uninstall-retains-user-data",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "rollback-previous-install",
+                       "status":  "passed",
+                       "version":  "1.2.42"
+                   },
+                   {
+                       "id":  "rollback-first-launch",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "rollback-cleanup-retains-user-data",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "post-rollback-management-backup-restore",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "post-restore-knowledge-index-rebuild",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "post-restore-representative-file-reopen",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "post-restore-uninstall-retains-management-data",
+                       "status":  "passed"
+                   }
+               ],
+    "installedArtifactSmokeEvidence":  "installed-artifact-smoke.json",
+    "defaultAppLifecycleEvidence":  "installed-default-app-lifecycle-evidence.json",
+    "managementRollbackEvidence":  "management-backup-index-evidence.json"
+}

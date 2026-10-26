@@ -1,0 +1,43 @@
+{
+  "appVersion": "1.2.43",
+  "sourceCommit": "65f25d7d954161002cecadff38c7bac1b15ffaa8",
+  "installerSha256": "d7291cb44e2f0d0bd399f1d469f522f9980e309f4774dd5db3e7cf874470ab44",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "missing-default-inbox-is-normal-empty",
+      "status": "passed"
+    },
+    {
+      "id": "first-inbox-note-is-created-in-place",
+      "status": "passed"
+    },
+    {
+      "id": "any-file-catalog-includes-attachments",
+      "status": "passed"
+    },
+    {
+      "id": "toolbar-dialog-saves-cross-format-relation",
+      "status": "passed"
+    },
+    {
+      "id": "relationship-persisted-without-editing-files",
+      "status": "passed"
+    },
+    {
+      "id": "manual-relationship-in-native-graph",
+      "status": "passed"
+    },
+    {
+      "id": "renaming-retains-file-relationship",
+      "status": "passed"
+    },
+    {
+      "id": "removing-relation-retains-both-files",
+      "status": "passed"
+    }
+  ],
+  "lastControlSelector": "[...document.querySelectorAll('.file-relation-dialog button')].find(e=>e.textContent==='完成')"
+}

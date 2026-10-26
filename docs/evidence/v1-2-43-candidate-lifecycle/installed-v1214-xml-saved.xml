@@ -1,0 +1,10 @@
+﻿<?xml version="1.0"?>
+<!-- 我的草稿 -->
+<catalog xmlns:doc="urn:docs">
+  <doc:item id="9007199254740993123456789"><title>中文 &amp; 😀</title><!-- 内部 --><?keep value?><literal><![CDATA[< > &]]></literal></doc:item>
+  <doc:item id='first'/>
+  <empty></empty>
+  <selfClosing/>
+  <mixed>before<child/>after</mixed>
+  <annotated><!-- belongs? --><child/></annotated>
+</catalog>

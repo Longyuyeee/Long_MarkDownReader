@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-190-v1.2.43-toml-block-field-operations-candidate",
-  "binaryVersionTransition": "v1.2.43-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.43-release-ready",
   "displayLabel": "v1.2.43 TOML 多行字段复制排序候选 · 当前公开 v1.2.42",
   "activeSlice": {
     "id": "v1.2.43-toml-block-field-operations",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_43_Unsigned_Community_Release_Audit_2026-10-27.md"
   }
 }
