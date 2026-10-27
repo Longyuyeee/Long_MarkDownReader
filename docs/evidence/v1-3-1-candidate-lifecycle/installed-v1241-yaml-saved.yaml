@@ -1,0 +1,35 @@
+﻿# 配置 中文😀
+label: 我的草稿
+items:
+  second: >- # 第二段
+    后一段
+    折叠
+  second_copy: >- # 第二段
+    后一段
+    折叠
+
+  # independent
+
+  first: |- # 第一段
+    第一行😀
+    第二行
+  third: 0xFF # number
+kept:
+  text: |+ # keep
+    # 正文
+    text
+
+  other: true
+empty:
+  text: >-
+  other: false
+blocked:
+  text: |-
+    old
+  other: [1]
+ambiguous:
+  # attached?
+  text: |-
+    old
+  other: false
+last: 8_080
