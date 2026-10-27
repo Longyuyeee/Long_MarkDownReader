@@ -1,0 +1,15 @@
+﻿# 配置 中文😀
+label = '外部保留'
+text = ["""第一行😀
+修改后的第二行""", 0xFF] # 保留
+opened = ["""
+  原有缩进
+""", 0xFF]
+quotes = ["""末尾""""", 0xFF]
+number = 0xFF
+date = 2026-10-26
+literal = ['''原有多行''', 0xFF]
+escaped = ["""转义\n\u4E2D\U0001F600\\目录""", 0xFF]
+[nested]
+text = ["""嵌套""", 0xFF]
+next = '保留'
