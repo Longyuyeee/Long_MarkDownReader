@@ -116,19 +116,20 @@
           clearable
           size="small"
           placeholder="筛选路径或内容"
-          aria-label="筛选 YAML 结构提纲" @keydown.enter.prevent="filteredOutline[0] && revealRange(filteredOutline[0])"
+          aria-label="筛选 YAML 结构提纲" :input-props="{ 'aria-label': '筛选 YAML 结构提纲' }" @keydown.enter.prevent="filteredOutline[0] && revealRange(filteredOutline[0])"
         >
           <template #prefix><n-icon :component="SearchIcon" /></template>
         </n-input>
 
-        <div class="outline-list" @contextmenu="openEmptyFieldMenu">
+        <div :ref="outlineNav.element" role="group" aria-label="YAML 结构提纲" class="outline-list" @contextmenu="openEmptyFieldMenu">
           <button
             v-for="entry in filteredOutline"
             :key="`${entry.documentIndex}:${entry.start}:${entry.path}`"
             type="button"
             :style="{ paddingLeft: `${12 + Math.min(entry.depth, 8) * 14}px` }"
             @click="revealRange(entry)" @contextmenu.prevent.stop="nodeMenu.open($event, entry)"
-            :aria-current="entry === selectedOutlineEntry ? 'true' : undefined"
+            :aria-current="entry === outlineNav.selected.value ? 'true' : undefined"
+            :data-outline-node="outlineNav.key(entry)" :tabindex="outlineNav.tabIndex(entry)" @focus="outlineNav.select(entry)" @keydown="outlineNav.keydown($event, entry)"
           >
             <n-icon :component="kindIcon(entry.kind)" />
             <span class="outline-copy">
@@ -224,6 +225,7 @@
 </template>
 
 <script setup lang="ts">
+import { useSourceOutlineNavigation } from '../composables/useSourceOutlineNavigation'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'
@@ -397,14 +399,12 @@ const kindIcon = (kind: string) => {
 
 const analyzedSource = ref('')
 const selectedFieldStart = ref<number>()
-const selectedOutlineEntry = computed(() => {
-  const start = selectedFieldStart.value
-  if (start === undefined) return undefined
-  const entries = analysis.value?.outline || []
-  // A block mapping starts at its first child's key. Prefer that exact key
-  // before a node range so only the intended sibling is highlighted.
-  return entries.find(entry => entry.field?.start === start)
-    || entries.find(entry => entry.start === start)
+const outlineNav = useSourceOutlineNavigation({
+  entries: () => analysis.value?.outline || [], visible: () => filteredOutline.value,
+  identity: () => [yamlPath.value, isExternal.value, store.libraryPath].join('\0'),
+  ready: () => !loading.value && !analysisPending.value && analyzedSource.value === sourceContent.value,
+  preferredOffset: () => selectedFieldStart.value,
+  key: entry => entry.documentIndex + ':' + entry.path,
 })
 const session = useStructuredSession({
   path: () => yamlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
@@ -839,6 +839,7 @@ const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
 }
 
 const revealRange = (range: Pick<YamlDiagnostic, 'start' | 'end'>) => {
+  outlineNav.selectRange(range)
   if (analyzedSource.value !== sourceContent.value) { message.info('正在更新定位，请稍候再试'); return }
   if (!editor) return
   const from = byteOffsetToCodeUnit(sourceContent.value, range.start)
