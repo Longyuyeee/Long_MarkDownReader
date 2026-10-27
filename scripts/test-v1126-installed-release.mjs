@@ -7,6 +7,16 @@ import ts from 'typescript'
 import YAML from 'yaml'
 import {structuredHistoryFixtures,structuredHistoryBytes} from './lib/structured-history-fixture.mjs'
 import {structuredHistoryChecks,validateInstalledStructuredHistory,assertStructuredHistoryOutputBytes} from './lib/installed-v1-1-26-evidence.mjs'
+import {checkStaleHistory} from './lib/installed-history-stale-check.mjs'
+test('stale history requires unchanged draft and disk on every busy response and a final signature rejection',async()=>{
+ const busy='恢复未完成：历史记录正在读取、保存或整理，请稍后重试'
+ const run=async(errors,{changed=false}={})=>{let clicks=0,checks=0,pauses=0;await checkStaleHistory({click:async()=>{clicks++},readError:async()=>errors[Math.min(clicks-1,errors.length-1)],assertUnchanged:async()=>{checks++;assert.equal(changed,false)},pause:async ms=>{assert.equal(ms,250);pauses++}});return{clicks,checks,pauses}}
+ assert.deepEqual(await run(['恢复未完成：磁盘文件已变化，请重新比较']),{clicks:1,checks:1,pauses:0})
+ assert.deepEqual(await run([busy,busy,'恢复未完成：磁盘文件已变化，请重新比较']),{clicks:3,checks:3,pauses:2})
+ await assert.rejects(run([busy]),/remained busy/)
+ await assert.rejects(run(['恢复未完成：路径不可用']),/unexpected history/)
+ await assert.rejects(run([busy],{changed:true}))
+})
 test('installed structured history rejects missing tasks, stale identity, fake input and altered source bytes',()=>{
  const sha=b=>crypto.createHash('sha256').update(b).digest('hex'),bytes=new Map()
  for(const[mode,ext,source]of structuredHistoryFixtures){const current=source.replace('初稿','新稿').replace('保留"','后续输入"').replace('other: 保留','other: 后续输入').replace('<other>保留','<other>后续输入');for(const[suffix,text]of [['copy',source],['saved',current],['external',current.replace('新稿','磁盘改动')]])bytes.set(`installed-v1126-${mode}-${suffix}.${ext}`,structuredHistoryBytes(text))}

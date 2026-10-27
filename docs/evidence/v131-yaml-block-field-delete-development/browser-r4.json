@@ -1,0 +1,56 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "whole-field-delete-neighbor-selection-diff-draft-and-one-step-history",
+      "status": "passed"
+    },
+    {
+      "id": "last-only-opening-newline-empty-and-cancel",
+      "status": "passed"
+    },
+    {
+      "id": "repeated-delete-to-empty-mapping-keeps-all-standalone-comments",
+      "status": "passed"
+    },
+    {
+      "id": "independent-comments-allow-delete-and-only-root-field-keeps-empty-mapping",
+      "status": "passed"
+    },
+    {
+      "id": "late-delete-result-cannot-replace-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "old-delete-diff-cannot-replace-new-input",
+      "status": "passed"
+    },
+    {
+      "id": "late-delete-on-file-switch-keeps-new-preview-and-old-draft",
+      "status": "passed"
+    },
+    {
+      "id": "switch-clears-old-delete-diff-and-menu",
+      "status": "passed"
+    },
+    {
+      "id": "complex-multiline-field-local-fallback-preserves-draft-and-focus",
+      "status": "passed"
+    },
+    {
+      "id": "switch-clears-old-local-fallback-form",
+      "status": "passed"
+    },
+    {
+      "id": "save-retry-and-external-conflict-preserve-original-and-complete-deleted-draft",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-whole-page-menu-and-diff-wide-narrow-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}
