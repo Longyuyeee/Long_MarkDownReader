@@ -2,16 +2,25 @@
 import html
 import json
 import shutil
+import argparse
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-private = root / '.release-secrets/ui-global-review'
-destination = root / 'docs/design/full-window-review-2026-10-22'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--source', default='.release-secrets/ui-global-review')
+parser.add_argument('--destination', default='docs/design/full-window-review-2026-10-22')
+parser.add_argument('--evidence', default='docs/evidence/ui-full-window-2026-10-22')
+parser.add_argument('--reports', nargs='+')
+parser.add_argument('--interactions', default='after')
+args = parser.parse_args()
+private = root / args.source
+destination = root / args.destination
 destination.mkdir(parents=True, exist_ok=True)
 images = destination / 'images'
 images.mkdir(exist_ok=True)
 pages = {}
-for report_file in sorted(private.glob('*/report.json'), key=lambda p: p.stat().st_mtime):
+report_files = [private / item / 'report.json' for item in args.reports] if args.reports else list(private.glob('*/report.json'))
+for report_file in sorted(report_files, key=lambda p: p.stat().st_mtime):
     source = report_file.parent
     for page in json.loads(report_file.read_text(encoding='utf-8')):
         pages[page['id']] = (page, source)
@@ -59,14 +68,14 @@ for key, (page, source) in pages.items():
     area = lambda size: f"{sizes[size]['width']}×{sizes[size]['height']}"
     table.append(f'| {label} | {area("large")} | {area("normal")} | {area("small")} | {area("compact")} | {note} |')
     summary.append({**page, 'label': label})
-checks = json.loads((private / 'after/interactions.json').read_text(encoding='utf-8'))
+checks = json.loads((private / args.interactions / 'interactions.json').read_text(encoding='utf-8'))
 layouts = sum(len(page['layouts']) for page, _ in pages.values())
 page_html = '''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Long编辑 · 完整窗口界面复查</title><style>
 *{box-sizing:border-box}body{margin:0;background:#edf1f6;color:#203049;font:15px/1.6 system-ui,"Microsoft YaHei",sans-serif}header,main{max-width:1720px;margin:auto;padding:24px}h1{margin:0;font-size:28px}header p{color:#53647b}nav{display:flex;flex-wrap:wrap;gap:7px}nav a{padding:4px 10px;background:#fff;border-radius:7px}a{color:#2359c6}section{scroll-margin-top:16px;margin-bottom:28px;background:white;border:1px solid #d6dfe9;border-radius:12px;padding:18px}h2{margin:0;font-size:21px}section>p{color:#53647b;margin:6px 0 14px}.comparison{display:grid;grid-template-columns:1.45fr 1fr;gap:16px;align-items:start}figure{margin:0}figcaption{font-size:13px;color:#53647b;margin-bottom:6px}img{display:block;width:100%;height:auto;border:1px solid #d6dfe9}details{margin-top:12px}details img{max-width:640px;margin-top:12px}summary{cursor:pointer;color:#2359c6}@media(max-width:950px){.comparison{grid-template-columns:1fr}header,main{padding:12px}section{padding:12px}}
 </style><header><h1>完整窗口界面复查</h1>'''
 page_html += f'<p>44 个页面与子页面 · {layouts} 组窗口与风格布局。截图包含真实应用外壳、导航、工具栏与内容区；使用模拟文件数据。点击图片查看原尺寸。正常窗口 1000 × 700 也参与检查。28 个主要页面覆盖全部六种风格，补充子页面另列检查。</p><nav>' + ''.join(links) + '</nav></header><main>' + ''.join(sections) + '</main></html>'
 (destination / 'index.html').write_text(page_html, encoding='utf-8')
-evidence = root / 'docs/evidence/ui-full-window-2026-10-22'
+evidence = root / args.evidence
 evidence.mkdir(parents=True, exist_ok=True)
 (evidence / 'summary.json').write_text(json.dumps({'pages':len(pages),'layouts':layouts,'sizes':['1920×1080','1000×700','800×600','640×480'],'interactions':checks,'results':summary}, ensure_ascii=False, indent=2), encoding='utf-8')
 (destination / 'page-inventory.md').write_text('# 完整窗口逐页复查\n\n尺寸为主要内容区的实测宽×高，不是截图裁切。小窗口中的侧栏按需打开，内容型列表可滚动。\n\n| 页面 | 1920×1080 | 1000×700 | 800×600 | 640×480 | 处理说明 |\n| --- | --- | --- | --- | --- | --- |\n' + '\n'.join(table) + '\n', encoding='utf-8')

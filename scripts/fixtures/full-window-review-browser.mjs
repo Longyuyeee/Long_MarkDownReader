@@ -31,6 +31,10 @@ const store = pinia._s.get('app')
 const sourcePath = String(oldRoute?.query.path || store.activeTabId || '')
 const oldFullPath = oldRoute?.fullPath || '/workspace'
 previous.unmount()
+// The seed component may have initialized the shared updater using its old
+// fixture version. This whole-window fixture represents the current build.
+const { updaterState } = await import('/src/services/appUpdater.ts')
+updaterState.currentVersion = packageInfo.version
 document.querySelector('#app').style.cssText = 'height:100vh;width:100%'
 const root = /^[a-z]:[\\/]/i.test(store.libraryPath) ? store.libraryPath.replaceAll('\\', '/') : 'C:/window-review'
 const path = sourcePath && !/^[a-z]:[\\/]/i.test(sourcePath) ? `${root}/${sourcePath.split(/[\\/]/).pop()}` : sourcePath

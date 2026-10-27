@@ -26,6 +26,19 @@ test('a remounted editor cannot inherit an old callback even with the same path'
   await assert.rejects(old.run(), /文件已切换/)
   assert.equal(await commands.capture()[0].run(), 42)
 })
+
+test('history requests retain the selected timestamp and still validate the current owner', async () => {
+  const commands = createContextCommands(), received = []
+  let owner = 'library/a'
+  commands.register(() => owner, () => [{id:'history',title:'历史',description:'',run:input=>received.push(input?.historyTimestamp)}])
+  const selected = commands.capture()[0]
+  await selected.run({historyTimestamp:17})
+  await selected.run()
+  assert.deepEqual(received,[17,undefined])
+  owner = 'library/b'
+  await assert.rejects(selected.run({historyTimestamp:17}), /文件已切换/)
+  assert.deepEqual(received,[17,undefined])
+})
 test('local operation failures propagate without saving or unregistering other actions', async () => {
   const commands = createContextCommands(), draft = {content:'未保存的正文',dirty:true}
   commands.register(()=>'a',()=>[{id:'attachments',title:'附件',description:'',run:()=>{throw Error('目录暂不可读')}}])

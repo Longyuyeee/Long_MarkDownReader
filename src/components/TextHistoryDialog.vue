@@ -1,5 +1,5 @@
 <template>
-  <n-modal :show="!comparison" preset="card" :title="title" class="text-history-dialog" :style="{ width: 'min(600px, 94vw)' }" @update:show="value => { if (!value) $emit('close') }">
+  <n-modal :show="!comparison && !initialComparisonPending" preset="card" :title="title" class="text-history-dialog" :style="{ width: 'min(600px, 94vw)', maxHeight: 'calc(100dvh - 24px)' }" @update:show="value => { if (!value) $emit('close') }">
     <HistoryVersionList :entries="entries.map(([timestamp,content]) => ({timestamp,content}))" :path="path" :library-root="libraryRoot" :loading="loading" :error="error" class="text-history-list" @compare="compare" @refresh="load" />
     <template #footer><n-button @click="$emit('close')">关闭</n-button></template>
   </n-modal>
@@ -14,10 +14,11 @@ import { confirmAppAction } from '../services/appDialog'
 import { beginWindowSave } from '../services/windowDrafts'
 import HistoryDiffDialog from './HistoryDiffDialog.vue'
 import { restoreHistoryChange } from '../utils/historyDiff'
-const props = withDefaults(defineProps<{ libraryRoot: string; path: string; draft: string; maxCount: number; readOnly?: boolean; title?: string }>(), { readOnly: false, title: '文本历史与差异' })
+const props = withDefaults(defineProps<{ libraryRoot: string; path: string; draft: string; maxCount: number; readOnly?: boolean; title?: string; initialTimestamp?: number }>(), { readOnly: false, title: '文本历史与差异' })
 const emit = defineEmits<{ close: []; replace: [content: string, partial?: boolean, expectedDraft?: string]; copy: [path: string] }>()
 const entries = ref<[number, string][]>([]), loading = ref(false), error = ref(''), actionError = ref(''), busy = ref(false)
 const comparison = ref<{ timestamp: number; draft: string; disk: string; content: string; diskSignature: string; historySignature: string } | null>(null)
+const initialComparisonPending = ref(false)
 const dialog = useDialog()
 let disposed = false, generation = 0
 async function load() {
@@ -52,10 +53,23 @@ const recover = async (mode: 'copy' | 'replace' | 'partial', changeId?: number) 
   } catch (cause) { if (!disposed) actionError.value = '恢复未完成：' + String(cause) }
   finally { busy.value = false; finish() }
 }
-watch([() => props.path, () => props.libraryRoot], () => { comparison.value = null; entries.value = []; void load() }, { immediate: true })
+watch([() => props.path, () => props.libraryRoot, () => props.initialTimestamp], () => {
+  comparison.value = null; entries.value = []; error.value = ''
+  const { path, libraryRoot, initialTimestamp } = props
+  initialComparisonPending.value = Number.isFinite(initialTimestamp)
+  if (!initialComparisonPending.value) { void load(); return }
+  void load().then(() => {
+    if (disposed || props.path !== path || props.libraryRoot !== libraryRoot || props.initialTimestamp !== initialTimestamp) return
+    return compare(initialTimestamp!)
+  }).finally(() => {
+    if (disposed || props.path !== path || props.libraryRoot !== libraryRoot || props.initialTimestamp !== initialTimestamp) return
+    initialComparisonPending.value = false
+  })
+}, { immediate: true })
 onBeforeUnmount(() => { disposed = true; ++generation })
 </script>
 <style scoped>
+:global(.text-history-dialog .n-card__content) { min-height: 0; overflow: auto; }
 .text-history-list { height: min(60vh, 560px); }
 .text-history-entries { max-height: 55vh; overflow: auto; display: grid; gap: 8px; }button { display: flex; align-items: center; gap: 12px; padding: 10px; border: var(--theme-border); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: var(--theme-surface); cursor: pointer; text-align: left; }button>span { display: grid; gap: 5px; min-width: 0; flex: 1; }small { color: var(--theme-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }[role=alert] { color: var(--status-danger); }
 </style>

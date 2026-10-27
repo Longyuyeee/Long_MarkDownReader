@@ -379,7 +379,7 @@
             </div>
           </div>
         </div>
-        <n-button quaternary size="small" @click="activeSidebarTab = 'history'; isSidebarCollapsed = false">历史与差异</n-button>
+        <n-button quaternary size="small" @click="openDocumentHistory">历史与差异</n-button>
         <n-button quaternary size="small" @click="router.push({ name: 'Settings', query: { category: 'appearance', focus: 'document-display' } })">显示设置</n-button>
         <n-button quaternary size="small" @click="store.toggleZen()">专注写作 · F11</n-button>
         <p class="document-menu-capability">{{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.description }}</p>
@@ -678,7 +678,7 @@
 <script setup lang="ts">
 import WorkspaceEmbeddedDocument from '../components/workspace/WorkspaceEmbeddedDocument.vue'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
-import { useContextCommands, type ContextCommand } from '../services/contextCommands'
+import { contextCommands, useContextCommands, type ContextCommand } from '../services/contextCommands'
 import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
 import InboxBrowser from '../components/InboxBrowser.vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
@@ -2271,7 +2271,25 @@ const fetchHistory = async () => {
 
 const ownsHistoryEntry = (entry: HistoryEntry) => historyList.value.includes(entry)
   && entry.path === activeTabId.value && entry.libraryRoot === store.libraryPath
+const sourceHistoryCommand = () => activeEmbeddedEditor.value
+  ? contextCommands.capture().find(command => command.id === 'structured-history' || command.id === 'text-history')
+  : undefined
+const openDocumentHistory = async () => {
+  documentActionsVisible.value = false
+  const command = sourceHistoryCommand()
+  if (command) {
+    try { await command.run() } catch (error) { message.warning(String(error)) }
+    return
+  }
+  activeSidebarTab.value = 'history'; isSidebarCollapsed.value = false
+}
 const restoreHistory = async (entry: HistoryEntry) => {
+  if (ownsHistoryEntry(entry) && activeEmbeddedEditor.value) {
+    const command = sourceHistoryCommand()
+    if (!command) { message.info('当前格式暂不支持恢复此历史，文件和草稿均保留'); return }
+    try { await command.run({ historyTimestamp: entry.timestamp }) } catch (error) { message.warning(String(error)) }
+    return
+  }
   if (!ownsHistoryEntry(entry) || !vditor || !isVditorReady || lastLoadedPath !== entry.path
     || !activeFormatCanEdit.value || hasPendingMainTextSave(entry.path)) {
     message.warning('文件已切换或正在读写，请等待当前文件就绪后重试')

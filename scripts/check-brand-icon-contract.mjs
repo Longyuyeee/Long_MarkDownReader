@@ -43,6 +43,8 @@ if (failures.length === 0) {
 const readme = fs.readFileSync('design/brand/README.md', 'utf8')
 const audit = fs.readFileSync('docs/Brand_Icon_Solid_Gold_Audit_2026-08-03.md', 'utf8')
 const pkg = fs.readFileSync('package.json', 'utf8')
+const productName = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8')).productName
+if (JSON.parse(pkg).displayName !== productName) fail('package display name must match the localized application name')
 for (const token of ['longedit-icon-v1.0.1.png', 'longedit-icon-v1.0.2.png', '实心金色']) if (!readme.includes(token)) fail(`brand README is missing ${token}`)
 for (const token of ['实心金色', '透明圆角', '32px', 'check:brand-icon-contract']) if (!audit.includes(token)) fail(`brand audit is missing ${token}`)
 if (!pkg.includes('npm run check:brand-icon-contract')) fail('brand icon contract is not reachable from the patch release gate')

@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    "json compare/cancel/full restore only to owned draft and one undo",
+    "json late restore preserves subsequent input",
+    "json explicit save retains before and after snapshots",
+    "yaml compare/cancel/full restore only to owned draft and one undo",
+    "yaml late restore preserves subsequent input",
+    "yaml explicit save retains before and after snapshots",
+    "xml compare/cancel/full restore only to owned draft and one undo",
+    "xml late restore preserves subsequent input",
+    "xml explicit save retains before and after snapshots",
+    "toml compare/cancel/full restore only to owned draft and one undo",
+    "toml late restore preserves subsequent input",
+    "toml explicit save retains before and after snapshots"
+  ],
+  "errors": []
+}
