@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-196-v1.3.0-foundation-ui-audit-candidate",
-  "binaryVersionTransition": "v1.3.0-quality-gate-pending",
+  "binaryVersionTransition": "v1.3.0-release-ready",
   "displayLabel": "v1.3.0 基础功能与全界面收尾候选 · 当前公开 v1.2.45",
   "activeSlice": {
     "id": "v1.3.0-foundation-ui-audit",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_3_0_Unsigned_Community_Release_Audit_2026-10-27.md"
   }
 }

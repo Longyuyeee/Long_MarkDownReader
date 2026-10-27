@@ -1,6 +1,6 @@
 # v1.3.0：近期功能与完整界面审计
 
-当前状态：候选检查中，尚未发布。公开下载仍为 v1.2.45。用户本次授权在审计通过后由 1.2.45 升为 1.3.0；不是把待实现的 1.2.46 计作已完成。
+当前状态：完整源码、构建和同包安装检查通过，待公开发布。公开下载仍为 v1.2.45。用户本次授权在审计通过后由 1.2.45 升为 1.3.0；不是把待实现的 1.2.46 计作已完成。
 
 发布形态为 `community-unsigned`，产品运行时契约 `releaseCandidate=false`。正式发布后可手动下载安装；当前尚未发布。
 
@@ -58,9 +58,9 @@
 - 浏览器模拟 IPC/磁盘，只证明当前界面与交互。原生格式往返、原始安装器、完整 NSIS 生命周期与真实文件输出将单独记录；不把旧版本记录当作当前版本通过。
 - MSI 构建与摘要、NSIS 实际安装流程分开记录；应用内自动更新观察仍独立待完成。持续设备性能不由截图矩阵证明。
 
-最终构建、安装和公开附件核对待完成。完成后再更新下述结果，不提前宣称正式发布。
+最终构建与同包安装检查通过，公开附件核对待完成。
 
-本地 `npm run ci:patch-release` 最终整轮实际退出0；Rust格式621项通过，2项既有忽略。界面截图库外，新增 [JSON历史差异小窗口](design/v1.3.0-full-window-review/history/json-diff-640.png)、[TOML历史差异小窗口](design/v1.3.0-full-window-review/history/toml-diff-640.png) 便于复看。原生安装记录尚待完成。
+本地 `npm run ci:patch-release` 最终整轮实际退出0；Rust格式621项通过，2项既有忽略。界面截图库外，新增 [JSON历史差异小窗口](design/v1.3.0-full-window-review/history/json-diff-640.png)、[TOML历史差异小窗口](design/v1.3.0-full-window-review/history/toml-diff-640.png) 便于复看。原生安装记录见下节。
 
 ## 5. 接手后的顺序
 
@@ -73,3 +73,16 @@
 使用独立 Vite 预览服务15941和真实产品组件；`test-full-window-review-browser.mjs --styles`、`--variants --styles`、`test-full-window-interactions-browser.mjs`、`test-v120-reference-layout-browser.mjs`、`test-v130-history-entry-browser.mjs`、`test-v1126-history-browser.mjs`、`test-toml-block-field-delete-browser.mjs`。`LONGEDIT_PLAYWRIGHT_MODULE` 指向可用 Playwright 包。详细范围见 [scope.json](evidence/v130-ui-audit/scope.json)。
 
 首次开发服务冷启动、依赖预打包重载和极速缩窗造成的观察脚本中断未计为通过；已修正观察等待，并在最终代码上完整复跑。原生版本检查补齐小版本线跨越后的既有能力预期，不修改旧版本证据。
+
+## 安装检查结果
+
+固定产品 `a7f4abac769376a21f9f2f0796c47377b63cc92a`，固定检查代码 `a7f4abac769376a21f9f2f0796c47377b63cc92a`。完整源码检查 40432308695、原始构建 40432358551 和同包实际安装复查 40436716613 完整通过。Rust 1454 项功能、1 项性能通过，5 项既有忽略。
+
+83组功能任务共773项通过；四类结构化文件还逐类记录外层历史菜单、侧栏指定版本比较、恢复焦点与立即撤销三项结果（共12项详细断言），均通过。旧版文件管理、移动/链接接续、保存与草稿、搜索、PDF批注、表格、图形及各格式任务均在本安装包重跑。
+
+NSIS 实际安装、手动升级和卸载通过，另有生命周期22、工作区18、路由11、管理更新回滚7、版本身份4。MSI仅完成构建及摘要核对。浏览器模拟与安装原生证明分开保留；应用内1.2.45→1.3.0自动更新实际观察仍独立pending。公开发布复用原包，不为文档收尾重新编译。
+
+| 安装器 | 字节数 | SHA-256 |
+| --- | ---: | --- |
+| LongEdit_1.3.0_x64_zh-CN.msi | 78200832 | `7c1ed082205487fb812a86b4bd6d548c52c82cf27a3a4bb6cf94e768ba76c5cb` |
+| LongEdit_1.3.0_x64-setup.exe | 68802635 | `547cb4cc7345510af12afc9e263bf3e2134b845511f55d2e470d9617ac6b6ba9` |
