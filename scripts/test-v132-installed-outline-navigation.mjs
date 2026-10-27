@@ -19,3 +19,16 @@ test('installed navigation remains bound to runtime, original installers and pub
  const tree=ts.createSourceFile('driver.mjs',driver,ts.ScriptTarget.ESNext,true,ts.ScriptKind.JS);let count=0
  const visit=node=>{if(ts.isCallExpression(node)&&/^(?:evaluate|ui\.waitFor)$/.test(node.expression.getText(tree))){const a=node.arguments[0];if(a&&(ts.isStringLiteral(a)||ts.isNoSubstitutionTemplateLiteral(a)||ts.isTemplateExpression(a))){const script=ts.isTemplateExpression(a)?a.head.text+a.templateSpans.map(s=>'__fixture__'+s.literal.text).join(''):a.text;assert.doesNotThrow(()=>new vm.Script(script),script);count++}}ts.forEachChild(node,visit)};visit(tree);assert.ok(count>=10)
 })
+
+test('the current version must still execute and validate the inherited131 workflow',()=>{
+ const current=JSON.parse(fs.readFileSync('package.json','utf8')).version
+ for(const[file,anchor,guard]of [
+  ['scripts/capture-r5j-installed-artifact-smoke.mjs','const {runInstalledV131YamlBlockFieldDeleteWorkflow}','if('],
+  ['scripts/lib/installed-release-runtime.mjs','validateInstalledYamlBlockFieldDelete(reports.yamlBlockFieldDelete','if('],
+  ['scripts/import-community-release-review.mjs',"[['yamlBlockFieldDelete','installed-v131",'...('],
+  ['.github/workflows/community-release-publish.yml','import {validateInstalledYamlBlockFieldDelete','if ($env:RELEASE_VERSION'],
+ ]){
+  const source=fs.readFileSync(file,'utf8'),end=source.indexOf(anchor);assert.ok(end>0,file)
+  const start=source.lastIndexOf(guard,end);assert.ok(start>=0,file);assert.ok(source.slice(start,end).includes("'"+current+"'"),file+' omitted the current version from the inherited workflow')
+ }
+})

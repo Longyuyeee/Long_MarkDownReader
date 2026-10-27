@@ -191,7 +191,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.tomlBlockFieldDelete[key],reports.searchCompleteness[key])
     assertTomlBlockFieldDeleteOutputBytes(reports.tomlBlockFieldDelete,file=>read(evidenceRoot+file))
   }
-  if(manifest.appVersion==='1.3.1'){
+  if(['1.3.1','1.3.2'].includes(manifest.appVersion)){
     validateInstalledYamlBlockFieldDelete(reports.yamlBlockFieldDelete,manifest)
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.yamlBlockFieldDelete[key],reports.searchCompleteness[key])
     assertYamlBlockFieldDeleteOutputBytes(reports.yamlBlockFieldDelete,file=>read(evidenceRoot+file))

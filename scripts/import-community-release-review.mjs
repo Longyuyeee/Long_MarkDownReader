@@ -109,7 +109,7 @@ const reports = Object.fromEntries([
   ...(['1.2.43','1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['tomlBlockFields','installed-v1243-block-fields-workflow.json',tomlBlockFieldsChecks.length]] : []),
   ...(['1.2.44','1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['tomlBlockArrayDelete','installed-v1244-block-array-delete-workflow.json',tomlBlockArrayDeleteChecks.length]] : []),
   ...(['1.2.45','1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['tomlBlockFieldDelete','installed-v1245-block-field-delete-workflow.json',tomlBlockFieldDeleteChecks.length]] : []),
-  ...(version==='1.3.1' ? [['yamlBlockFieldDelete','installed-v131-block-field-delete-workflow.json',yamlBlockFieldDeleteChecks.length]] : []),
+  ...(['1.3.1','1.3.2'].includes(version) ? [['yamlBlockFieldDelete','installed-v131-block-field-delete-workflow.json',yamlBlockFieldDeleteChecks.length]] : []),
   ...(version==='1.3.2' ? [['outlineNavigation','installed-v132-outline-workflow.json',outlineNavigationChecks.length]] : []),
   ...(['1.2.31','1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['yamlFieldOrder','installed-v1231-order-workflow.json',yamlFieldOrderChecks.length]] : []),
   ...(['1.2.30','1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['tomlFieldCopy','installed-v1230-field-copy-workflow.json',tomlFieldCopyChecks.length]] : []),
@@ -246,7 +246,7 @@ if(['1.2.42','1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(v
 if(['1.2.43','1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version))assertTomlBlockFieldsOutputBytes(reports.tomlBlockFields.report,file=>fs.readFileSync(path.join(directory,file)))
 if(['1.2.44','1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version))assertTomlBlockArrayDeleteOutputBytes(reports.tomlBlockArrayDelete.report,file=>fs.readFileSync(path.join(directory,file)))
 if(['1.2.45','1.3.0', '1.3.1', '1.3.2'].includes(version))assertTomlBlockFieldDeleteOutputBytes(reports.tomlBlockFieldDelete.report,file=>fs.readFileSync(path.join(directory,file)))
-if(version==='1.3.1')assertYamlBlockFieldDeleteOutputBytes(reports.yamlBlockFieldDelete.report,file=>fs.readFileSync(path.join(directory,file)))
+if(['1.3.1','1.3.2'].includes(version))assertYamlBlockFieldDeleteOutputBytes(reports.yamlBlockFieldDelete.report,file=>fs.readFileSync(path.join(directory,file)))
 if(version==='1.3.2')assertOutlineNavigationOutputBytes(reports.outlineNavigation.report,file=>fs.readFileSync(path.join(directory,file)))
 if(['1.2.31','1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version))assertYamlFieldOrderOutputBytes(reports.yamlFieldOrder.report,file=>fs.readFileSync(path.join(directory,file)))
 if(['1.2.30','1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version))assertTomlFieldCopyOutputBytes(reports.tomlFieldCopy.report,file=>fs.readFileSync(path.join(directory,file)))
@@ -304,7 +304,7 @@ if(['1.2.42','1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(v
 if(['1.2.43','1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version)) for(const {fileName} of reports.tomlBlockFields.report.outputs) if(!files.includes(fileName)) files.push(fileName)
 if(['1.2.44','1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version)) for(const {fileName} of reports.tomlBlockArrayDelete.report.outputs) if(!files.includes(fileName)) files.push(fileName)
 if(['1.2.45','1.3.0', '1.3.1', '1.3.2'].includes(version)) for(const {fileName} of reports.tomlBlockFieldDelete.report.outputs) if(!files.includes(fileName)) files.push(fileName)
-if(version==='1.3.1') for(const {fileName} of reports.yamlBlockFieldDelete.report.outputs) if(!files.includes(fileName)) files.push(fileName)
+if(['1.3.1','1.3.2'].includes(version)) for(const {fileName} of reports.yamlBlockFieldDelete.report.outputs) if(!files.includes(fileName)) files.push(fileName)
 if(version==='1.3.2') for(const {fileName} of reports.outlineNavigation.report.outputs) if(!files.includes(fileName)) files.push(fileName)
 if(['1.2.31','1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version)) for(const {fileName} of reports.yamlFieldOrder.report.outputs) if(!files.includes(fileName)) files.push(fileName)
 if(['1.2.30','1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version)) for(const {fileName} of reports.tomlFieldCopy.report.outputs) if(!files.includes(fileName)) files.push(fileName)
@@ -340,7 +340,7 @@ const runtimeReports = Object.fromEntries([
   ...(['1.2.43','1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['tomlBlockFields',reports.tomlBlockFields.file]] : []),
   ...(['1.2.44','1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['tomlBlockArrayDelete',reports.tomlBlockArrayDelete.file]] : []),
   ...(['1.2.45','1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['tomlBlockFieldDelete',reports.tomlBlockFieldDelete.file]] : []),
-  ...(version==='1.3.1' ? [['yamlBlockFieldDelete',reports.yamlBlockFieldDelete.file]] : []),
+  ...(['1.3.1','1.3.2'].includes(version) ? [['yamlBlockFieldDelete',reports.yamlBlockFieldDelete.file]] : []),
   ...(version==='1.3.2' ? [['outlineNavigation',reports.outlineNavigation.file]] : []),
   ...(['1.2.31','1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['yamlFieldOrder',reports.yamlFieldOrder.file]] : []),
   ...(['1.2.30','1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? [['tomlFieldCopy',reports.tomlFieldCopy.file]] : []),
@@ -430,7 +430,7 @@ const manifest = {
     ...(['1.2.43','1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? {tomlBlockFieldsChecksPassed:tomlBlockFieldsChecks.length} : {}),
     ...(['1.2.44','1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? {tomlBlockArrayDeleteChecksPassed:tomlBlockArrayDeleteChecks.length} : {}),
     ...(['1.2.45','1.3.0', '1.3.1', '1.3.2'].includes(version) ? {tomlBlockFieldDeleteChecksPassed:tomlBlockFieldDeleteChecks.length} : {}),
-    ...(version==='1.3.1' ? {yamlBlockFieldDeleteChecksPassed:yamlBlockFieldDeleteChecks.length} : {}),
+    ...(['1.3.1','1.3.2'].includes(version) ? {yamlBlockFieldDeleteChecksPassed:yamlBlockFieldDeleteChecks.length} : {}),
     ...(version==='1.3.2' ? {outlineNavigationChecksPassed:outlineNavigationChecks.length} : {}),
     ...(['1.2.31','1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? {yamlFieldOrderChecksPassed:yamlFieldOrderChecks.length} : {}),
     ...(['1.2.30','1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? {tomlFieldCopyChecksPassed:tomlFieldCopyChecks.length} : {}),
@@ -523,7 +523,7 @@ write(path.join(releaseRoot, 'import-manifest.json'), {
     ...(['1.2.43','1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? {tomlBlockFieldsPassed:tomlBlockFieldsChecks.length} : {}),
     ...(['1.2.44','1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? {tomlBlockArrayDeletePassed:tomlBlockArrayDeleteChecks.length} : {}),
     ...(['1.2.45','1.3.0', '1.3.1', '1.3.2'].includes(version) ? {tomlBlockFieldDeletePassed:tomlBlockFieldDeleteChecks.length} : {}),
-    ...(version==='1.3.1' ? {yamlBlockFieldDeletePassed:yamlBlockFieldDeleteChecks.length} : {}),
+    ...(['1.3.1','1.3.2'].includes(version) ? {yamlBlockFieldDeletePassed:yamlBlockFieldDeleteChecks.length} : {}),
     ...(version==='1.3.2' ? {outlineNavigationPassed:outlineNavigationChecks.length} : {}),
     ...(['1.2.31','1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? {yamlFieldOrderPassed:yamlFieldOrderChecks.length} : {}),
     ...(['1.2.30','1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2'].includes(version) ? {tomlFieldCopyPassed:tomlFieldCopyChecks.length} : {}),

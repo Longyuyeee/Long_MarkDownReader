@@ -983,7 +983,7 @@ if(['1.2.45','1.3.0', '1.3.1', '1.3.2'].includes(appVersion) && process.env.LONG
  await runInstalledV1245TomlBlockFieldDeleteWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
 }
 
-if(appVersion==='1.3.1' && process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO==='1'){
+if(['1.3.1','1.3.2'].includes(appVersion) && process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO==='1'){
  const {runInstalledV131YamlBlockFieldDeleteWorkflow}=await import('./lib/installed-v1-3-1-workflow.mjs')
  await runInstalledV131YamlBlockFieldDeleteWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
 }
