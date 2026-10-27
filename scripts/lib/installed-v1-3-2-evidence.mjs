@@ -6,6 +6,7 @@ export const outlineNavigationOutputFiles=['installed-v132-outline-observations.
 export function validateInstalledOutlineNavigation(r,m){
  assert.equal(m.appVersion,'1.3.2');for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-outline-navigation-trusted-input-and-output-bytes')
+ assert.equal(r.inputProtocol,'leading-empty-lines-use-trusted-enter')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(r[k],false)
  assert.deepEqual(r.checks.map(c=>[c.id,c.status]),outlineNavigationChecks.map(id=>[id,'passed']));assert.deepEqual(r.runtimeErrors,[])
