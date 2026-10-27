@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.3.0 已发布：已审计近期45版与全部44个页面及子页面，修正历史入口、恢复焦点、长差异弹窗和显示名，保留既有功能、风格与正常动效。[完整审计](docs/V1_3_0_Unsigned_Community_Release_Audit_2026-10-27.md) · [整窗图册](docs/design/v1.3.0-full-window-review/index.html)。[1.3 开发路线](docs/Foundation_Deepening_Roadmap_1_3_0_to_1_3_2_2026-10-27.md)：1.3.0整体收尾已交付；下一版1.3.1接续YAML多行映射字段删除，仍为规划，尚未实现。
+v1.3.1 正在深化 YAML 多行字段删除，继续沿右键和差异弹窗保护草稿、注释与撤销。[本版记录](docs/V1_3_1_Unsigned_Community_Release_Audit_2026-10-27.md)。当前公开下载仍为 v1.3.0。
 
 ## 不只是打开文件，更是接续你的工作
 

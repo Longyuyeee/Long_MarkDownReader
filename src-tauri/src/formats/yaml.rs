@@ -45,6 +45,10 @@ mod block_operation_tests;
 #[path = "yaml_block_field_tests.rs"]
 mod block_field_tests;
 
+#[cfg(test)]
+#[path = "yaml_block_field_delete_tests.rs"]
+mod block_field_delete_tests;
+
 fn parser_source(content: &str) -> &str {
     content.strip_prefix('\u{feff}').unwrap_or(content)
 }

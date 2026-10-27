@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.3.1",
-  "runtimeBaseVersion": "1.3.0",
+  "runtimeBaseVersion": "1.3.1",
   "publicVersion": "1.3.0",
   "publicTag": "v1.3.0",
   "publicTagCommit": "a7f4abac769376a21f9f2f0796c47377b63cc92a",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-197-v1.3.0-published",
-  "binaryVersionTransition": "v1.3.0-public-release-published",
-  "displayLabel": "v1.3.0 已发布 · 下一目标 v1.3.1",
+  "currentStage": "M8-198-v1.3.1-yaml-block-field-deletion-candidate",
+  "binaryVersionTransition": "v1.3.1-quality-gate-pending",
+  "displayLabel": "v1.3.1 YAML 多行字段删除候选 · 当前公开 v1.3.0",
   "activeSlice": {
-    "id": "v1.3.0-foundation-ui-audit",
-    "status": "published-and-remote-assets-verified",
-    "document": "docs/V1_3_0_Unsigned_Community_Release_Audit_2026-10-27.md"
+    "id": "v1.3.1-yaml-block-field-deletion",
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_3_1_Unsigned_Community_Release_Audit_2026-10-27.md"
   }
 }

@@ -3,6 +3,9 @@ use super::*;
 #[path = "yaml_field_blocks.rs"]
 mod blocks;
 
+#[path = "yaml_block_field_delete.rs"]
+mod block_delete;
+
 #[derive(Clone)]
 struct Target<'a> {
     node: &'a MarkedYamlOwned,
@@ -740,6 +743,9 @@ pub fn remove_yaml_field_source(
     start: usize,
     end: usize,
 ) -> Result<YamlKeyChange, String> {
+    if let Some(result) = block_delete::remove(content, start, end) {
+        return result;
+    }
     let (mut docs, offsets, maps) = prepare(content)?;
     let target = docs
         .first()
@@ -971,12 +977,13 @@ mod tests {
             ("root: &anchor {old: 1}\nref: *anchor\n", "$.root.old"),
             ("root: !tag {old: 1}\n", "$.root.old"),
             ("base: &x 1\nold: *x\n", "$.old"),
-            ("old: |\n  text\n", "$.old"),
+            ("old: 'multiple\n  lines'\n", "$.old"),
             ("old: [1,2]\n", "$.old"),
             ("old: 1\n---\nnext: 2\n", "$.old"),
         ] {
             assert!(remove(source, path).is_err(), "{source}");
         }
+        assert_eq!(remove("old: |\n  text\n", "$.old").unwrap().content, "{}\n");
         assert!(add("root: &x {old: 1}\nref: *x\n", "$.root", "new", "1").is_err());
         let source = "base: &x {keep: 1}\nref: *x\nold: 2\n";
         assert!(remove(source, "$.old").is_ok());
