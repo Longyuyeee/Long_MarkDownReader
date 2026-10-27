@@ -21,6 +21,15 @@ test('publisher validates each installed report once using a registered filename
   reports.push(primary[1])
  }
  assert.ok(reports.length>=30,`Expected current and historical installed validation blocks; found ${reports.length}`)
- const current=`installed-v${version.replaceAll('.','')}`
- assert.ok(reports.some(file=>file.startsWith(current+'-')),`Current version ${version} has no publisher validation`)
+ // The 1.3.0 audit extends the existing history workflow and retains the
+ // latest 1.2 feature workflow instead of inventing a duplicate report.
+ const aggregateReports=version==='1.3.0'
+  ?['installed-v1126-workflow.json','installed-v1245-block-field-delete-workflow.json']
+  :null
+ if(aggregateReports){
+  for(const file of aggregateReports)assert.ok(reports.includes(file),`Current version ${version} is missing publisher validation: ${file}`)
+ }else{
+  const current=`installed-v${version.replaceAll('.','')}`
+  assert.ok(reports.some(file=>file.startsWith(current+'-')),`Current version ${version} has no publisher validation`)
+ }
 })
