@@ -32,18 +32,18 @@
 </p>
 
 <p align="center">
-  <img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.3.0 真实安装版，紧凑导航、多文档标签与主编辑区">
+  <img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.3.1 真实安装版，紧凑导航、多文档标签与主编辑区">
 </p>
 
 <p align="center"><sub>真实安装版工作区：紧凑导航、稳定的多文档标签与主编辑区，把更多空间留给内容。</sub></p>
 
 ## 开发进展
 
-v1.3.1 正在深化 YAML 多行字段删除，继续沿右键和差异弹窗保护草稿、注释与撤销。[本版记录](docs/V1_3_1_Unsigned_Community_Release_Audit_2026-10-27.md)。当前公开下载仍为 v1.3.0。
+v1.3.1 已发布：YAML多行字段沿已有右键直接删除，保留注释、空映射、相邻定位与一次撤销；修复定位源码后的焦点接续。[本版审计](docs/V1_3_1_Unsigned_Community_Release_Audit_2026-10-27.md)。[1.3开发路线](docs/Foundation_Deepening_Roadmap_1_3_0_to_1_3_2_2026-10-27.md)：1.3.0—1.3.1已交付2/2版；下一目标1.3.2深化结构提纲的键盘导航与定位接续，仍为规划。
 
 ## 不只是打开文件，更是接续你的工作
 
-> **v1.3.0 已正式发布**：基础功能与全界面收尾，历史入口一致，恢复后可立即撤销，小窗口保留完整操作。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.0) · [发布说明](docs/RELEASE_NOTES_v1.3.0.md)。
+> **v1.3.1 已正式发布**：YAML多行字段删除，保留注释和未保存内容，支持相邻定位与一次撤销。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.1) · [发布说明](docs/RELEASE_NOTES_v1.3.1.md)。
 
 
 
@@ -81,19 +81,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.0"><img src="https://img.shields.io/badge/Stable-v1.3.0-cca43b" alt="v1.3.0 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.1"><img src="https://img.shields.io/badge/Stable-v1.3.1-cca43b" alt="v1.3.1 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.3.0**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.3.1**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.3.0_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.0/LongEdit_1.3.0_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.3.0_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.0/LongEdit_1.3.0_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.3.0](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.0) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.3.1_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.1/LongEdit_1.3.1_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.3.1_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.1/LongEdit_1.3.1_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.3.1](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.1) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.0/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.1/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -101,12 +101,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.3.0_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.3.1_x64-setup.exe
 ```
 
 ```text
-7c1ed082205487fb812a86b4bd6d548c52c82cf27a3a4bb6cf94e768ba76c5cb  LongEdit_1.3.0_x64_zh-CN.msi
-547cb4cc7345510af12afc9e263bf3e2134b845511f55d2e470d9617ac6b6ba9  LongEdit_1.3.0_x64-setup.exe
+3783c57866e089a7d243e45e0ebe0152572b6a67f6d69c6f9cc3afaa0a6c2350  LongEdit_1.3.1_x64_zh-CN.msi
+ae8ee5ed57b340f1aedab8b91a2ccee892a1eeabec5d8999e12ee2997de10213  LongEdit_1.3.1_x64-setup.exe
 ```
 
 </details>
@@ -236,19 +236,19 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 ## 真实界面
 
-主图、模板、TXT 恢复、文件整理与图谱截图来自 **v1.3.0 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
+主图、模板、TXT 恢复、文件整理与图谱截图来自 **v1.3.1 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
 
 ### 模板与文本历史
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.3.0 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.3.0 从 TXT 历史恢复独立副本"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.3.1 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.3.1 从 TXT 历史恢复独立副本"></td></tr>
   <tr><td align="center"><sub>在弹窗中编辑模板与变量</sub></td><td align="center"><sub>TXT 恢复副本，保留原文件</sub></td></tr>
 </table>
 
 ### 文件整理与回收
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.3.0 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.3.0 资料库回收站，选择文件后恢复"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.3.1 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.3.1 资料库回收站，选择文件后恢复"></td></tr>
   <tr><td align="center"><sub>选择或输入目标目录</sub></td><td align="center"><sub>在回收站选择恢复</sub></td></tr>
 </table>
 
@@ -267,10 +267,10 @@ JSON、YAML、XML、TOML 与代码文件使用专业源码编辑体验。JSON �
 ### 表格与工作簿
 
 <p align="center">
-  <img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1115-csv-reopened.jpg" width="100%" alt="Long编辑 v1.3.0 真实安装版，CSV 保存重开后保留多行内容、前导零和长编号">
+  <img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1115-csv-reopened.jpg" width="100%" alt="Long编辑 v1.3.1 真实安装版，CSV 保存重开后保留多行内容、前导零和长编号">
 </p>
 
-<p align="center"><sub>v1.3.0 真实安装版 · 多行按需编辑，CSV 重开与编号保留；原有 XLSX 工作区继续保留。</sub></p>
+<p align="center"><sub>v1.3.1 真实安装版 · 多行按需编辑，CSV 重开与编号保留；原有 XLSX 工作区继续保留。</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/xlsx-workbook-dark.png" width="100%" alt="Long编辑 XLSX 工作簿编辑界面，包含多工作表、公式栏、页面工具和网格编辑区">
@@ -283,10 +283,10 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 ### 知识图谱与思维导图
 
 <p align="center">
-  <img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.3.0 知识图谱与关系健康面板">
+  <img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.3.1 知识图谱与关系健康面板">
 </p>
 
-<p align="center"><sub>v1.3.0 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
+<p align="center"><sub>v1.3.1 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
 
 知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持稳定后自动全图适配、搜索、筛选、多种布局与主题、框选和拖动、缩放、适应当前选择、有界且尊重减少动效设置的选择反馈、可点击/拖动/键盘操作的语义缩略导航、右键操作、中心节点、视图保存以及 SVG/PNG 导出；密集中景会主动降低普通箭头和状态环噪声，近景仍保留方向语义。
 
@@ -496,7 +496,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ## 开发与验证
 
-1.3.0 已发布：基础功能与全界面收尾已交付。[发布说明](docs/RELEASE_NOTES_v1.3.0.md) · [基础功能路线](docs/Foundation_Deepening_Roadmap_1_3_0_to_1_3_2_2026-10-27.md)。
+1.3.1 已发布：YAML多行字段删除与定位接续已交付。[发布说明](docs/RELEASE_NOTES_v1.3.1.md) · [开发路线](docs/Foundation_Deepening_Roadmap_1_3_0_to_1_3_2_2026-10-27.md)。
 
 <p>
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
@@ -586,6 +586,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.3.1 | YAML多行字段删除与定位接续 | [发布说明](docs/RELEASE_NOTES_v1.3.1.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.1) · [审计](docs/V1_3_1_Unsigned_Community_Release_Audit_2026-10-27.md) |
 | v1.3.0 | 基础功能与全界面收尾 | [发布说明](docs/RELEASE_NOTES_v1.3.0.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.0) · [审计记录](docs/V1_3_0_Unsigned_Community_Release_Audit_2026-10-27.md) |
 | v1.2.45 | TOML 多行字段删除 | [发布说明](docs/RELEASE_NOTES_v1.2.45.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.45) · [发布记录](docs/V1_2_45_Unsigned_Community_Release_Audit_2026-10-27.md) |
 | v1.2.44 | TOML 多行数组项删除 | [发布说明](docs/RELEASE_NOTES_v1.2.44.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.44) · [发布记录](docs/V1_2_44_Unsigned_Community_Release_Audit_2026-10-27.md) |
@@ -681,9 +682,18 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - [1.2.39—1.2.40](docs/Foundation_Deepening_Roadmap_1_2_39_to_1_2_40_2026-10-26.md) 已交付 **2/2 版**：TOML 数组多行正文与 YAML 列表条目复制排序。
 - [1.2.41—1.2.42](docs/Foundation_Deepening_Roadmap_1_2_41_to_1_2_42_2026-10-26.md) 已交付 **2/2 版**：YAML多行字段与TOML多行数组项复制排序。
 - [1.2.43—1.2.44](docs/Foundation_Deepening_Roadmap_1_2_43_to_1_2_44_2026-10-27.md) 已交付 **2/2 版**：TOML多行字段复制排序和多行数组项删除。
-- [1.3 开发路线](docs/Foundation_Deepening_Roadmap_1_3_0_to_1_3_2_2026-10-27.md)：1.3.0整体收尾已交付；下一版1.3.1接续YAML多行映射字段删除，仍为规划，尚未实现。
+- [1.3开发路线](docs/Foundation_Deepening_Roadmap_1_3_0_to_1_3_2_2026-10-27.md)：1.3.0—1.3.1已交付2/2版；下一目标1.3.2深化结构提纲的键盘导航与定位接续，仍为规划。
 
-### v1.3.0 本次更新
+### v1.3.1 本次更新
+
+- YAML多行字段右键“删除字段…”，直接预览完整删除，应用只改草稿，保存才写入原文件。
+- 保留标题行注释、独立注释、其他字段的原文与BOM/换行；删除后定位相邻字段，最后一个字段删除后仍是明确的空映射。
+- 连续删除和一次撤销保留完整段落；继续保护后续输入、迟到结果、文件切换、保存重试与外部冲突副本。
+- 修复“定位源码”关闭弹窗后的焦点衔接，回到正文可直接输入。保留全部功能、风格与正常动效。
+
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v131-block-field-delete-flow.jpg" width="920" alt="v1.3.1真实安装版：YAML多行字段完整删除差异预览">
+
+### v1.3.0 基础功能与全界面收尾
 
 - 历史入口交给当前文件的编辑器，侧栏可直接比较所选版本；取消保留草稿，恢复后立即继续输入或撤销。
 - 结构化编辑器直接显示“历史”；差异与恢复操作固定在弹窗底部，长内容在小窗口内滚动。
@@ -699,7 +709,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 保留独立注释、其他字段和格式，结束行注释留为独立注释；删除后定位到相邻字段或空表，唯一根字段删除后仍是合法空文档。
 - 连续删除使用当前草稿，一次撤销／重做、显式保存；保护后续输入、迟到结果、旧差异、切换文件、保存失败重试和外部冲突完整副本。复杂集合继续提供局部源码入口。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1245-block-field-delete-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 多行字段删除差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1245-block-field-delete-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 多行字段删除差异预览">
 
 ### v1.2.44 TOML 多行数组项删除
 
@@ -707,7 +717,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 删除完整目标及必要逗号，保留其他项的原文字、格式和注释；目标行尾注释保留为独立注释，不拼接到相邻值。支持首项、末项、唯一项和连续删除，结果定位到相邻项或空数组。
 - 一次撤销／重做、显式保存，继续保护后续输入、迟到结果、旧差异、切换文件、保存失败重试与外部冲突完整副本。复杂结构和共享行注释提供局部源码入口，原文仍保留。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1244-block-array-delete-flow.jpg" width="920" alt="v1.3.0 真实安装版：多行数组项删除差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1244-block-array-delete-flow.jpg" width="920" alt="v1.3.1 真实安装版：多行数组项删除差异预览">
 
 ### v1.2.43 TOML 多行字段复制排序
 
@@ -715,7 +725,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 保留原三引号形式、段落、转义与行尾注释；独立注释和空行保持原位，BOM、换行及其他字段拼写不变，按新解析范围选中结果。重名或局部错误会保留名称，方便直接修改。
 - 修改只进入草稿，一次撤销／重做，明确保存才写盘；继续保护后续输入、迟到结果、旧差异、文件切换、保存失败重试及外部冲突完整副本。复杂结构和含混归属提供局部源码入口，原文保留。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1243-block-fields-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 多行字段复制排序差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1243-block-fields-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 多行字段复制排序差异预览">
 
 ### v1.2.42 TOML 多行数组项复制排序
 
@@ -723,7 +733,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 复制保留原文字形式、段落、转义及明确附着的行尾注释；排序保留逗号所在位置，独立注释与空行保持原位。保留 BOM、换行和其他值的原始拼写，准确选中新项。
 - 修改只进入草稿，支持一次撤销／重做，明确保存才写盘；继续保护后续输入、旧差异、切换文件、保存失败重试和外部冲突完整副本。无法可靠接续的复杂结构提供局部源码入口，原文保留。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1242-block-arrays-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 多行数组项复制排序差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1242-block-arrays-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 多行数组项复制排序差异预览">
 
 ### v1.2.41 YAML 多行字段复制排序
 
@@ -731,7 +741,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 复制完整正文、块形式与行尾注释，独立注释保持原位；保留段落、缩进、BOM 和换行格式，并准确选中新字段。重名会保留输入，方便直接修改。
 - 修改只进入草稿，一次撤销／重做，明确保存才写盘；继续保护后续输入、旧差异、文件切换、保存失败重试和外部冲突完整副本。无法可靠接续的结构提供局部源码入口，原文保留。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1241-block-fields-flow.jpg" width="920" alt="v1.3.0 真实安装版：YAML 多行字段复制排序差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1241-block-fields-flow.jpg" width="920" alt="v1.3.1 真实安装版：YAML 多行字段复制排序差异预览">
 
 ### v1.2.40 YAML 多行条目复制排序
 
@@ -739,7 +749,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 完整处理块标记、正文与行尾注释，独立注释保留原位；保留段落、缩进、BOM及换行格式，移动后继续选中对应条目。普通相邻值仍可操作。
 - 修改只应用到草稿，一次撤销／重做，点击保存才写回；继续保护后续输入、旧差异、文件切换、保存失败重试与外部冲突完整副本。复杂集合、引用、含混注释及无法保持原值的末尾空块保留局部源码入口，原文不变。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1240-block-operations-flow.jpg" width="920" alt="v1.3.0 真实安装版：YAML 多行条目复制与排序差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1240-block-operations-flow.jpg" width="920" alt="v1.3.1 真实安装版：YAML 多行条目复制与排序差异预览">
 
 ### v1.2.39 TOML 数组多行正文编辑
 
@@ -747,7 +757,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 保留文字形式、数组其他项、逗号、注释、BOM与换行格式；无变化时精确保留原文。普通相邻值仍能编辑，复杂数组保留源码入口。
 - 沿现有差异弹窗应用到草稿，一次撤销／重做，点击保存才写回；继续保护读取失败重试、后续输入、文件切换、保存重试及外部冲突完整副本。保留全部风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1239-array-multiline-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 数组多行正文差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1239-array-multiline-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 数组多行正文差异预览">
 
 ### v1.2.38 YAML 清单正文编辑
 
@@ -755,7 +765,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 保留条目形式、相邻内容、注释、BOM 与换行格式；无变化时保留原文。先看差异，再应用到草稿，一次撤销／重做，点击保存才写回文件。
 - 读取失败时禁用空白输入，重试成功后再编辑；继续保护后续输入、文件切换、保存重试和外部冲突完整副本。保留全部风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1238-sequence-block-flow.jpg" width="920" alt="v1.3.0 真实安装版：YAML 清单正文差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1238-sequence-block-flow.jpg" width="920" alt="v1.3.1 真实安装版：YAML 清单正文差异预览">
 
 ### v1.2.37 TOML 多行正文编辑
 
@@ -763,7 +773,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 保留多行字符串形式、注释、其他字段及换行格式；无变化时保留原文。先看差异，再应用到草稿，一次撤销／重做，点击保存才写回文件。
 - 补齐预填失败时的输入保护，继续保护后续输入、切换文件、保存失败重试及外部冲突完整副本。保留现有三单引号、日期、数组项等编辑方式，保留全部风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1237-basic-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 多行正文差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1237-basic-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 多行正文差异预览">
 
 ### v1.2.36 YAML 段落文字编辑
 
@@ -773,7 +783,7 @@ YAML `>`、`>-`、`>+` 段落字段现在可右键“修改值…”，直接编
 
 继续保护未保存内容、迟到结果、旧差异、文件切换、保存失败重试和外部冲突完整副本。保留全部既有功能、风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1236-folded-flow.jpg" width="920" alt="v1.3.0 真实安装版：YAML 段落文字差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1236-folded-flow.jpg" width="920" alt="v1.3.1 真实安装版：YAML 段落文字差异预览">
 
 ### v1.2.35 TOML 多行文字编辑
 
@@ -783,7 +793,7 @@ TOML 三单引号多行文字字段现在可右键“修改值…”，直接编
 
 继续保护未保存内容、迟到结果、旧差异、文件切换、保存失败重试和外部冲突完整副本。保留全部既有功能、风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1235-literal-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 多行文字差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1235-literal-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 多行文字差异预览">
 
 ### v1.2.34 YAML 多行文本编辑
 
@@ -793,7 +803,7 @@ TOML 三单引号多行文字字段现在可右键“修改值…”，直接编
 
 继续保护未保存内容、延迟预填与修改结果、后续输入、旧差异、文件切换、保存失败重试与外部冲突完整副本。错误时保留输入，保留全部既有功能、风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1234-literal-flow.jpg" width="920" alt="v1.3.0 真实安装版：YAML 多行文字差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1234-literal-flow.jpg" width="920" alt="v1.3.1 真实安装版：YAML 多行文字差异预览">
 
 ### v1.2.33 TOML 日期时间编辑
 
@@ -803,7 +813,7 @@ TOML 三单引号多行文字字段现在可右键“修改值…”，直接编
 
 继续保护未保存内容、后续输入、延迟结果、旧差异、文件切换、保存失败重试与外部冲突完整副本。保留全部既有功能、风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1233-datetime-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 日期时间差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1233-datetime-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 日期时间差异预览">
 
 ### v1.2.32 TOML 字段顺序调整
 
@@ -813,7 +823,7 @@ TOML 三单引号多行文字字段现在可右键“修改值…”，直接编
 
 继续保护未保存内容、后续输入、延迟结果、旧差异、文件切换、保存失败重试与外部冲突完整副本。保留全部既有功能、风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1232-order-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 字段上移与差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1232-order-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 字段上移与差异预览">
 
 ### v1.2.31 YAML 字段顺序调整
 
@@ -823,127 +833,127 @@ TOML 三单引号多行文字字段现在可右键“修改值…”，直接编
 
 保护未保存内容、后续输入、延迟结果、旧差异、文件切换、保存失败重试及外部冲突完整副本。保留全部既有功能、风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1231-order-flow.jpg" width="920" alt="v1.3.0 真实安装版：YAML 字段上移与差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1231-order-flow.jpg" width="920" alt="v1.3.1 真实安装版：YAML 字段上移与差异预览">
 
 ### v1.2.30 TOML 字段复制
 
 TOML 字段右键“复制为新字段…”，只填写新名称。默认选中同级不重名的副本名，值来自当前草稿，不必重新输入；直接预览后应用，选择并高亮新字段，接着修改，一次撤销／重做，显式保存。新字段紧跟原字段，保留所属分区、原值写法、等号空白、缩进、行尾注释、独立注释、BOM 与换行。复杂内容局部说明并定位源码，名称与草稿保留。继续保护后续输入、延迟结果、旧预览、文件切换、失败重试与完整冲突副本，保留全部功能、风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1230-field-copy-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 字段复制与差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1230-field-copy-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 字段复制与差异预览">
 
 ### v1.2.29 YAML 字段复制
 
 YAML 字段右键“复制为新字段…”，只填写新名称。默认选中同级不重名的副本名，值来自当前草稿，不必重新输入；直接预览后应用，选择并高亮新字段，接着修改，一次撤销／重做，显式保存。新字段紧跟原字段，保留原值写法、冒号空白、缩进、行尾注释、独立注释、BOM 与换行。复杂内容局部说明并定位源码，名称与草稿保留。继续保护后续输入、延迟结果、旧预览、文件切换、失败重试与完整冲突副本，保留全部功能、风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1229-field-copy-flow.jpg" width="920" alt="v1.3.0 真实安装版：YAML 字段复制与差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1229-field-copy-flow.jpg" width="920" alt="v1.3.1 真实安装版：YAML 字段复制与差异预览">
 
 ### v1.2.28 TOML 数组项上移／下移
 
 TOML 数组条目右键“上移／下移”直接预览相邻换位，首末禁用无效方向。应用后保留展开、选择与高亮，继续修改或复制；一次撤销／重做，显式保存，不填写索引或路径，不增加常驻按钮。保留原文字面量、日期时间、其他分区、BOM、换行和逗号位置。多行数组行尾注释随值移动，最后一项无逗号也保持合法；独立注释留在原位，复杂结构局部说明并定位源码。保护未保存内容、延迟结果、旧差异、来源切换、失败重试和完整冲突副本，保留全部现有功能、风格及正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1228-order-flow.jpg" width="920" alt="v1.3.0 真实安装版：TOML 数组项相邻换位与差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1228-order-flow.jpg" width="920" alt="v1.3.1 真实安装版：TOML 数组项相邻换位与差异预览">
 
 ### v1.2.27 YAML 清单项上移／下移
 
 YAML 列表项右键“上移／下移”直接预览相邻换位，首末位置禁用无效方向。应用后保持选择与提纲高亮，继续修改或复制；一次撤销／重做，显式保存才写盘，不填写索引或路径，不增加空表单和常驻箭头。保留原文字面量、其他内容、BOM 和换行；块列表行尾注释随项移动，明确分隔的独立注释保留，复杂内容局部说明并定位源码。保护未保存内容、延迟结果、旧差异、来源切换、失败重试和外部冲突副本。提纲右键菜单支持 Esc 关闭，保留全部功能、风格与正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1227-order-flow.jpg" width="920" alt="v1.3.0 真实安装版：YAML 清单项相邻换位与差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1227-order-flow.jpg" width="920" alt="v1.3.1 真实安装版：YAML 清单项相邻换位与差异预览">
 
 ### v1.2.26 YAML／TOML 清单单项复制
 
 清单项右键“复制为新项…”直接进入差异预览，确认后选中新项，继续修改；可独立撤销／重做，显式保存才写盘，不填写索引或路径，不增加空表单。保留原文字面量、其他项、独立注释、BOM 和换行，复杂内容局部说明并定位源码，定位后可直接输入。保护未保存内容、延迟结果、旧差异、来源切换、保存失败重试与外部冲突副本。资料库“查看文件关系”归入文档操作菜单，避免浮动把手遮住提纲，关闭后保持收起；保留全部功能、风格及正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1226-yaml-copy.jpg" width="920" alt="v1.3.0 真实安装版：YAML 清单项直接复制与差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1226-yaml-copy.jpg" width="920" alt="v1.3.1 真实安装版：YAML 清单项直接复制与差异预览">
 
 ### v1.2.25 TOML 数组项直接改值
 
 TOML 数组项右键“修改值…”，自动带入原文字面量；差异显示实际类型，应用后保留展开并选中新值，可独立撤销／重做，显式保存才写盘。支持普通单行文本、数字、布尔、日期时间及范围明确的多行数组，只替换所选项，保留其他项、逗号、注释、表归属、BOM 和换行。无效输入留在弹窗，源码定位后可返回继续修正；保护后续输入、旧结果、旧差异、来源切换、保存失败重试和外部冲突副本。保留全部功能、风格及正常动效，不增加常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1225-toml-edit.jpg" width="920" alt="v1.3.0 真实安装版：TOML 数组项直接改值差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1225-toml-edit.jpg" width="920" alt="v1.3.1 真实安装版：TOML 数组项直接改值差异预览">
 
 ### v1.2.24 TOML 数组项新增与删除
 
 TOML 数组按需展开，显示序号与短值，点击定位；右键追加、项后新增和删除，只在必要弹窗输入值，差异显示实际类型。支持普通单行文本、数字、布尔、日期时间与范围明确的多行数组，保留其他原文、字面量、注释、逗号、表归属、BOM 和换行，删除末项仍是空数组。修改、撤销和源码编辑后保留展开状态并刷新条目；保护旧读取、后续输入、来源切换、失败重试和外部冲突副本。差异确认只应用到草稿，显式保存才写盘；复杂内容局部说明与源码定位，输入仍保留。保留全部功能、风格和正常动效，无常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1224-toml-add.jpg" width="920" alt="v1.3.0 真实安装版：TOML 数组项新增差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1224-toml-add.jpg" width="920" alt="v1.3.1 真实安装版：TOML 数组项新增差异预览">
 
 ### v1.2.23 YAML 列表项新增与删除
 
 YAML 提纲列表右键“追加列表项…”，某项右键“在此项后新增…”，自动接续当前列表，只输入值，预览显示实际类型。“删除列表项…”直接预览，空列表可增加首项，删除末项仍保留 `[]`。支持普通单行文本、数字、布尔及 null 的块式／流式列表，保留顺序、其他字面量、独立注释、BOM 与换行；引用、嵌套集合及无法确认的缩进／注释归属局部说明并定位源码。应用只改草稿，可独立撤销／重做，显式保存才写盘；错误保留输入，保护后续输入、来源切换、失败重试和外部冲突副本。保留全部功能、风格与正常动效，无常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1223-yaml-add.jpg" width="920" alt="v1.3.0 真实安装版：YAML 列表新增差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1223-yaml-add.jpg" width="920" alt="v1.3.1 真实安装版：YAML 列表新增差异预览">
 
 ### v1.2.22 TOML 字段新增与删除
 
 TOML 提纲普通表／字段右键“新增字段…”，自动使用当前表，只填名称和值；名称中的点保持单个键，预览显示实际类型。空白提纲右键可从根部新增。字段右键“删除字段…”直接预览，支持单段键与单行完整值，包括日期、数组、内联表；保留其他字段、表头、独立注释与相邻表。多行、点键、隐式表及数组表整理提供局部说明和源码定位。应用只改草稿，可独立撤销／重做，显式保存才写盘；输入错误保留名称和值，保护后续输入、文件切换、失败重试和外部冲突副本。保留全部功能、风格与正常动效，无常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1222-toml-add.jpg" width="920" alt="v1.3.0 真实安装版：TOML 新增字段差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1222-toml-add.jpg" width="920" alt="v1.3.1 真实安装版：TOML 新增字段差异预览">
 
 ### v1.2.21 YAML 字段新增与删除
 
 YAML 提纲的映射／字段右键“新增字段…”，自动使用当前映射，只输入名称和值；名称保持字符串键，差异标题显示值的实际类型。空文档可从提纲空白处右键新增，支持空映射与归属明确的块式／流式映射。字段右键“删除字段…”直接进入差异预览，先支持单行简单值，保留其他字段和注释，最后一项删除后仍是空映射。锚点依赖、多行值等复杂内容局部解释并定位源码。应用仅改草稿，可独立撤销／重做，显式保存才写盘；错误保留名称和值，继续保护后续输入、来源切换、保存失败重试与外部冲突副本。保留全部功能、风格和正常动效，无新增常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1221-yaml-add.jpg" width="920" alt="v1.3.0 真实安装版：YAML 新增字段差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1221-yaml-add.jpg" width="920" alt="v1.3.1 真实安装版：YAML 新增字段差异预览">
 
 ### v1.2.20 TOML 字段重命名
 
 TOML“分区与问题”字段右键“重命名字段…”，预填名称，弹窗输入、差异预览后应用到草稿。支持根部和已有普通表内的单段普通／引号键，包括数组、内联表及日期值的外层字段名。只替换准确键范围，保留值、注释、日期、数字原文、BOM、换行与表归属；保留原有引号风格，必要时使用合法引号键，名称中的点保持单个字段。同级重名与表路径冲突局部提示并保留输入；点键、表头与数组表等提供源码定位。独立撤销、显式保存、失败重试和外部冲突副本继续保护未保存内容，保留全部功能、主题和正常动效，无新增常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1220-toml-edit.jpg" width="920" alt="v1.3.0 真实安装版：TOML 字段重命名差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1220-toml-edit.jpg" width="920" alt="v1.3.1 真实安装版：TOML 字段重命名差异预览">
 
 ### v1.2.19 YAML 字段重命名
 
 YAML 提纲字段右键“重命名字段…”，预填当前名称，弹窗输入、差异预览后应用到草稿。支持块式和流式映射中的普通字符串键，只修改准确的键原文，保留值、注释、锚点与别名绑定、数字原文、BOM 和换行；保留引号风格，true、null 或数字等名称保持字符串类型。连续改名接续最新路径及定位。同级重名、复杂键或归属不明确时局部提示，保留输入并提供源码定位。独立撤销、显式保存、失败重试和外部冲突副本继续保护未保存内容，保留全部功能、主题和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1219-yaml-edit.jpg" width="920" alt="v1.3.0 真实安装版：YAML 字段重命名差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1219-yaml-edit.jpg" width="920" alt="v1.3.1 真实安装版：YAML 字段重命名差异预览">
 
 ### v1.2.18 XML 元素创建与重命名
 
 XML 元素提纲右键“添加子元素…”或“重命名元素…”，必要弹窗输入，预览后应用到草稿。新子元素支持空容器、自闭合容器、清晰的子元素布局及普通文字转义；重命名只修改当前元素开始/结束标签的本地名称，保留原前缀、属性、内部文字、注释、CDATA 和其他原文。应用后选中并定位元素，复杂内容局部提示、保留输入并提供源码定位。沿独立撤销、准确保存状态、保存失败重试和外部冲突副本保护未保存内容，不增加常驻表单，保留全部功能、主题和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1218-xml-edit.jpg" width="920" alt="v1.3.0 真实安装版：XML 子元素创建差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1218-xml-edit.jpg" width="920" alt="v1.3.1 真实安装版：XML 子元素创建差异预览">
 
 ### v1.2.17 准确保存状态
 
 JSON/JSONC、YAML、TOML、XML 和 SVG 源码视图在撤销、重做、手动恢复或结构化操作回到已保存原文后，正确更新现有状态栏、标签、保存按钮与关闭确认。基线来自真实读取或保存回执，精确比较源码及所属文件、签名与编码；不重新序列化文件，也不在每次输入时读盘。保存期间后续输入、文件切换、失败重试和冲突继续保护草稿，写入未完成时回到旧基线仍保护关闭；已检测到外部修改或无法确认基线时保守保留未保存状态。不增加页面或常驻表单，全部现有功能、主题和正常动效保留。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1217-savepoint-clean.jpg" width="920" alt="v1.3.0 真实安装版：XML 撤销结构操作后恢复准确的已保存状态">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1217-savepoint-clean.jpg" width="920" alt="v1.3.1 真实安装版：XML 撤销结构操作后恢复准确的已保存状态">
 
 ### v1.2.16 XML 属性新增与移除
 
 XML 元素右键“修改属性…”，在已有弹窗新增普通属性或移除所选属性，无属性元素也可使用。名称和值局部输入与纠正，预览后应用到草稿，保留其他属性顺序、引号、缩进、BOM/换行及其他节点。命名空间声明与前缀属性的增删给出局部提示和源码定位；原有属性值编辑、独立撤销、显式保存、失败重试和冲突副本保留，不增加常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1216-xml-edit.jpg" width="920" alt="v1.3.0 真实安装版：XML 属性新增差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1216-xml-edit.jpg" width="920" alt="v1.3.1 真实安装版：XML 属性新增差异预览">
 
 ### v1.2.15 XML 元素删除
 
 XML 的“元素与问题”提纲右键“删除元素…”，预览后删除完整子树及准确空白，保留相邻原文。支持首尾、唯一子元素、空元素、自闭合元素及连续删除；删除后定位到相邻元素或父元素，同名元素路径刷新。父级混合正文或外部注释归属不明时，局部提示并定位源码；沿已有独立撤销、草稿接续、显式保存、失败重试与冲突副本保护内容，不增加常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1215-xml-edit.jpg" width="920" alt="v1.3.0 真实安装版：XML 完整元素删除差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1215-xml-edit.jpg" width="920" alt="v1.3.1 真实安装版：XML 完整元素删除差异预览">
 
 ### v1.2.14 XML 同级元素排序
 
 XML“元素与问题”提纲右键“上移 / 下移”，沿已有差异预览调整同一父级内相邻元素顺序；保留元素原文、内部属性、命名空间、文字、CDATA、注释和处理指令，移动后定位跟随原元素。首项和末项禁用对应方向；混合正文或外部注释归属不明确时局部提示并定位源码。未保存草稿、独立撤销、显式保存、失败重试与冲突副本沿原流程接续，不增加常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1214-xml-edit.jpg" width="920" alt="v1.3.0 真实安装版：XML 同级元素排序差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1214-xml-edit.jpg" width="920" alt="v1.3.1 真实安装版：XML 同级元素排序差异预览">
 
 ### v1.2.13 XML 元素复制
 
 XML 的“元素与问题”提纲右键“复制元素”，预览后在原元素后插入完整副本；保留属性、命名空间、内部文字、CDATA、注释和换行缩进。支持同名元素、空元素、自闭合元素与连续复制，不自动修改业务标识符。父级混合正文或外部注释归属不明时，局部提示并定位源码；沿已有独立撤销、草稿接续、显式保存、失败重试与冲突副本保护内容，不增加常驻表单。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1213-xml-edit.jpg" width="920" alt="v1.3.0 真实安装版：XML 完整元素复制差异预览">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1213-xml-edit.jpg" width="920" alt="v1.3.1 真实安装版：XML 完整元素复制差异预览">
 
 ### v1.2.12 XML 文字编辑
 
 打开 XML 的“元素与问题”，在结构提纲中右键元素选择“修改文字…”。弹窗预填可读原文，预览后只替换当前连续文字，保留其他节点、属性、注释和排版。支持普通文字、CDATA 及成对空元素，特殊符号自动转义，CDATA 结束符自动拆分并可继续编辑；复杂混合内容局部定位源码。沿已有独立撤销、显式保存、失败重试及冲突副本接续未保存内容，保留全部功能、风格和正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1212-xml-edit.jpg" width="920" alt="v1.3.0 真实安装版：右键修改 XML 文字，预填并选中可读原文">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1212-xml-edit.jpg" width="920" alt="v1.3.1 真实安装版：右键修改 XML 文字，预填并选中可读原文">
 
 ### v1.2.11 XML 属性编辑
 
 XML 元素右键“修改属性…”选择已有属性并编辑可读值，特殊符号按原引号转义，保留其他属性、注释、排版与换行。支持前缀属性、同名元素、空值和多行；错误在弹窗内纠正，受限内容保留源码入口。沿现有差异预览、独立撤销、显式保存与冲突副本保护未保存内容，不增加常驻表单。同时修正 YAML 提纲的长数字、负数和科学计数原文显示。保留全部功能、风格及正常动效。
 
-<img src="docs/evidence/v1-3-0-candidate-lifecycle/installed-v1211-xml-edit.jpg" width="920" alt="v1.3.0 真实安装版：从 XML 元素右键修改已有属性，预填可读原值">
+<img src="docs/evidence/v1-3-1-candidate-lifecycle/installed-v1211-xml-edit.jpg" width="920" alt="v1.3.1 真实安装版：从 XML 元素右键修改已有属性，预填可读原值">
 
 ### v1.2.10 YAML 简单值编辑
 
