@@ -1,6 +1,6 @@
 # 基础功能深化路线：1.2.39—1.2.40
 
-状态：本轮 **2/2 版已正式发布**；1.2.39 TOML数组多行正文与1.2.40 YAML多行条目复制排序均已交付。[发布记录](V1_2_40_Unsigned_Community_Release_Audit_2026-10-26.md)。[后续1.2.41—1.2.42](Foundation_Deepening_Roadmap_1_2_41_to_1_2_42_2026-10-26.md) 已交付 **2/2 版**；[43—44轮](Foundation_Deepening_Roadmap_1_2_43_to_1_2_44_2026-10-27.md) 已交付 **2/2 版**；[当前45—46轮](Foundation_Deepening_Roadmap_1_2_45_to_1_2_46_2026-10-27.md) 为 **0/2 版规划**，尚未实施。以下保留本轮实施过程。
+状态：本轮 **2/2 版已正式发布**；1.2.39 TOML数组多行正文与1.2.40 YAML多行条目复制排序均已交付。[发布记录](V1_2_40_Unsigned_Community_Release_Audit_2026-10-26.md)。[后续1.2.41—1.2.42](Foundation_Deepening_Roadmap_1_2_41_to_1_2_42_2026-10-26.md) 已交付 **2/2 版**；[43—44轮](Foundation_Deepening_Roadmap_1_2_43_to_1_2_44_2026-10-27.md) 已交付 **2/2 版**；[当前45—46轮](Foundation_Deepening_Roadmap_1_2_45_to_1_2_46_2026-10-27.md) 已交付 **1/2 版**；TOML多行字段删除已发布，下一版YAML多行字段删除仍为规划。以下保留历史过程。
 
 ## 本轮规划时的基础与断点
 
