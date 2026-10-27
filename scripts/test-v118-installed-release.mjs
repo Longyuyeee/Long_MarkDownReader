@@ -105,7 +105,7 @@ test('all historical installed entry guards accept v118 without removing their t
     // report/version assertions above remain fixed to 1.1.8.
     const current = JSON.parse(fs.readFileSync('package.json','utf8')).version
     assert.equal(workflow.on.workflow_dispatch.inputs.current_version.default, current)
-    assert.equal(workflow.on.workflow_dispatch.inputs.previous_version.default, (current === '1.2.0' ? '1.1.37' : current.split('.').slice(0,2).join('.') + '.' + (Number(current.split('.')[2]) - 1)))
+    assert.equal(workflow.on.workflow_dispatch.inputs.previous_version.default, (current === '1.3.0' ? '1.2.45' : current === '1.2.0' ? '1.1.37' : current.split('.').slice(0,2).join('.') + '.' + (Number(current.split('.')[2]) - 1)))
     if (file.includes('installer-review')) {
       const diagnostics = workflow.jobs.review.steps.find(step => step.name === 'Retain original build reports separately from installer bytes')
       assert.equal(diagnostics.if, 'always()')

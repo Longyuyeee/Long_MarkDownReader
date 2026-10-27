@@ -103,7 +103,7 @@
     </section>
         </n-popover>
         <WorkspaceHelp v-else label="网页预览说明" text="预览当前草稿，不会保存文件；脚本、嵌入页面、表单提交和外部资源不会运行或加载。" />
-        <n-button v-if="format?.id === 'plain-text' && !isExternal" size="small" quaternary :disabled="loading || saving || readOnly || rangeMode" @click="showHistory = true">历史与差异</n-button>
+        <n-button v-if="format?.id === 'plain-text' && !isExternal" size="small" quaternary :disabled="loading || saving || readOnly || rangeMode" @click="openTextHistory()">历史与差异</n-button>
       </div>
     </header>
 
@@ -137,7 +137,7 @@
 
     <TextConflictDialog v-if="conflict" :path="conflict.path" :library-root="conflict.root" :draft="conflict.draft" :format-id="conflict.format" :read-encoding="conflict.encoding" :save-policy="conflict.policy" :is-current="conflict.current" @close="conflict = null" @reload="useConflictDisk" @copy="finishTextConflictCopy" />
     <DocumentFindReplace ref="documentFind" :context-key="store.libraryPath+':'+textPath+':'+isExternal+':'+viewMode" :revision="store.tabs.find(t=>t.path===textPath)?.content" :capture="captureFindDocument" :is-current="isFindCurrent" :apply-change="applyFindChange" :reveal="revealFindMatch" />
-    <TextHistoryDialog v-if="showHistory" :key="textPath" :library-root="store.libraryPath" :path="textPath" :draft="historyDraft" :max-count="store.maxHistoryCount" @close="showHistory = false" @replace="applyHistoryDraft" @copy="openHistoryCopy" />
+    <TextHistoryDialog v-if="showHistory" :key="textPath" :library-root="store.libraryPath" :path="textPath" :draft="historyDraft" :max-count="store.maxHistoryCount" :initial-timestamp="historyTimestamp" @close="showHistory = false" @replace="applyHistoryDraft" @copy="openHistoryCopy" />
     <footer class="status-bar">
       <div v-if="viewMode === 'source'">
         <span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span>
@@ -276,6 +276,8 @@ const isHtmlDocument = computed(() => /\.html?$/i.test(textPath.value))
 const currentTab = computed(() => store.tabs.find(tab => tab.path === textPath.value))
 const loading = ref(true)
 const showHistory = ref(false)
+const historyTimestamp = ref<number>()
+const openTextHistory = (timestamp?: number) => { historyTimestamp.value = timestamp; showHistory.value = true }
 const historyDraft = computed(() => store.tabs.find(tab => tab.path === textPath.value)?.content || '')
 const applyHistoryDraft = (content: string, partial = false) => {
   if (!editor || readOnly.value) return
@@ -841,7 +843,7 @@ watch([textPath, isExternal], () => {
 })
 
 useContextCommands(() => JSON.stringify([store.libraryPath,textPath.value,isExternal.value,loadGeneration]), () => !loading.value && !saving.value && !loadError.value && editor ? [
-  ...(!isExternal.value && format.value?.id === 'plain-text' ? [{id:'text-history',title:'历史与差异…',description:'比较当前文本草稿与保存历史',keywords:'历史 版本 差异 恢复 history',run:()=>{showHistory.value=true}}] : []),
+  ...(!isExternal.value && format.value?.id === 'plain-text' ? [{id:'text-history',title:'历史与差异…',description:'比较当前文本草稿与保存历史',keywords:'历史 版本 差异 恢复 history',run:(input?: {historyTimestamp?: number})=>openTextHistory(input?.historyTimestamp)}] : []),
   ...(!readOnly.value ? [{id:'text-save',title:'保存文件',description:'保存当前文本草稿',keywords:'保存 save',run:()=>save()}] : []),
 ] : [])
 onMounted(async () => {

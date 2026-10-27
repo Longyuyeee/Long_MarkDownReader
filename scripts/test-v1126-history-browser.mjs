@@ -9,7 +9,7 @@ try{
   page=await browser.newPage({viewport:{width:1280,height:800}});page.on('pageerror',e=>errors.push(String(e)))
   await page.goto(base+'/scripts/fixtures/v1120-structured-browser.html?mode='+mode);const input=page.locator('.cm-content[contenteditable="true"]');await input.waitFor()
   const write=async text=>{await input.click();await page.keyboard.press('Control+a');await page.keyboard.insertText(text)}
-  const open=async()=>{await page.getByRole('button',{name:'文档操作',exact:true}).click();await page.getByText('历史与差异…',{exact:true}).click();await page.locator('.history-version-button').first().waitFor()}
+  const open=async()=>{await page.getByTestId('structured-history').click();await page.locator('.history-version-button').first().waitFor()}
   const compare=async()=>{await open();await page.locator('.history-version-button').first().click();await page.locator('.history-diff-dialog').waitFor()}
   const original=await page.evaluate(()=>window.structuredAudit.sources[window.structuredAudit.mode]),draft=original.replace('原稿','我的草稿')
   await write(draft);await compare();await page.locator('.history-diff-dialog').getByRole('button',{name:'取消',exact:true}).click();await page.locator('.text-history-dialog').getByRole('button',{name:'关闭',exact:true}).click();assert.equal(await page.evaluate(()=>window.structuredAudit.sourceText()),draft)

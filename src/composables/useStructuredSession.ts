@@ -39,7 +39,7 @@ const key = (owner: Pick<Owner, 'path'>) => fileStylePathKey(owner.path)
 export function useStructuredSession(options: Options) {
   let disposed = false, bound: Owner | undefined
   const conflict = shallowRef<Owner>()
-  const history = shallowRef<Owner>()
+  const history = shallowRef<Owner & { historyTimestamp?: number }>()
   const historyDraft = computed(() => history.value?.tab?.content ?? history.value?.source ?? '')
   const preview = shallowRef<{ owner: Owner; title: string; target: string; anchor: number; applied?: () => void }>()
   const previewError = shallowRef('')
@@ -222,9 +222,10 @@ export function useStructuredSession(options: Options) {
     options.message.success('已应用到草稿，可撤销；保存后才写入文件')
   }
   const cancelChange = () => { preview.value = undefined; previewError.value = '' }
-  const openHistory = () => {
+  const openHistory = (historyTimestamp?: number) => {
     if (!hasDocument() || options.loading.value || options.saving.value || options.external()) return
-    history.value = capture()
+    const owner = capture()
+    if (owner) history.value = { ...owner, historyTimestamp }
   }
   const closeHistory = () => { history.value = undefined }
   const historyCurrent = () => owns(history.value) && history.value?.signature === capture()?.signature
@@ -242,6 +243,7 @@ export function useStructuredSession(options: Options) {
     owner.editor.dispatch({ changes: { from, to: before.length - suffix, insert: target.slice(from, target.length - suffix) }, annotations: isolateHistory.of('full') })
     refreshDirty()
     closeHistory()
+    void nextTick(() => { if (owns(owner)) owner.editor.focus() })
     options.message.success('已恢复到草稿，可一次撤销；保存后才写入文件')
   }
   const keydown = (event: KeyboardEvent) => {

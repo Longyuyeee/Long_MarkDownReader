@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 2,
+  "kind": "longedit.table",
+  "data": {
+    "columns": [
+      {
+        "id": "task",
+        "name": "任务",
+        "type": "text"
+      },
+      {
+        "id": "state",
+        "name": "状态",
+        "type": "text"
+      },
+      {
+        "id": "code",
+        "name": "编号",
+        "type": "text"
+      },
+      {
+        "id": "scope",
+        "name": "范围",
+        "type": "text"
+      }
+    ],
+    "rows": [
+      {
+        "id": "r-a",
+        "values": {
+          "code": "00077",
+          "scope": "可见",
+          "state": "待处理",
+          "task": "复用\r\n记录"
+        }
+      },
+      {
+        "id": "row-33ac9151-19fb-4c2d-ac8f-98bdc67a4a5b",
+        "values": {
+          "code": "00999",
+          "scope": "可见",
+          "state": "待处理",
+          "task": "复用\r\n记录"
+        }
+      },
+      {
+        "id": "r-hidden",
+        "values": {
+          "code": "9007199254740993123",
+          "scope": "隐藏",
+          "state": "隐藏",
+          "task": "外部保留"
+        }
+      },
+      {
+        "id": "r-c",
+        "values": {
+          "code": " 00002 ",
+          "scope": "可见",
+          "state": "待处理",
+          "task": "已有备注"
+        }
+      },
+      {
+        "id": "r-d",
+        "values": {
+          "code": "=SUM(A1:A2)",
+          "scope": "其他",
+          "state": "已完成",
+          "task": "保持"
+        }
+      }
+    ]
+  },
+  "views": [
+    {
+      "id": "grid",
+      "name": "表格",
+      "kind": "grid",
+      "config": {
+        "filter": "",
+        "sort": null,
+        "frozenColumns": 0,
+        "columnWidths": {
+          "code": 220,
+          "scope": 140,
+          "state": 140,
+          "task": 200
+        },
+        "groupBy": "task",
+        "titleColumn": "task",
+        "cardColumns": [],
+        "categoryColumn": "task",
+        "valueColumn": null,
+        "aggregation": "count",
+        "chartType": "bar",
+        "seriesColumn": null,
+        "nullStrategy": "skip",
+        "showLegend": true,
+        "dashboardItems": []
+      }
+    }
+  ],
+  "activeView": "grid"
+}

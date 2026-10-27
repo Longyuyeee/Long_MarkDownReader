@@ -9,10 +9,10 @@ import {jsonPathToPointer} from '../src/utils/structuredPaths.ts'
 const box=value=>({value}),deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no});return{promise,resolve,reject}}
 function harness(){
  const analysis=deferred(),write=deferred(),confirmation=deferred(),calls=[],disposers=[],errors=[];let doc='{"value":"保存的内容"}',pending=0,loads=0
- const editor={state:{get doc(){return Text.of(doc.split('\n'))}},dispatch:change=>{const c=change.changes;doc=doc.slice(0,c.from)+c.insert+doc.slice(c.to);editor.lastChange=change}}
+ const editor={focusCount:0,focus(){editor.focusCount++},state:{get doc(){return Text.of(doc.split('\n'))}},dispatch:change=>{const c=change.changes;doc=doc.slice(0,c.from)+c.insert+doc.slice(c.to);editor.lastChange=change}}
  const opts={path:()=>opts.file,external:()=>false,format:()=> 'json',generation:()=>opts.epoch,editor:()=>editor,file:'C:/ui/A.json',epoch:1,store:{libraryPath:'C:/ui',tabs:[],addTab(tab){if(!this.tabs.some(t=>t.path===tab.path))this.tabs.push(tab)}},loading:box(false),saving:box(false),dirty:box(true),signature:box('A-1'),encoding:box('utf-8'),fileSize:box(1),modified:box(1),readOnlyReason:box(''),dialog:{},message:{info(){},success(){},warning(){},error:e=>errors.push(e)},analyze:()=>analysis.promise,clearAnalysis(){},scheduleAnalysis(){},applySnapshot:async()=>{},load:async()=>{loads++}}
  const ctx=vm.createContext({exports:{},Promise,document:{body:{inert:false}},window:{addEventListener(){},removeEventListener(){}},Element:class{},require:name=>{
-  if(name==='vue')return{shallowRef:box,computed:fn=>({get value(){return fn()}}),onMounted(){},onBeforeUnmount:fn=>disposers.push(fn)}
+  if(name==='vue')return{nextTick:fn=>Promise.resolve().then(fn),shallowRef:box,computed:fn=>({get value(){return fn()}}),onMounted(){},onBeforeUnmount:fn=>disposers.push(fn)}
   if(name==='@codemirror/commands')return{isolateHistory:{of:value=>({isolateHistory:value})}}
   if(name==='@codemirror/state')return{Text}
   if(name.includes('structuredSavepoints'))return savepoints
@@ -24,7 +24,7 @@ function harness(){
  }})
  vm.runInContext(ts.transpileModule(fs.readFileSync('src/composables/useStructuredSession.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText,ctx)
  const session=ctx.exports.useStructuredSession(opts);session.bind()
- return{session,opts,analysis,write,confirmation,calls,errors,edit:value=>{doc=value;session.refreshDirty()},text:()=>doc,pending:()=>pending,loads:()=>loads,dispose:()=>disposers.forEach(fn=>fn())}
+ return{session,opts,analysis,write,confirmation,calls,errors,focusCount:()=>editor.focusCount,edit:value=>{doc=value;session.refreshDirty()},text:()=>doc,pending:()=>pending,loads:()=>loads,dispose:()=>disposers.forEach(fn=>fn())}
 }
 
 test('trusted read baseline clears only exact source restoration and not later changed text',()=>{
@@ -78,6 +78,13 @@ test('history restore is one isolated draft transaction and rejects stale editor
  h.session.openHistory();const prior=h.text();h.edit('{"value":"后续输入"}');h.session.applyHistoryDraft('{}',false,prior);assert.equal(h.text(),'{"value":"后续输入"}')
  h.opts.readOnlyReason.value='locked';h.session.applyHistoryDraft('{}',false,h.text());assert.equal(h.text(),'{"value":"后续输入"}')
  h.opts.readOnlyReason.value='';h.opts.epoch++;h.session.applyHistoryDraft('{}',false,h.text());assert.equal(h.text(),'{"value":"后续输入"}')
+})
+
+test('history restoration focuses the current editor after the dialog closes, never a replacement editor',async()=>{
+ const h=harness();h.session.openHistory(17);assert.equal(h.session.history.value.historyTimestamp,17)
+ h.session.applyHistoryDraft('{}',false,h.text());assert.equal(h.focusCount(),0);await Promise.resolve();assert.equal(h.focusCount(),1)
+ const replaced=harness();replaced.session.openHistory(19);replaced.session.applyHistoryDraft('{}',false,replaced.text());replaced.opts.epoch++
+ await Promise.resolve();assert.equal(replaced.focusCount(),0)
 })
 test('structured save records original before write and saved snapshot after write, retaining later input',async()=>{
  const h=harness(),snap={content:'原稿',signature:'A-1'};h.opts.store.maxHistoryCount=10

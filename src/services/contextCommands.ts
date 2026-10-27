@@ -5,7 +5,7 @@ export interface ContextCommand {
   title: string
   description: string
   keywords?: string
-  run: () => unknown | Promise<unknown>
+  run: (input?: { historyTimestamp?: number }) => unknown | Promise<unknown>
 }
 interface Provider { owner: () => string; commands: () => ContextCommand[] }
 
@@ -29,7 +29,7 @@ export function createContextCommands() {
             if (!current) throw Error('当前操作暂不可用，请等待文件加载完成后重试。')
             return current
           }
-          return { ...command, check, run: async () => await check().run() }
+          return { ...command, check, run: async (input?: { historyTimestamp?: number }) => await check().run(input) }
         })
       })
     },
