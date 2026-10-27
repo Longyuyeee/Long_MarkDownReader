@@ -45,7 +45,7 @@
         <div class="outline" @contextmenu.self="openRootFieldMenu">
           <template v-for="item in filteredOutline" :key="`${item.start}:${item.path}`">
             <div class="outline-node">
-              <button :aria-current="selectedFieldStart !== undefined && (selectedFieldStart === (item.kind==='array-item' ? item.start : item.field?.start) || item.array && selectedFieldStart === item.start) ? 'true' : undefined" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
+              <button :aria-current="selectedFieldStart !== undefined && (selectedFieldStart === (item.kind==='array-item' ? item.start : item.field?.start) || (item.array || item.kind==='table') && selectedFieldStart === item.start) ? 'true' : undefined" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
                 <n-icon :component="item.array || item.kind==='array-item' ? ArrayIcon : item.kind === 'value' ? KeyIcon : TableIcon" />
                 <span><strong>{{ item.label }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
               </button>
@@ -290,7 +290,7 @@ const openRootFieldMenu=(event:MouseEvent)=>{
   nodeMenu.open(event,{path:'$',label:'文档根部',kind:'root',start:0,end:0,depth:0,preview:''})
 }
 let fieldOwner:ReturnType<typeof session.capture>, pendingField:(()=>void)|undefined, resumeField=false
-const finishFieldDialog=()=>{const offer=pendingField;pendingField=undefined;offer?.()}
+const finishFieldDialog=()=>{const offer=pendingField;pendingField=undefined;if(offer)void nextTick(offer)}
 const revealFieldSource=()=>{
   const owner=fieldOwner,entry=fieldEntry.value
   if(!owner||!entry||!session.unchanged(owner))return
@@ -317,7 +317,7 @@ const previewFieldChange=async()=>{
     if(!session.unchanged(owner)){fieldError.value='草稿已继续编辑，未应用旧结果；当前输入与内容仍保留';fieldVisible.value=true;return}
     const bytes=new TextEncoder().encode(result.content),point=(n:number)=>new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0,n)).length
     const offer=()=>session.offerChange(owner,mode==='add'?`新增 TOML 字段${result.valueType?' · '+result.valueType:''}`:'删除 TOML 字段',result.content,point(result.start),()=>{
-      query.value='';selectedFieldStart.value=mode==='add'?result.start:undefined
+      query.value='';selectedFieldStart.value=result.end>result.start?result.start:undefined
       owner.editor.dispatch({selection:{anchor:point(result.start),head:point(result.end)},scrollIntoView:true})
     })
     if(fieldVisible.value){pendingField=offer;fieldVisible.value=false}else offer()
