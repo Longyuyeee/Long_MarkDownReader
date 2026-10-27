@@ -15,7 +15,7 @@ export function validateInstalledYamlBlockFieldDelete(r,m){
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(r[k],false)
  assert.deepEqual(r.checks.map(c=>[c.id,c.status]),yamlBlockFieldDeleteChecks.map(id=>[id,'passed']));assert.deepEqual(r.runtimeErrors,[])
  assert.ok(r.inputTrace.length>10&&r.inputTrace.every(e=>e.trusted));assert.ok(r.inputTrace.some(e=>e.type==='input'));assert.equal(r.disposableDraftsExplicitlyDiscarded,true)
- assert.deepEqual(r.viewportWidths,[1280,800]);assert.equal(r.deletionSelectionVerified,true)
+ assert.deepEqual(r.viewportWidths,[1280,800]);assert.equal(r.deletionSelectionVerified,true);assert.equal(r.uniqueSelectionVerified,true)
 }
 export function assertYamlBlockFieldDeleteOutputBytes(r,read){
  assert.deepEqual(r.outputs.map(o=>o.fileName),yamlBlockFieldDeleteOutputFiles)

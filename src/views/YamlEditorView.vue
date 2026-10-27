@@ -128,7 +128,7 @@
             type="button"
             :style="{ paddingLeft: `${12 + Math.min(entry.depth, 8) * 14}px` }"
             @click="revealRange(entry)" @contextmenu.prevent.stop="nodeMenu.open($event, entry)"
-            :aria-current="selectedFieldStart !== undefined && (entry.field?.start === selectedFieldStart || entry.start === selectedFieldStart) ? 'true' : undefined"
+            :aria-current="entry === selectedOutlineEntry ? 'true' : undefined"
           >
             <n-icon :component="kindIcon(entry.kind)" />
             <span class="outline-copy">
@@ -397,6 +397,15 @@ const kindIcon = (kind: string) => {
 
 const analyzedSource = ref('')
 const selectedFieldStart = ref<number>()
+const selectedOutlineEntry = computed(() => {
+  const start = selectedFieldStart.value
+  if (start === undefined) return undefined
+  const entries = analysis.value?.outline || []
+  // A block mapping starts at its first child's key. Prefer that exact key
+  // before a node range so only the intended sibling is highlighted.
+  return entries.find(entry => entry.field?.start === start)
+    || entries.find(entry => entry.start === start)
+})
 const session = useStructuredSession({
   path: () => yamlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
