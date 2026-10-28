@@ -8,7 +8,7 @@ export const tomlBlockFieldDeleteConflict="# 配置 中文😀\nlabel = '我的�
 export const tomlBlockFieldDeleteEmpty="# 配置 中文😀\nlabel = '我的草稿'\n[items]\n# 第一段\n\n# independent\n\n# 第二段\n# number\n[kept]\ntext = \"\"\"\n# 正文\ntext\n\"\"\" # keep\n\nother = true\n[empty]\ntext = \"\"\"\n\"\"\"\nother = false\n[blocked]\ntext = [\n1,\n2\n]\nother = false\n[ambiguous]\n# attached?\ntext = '''old\nbody'''\nother = false\n[unique]\ntext = \"\"\"\n\"\"\" # unique\n[unchanged]\nlast = 8_080\n"
 export const tomlBlockFieldDeleteOutputFiles=['installed-v1245-block-field-delete-observations.json','installed-v1245-toml-saved.toml','installed-v1245-toml-copy.toml','installed-v1245-toml-external.toml']
 export function validateInstalledTomlBlockFieldDelete(r,m){
- assert.ok(['1.2.45','1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.45','1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-toml-block-field-deletion-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const prefix of ['locked','external']){assert.match(r[prefix+'Before'],/^[a-f0-9]{64}$/);assert.equal(r[prefix+'Before'],r[prefix+'After'])}

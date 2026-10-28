@@ -24,3 +24,11 @@ test('empty/invalid queries and explicitly closed panels are retained as user in
  const tab={};claimStructuredSearch(tab,'root/json').remember({...state,search:'[',regexp:true,open:false})
  assert.deepEqual(claimStructuredSearch(tab,'root/json').state,{...state,search:'[',regexp:true,open:false})
 })
+
+test('scope bounds are detached per owner and only a digest promise accompanies them',()=>{
+ const tab={},digest=Promise.resolve('fingerprint'),snapshot={...state,scope:{from:4,to:20,digest}}
+ claimStructuredSearch(tab,'root/json').remember(snapshot);snapshot.scope.from=0
+ const current=claimStructuredSearch(tab,'root/json');assert.equal(current.state.scope.from,4);assert.equal(current.state.scope.digest,digest)
+ current.state.scope.to=100;assert.equal(claimStructuredSearch(tab,'root/json').state.scope.to,20)
+ assert.equal(claimStructuredSearch(tab,'other/json').state,undefined)
+})

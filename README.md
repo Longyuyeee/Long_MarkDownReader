@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.3.5已发布：JSON、YAML、XML、TOML切换文件后接续查找及替换输入、条件与面板开闭，主动选文查找优先；现有面板中文化，保护草稿和显式保存。[本版审计](docs/V1_3_5_Unsigned_Community_Release_Audit_2026-10-28.md)。下一版1.3.6规划选区内查找与替换，让修改范围更明确。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_6_2026-10-28.md)。
+v1.3.6正在完善选区内查找与替换、匹配数量及范围接续，保护草稿，沿用现有面板。[本版记录](docs/V1_3_6_Unsigned_Community_Release_Audit_2026-10-28.md)。当前公开下载仍为v1.3.5。
 
 ## 不只是打开文件，更是接续你的工作
 
