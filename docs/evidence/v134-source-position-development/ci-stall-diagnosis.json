@@ -1,0 +1,18 @@
+{
+  "status": "cancelled-stalled-build-not-release-proof",
+  "sourceCommit": "4af6f44db206972dc58b76e206286c52e6d104bd",
+  "sourceQualityRun": 40645954405,
+  "buildRun": 40645970133,
+  "jobId": 122674745034,
+  "compilationFinishedAt": "2026-10-28T06:59:02.8396380Z",
+  "longRunningTest": "commands::graph::tests::post_v115_m0_graph_baseline_builds_real_markdown_tiers",
+  "longRunningWarningAt": "2026-10-28T07:00:11.0743299Z",
+  "cancelledAt": "2026-10-28T07:38:32.5196113Z",
+  "sameCodeSourceQualityFunctionalPassed": 1464,
+  "sameCodeSourceQualityGraphTestPassedAt": "2026-10-28T06:57:46.4684933Z",
+  "localSerialDiagnosticSeconds": 16.03,
+  "localSerialDiagnosticQualification": "existing owned test executable; diagnosis only, not current release qualification",
+  "correction": "Run all Rust regression cases serially in both hosted quality and installer-build jobs; preserve every assertion and performance check. Production runtime threading is unchanged.",
+  "stalledProofReusedAsPassing": false,
+  "sourceUserContentIncluded": false
+}

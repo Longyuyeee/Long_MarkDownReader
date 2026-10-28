@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "status": "failed-review-not-imported-not-published",
+  "sourceCommit": "53866074bbf2bf4d04d236215352f32a4199ba53",
+  "harnessCommit": "53866074bbf2bf4d04d236215352f32a4199ba53",
+  "buildRun": 40654482441,
+  "reviewRun": 40658080900,
+  "newPositionChecks": {
+    "status": "passed",
+    "checks": [
+      {
+        "id": "json-source-selection-scroll-and-draft",
+        "status": "passed"
+      },
+      {
+        "id": "yaml-source-selection-scroll-and-draft",
+        "status": "passed"
+      },
+      {
+        "id": "xml-source-selection-scroll-and-draft",
+        "status": "passed"
+      },
+      {
+        "id": "toml-source-selection-scroll-and-draft",
+        "status": "passed"
+      },
+      {
+        "id": "outline-and-json-tree-scroll-return",
+        "status": "passed"
+      },
+      {
+        "id": "explicit-navigation-and-filter-focus-win",
+        "status": "passed"
+      },
+      {
+        "id": "changed-content-close-and-real-rename-ownership",
+        "status": "passed"
+      },
+      {
+        "id": "wide-narrow-library-return-and-existing-context-menu",
+        "status": "passed"
+      },
+      {
+        "id": "explicit-save-exact-bytes-prior-drafts-and-no-runtime-error",
+        "status": "passed"
+      }
+    ],
+    "runtimeErrors": [],
+    "errorOverlay": false
+  },
+  "failedCheck": "palette-scope-dropdown-is-clickable-and-shows-real-native-results",
+  "observation": "The smaller library result was already visible while the larger library was still searching (1/2 libraries complete). Native query had already confirmed all three expected files. The driver waited only for the remote file, then asserted all three immediately.",
+  "correction": "Wait for all three expected visible file-open controls together, accepting the existing explicit page update button. Keep the original three-file assertion, bounded waits and trusted input.",
+  "localHarnessTests": {
+    "command": "node --test scripts/test-search-feedback-contract.mjs scripts/test-v115-release-contract.mjs",
+    "passed": 13,
+    "failed": 0
+  },
+  "productChanged": false,
+  "installerRebuilt": false
+}

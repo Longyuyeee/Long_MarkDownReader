@@ -410,6 +410,8 @@ const outlineNav = useSourceOutlineNavigation({
   key: entry => entry.documentIndex + ':' + entry.path,
 })
 const session = useStructuredSession({
+  positionPanes: () => ({ outline: outlineNav.element.value, inspector: outlineNav.element.value?.closest('aside') || null }),
+  positionReady: () => !analysisPending.value && analyzedSource.value === sourceContent.value,
   path: () => yamlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
   analyze: source => analyzeContent(source), clearAnalysis: () => clearAnalysisTimer(), scheduleAnalysis: () => scheduleAnalysis(),
@@ -767,6 +769,7 @@ const createEditor = () => {
 
 const replaceDocument = (content: string, isReadOnly: boolean) => {
   if (!editor) return
+  session.beforeReplace()
   applyingDocument = true
   editor.setState(EditorState.create({ doc: content, extensions: editorExtensions(isReadOnly) }))
   applyingDocument = false
@@ -863,7 +866,7 @@ const save = () => session.save()
 const reloadFromDisk = () => session.reload()
 
 const leaveEditor = () => router.push({ name: 'LibraryMode' })
-watch([yamlPath, isExternal, () => store.libraryPath], () => { syncCurrentTab(); saving.value = false; void load() }, {flush:'sync'})
+watch([yamlPath, isExternal, () => store.libraryPath], () => { syncCurrentTab(); session.beforeReplace(); saving.value = false; void load() }, {flush:'sync'})
 onMounted(async () => {
   await nextTick()
   createEditor()

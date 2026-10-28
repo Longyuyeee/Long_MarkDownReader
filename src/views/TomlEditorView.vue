@@ -208,6 +208,8 @@ const outlineNav = useSourceOutlineNavigation({
   preferredOffset: () => selectedFieldStart.value,
 })
 const session = useStructuredSession({
+  positionPanes: () => ({ outline: outlineNav.element.value, inspector: outlineNav.element.value?.closest('aside') || null }),
+  positionReady: () => !analysisPending.value && analyzedSource.value === content.value && !Object.values(arrayLoading.value).some(Boolean),
   path: () => path.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadId, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
   analyze: source => analyze(source), clearAnalysis: () => clearTimer(), scheduleAnalysis: () => schedule(),
@@ -559,7 +561,7 @@ const schedule = () => {
 const extensions = (locked: boolean) => [basicSetup, StreamLanguage.define(toml), EditorState.readOnly.of(locked), EditorView.editable.of(!locked), EditorView.lineWrapping,
   EditorView.updateListener.of(update => { if (update.docChanged) { content.value = update.state.doc.toString(); lines.value = update.state.doc.lines; if (!applying) { session.refreshDirty(); schedule() } } if (update.docChanged || update.selectionSet) { const p = update.state.selection.main.head, line = update.state.doc.lineAt(p); cursorLine.value = line.number; cursorColumn.value = p - line.from + 1 } }),
   ...codeMirrorThemeExtensions]
-const replace = (source: string, locked: boolean) => { if (!editor) return; applying = true; editor.setState(EditorState.create({ doc: source, extensions: extensions(locked) })); applying = false; content.value = editor.state.doc.toString(); lines.value = editor.state.doc.lines }
+const replace = (source: string, locked: boolean) => { if (!editor) return; session.beforeReplace(); applying = true; editor.setState(EditorState.create({ doc: source, extensions: extensions(locked) })); applying = false; content.value = editor.state.doc.toString(); lines.value = editor.state.doc.lines }
 const apply = async (s: Snapshot) => { signature.value = s.signature; encoding.value = s.encoding; fileSize.value = s.size; modified.value = s.modified; readOnlyReason.value = s.readOnlyReason || ''; dirty.value = false; replace(s.content, Boolean(s.readOnlyReason)); registerTab(s); await analyze(editor?.state.doc.toString() || '') }
 const restore = async (tab: TabInfo) => { signature.value = tab.textSignature || ''; encoding.value = tab.textEncoding || 'utf-8'; fileSize.value = tab.textSize || 0; modified.value = tab.textModified || 0; readOnlyReason.value = tab.textReadOnlyReason || ''; dirty.value = true; replace(tab.content || '', Boolean(tab.textReadOnlyReason)); session.bind(); store.activateTab(tab.id); await analyze(tab.content || '') }
 const load = async (discardDraft = false) => {
@@ -604,7 +606,7 @@ const save = () => session.save()
 
 const reload = () => session.reload()
 
-watch([path, isExternal, () => store.libraryPath], () => { syncTab(); saving.value = false; void load() }, {flush:'sync'})
+watch([path, isExternal, () => store.libraryPath], () => { syncTab(); session.beforeReplace(); saving.value = false; void load() }, {flush:'sync'})
 onMounted(async () => { await nextTick(); if (editorHost.value) editor = new EditorView({ state: EditorState.create({ doc: '', extensions: extensions(true) }), parent: editorHost.value }); await load();    })
 onBeforeUnmount(() => { clearTimer(); syncTab(); editor?.destroy(); editor = null;    })
 </script>

@@ -1,0 +1,1415 @@
+{
+  "appVersion": "1.3.4",
+  "sourceCommit": "53866074bbf2bf4d04d236215352f32a4199ba53",
+  "installerSha256": "6aaf463a960cdbffbc532ddbf8edee699a66d2343c3c12195dea4aa3bae2d9b4",
+  "harnessSourceCommit": "1db3492731d884f6f2501de02349cc4ba70d86d9",
+  "executableSha256": "58f68faf9dc10a97e2e51eb52491a6ec8495659f1c75bed276653e921f1cb939",
+  "evidenceLevel": "installed-webview-input-native-graph-ipc-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "installed-identity-and-real-generated-graph",
+      "status": "passed"
+    },
+    {
+      "id": "dense-search-and-nonoverlapping-active-label",
+      "status": "passed"
+    },
+    {
+      "id": "native-refresh-preserves-camera-and-selection",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-canvas-pan-retains-selection",
+      "status": "passed"
+    },
+    {
+      "id": "genuine-unavailable-library-retains-view",
+      "status": "passed"
+    },
+    {
+      "id": "retry-reads-restored-native-library",
+      "status": "passed"
+    },
+    {
+      "id": "neighbor-refresh-and-return-camera",
+      "status": "passed"
+    },
+    {
+      "id": "existing-layout-and-theme-tools-retained",
+      "status": "passed"
+    },
+    {
+      "id": "mindmap-refresh-continuity",
+      "status": "passed"
+    },
+    {
+      "id": "initial-error-is-not-empty-and-can-retry",
+      "status": "passed"
+    },
+    {
+      "id": "single-select-and-double-click-managed-open",
+      "status": "passed"
+    },
+    {
+      "id": "source-hashes-and-no-global-errors",
+      "status": "passed"
+    }
+  ],
+  "poses": {
+    "refresh": {
+      "before": {
+        "x": -1028.2683090464166,
+        "y": -459.4884316251223,
+        "zoom": 1
+      },
+      "after": {
+        "x": -1028.2683090464166,
+        "y": -459.4884316251223,
+        "zoom": 1
+      }
+    },
+    "pan": {
+      "before": {
+        "x": -974.2683090464166,
+        "y": -429.4884316251223,
+        "zoom": 1
+      },
+      "after": {
+        "x": -974.2683090464166,
+        "y": -429.4884316251223,
+        "zoom": 1
+      }
+    },
+    "failure": {
+      "before": {
+        "x": -974.2683090464166,
+        "y": -429.4884316251223,
+        "zoom": 1
+      },
+      "after": {
+        "x": -974.2683090464166,
+        "y": -429.4884316251223,
+        "zoom": 1
+      }
+    },
+    "retry": {
+      "before": {
+        "x": -974.2683090464166,
+        "y": -429.4884316251223,
+        "zoom": 1
+      },
+      "after": {
+        "x": -974.2683090464166,
+        "y": -429.4884316251223,
+        "zoom": 1
+      }
+    },
+    "neighbor": {
+      "before": {
+        "x": -974.2683090464166,
+        "y": -429.4884316251223,
+        "zoom": 1
+      },
+      "after": {
+        "x": -974.2683090464166,
+        "y": -429.4884316251223,
+        "zoom": 1
+      }
+    },
+    "mindmap": {
+      "before": {
+        "x": 40,
+        "y": 0,
+        "zoom": 1
+      },
+      "after": {
+        "x": 40,
+        "y": 0,
+        "zoom": 1
+      }
+    }
+  },
+  "sourceFiles": [
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题000 - 项目长期研究与来源证据核对.md",
+      "before": "c7fb19427eb16564af320b8e984f0741cf279a7e3aea9291f1b7615eb076f2ff",
+      "after": "c7fb19427eb16564af320b8e984f0741cf279a7e3aea9291f1b7615eb076f2ff"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题001 - 项目长期研究与来源证据核对.md",
+      "before": "00a55a38270c3928c469afb52b55e364e74809f0b29b198784b651b371952998",
+      "after": "00a55a38270c3928c469afb52b55e364e74809f0b29b198784b651b371952998"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题002 - 项目长期研究与来源证据核对.md",
+      "before": "41f629842cf3f2063678a2fb0bd39052189185af1f12449b744f9d574aba9f96",
+      "after": "41f629842cf3f2063678a2fb0bd39052189185af1f12449b744f9d574aba9f96"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题003 - 项目长期研究与来源证据核对.md",
+      "before": "3cb7316e9c6e94d9b86b284b7814723915d3e67baba0d2e1fc1e2a846fc02de7",
+      "after": "3cb7316e9c6e94d9b86b284b7814723915d3e67baba0d2e1fc1e2a846fc02de7"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题004 - 项目长期研究与来源证据核对.md",
+      "before": "06008cece438fa651b3fdd6d74499fc983e4e709ab49403e45704e3ecbee9f78",
+      "after": "06008cece438fa651b3fdd6d74499fc983e4e709ab49403e45704e3ecbee9f78"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题005 - 项目长期研究与来源证据核对.md",
+      "before": "d5d1b29d1d2103c8cba474ac3df3736f8374c56a83aed676447346891777a174",
+      "after": "d5d1b29d1d2103c8cba474ac3df3736f8374c56a83aed676447346891777a174"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题006 - 项目长期研究与来源证据核对.md",
+      "before": "f02be8726e69fdfc025c12c453200ce77cf369083a149d1a2fab774af33e42c1",
+      "after": "f02be8726e69fdfc025c12c453200ce77cf369083a149d1a2fab774af33e42c1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题007 - 项目长期研究与来源证据核对.md",
+      "before": "828622066152d973f2e87e27311f3e5c86d4f041a68b4c0d8df3be46acbc4296",
+      "after": "828622066152d973f2e87e27311f3e5c86d4f041a68b4c0d8df3be46acbc4296"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题008 - 项目长期研究与来源证据核对.md",
+      "before": "f32ecf4bb0200a77c5220766673b5184ca04721d9dc189555f3d0f8d5600ae34",
+      "after": "f32ecf4bb0200a77c5220766673b5184ca04721d9dc189555f3d0f8d5600ae34"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题009 - 项目长期研究与来源证据核对.md",
+      "before": "129188fd35bfadf24592664702330314d8503d08e1f321f95c16b5751d605e46",
+      "after": "129188fd35bfadf24592664702330314d8503d08e1f321f95c16b5751d605e46"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题010 - 项目长期研究与来源证据核对.md",
+      "before": "f669e47aaaa390af6c21645f649ce04b362c2a05d9ab57ea7c5200515dea1dd9",
+      "after": "f669e47aaaa390af6c21645f649ce04b362c2a05d9ab57ea7c5200515dea1dd9"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题011 - 项目长期研究与来源证据核对.md",
+      "before": "27d576020f2b9f61cdd1316e9ff8f31ec46edbdd02aed574c1e98c15afb5f9c8",
+      "after": "27d576020f2b9f61cdd1316e9ff8f31ec46edbdd02aed574c1e98c15afb5f9c8"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题012 - 项目长期研究与来源证据核对.md",
+      "before": "53fb66e318cb3f949452bae13c22322dc83f92df966bce8dcaeb5066e7e70e9a",
+      "after": "53fb66e318cb3f949452bae13c22322dc83f92df966bce8dcaeb5066e7e70e9a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题013 - 项目长期研究与来源证据核对.md",
+      "before": "3347d4c8069d7833630ee207a1877ba0d4ca9622f67819b48845660dfc33930b",
+      "after": "3347d4c8069d7833630ee207a1877ba0d4ca9622f67819b48845660dfc33930b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题014 - 项目长期研究与来源证据核对.md",
+      "before": "bd0c5aa2286de1e201f3120faaa0666a322d42833382e0f0c29faab7e85d633f",
+      "after": "bd0c5aa2286de1e201f3120faaa0666a322d42833382e0f0c29faab7e85d633f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题015 - 项目长期研究与来源证据核对.md",
+      "before": "5dc5d6f4dc0afb8337d4ddfc7b9ee6ba64537c181b65cf3aee1c7fb5312ff50f",
+      "after": "5dc5d6f4dc0afb8337d4ddfc7b9ee6ba64537c181b65cf3aee1c7fb5312ff50f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题016 - 项目长期研究与来源证据核对.md",
+      "before": "fdb9a5b123119667f26acb1f40afc04418bd03d9b64e3fc4b69cbc5e1c531911",
+      "after": "fdb9a5b123119667f26acb1f40afc04418bd03d9b64e3fc4b69cbc5e1c531911"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题017 - 项目长期研究与来源证据核对.md",
+      "before": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3",
+      "after": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题018 - 项目长期研究与来源证据核对.md",
+      "before": "519bbe12a7b2461942e1e16bf6f7be41a4120d6a954139f12cb693f0d3611502",
+      "after": "519bbe12a7b2461942e1e16bf6f7be41a4120d6a954139f12cb693f0d3611502"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题019 - 项目长期研究与来源证据核对.md",
+      "before": "db8b032c016ad5527285f717c9220e7c61e2529e525eb1b023aa215c7efcd764",
+      "after": "db8b032c016ad5527285f717c9220e7c61e2529e525eb1b023aa215c7efcd764"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题020 - 项目长期研究与来源证据核对.md",
+      "before": "9897fd1a36216f12641d229d0336fa4a32172a0a1f15706732dc8bfd2fd385ae",
+      "after": "9897fd1a36216f12641d229d0336fa4a32172a0a1f15706732dc8bfd2fd385ae"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题021 - 项目长期研究与来源证据核对.md",
+      "before": "feebf5d8db7e6824caccb4c2bf07905836a466e9f6407a890a14d4f31ce685be",
+      "after": "feebf5d8db7e6824caccb4c2bf07905836a466e9f6407a890a14d4f31ce685be"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题022 - 项目长期研究与来源证据核对.md",
+      "before": "b1047f5a0adf726f251ae0aa48f7deac6af5592a34fa9336f69cbc3d37e3ee94",
+      "after": "b1047f5a0adf726f251ae0aa48f7deac6af5592a34fa9336f69cbc3d37e3ee94"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题023 - 项目长期研究与来源证据核对.md",
+      "before": "009863eea8bf82e30736a0997c8df07ef3e0a0f9f72d39e0476dcb2f72d006ad",
+      "after": "009863eea8bf82e30736a0997c8df07ef3e0a0f9f72d39e0476dcb2f72d006ad"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题024 - 项目长期研究与来源证据核对.md",
+      "before": "dde42fdff3e3668364de8f1ff6c1c877e029a1d6308d92882d367f71cff938cd",
+      "after": "dde42fdff3e3668364de8f1ff6c1c877e029a1d6308d92882d367f71cff938cd"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题025 - 项目长期研究与来源证据核对.md",
+      "before": "07a75f83fbdd1b7bb4ca53b5fca9c17660bafb039d45b6b728d4cc3d8be30d61",
+      "after": "07a75f83fbdd1b7bb4ca53b5fca9c17660bafb039d45b6b728d4cc3d8be30d61"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题026 - 项目长期研究与来源证据核对.md",
+      "before": "9f1f6571c2ec9c1210f8028f72820a246e3f47de7311f0b1027aafc9826b3db1",
+      "after": "9f1f6571c2ec9c1210f8028f72820a246e3f47de7311f0b1027aafc9826b3db1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题027 - 项目长期研究与来源证据核对.md",
+      "before": "7829a0a80503200d255fb98ec0e11a3a4e94efa113f5494c4461568c1cc9df38",
+      "after": "7829a0a80503200d255fb98ec0e11a3a4e94efa113f5494c4461568c1cc9df38"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题028 - 项目长期研究与来源证据核对.md",
+      "before": "712384ef0bafd168f4205db9a9ed671c03c26634cea12276b8f4964701353144",
+      "after": "712384ef0bafd168f4205db9a9ed671c03c26634cea12276b8f4964701353144"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题029 - 项目长期研究与来源证据核对.md",
+      "before": "f7245061078379626d5aece4825466620e90fb08993ca5749040f018d194a8fe",
+      "after": "f7245061078379626d5aece4825466620e90fb08993ca5749040f018d194a8fe"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题030 - 项目长期研究与来源证据核对.md",
+      "before": "63975c7bf4ff8bb80bb10587de73656cc0f7baab4ba79844b692a5aa15807510",
+      "after": "63975c7bf4ff8bb80bb10587de73656cc0f7baab4ba79844b692a5aa15807510"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题031 - 项目长期研究与来源证据核对.md",
+      "before": "0c3dde97ba35af6ae8d3a141149262d6926e0091544bce2c9d0937d7d90585b3",
+      "after": "0c3dde97ba35af6ae8d3a141149262d6926e0091544bce2c9d0937d7d90585b3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题032 - 项目长期研究与来源证据核对.md",
+      "before": "fbb7751462698976770a7fb3f4194d0d06500a6f24d5c3e7031ce9d19f514485",
+      "after": "fbb7751462698976770a7fb3f4194d0d06500a6f24d5c3e7031ce9d19f514485"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题033 - 项目长期研究与来源证据核对.md",
+      "before": "b8a59f6fc76748dc28f2cb0a39215d6fe550568568b799f4ba31e05069955649",
+      "after": "b8a59f6fc76748dc28f2cb0a39215d6fe550568568b799f4ba31e05069955649"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题034 - 项目长期研究与来源证据核对.md",
+      "before": "8dce3a1e5163bc8a3ee9b3e0d17f58861499cab8358a1f2b078864d7b2010406",
+      "after": "8dce3a1e5163bc8a3ee9b3e0d17f58861499cab8358a1f2b078864d7b2010406"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题035 - 项目长期研究与来源证据核对.md",
+      "before": "060a39f23ff192164e3ab175f7777503a7de1ab2cbd6deb4e3bbd40407a0c80b",
+      "after": "060a39f23ff192164e3ab175f7777503a7de1ab2cbd6deb4e3bbd40407a0c80b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题036 - 项目长期研究与来源证据核对.md",
+      "before": "6b5b5dec9cc7f8c2b5e43d4f7f615535e7270e99d2ed66b272d8ff247225d876",
+      "after": "6b5b5dec9cc7f8c2b5e43d4f7f615535e7270e99d2ed66b272d8ff247225d876"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题037 - 项目长期研究与来源证据核对.md",
+      "before": "740acf713ae0e06d7100d22955084a9e55f9c7330edcc4e9087863945c4eaa7c",
+      "after": "740acf713ae0e06d7100d22955084a9e55f9c7330edcc4e9087863945c4eaa7c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题038 - 项目长期研究与来源证据核对.md",
+      "before": "516c6922b6d5ce2ad698cd9f2c8b48ff744407b159f44baa909f85e591e164f0",
+      "after": "516c6922b6d5ce2ad698cd9f2c8b48ff744407b159f44baa909f85e591e164f0"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题039 - 项目长期研究与来源证据核对.md",
+      "before": "df90ff1a370aac74b1cd74d9548d20bd269daa5801ce002bfeb3397514ab2464",
+      "after": "df90ff1a370aac74b1cd74d9548d20bd269daa5801ce002bfeb3397514ab2464"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题040 - 项目长期研究与来源证据核对.md",
+      "before": "2de37f83f98d1d09bc41de6775efe03abf52e5a09d363317e47b43a6cb1c184c",
+      "after": "2de37f83f98d1d09bc41de6775efe03abf52e5a09d363317e47b43a6cb1c184c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题041 - 项目长期研究与来源证据核对.md",
+      "before": "b8cca830b901a6c375fb8559fe35aa5f7da4d0eb0df4d3d181c2118a23331bb5",
+      "after": "b8cca830b901a6c375fb8559fe35aa5f7da4d0eb0df4d3d181c2118a23331bb5"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题042 - 项目长期研究与来源证据核对.md",
+      "before": "6163e85c77dca7ab66c8ad26b36f48872468eeaf52c2b81bbf3f5bc6ac27090c",
+      "after": "6163e85c77dca7ab66c8ad26b36f48872468eeaf52c2b81bbf3f5bc6ac27090c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题043 - 项目长期研究与来源证据核对.md",
+      "before": "346fb174c6bb48303da8c94c7d9984c7fdc2626ded33faae428c270431e42261",
+      "after": "346fb174c6bb48303da8c94c7d9984c7fdc2626ded33faae428c270431e42261"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题044 - 项目长期研究与来源证据核对.md",
+      "before": "dcb8e7029669a5ebc1547e3ee84d3648664d2c286840ff359ea13106478489aa",
+      "after": "dcb8e7029669a5ebc1547e3ee84d3648664d2c286840ff359ea13106478489aa"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题045 - 项目长期研究与来源证据核对.md",
+      "before": "6d939235e10ee070e4aae4d2ac936a84fb18da91419de3ba26496077e385a3e3",
+      "after": "6d939235e10ee070e4aae4d2ac936a84fb18da91419de3ba26496077e385a3e3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题046 - 项目长期研究与来源证据核对.md",
+      "before": "68576141587bd57d2d487bb683c81ab6d004b807b78e981d9f563aae8e1ae68a",
+      "after": "68576141587bd57d2d487bb683c81ab6d004b807b78e981d9f563aae8e1ae68a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题047 - 项目长期研究与来源证据核对.md",
+      "before": "f6a99f2bef328b9831ef4138df5eb72b43605f2b022b948b3131b36ae045957a",
+      "after": "f6a99f2bef328b9831ef4138df5eb72b43605f2b022b948b3131b36ae045957a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题048 - 项目长期研究与来源证据核对.md",
+      "before": "fb28e9b5795d0ca721719636e6181f1b539feed6116274a55da5fa7504747cbe",
+      "after": "fb28e9b5795d0ca721719636e6181f1b539feed6116274a55da5fa7504747cbe"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题049 - 项目长期研究与来源证据核对.md",
+      "before": "892d8b21dc1d1b81a79437e8ee785e761a9fae3e40d58d6a7f786956e3a3ab14",
+      "after": "892d8b21dc1d1b81a79437e8ee785e761a9fae3e40d58d6a7f786956e3a3ab14"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题050 - 项目长期研究与来源证据核对.md",
+      "before": "26727e18b389f6c520dca091996d969e035c902783d99b84c5d3e0243ad7c4b8",
+      "after": "26727e18b389f6c520dca091996d969e035c902783d99b84c5d3e0243ad7c4b8"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题051 - 项目长期研究与来源证据核对.md",
+      "before": "aa9d289c3e0f50229733b7037a1810321bba98195e8e7b6aa6c7939df761633c",
+      "after": "aa9d289c3e0f50229733b7037a1810321bba98195e8e7b6aa6c7939df761633c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题052 - 项目长期研究与来源证据核对.md",
+      "before": "bd6437bd792554bf0a66a564c7939010f97d24bf97ed1ed0b1df24b8b1ec7855",
+      "after": "bd6437bd792554bf0a66a564c7939010f97d24bf97ed1ed0b1df24b8b1ec7855"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题053 - 项目长期研究与来源证据核对.md",
+      "before": "a0de6438f9b95f430064108d44b411ca82bb5d9926adfc6050bebed7626f04f3",
+      "after": "a0de6438f9b95f430064108d44b411ca82bb5d9926adfc6050bebed7626f04f3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题054 - 项目长期研究与来源证据核对.md",
+      "before": "8cc4e893d273b1fd9a87d85b56e9a6fa5a74de0608e83fa03e42472bb40f55af",
+      "after": "8cc4e893d273b1fd9a87d85b56e9a6fa5a74de0608e83fa03e42472bb40f55af"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题055 - 项目长期研究与来源证据核对.md",
+      "before": "969d2ac087fd3c91597704b2f00ee045860b861973466104744bdb23ba7c380d",
+      "after": "969d2ac087fd3c91597704b2f00ee045860b861973466104744bdb23ba7c380d"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题056 - 项目长期研究与来源证据核对.md",
+      "before": "dc1864be132d7644a87b133c81b07332c41593bfb72d974965c17f72deef29db",
+      "after": "dc1864be132d7644a87b133c81b07332c41593bfb72d974965c17f72deef29db"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题057 - 项目长期研究与来源证据核对.md",
+      "before": "3f1fbb3e4204e065b0b429ef3a76fab2803c4e1c84bed613c69ef0a45267691f",
+      "after": "3f1fbb3e4204e065b0b429ef3a76fab2803c4e1c84bed613c69ef0a45267691f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题058 - 项目长期研究与来源证据核对.md",
+      "before": "ad4c3fec29aae4f9efdf29e8300a162da74b6be6cf0bc0fa3e1b4cdbefecdbfc",
+      "after": "ad4c3fec29aae4f9efdf29e8300a162da74b6be6cf0bc0fa3e1b4cdbefecdbfc"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题059 - 项目长期研究与来源证据核对.md",
+      "before": "fcfcbb0a3ddd5839af4957ebbab5619c55808860de16de15116973c8302322ec",
+      "after": "fcfcbb0a3ddd5839af4957ebbab5619c55808860de16de15116973c8302322ec"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题060 - 项目长期研究与来源证据核对.md",
+      "before": "8cfe62b1ff294f45d1877af2f10439db8c86fd62c1f01ec3e02770574a4fb44f",
+      "after": "8cfe62b1ff294f45d1877af2f10439db8c86fd62c1f01ec3e02770574a4fb44f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题061 - 项目长期研究与来源证据核对.md",
+      "before": "cb2d543bfd868ec131136a1ff2bd4f9d02657f93945c9c427f6964fd5c1649af",
+      "after": "cb2d543bfd868ec131136a1ff2bd4f9d02657f93945c9c427f6964fd5c1649af"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题062 - 项目长期研究与来源证据核对.md",
+      "before": "c84967f480fc790a78df09272512ec06c0c9b5dfd8fc6b00e44f2a1099047426",
+      "after": "c84967f480fc790a78df09272512ec06c0c9b5dfd8fc6b00e44f2a1099047426"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题063 - 项目长期研究与来源证据核对.md",
+      "before": "80d0b82329f3713334d5ad81f8451ed9a7953cc4a48660e5bab3f71054116cf3",
+      "after": "80d0b82329f3713334d5ad81f8451ed9a7953cc4a48660e5bab3f71054116cf3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题064 - 项目长期研究与来源证据核对.md",
+      "before": "65a2e142f66a23882d71c78ce65b8b32327509d53ad71a1bacd18a9bcdae3eae",
+      "after": "65a2e142f66a23882d71c78ce65b8b32327509d53ad71a1bacd18a9bcdae3eae"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题065 - 项目长期研究与来源证据核对.md",
+      "before": "cd9d77d96adec06976e29910462eb872ec00d7d927bbcb7771b51df279b42de2",
+      "after": "cd9d77d96adec06976e29910462eb872ec00d7d927bbcb7771b51df279b42de2"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题066 - 项目长期研究与来源证据核对.md",
+      "before": "0bb8ac3e4bfe76c0b45ae52ff0f9d533e308953c3a8aabe4714c041dd1ef134d",
+      "after": "0bb8ac3e4bfe76c0b45ae52ff0f9d533e308953c3a8aabe4714c041dd1ef134d"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题067 - 项目长期研究与来源证据核对.md",
+      "before": "315ede20036a429bf8dd3b6943ca6fac5807aceb114abd2dbd7e5c2d294aca11",
+      "after": "315ede20036a429bf8dd3b6943ca6fac5807aceb114abd2dbd7e5c2d294aca11"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题068 - 项目长期研究与来源证据核对.md",
+      "before": "36cdcbb4c1f5d4b2a2f596c9e681dff4fd51a408a9b633a233a7c6ec274a86e1",
+      "after": "36cdcbb4c1f5d4b2a2f596c9e681dff4fd51a408a9b633a233a7c6ec274a86e1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题069 - 项目长期研究与来源证据核对.md",
+      "before": "cf07696fe825266a5f84c003d428062c5436f68332547cd4406eef3e3c253f61",
+      "after": "cf07696fe825266a5f84c003d428062c5436f68332547cd4406eef3e3c253f61"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题070 - 项目长期研究与来源证据核对.md",
+      "before": "5d524e529a17521ec7c465582d540ea666c44299c78d5b833f6a3cbd0e3c6a9e",
+      "after": "5d524e529a17521ec7c465582d540ea666c44299c78d5b833f6a3cbd0e3c6a9e"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题071 - 项目长期研究与来源证据核对.md",
+      "before": "5f2bec7bc77edaf982e783c5b265e3209b31c5e28363c936bbf6f37a297f18e6",
+      "after": "5f2bec7bc77edaf982e783c5b265e3209b31c5e28363c936bbf6f37a297f18e6"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题072 - 项目长期研究与来源证据核对.md",
+      "before": "06e4c1dc13139614a5c7e53298b260ae2af462fc0b0aadf7b73b0baff909b01a",
+      "after": "06e4c1dc13139614a5c7e53298b260ae2af462fc0b0aadf7b73b0baff909b01a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题073 - 项目长期研究与来源证据核对.md",
+      "before": "28f22a097c3803d624253fede122440709891a796571460f6c567aac5c919344",
+      "after": "28f22a097c3803d624253fede122440709891a796571460f6c567aac5c919344"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题074 - 项目长期研究与来源证据核对.md",
+      "before": "e71ccdc6454d16063da164417d877e052f41037b7c491ea810be39cbedc54573",
+      "after": "e71ccdc6454d16063da164417d877e052f41037b7c491ea810be39cbedc54573"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题075 - 项目长期研究与来源证据核对.md",
+      "before": "a26341d9e20c8c13bc0fce96df1d04e68fa754d15a4c22e7e9093f9a4ac2974e",
+      "after": "a26341d9e20c8c13bc0fce96df1d04e68fa754d15a4c22e7e9093f9a4ac2974e"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题076 - 项目长期研究与来源证据核对.md",
+      "before": "a3d4e5976d59f55b2b5f164e5e4ef30a911802a6f905439cd69825d6d120f2b2",
+      "after": "a3d4e5976d59f55b2b5f164e5e4ef30a911802a6f905439cd69825d6d120f2b2"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题077 - 项目长期研究与来源证据核对.md",
+      "before": "6da50be06a782c2fa1b44b953af49bb00b6808627e56253574dc9d0a9ed8e939",
+      "after": "6da50be06a782c2fa1b44b953af49bb00b6808627e56253574dc9d0a9ed8e939"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题078 - 项目长期研究与来源证据核对.md",
+      "before": "f9434e9c32519bde5be70476fa602edad76653a90cad8140675a6bcc3fbe253c",
+      "after": "f9434e9c32519bde5be70476fa602edad76653a90cad8140675a6bcc3fbe253c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题079 - 项目长期研究与来源证据核对.md",
+      "before": "427ba80a9bdf4130be693c429b505145938be96e63584b0b0717a9d40bda0167",
+      "after": "427ba80a9bdf4130be693c429b505145938be96e63584b0b0717a9d40bda0167"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题080 - 项目长期研究与来源证据核对.md",
+      "before": "13db974ace6319679b80cd41d37724e47be90a977d265792684c31bd39e19d14",
+      "after": "13db974ace6319679b80cd41d37724e47be90a977d265792684c31bd39e19d14"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题081 - 项目长期研究与来源证据核对.md",
+      "before": "3a1fac84fdb5317c584a7032a5832454af97ad9b731e4f93f7ffd43c4357b7c8",
+      "after": "3a1fac84fdb5317c584a7032a5832454af97ad9b731e4f93f7ffd43c4357b7c8"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题082 - 项目长期研究与来源证据核对.md",
+      "before": "16890e880392d169136592ee929b6de910ee5a7ff96dc8587b5857c85f448385",
+      "after": "16890e880392d169136592ee929b6de910ee5a7ff96dc8587b5857c85f448385"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题083 - 项目长期研究与来源证据核对.md",
+      "before": "92f4e812d291b5bdc67a552a9dcdc9e4d7df2cc6918698e7edb515f4f66f7387",
+      "after": "92f4e812d291b5bdc67a552a9dcdc9e4d7df2cc6918698e7edb515f4f66f7387"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题084 - 项目长期研究与来源证据核对.md",
+      "before": "9afb792a927e810bc05bdeb32f382e70511950df3d470593b51ee097e90e3b76",
+      "after": "9afb792a927e810bc05bdeb32f382e70511950df3d470593b51ee097e90e3b76"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题085 - 项目长期研究与来源证据核对.md",
+      "before": "f37e84c792dc647d83afcbd947772c1076faeab7735494a2494253803e275430",
+      "after": "f37e84c792dc647d83afcbd947772c1076faeab7735494a2494253803e275430"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题086 - 项目长期研究与来源证据核对.md",
+      "before": "45ed92bb573c34b69a1feabf92d7eb438862630b59b8c3bd88bc19c3128bbc34",
+      "after": "45ed92bb573c34b69a1feabf92d7eb438862630b59b8c3bd88bc19c3128bbc34"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题087 - 项目长期研究与来源证据核对.md",
+      "before": "2e26cac21b4fca023647dcc2f125b5d84d3381015b9e87ae37d06e3dafaad858",
+      "after": "2e26cac21b4fca023647dcc2f125b5d84d3381015b9e87ae37d06e3dafaad858"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题088 - 项目长期研究与来源证据核对.md",
+      "before": "81bf346fdf9c3541b6e16ab50b3b9347e27262202c0a9d055e7c3767c0d3206c",
+      "after": "81bf346fdf9c3541b6e16ab50b3b9347e27262202c0a9d055e7c3767c0d3206c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题089 - 项目长期研究与来源证据核对.md",
+      "before": "beeef7ed2d1b3ee39039894f47f7212f9aed7895cb140dae6a09263e14e9d3e3",
+      "after": "beeef7ed2d1b3ee39039894f47f7212f9aed7895cb140dae6a09263e14e9d3e3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题090 - 项目长期研究与来源证据核对.md",
+      "before": "d4c54a185de8359c8f93c49af366d4f6beb7ef287820622591e39b4bc8a140b1",
+      "after": "d4c54a185de8359c8f93c49af366d4f6beb7ef287820622591e39b4bc8a140b1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题091 - 项目长期研究与来源证据核对.md",
+      "before": "9fff239ce9b6126301b463d9abbfe01ee7533b51b223d412512aa71e1a92a2d4",
+      "after": "9fff239ce9b6126301b463d9abbfe01ee7533b51b223d412512aa71e1a92a2d4"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题092 - 项目长期研究与来源证据核对.md",
+      "before": "55c9fcd9c9e1d31734ddab7a6b04204e04af020a62202b59af68a0e5e2cf6a2b",
+      "after": "55c9fcd9c9e1d31734ddab7a6b04204e04af020a62202b59af68a0e5e2cf6a2b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题093 - 项目长期研究与来源证据核对.md",
+      "before": "f5dda107ec17ea01eeb1c7604beefe7fc41953cae50c20cec8bb07970af5b0ac",
+      "after": "f5dda107ec17ea01eeb1c7604beefe7fc41953cae50c20cec8bb07970af5b0ac"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题094 - 项目长期研究与来源证据核对.md",
+      "before": "6f055492807b52368deae1f76a0b2dcc1be09b735cab73985d0d1bbdc770c8aa",
+      "after": "6f055492807b52368deae1f76a0b2dcc1be09b735cab73985d0d1bbdc770c8aa"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题095 - 项目长期研究与来源证据核对.md",
+      "before": "a9a2ba46c2c29090c0cf03a7bfb34a14ca53123f09044394ffc4c50c00dc0d49",
+      "after": "a9a2ba46c2c29090c0cf03a7bfb34a14ca53123f09044394ffc4c50c00dc0d49"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题096 - 项目长期研究与来源证据核对.md",
+      "before": "c5944bc02938030248d96e07c661925af65599cf94a0eb376fad30c0972e6994",
+      "after": "c5944bc02938030248d96e07c661925af65599cf94a0eb376fad30c0972e6994"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题097 - 项目长期研究与来源证据核对.md",
+      "before": "903f736ed293d65e4a8839c6f11ced5d2e29d5f10c9f2df36be4f7424e124692",
+      "after": "903f736ed293d65e4a8839c6f11ced5d2e29d5f10c9f2df36be4f7424e124692"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题098 - 项目长期研究与来源证据核对.md",
+      "before": "fff4fa93ca2117917d372fef98d84eb2c6398c51a0bb5504e10a43d475194c42",
+      "after": "fff4fa93ca2117917d372fef98d84eb2c6398c51a0bb5504e10a43d475194c42"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题099 - 项目长期研究与来源证据核对.md",
+      "before": "0df4805aaaa233c9ef28c69fabd58d89f81754d60542c0279b2125dbee6fb02b",
+      "after": "0df4805aaaa233c9ef28c69fabd58d89f81754d60542c0279b2125dbee6fb02b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题100 - 项目长期研究与来源证据核对.md",
+      "before": "22b774e09ef9d378ac271496da95fcc2554b459668ef906503d485bde80c76ce",
+      "after": "22b774e09ef9d378ac271496da95fcc2554b459668ef906503d485bde80c76ce"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题101 - 项目长期研究与来源证据核对.md",
+      "before": "ddc8b46db245d5746eeb17eb8a23dfb17de26b212caed32f4a2c1e36d1976401",
+      "after": "ddc8b46db245d5746eeb17eb8a23dfb17de26b212caed32f4a2c1e36d1976401"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题102 - 项目长期研究与来源证据核对.md",
+      "before": "dcd0d6484bd11db9c42727af1f4f2f89cf59b4751f5cf126a147ee945b5f6e3d",
+      "after": "dcd0d6484bd11db9c42727af1f4f2f89cf59b4751f5cf126a147ee945b5f6e3d"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题103 - 项目长期研究与来源证据核对.md",
+      "before": "1e09eeeb1bf34e6ca06080cbf15c8ce785bb6de926efaa09d67143ac96337363",
+      "after": "1e09eeeb1bf34e6ca06080cbf15c8ce785bb6de926efaa09d67143ac96337363"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题104 - 项目长期研究与来源证据核对.md",
+      "before": "07ab332a5a76f01b5a11d4c07b89e9512b9d5ba0f3aaef9a4c8172f9b7de7c60",
+      "after": "07ab332a5a76f01b5a11d4c07b89e9512b9d5ba0f3aaef9a4c8172f9b7de7c60"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题105 - 项目长期研究与来源证据核对.md",
+      "before": "4a2f5fac464fd83e66651f94ed2bf007a887ad741e2e79ba241b3a4b408c2e26",
+      "after": "4a2f5fac464fd83e66651f94ed2bf007a887ad741e2e79ba241b3a4b408c2e26"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题106 - 项目长期研究与来源证据核对.md",
+      "before": "6aa65377ca80a6bd9273e9226d17f35f9c2e095e90f0dd62d7df67b55688f094",
+      "after": "6aa65377ca80a6bd9273e9226d17f35f9c2e095e90f0dd62d7df67b55688f094"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题107 - 项目长期研究与来源证据核对.md",
+      "before": "995a76bf12506a8af115a9958b7ce01473029843e633b618e96bad8ec991666a",
+      "after": "995a76bf12506a8af115a9958b7ce01473029843e633b618e96bad8ec991666a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题108 - 项目长期研究与来源证据核对.md",
+      "before": "6f10f35573551f1099442f8b4c77e9b7905e4195b248f505e99d7963ca871344",
+      "after": "6f10f35573551f1099442f8b4c77e9b7905e4195b248f505e99d7963ca871344"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题109 - 项目长期研究与来源证据核对.md",
+      "before": "794c17f722a790f4c6a81f328ea3d854205d4aae55d270e0fdbed258153d11cb",
+      "after": "794c17f722a790f4c6a81f328ea3d854205d4aae55d270e0fdbed258153d11cb"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题110 - 项目长期研究与来源证据核对.md",
+      "before": "5b90546bcd77ebbb53317b5a8df54824cd86ddb64b90fa3cee6f6698e3de1720",
+      "after": "5b90546bcd77ebbb53317b5a8df54824cd86ddb64b90fa3cee6f6698e3de1720"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题111 - 项目长期研究与来源证据核对.md",
+      "before": "0277cee5760e7560be0f375fea3c37ab0da1c9ee4e9b48cd3cc76142f086ad2f",
+      "after": "0277cee5760e7560be0f375fea3c37ab0da1c9ee4e9b48cd3cc76142f086ad2f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题112 - 项目长期研究与来源证据核对.md",
+      "before": "62429258afc0f06cc29d1399155a0d5f41dbad5c0b25d3877bf372698942121f",
+      "after": "62429258afc0f06cc29d1399155a0d5f41dbad5c0b25d3877bf372698942121f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题113 - 项目长期研究与来源证据核对.md",
+      "before": "cbd69dac99d63dd5c7986a4d19c8ab15d9fa905fcee495300f2fb2a95f138f36",
+      "after": "cbd69dac99d63dd5c7986a4d19c8ab15d9fa905fcee495300f2fb2a95f138f36"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题114 - 项目长期研究与来源证据核对.md",
+      "before": "d119d8102959a5d77bfdba7eabcb344ebfa24d1877e21efee0b6f6b02b46d54b",
+      "after": "d119d8102959a5d77bfdba7eabcb344ebfa24d1877e21efee0b6f6b02b46d54b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题115 - 项目长期研究与来源证据核对.md",
+      "before": "53c696939da5ed1be2a8fd4b059ffb5791f4ca55e56da1508cb8157ff271e908",
+      "after": "53c696939da5ed1be2a8fd4b059ffb5791f4ca55e56da1508cb8157ff271e908"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题116 - 项目长期研究与来源证据核对.md",
+      "before": "f73aee746389a3bf57459cd181169f2200e9131cb577bf9c7527172f9290ac51",
+      "after": "f73aee746389a3bf57459cd181169f2200e9131cb577bf9c7527172f9290ac51"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题117 - 项目长期研究与来源证据核对.md",
+      "before": "3820673004508c0500b9b3bb6d1ee13b3526e8ae6d7133849214c6a722a53d8c",
+      "after": "3820673004508c0500b9b3bb6d1ee13b3526e8ae6d7133849214c6a722a53d8c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题118 - 项目长期研究与来源证据核对.md",
+      "before": "d9b6e4338cb1c76d31032facd627d282c6a005800efb29adc89bc7b59e7b734c",
+      "after": "d9b6e4338cb1c76d31032facd627d282c6a005800efb29adc89bc7b59e7b734c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题119 - 项目长期研究与来源证据核对.md",
+      "before": "914ab69c924ba4a3aa9d55c886c04c131173fd114f5f82bcae7c895e1c2d532b",
+      "after": "914ab69c924ba4a3aa9d55c886c04c131173fd114f5f82bcae7c895e1c2d532b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题120 - 项目长期研究与来源证据核对.md",
+      "before": "fa046d03775d43a8e5e1060a61e715a2a0fd212fa6647c2e9fa0e974aad0ae85",
+      "after": "fa046d03775d43a8e5e1060a61e715a2a0fd212fa6647c2e9fa0e974aad0ae85"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题121 - 项目长期研究与来源证据核对.md",
+      "before": "33cac142de33478e3764ae1e70ccc3ac8e982c5436c3dd5f72be0f563d23c091",
+      "after": "33cac142de33478e3764ae1e70ccc3ac8e982c5436c3dd5f72be0f563d23c091"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题122 - 项目长期研究与来源证据核对.md",
+      "before": "242733c637a9b3be0b9c394725e3ef64c534c10dca2eb695ce0a52d7599b7c74",
+      "after": "242733c637a9b3be0b9c394725e3ef64c534c10dca2eb695ce0a52d7599b7c74"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题123 - 项目长期研究与来源证据核对.md",
+      "before": "86987ecd8dc6a14cb3e2617a647eff30e0945e985708ad0e03f7f8b025bdf5f8",
+      "after": "86987ecd8dc6a14cb3e2617a647eff30e0945e985708ad0e03f7f8b025bdf5f8"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题124 - 项目长期研究与来源证据核对.md",
+      "before": "a4c0eeccf2dafa2c1e96f69293a8f67ddb0ff64f94a125692dbe1849f1fb2471",
+      "after": "a4c0eeccf2dafa2c1e96f69293a8f67ddb0ff64f94a125692dbe1849f1fb2471"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题125 - 项目长期研究与来源证据核对.md",
+      "before": "da6ed8d78d0c96cefa5cd5614a1ffb091fa72e8d59b4a19359a193615d99d758",
+      "after": "da6ed8d78d0c96cefa5cd5614a1ffb091fa72e8d59b4a19359a193615d99d758"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题126 - 项目长期研究与来源证据核对.md",
+      "before": "e8efb5d19d2f685961dfd79799736b09af69e08c0273fa53dfa23d9b35d44a99",
+      "after": "e8efb5d19d2f685961dfd79799736b09af69e08c0273fa53dfa23d9b35d44a99"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题127 - 项目长期研究与来源证据核对.md",
+      "before": "cb87870200affd46487bac7efccaad8988f7ad847d7f725ca38b021b73b3e9bb",
+      "after": "cb87870200affd46487bac7efccaad8988f7ad847d7f725ca38b021b73b3e9bb"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题128 - 项目长期研究与来源证据核对.md",
+      "before": "b81cf43f82ade5265e31df187d869e247a5b3d7797c0508475f77532761b90c7",
+      "after": "b81cf43f82ade5265e31df187d869e247a5b3d7797c0508475f77532761b90c7"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题129 - 项目长期研究与来源证据核对.md",
+      "before": "c77c13128d350deca617affe14f90e233ac56a5cc7435de64c6a1060081ef703",
+      "after": "c77c13128d350deca617affe14f90e233ac56a5cc7435de64c6a1060081ef703"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题130 - 项目长期研究与来源证据核对.md",
+      "before": "70bdd3c4910952736ceb825b3c0f938e67cabe1fa25dbb0a9642569565362e7e",
+      "after": "70bdd3c4910952736ceb825b3c0f938e67cabe1fa25dbb0a9642569565362e7e"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题131 - 项目长期研究与来源证据核对.md",
+      "before": "ca734ba34525beb581c61d451fd2e70a14510be804dc4f2d9500ffae9784b0bc",
+      "after": "ca734ba34525beb581c61d451fd2e70a14510be804dc4f2d9500ffae9784b0bc"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题132 - 项目长期研究与来源证据核对.md",
+      "before": "ec6104405f863be4981c474c7741d87289801c12cb4863ef57ae5e3635463495",
+      "after": "ec6104405f863be4981c474c7741d87289801c12cb4863ef57ae5e3635463495"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题133 - 项目长期研究与来源证据核对.md",
+      "before": "c5077c4c180e6c2661d7b79e36086476c10f540a20cc816d99053f029c32e844",
+      "after": "c5077c4c180e6c2661d7b79e36086476c10f540a20cc816d99053f029c32e844"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题134 - 项目长期研究与来源证据核对.md",
+      "before": "7a6c47a58653a9eb93fd91344c76c08172dde22ba924a9183081894fee81888f",
+      "after": "7a6c47a58653a9eb93fd91344c76c08172dde22ba924a9183081894fee81888f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题135 - 项目长期研究与来源证据核对.md",
+      "before": "58c69398ee8a18948fd4f0487f02139aa6cfeb4ce2ced8b19d04d2ec7e58a1f4",
+      "after": "58c69398ee8a18948fd4f0487f02139aa6cfeb4ce2ced8b19d04d2ec7e58a1f4"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题136 - 项目长期研究与来源证据核对.md",
+      "before": "8981c8ac794f2a337ed335364bffa510afde89592a5af99262b1f233950dbd57",
+      "after": "8981c8ac794f2a337ed335364bffa510afde89592a5af99262b1f233950dbd57"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题137 - 项目长期研究与来源证据核对.md",
+      "before": "f5bead3b578a8f325373941028ec2ca280cd5bca523db2bb32db601804b762bd",
+      "after": "f5bead3b578a8f325373941028ec2ca280cd5bca523db2bb32db601804b762bd"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题138 - 项目长期研究与来源证据核对.md",
+      "before": "554e8a8edb454121547d417047866f36a503a82767c2f11d758c81023a7db20c",
+      "after": "554e8a8edb454121547d417047866f36a503a82767c2f11d758c81023a7db20c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题139 - 项目长期研究与来源证据核对.md",
+      "before": "0ac4dc85989130c9d989c33213fb7ca6d09d3f5acc299e71fd34e0752176f90a",
+      "after": "0ac4dc85989130c9d989c33213fb7ca6d09d3f5acc299e71fd34e0752176f90a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题140 - 项目长期研究与来源证据核对.md",
+      "before": "5e13201e773514d694eb5ef7ded070a7e61996473c590eb505e8720e770e7d86",
+      "after": "5e13201e773514d694eb5ef7ded070a7e61996473c590eb505e8720e770e7d86"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题141 - 项目长期研究与来源证据核对.md",
+      "before": "37ac5ec690ed36b1c35c6bee23f385fc05e77b329080ff5075ba65dfa7826c41",
+      "after": "37ac5ec690ed36b1c35c6bee23f385fc05e77b329080ff5075ba65dfa7826c41"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题142 - 项目长期研究与来源证据核对.md",
+      "before": "ea5572b4f43843a59f268b0548ff1f426e867ba60c5e68d88aa19214da631591",
+      "after": "ea5572b4f43843a59f268b0548ff1f426e867ba60c5e68d88aa19214da631591"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题143 - 项目长期研究与来源证据核对.md",
+      "before": "2f5097713a05ebba650e09c0fafb40f27de51d7840b3485139e5154702c7767c",
+      "after": "2f5097713a05ebba650e09c0fafb40f27de51d7840b3485139e5154702c7767c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题144 - 项目长期研究与来源证据核对.md",
+      "before": "a915a6e8ce9c9d9a5f612548bf9fb622e9ee8e449af7aad80103649570b81eda",
+      "after": "a915a6e8ce9c9d9a5f612548bf9fb622e9ee8e449af7aad80103649570b81eda"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题145 - 项目长期研究与来源证据核对.md",
+      "before": "d7ae768cbaae9cb44ad6686a0c98434f33c7dcaae8b8e46f5e42e0b280aeee8e",
+      "after": "d7ae768cbaae9cb44ad6686a0c98434f33c7dcaae8b8e46f5e42e0b280aeee8e"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题146 - 项目长期研究与来源证据核对.md",
+      "before": "c7a94dd7f5de919ee60c9888eed29ba3200021a38d494e0a0998ba51aad1f4c3",
+      "after": "c7a94dd7f5de919ee60c9888eed29ba3200021a38d494e0a0998ba51aad1f4c3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题147 - 项目长期研究与来源证据核对.md",
+      "before": "62a0d6e99fe1bb00f542a91193b1203b31938b1bc8599776ccd8846771304322",
+      "after": "62a0d6e99fe1bb00f542a91193b1203b31938b1bc8599776ccd8846771304322"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题148 - 项目长期研究与来源证据核对.md",
+      "before": "d0c0d3883458ad7d5638878cefd2a73262fb7ec9df0a0f90052903fccab1c507",
+      "after": "d0c0d3883458ad7d5638878cefd2a73262fb7ec9df0a0f90052903fccab1c507"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题149 - 项目长期研究与来源证据核对.md",
+      "before": "f286dcdb9666141b95ed29388fcce9e86740318bbbbcfff010f004af07ec94e0",
+      "after": "f286dcdb9666141b95ed29388fcce9e86740318bbbbcfff010f004af07ec94e0"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题150 - 项目长期研究与来源证据核对.md",
+      "before": "58d45fd38f18f741d8459dcfb12739876e05cead03baf2ed6476a62bce19aafd",
+      "after": "58d45fd38f18f741d8459dcfb12739876e05cead03baf2ed6476a62bce19aafd"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题151 - 项目长期研究与来源证据核对.md",
+      "before": "63ee7a330e9e8839460ab8836077d90d843272b0d98395c760e4607cb190d66f",
+      "after": "63ee7a330e9e8839460ab8836077d90d843272b0d98395c760e4607cb190d66f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题152 - 项目长期研究与来源证据核对.md",
+      "before": "b3598c14afa29201d5ac293c93bc4b1d970620f1bb1cb3fbd1d8127ac5a673a5",
+      "after": "b3598c14afa29201d5ac293c93bc4b1d970620f1bb1cb3fbd1d8127ac5a673a5"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题153 - 项目长期研究与来源证据核对.md",
+      "before": "0194f98586ccb81e544b99cc02b130b6338cb4a2815aed6661ed7e584be5971d",
+      "after": "0194f98586ccb81e544b99cc02b130b6338cb4a2815aed6661ed7e584be5971d"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题154 - 项目长期研究与来源证据核对.md",
+      "before": "86e904823965875f4fc68eb4e02d739d1977844fbd01c1e5945a97c6e0e016f8",
+      "after": "86e904823965875f4fc68eb4e02d739d1977844fbd01c1e5945a97c6e0e016f8"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题155 - 项目长期研究与来源证据核对.md",
+      "before": "a2e04cc60b5be90fe81e8f3399ad6354563f00e2be53deb1ec0e9dc0bebd8452",
+      "after": "a2e04cc60b5be90fe81e8f3399ad6354563f00e2be53deb1ec0e9dc0bebd8452"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题156 - 项目长期研究与来源证据核对.md",
+      "before": "6747f7103dd5b664182bc6e09ee14d85ab8378faf6d421f99033b098678b1524",
+      "after": "6747f7103dd5b664182bc6e09ee14d85ab8378faf6d421f99033b098678b1524"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题157 - 项目长期研究与来源证据核对.md",
+      "before": "37395abb18a5070388767628ff9190b6b9c09c24e5eaa69414ef3f19a446b9cb",
+      "after": "37395abb18a5070388767628ff9190b6b9c09c24e5eaa69414ef3f19a446b9cb"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题158 - 项目长期研究与来源证据核对.md",
+      "before": "b652d1b167b8d5a67d1b1c6613c04eea3c65ec262ce4ef2b306b110aaee7514e",
+      "after": "b652d1b167b8d5a67d1b1c6613c04eea3c65ec262ce4ef2b306b110aaee7514e"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题159 - 项目长期研究与来源证据核对.md",
+      "before": "f8a916e69614645e6486720a1563dad7d208243a7d8028e208d2825d0623c9d3",
+      "after": "f8a916e69614645e6486720a1563dad7d208243a7d8028e208d2825d0623c9d3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题160 - 项目长期研究与来源证据核对.md",
+      "before": "471cce5ca81823f5ad9acf278269f9555af83fe8e84fa6a2116405adffbea98f",
+      "after": "471cce5ca81823f5ad9acf278269f9555af83fe8e84fa6a2116405adffbea98f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题161 - 项目长期研究与来源证据核对.md",
+      "before": "4237f69744ec79129363af27e729dc70cef9cb9502cd17301523c880d32f2863",
+      "after": "4237f69744ec79129363af27e729dc70cef9cb9502cd17301523c880d32f2863"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题162 - 项目长期研究与来源证据核对.md",
+      "before": "6361aa0004b34f3d75d46f471bdc66daa93e2bffae3e26582b8ca5848ebcfb88",
+      "after": "6361aa0004b34f3d75d46f471bdc66daa93e2bffae3e26582b8ca5848ebcfb88"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题163 - 项目长期研究与来源证据核对.md",
+      "before": "bae0b59b1a897cfa685c5179c89d6651fe345772ef657f8736fe3c9f1fa45cf4",
+      "after": "bae0b59b1a897cfa685c5179c89d6651fe345772ef657f8736fe3c9f1fa45cf4"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题164 - 项目长期研究与来源证据核对.md",
+      "before": "944374d60377869174aa3af9b0ae1fa483a8e0d79a32c089acec3fd95e5aec9a",
+      "after": "944374d60377869174aa3af9b0ae1fa483a8e0d79a32c089acec3fd95e5aec9a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题165 - 项目长期研究与来源证据核对.md",
+      "before": "45d8756cdf1c0525666c64f59dee4922d3f610b8b81242a2bbc7035c2fd696e6",
+      "after": "45d8756cdf1c0525666c64f59dee4922d3f610b8b81242a2bbc7035c2fd696e6"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题166 - 项目长期研究与来源证据核对.md",
+      "before": "f590117682197e778a78f95efc97e171fc4afe3f3daedd295452bdf3b6160154",
+      "after": "f590117682197e778a78f95efc97e171fc4afe3f3daedd295452bdf3b6160154"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题167 - 项目长期研究与来源证据核对.md",
+      "before": "17a9dec8e08e8295da6cd2cdbd803a8cc7187003206ceff0af1d215a4706ef05",
+      "after": "17a9dec8e08e8295da6cd2cdbd803a8cc7187003206ceff0af1d215a4706ef05"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题168 - 项目长期研究与来源证据核对.md",
+      "before": "bc3371f8b94dac2841116cbf638e10d3217b4ee45f478dbc48898728ab9b786a",
+      "after": "bc3371f8b94dac2841116cbf638e10d3217b4ee45f478dbc48898728ab9b786a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题169 - 项目长期研究与来源证据核对.md",
+      "before": "650025a231c7f1f9e6ae3d5d3fbf3714acd7a37e0efa1def47d0a9abacf3bb3a",
+      "after": "650025a231c7f1f9e6ae3d5d3fbf3714acd7a37e0efa1def47d0a9abacf3bb3a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题170 - 项目长期研究与来源证据核对.md",
+      "before": "1fe28b06f3cff3c34370c058b0a86596ccaede20a129501ab014e35e31f69a12",
+      "after": "1fe28b06f3cff3c34370c058b0a86596ccaede20a129501ab014e35e31f69a12"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题171 - 项目长期研究与来源证据核对.md",
+      "before": "28e7090494adbc7a1373edd22d8c5f540af67fdbc00bebeb823a069a0195ccac",
+      "after": "28e7090494adbc7a1373edd22d8c5f540af67fdbc00bebeb823a069a0195ccac"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题172 - 项目长期研究与来源证据核对.md",
+      "before": "d8fc13b011a1fc6beedc4f2e358f438be73f96a92bb912b86488ba6082691afb",
+      "after": "d8fc13b011a1fc6beedc4f2e358f438be73f96a92bb912b86488ba6082691afb"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题173 - 项目长期研究与来源证据核对.md",
+      "before": "57127680bb1cc1c4dfc02b8e7323ff422b9ff4e4788c0226eb965c5fbe79515c",
+      "after": "57127680bb1cc1c4dfc02b8e7323ff422b9ff4e4788c0226eb965c5fbe79515c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题174 - 项目长期研究与来源证据核对.md",
+      "before": "68da1e5b5bcd1c6f9f0c8dd5e60e85080ed155a06f15dbd5d27755bba076f31c",
+      "after": "68da1e5b5bcd1c6f9f0c8dd5e60e85080ed155a06f15dbd5d27755bba076f31c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题175 - 项目长期研究与来源证据核对.md",
+      "before": "bfe0d69b9c9c023296c3d09f5a92091026d9713eeecff75c17ff9e8fa96e5c21",
+      "after": "bfe0d69b9c9c023296c3d09f5a92091026d9713eeecff75c17ff9e8fa96e5c21"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题176 - 项目长期研究与来源证据核对.md",
+      "before": "54d1d00a0011d7d70da31e4c31539a1bfaea8a9e32df8f0adcc2263872febac4",
+      "after": "54d1d00a0011d7d70da31e4c31539a1bfaea8a9e32df8f0adcc2263872febac4"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题177 - 项目长期研究与来源证据核对.md",
+      "before": "fc13b848b33834f782086b7021c0fd20daec5543a376a22566f5f383f077d24b",
+      "after": "fc13b848b33834f782086b7021c0fd20daec5543a376a22566f5f383f077d24b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题178 - 项目长期研究与来源证据核对.md",
+      "before": "b706964b8fa2a69d49355cac1bf50d0c6816585e7ac89895e2f11a3b83265aaf",
+      "after": "b706964b8fa2a69d49355cac1bf50d0c6816585e7ac89895e2f11a3b83265aaf"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题179 - 项目长期研究与来源证据核对.md",
+      "before": "4f6d2c60e03d51b8522567e62d919cd90e70f3beffbfd8666e12d443f3b16597",
+      "after": "4f6d2c60e03d51b8522567e62d919cd90e70f3beffbfd8666e12d443f3b16597"
+    }
+  ],
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointermove",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointermove",
+      "trusted": true
+    },
+    {
+      "type": "pointermove",
+      "trusted": true
+    },
+    {
+      "type": "pointermove",
+      "trusted": true
+    },
+    {
+      "type": "pointermove",
+      "trusted": true
+    },
+    {
+      "type": "pointermove",
+      "trusted": true
+    },
+    {
+      "type": "pointermove",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "offlineRenameOperations": [
+    {
+      "attempts": 1,
+      "elapsedMs": 1,
+      "transientErrors": []
+    },
+    {
+      "attempts": 1,
+      "elapsedMs": 1,
+      "transientErrors": []
+    },
+    {
+      "attempts": 1,
+      "elapsedMs": 3,
+      "transientErrors": []
+    },
+    {
+      "attempts": 1,
+      "elapsedMs": 1,
+      "transientErrors": []
+    }
+  ],
+  "nativeGraph": {
+    "nodes": 612,
+    "edges": 500,
+    "ownedFiles": 180,
+    "selectedNodeId": "\\\\?\\C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题017 - 项目长期研究与来源证据核对.md"
+  },
+  "selectedNodeId": "\\\\?\\C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题017 - 项目长期研究与来源证据核对.md",
+  "labels": [
+    {
+      "left": 167.006103515625,
+      "right": 436.993896484375,
+      "top": 306.5,
+      "bottom": 329.5,
+      "id": "\\\\?\\C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题017 - 项目长期研究与来源证据核对.md",
+      "text": "图谱验收主题017 - 项目长期研究与来源证…",
+      "x": 173.006103515625,
+      "y": 310.5,
+      "emphasized": true
+    }
+  ],
+  "failedGraphNodes": 612,
+  "offlineRootRestored": true,
+  "retriedGraphNodes": 612,
+  "layouts": [
+    "自动网络",
+    "树状层级",
+    "组织结构",
+    "放射聚焦",
+    "时间线"
+  ],
+  "themes": [
+    "专业 · 克制网格",
+    "多彩 · 语义光域",
+    "专注 · 纯净画布"
+  ],
+  "initialErrorObserved": true,
+  "initialRetryObserved": true,
+  "doubleClickTarget": {
+    "x": 370,
+    "y": 411.5
+  },
+  "doubleClickFocus": {
+    "nodeId": "\\\\?\\C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题017 - 项目长期研究与来源证据核对.md",
+    "point": {
+      "x": 660,
+      "y": 367.50101419878297
+    },
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "width": 604,
+      "height": 577
+    },
+    "target": {
+      "x": -358,
+      "y": -79.00101419878297,
+      "zoom": 1
+    }
+  },
+  "singleClickStayed": true,
+  "singleClickNodeId": "\\\\?\\C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题017 - 项目长期研究与来源证据核对.md",
+  "doubleClickPath": "C:\\LongEditR5ILibrary\\v1111-graph-6de226d9-375a-430e-a023-a10681c917e8\\图谱验收主题017 - 项目长期研究与来源证据核对.md",
+  "documentContentVisible": true,
+  "errorOverlay": false
+}

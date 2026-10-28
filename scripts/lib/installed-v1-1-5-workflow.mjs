@@ -6,7 +6,7 @@ import { searchFeedbackContract, paletteFileOpenExpression } from './search-feed
 
 // Real packaged IPC, synthetic files and UI input; never grant test-only permissions.
 export async function runInstalledV115Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
-  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3'].includes(appVersion)) throw Error('Disposable 1.1.5 or later supported installation required')
+  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4'].includes(appVersion)) throw Error('Disposable 1.1.5 or later supported installation required')
   if (path.resolve(library).toLowerCase() !== 'c:\\longeditr5ilibrary') throw Error('Only the disposable installer fixture library may be changed')
   const harnessSourceCommit = process.env.GITHUB_SHA || process.env.LONGEDIT_INSTALLED_HARNESS_COMMIT || ''
   assert.match(harnessSourceCommit, /^[a-f0-9]{40}$/, 'record the exact installer verification harness revision')
@@ -50,13 +50,15 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
   // Paged searches preserve the visible order until the user accepts a new
   // snapshot. Follow that visible action when more libraries complete.
   const resultReady = async (name, label) => {
+    const names = Array.isArray(name) ? name : [name]
+    const ready = names.map(file => `!!(${result(file)})`).join('&&')
     const refresh = `document.querySelector('${palette} .search-page-update button:not([disabled])')`
     for (let step = 0; step < 8; step++) {
-      await waitFor(`!!(${result(name)})||!!(${refresh})`, label+' or explicit refresh')
-      if (await evaluate(`!!(${result(name)})`)) return
+      await waitFor(`(${ready})||!!(${refresh})`, label+' or explicit refresh')
+      if (await evaluate(ready)) return
       await mouse(refresh)
     }
-    throw Error('Expected search file absent after explicit refresh: '+name)
+    throw Error('Expected search files absent after explicit refresh: '+names.join(', '))
   }
 
   const normalize = p => { const value = p.replaceAll('\\', '/'); return (value.startsWith('//?/') ? value.slice(4) : value).toLowerCase() }
@@ -136,7 +138,10 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await navigate('#/library?path=' + encodeURIComponent(draft), '.library-mode', 'v115 actual command panel')
     await waitFor(`(${editor})?.textContent.includes('安装态草稿')`, 'v115 draft ready')
     await open(); await query(expression); await waitFor(`!!(${result(path.basename(main))})&&!!(${result(path.basename(data))})`, 'v115 TXT and JSON results')
-    await scopeAll(); await resultReady(path.basename(remote), 'v115 all-library result visible')
+    // A small library may finish first. Its one visible result is not evidence
+    // that the larger library has completed its page; accept the normal update
+    // action until all three expected files are visible in the same snapshot.
+    await scopeAll(); await resultReady([main, data, remote].map(file => path.basename(file)), 'v115 all-library results visible')
     check('palette-scope-dropdown-is-clickable-and-shows-real-native-results', await evaluate(`!!(${result(path.basename(main))})&&!!(${result(path.basename(data))})&&!!(${result(path.basename(remote))})`))
     await snap('installed-v115-search.jpg')
     // This shared fixture retains earlier format/failure examples. The paged
