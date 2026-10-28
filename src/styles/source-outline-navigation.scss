@@ -1,0 +1,8 @@
+[data-outline-node][aria-current='true'] {
+  background: rgba(var(--theme-primary-rgb), .1);
+  color: var(--theme-primary);
+}
+[data-outline-node]:focus-visible {
+  outline: 2px solid var(--theme-primary);
+  outline-offset: -2px;
+}

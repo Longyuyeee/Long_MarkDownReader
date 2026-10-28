@@ -42,10 +42,10 @@
         </button>
         <div v-if="analysis?.valid" class="valid"><n-icon :component="ValidIcon" /><span>语法有效</span><WorkspaceHelp label="说明：语法有效，注释、顺序与字面量由源码保" text="语法有效，注释、顺序与字面量由源码保留" /></div>
         <n-input v-model:value="query" @keydown.enter.prevent="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选键路径或值"><template #prefix><n-icon :component="SearchIcon" /></template></n-input>
-        <div class="outline" @contextmenu.self="openRootFieldMenu">
+        <div :ref="outlineNav.element" role="group" aria-label="TOML 结构提纲" class="outline" @contextmenu.self="openRootFieldMenu">
           <template v-for="item in filteredOutline" :key="`${item.start}:${item.path}`">
             <div class="outline-node">
-              <button :aria-current="selectedFieldStart !== undefined && (selectedFieldStart === (item.kind==='array-item' ? item.start : item.field?.start) || (item.array || item.kind==='table') && selectedFieldStart === item.start) ? 'true' : undefined" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
+              <button :aria-current="item === outlineNav.selected.value ? 'true' : undefined" :data-outline-node="outlineNav.key(item)" :tabindex="outlineNav.tabIndex(item)" @focus="outlineNav.select(item)" @keydown="outlineNav.keydown($event, item)" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
                 <n-icon :component="item.array || item.kind==='array-item' ? ArrayIcon : item.kind === 'value' ? KeyIcon : TableIcon" />
                 <span><strong>{{ item.label }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
               </button>
@@ -128,6 +128,7 @@
 </template>
 
 <script setup lang="ts">
+import { useSourceOutlineNavigation } from '../composables/useSourceOutlineNavigation'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -173,6 +174,14 @@ function updateArrayRecord<T>(record:Record<string,T>,key:string,value:T):Record
 // Paths are user data: avoid both inherited keys and Vue's proxy flag names.
 const expandedArrays=shallowRef(emptyArrayRecord<boolean>()),arrayItems=shallowRef(emptyArrayRecord<Entry[]>()),arrayErrors=shallowRef(emptyArrayRecord<string>()),arrayLoading=shallowRef(emptyArrayRecord<boolean>())
 const arraySource=ref('')
+const outlineEntries = computed(() => {
+  const rows:Entry[]=[]
+  for(const entry of analysis.value?.outline||[]){
+    const children=arraySource.value===content.value&&expandedArrays.value[entry.path]?(arrayItems.value[entry.path]||[]):[]
+    rows.push(entry, ...children)
+  }
+  return rows
+})
 const filteredOutline = computed(() => {
   const q=query.value.trim().toLowerCase(),rows:Entry[]=[]
   for(const entry of analysis.value?.outline||[]){
@@ -189,6 +198,12 @@ const errorText = (cause: unknown) => { const e = cause as { message?: string; s
 const clearTimer = () => { if (timer) clearTimeout(timer); timer = null }
 const selectedFieldStart = ref<number>()
 const analyzedSource = ref('')
+const outlineNav = useSourceOutlineNavigation({
+  entries: () => outlineEntries.value, visible: () => filteredOutline.value,
+  identity: () => [path.value, isExternal.value, store.libraryPath].join('\0'),
+  ready: () => !loading.value && !analysisPending.value && analyzedSource.value === content.value && !Object.values(arrayLoading.value).some(Boolean),
+  preferredOffset: () => selectedFieldStart.value,
+})
 const session = useStructuredSession({
   path: () => path.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadId, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
@@ -576,6 +591,7 @@ const load = async (discardDraft = false) => {
 }
 
 const reveal = (range: Range) => {
+  outlineNav.selectRange(range)
   if (analyzedSource.value !== content.value) { message.info('正在更新定位，请稍候再试'); return } if (!editor) return; const bytes = new TextEncoder().encode(content.value), point = (n: number) => new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0, Math.min(n, bytes.length))).length, from = point(range.start), to = Math.max(from, point(range.end)); editor.dispatch({ selection: { anchor: from, head: to }, effects: EditorView.scrollIntoView(from, { y: 'center' }) }); editor.focus() }
 const save = () => session.save()
 

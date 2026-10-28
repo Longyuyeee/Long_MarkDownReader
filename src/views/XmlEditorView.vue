@@ -90,14 +90,15 @@
         <n-input v-model:value="query" @keydown.enter.prevent="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选元素、路径或属性">
           <template #prefix><n-icon :component="SearchIcon" /></template>
         </n-input>
-        <div class="outline">
+        <div :ref="outlineNav.element" role="group" aria-label="XML 结构提纲" class="outline">
           <button
             v-for="item in filteredOutline"
             :key="`${item.start}:${item.path}`"
             type="button"
-            :aria-current="selectedElementStart === item.start ? 'true' : undefined"
+            :aria-current="item === outlineNav.selected.value ? 'true' : undefined"
+            :data-outline-node="outlineNav.key(item)" :tabindex="outlineNav.tabIndex(item)" @focus="outlineNav.select(item)" @keydown="outlineNav.keydown($event, item)"
             :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }"
-            @click="selectedElementStart = item.start; reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)"
+            @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)"
           >
             <n-icon :component="TagIcon" />
             <span><strong>{{ item.name }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
@@ -165,6 +166,7 @@
 </template>
 
 <script setup lang="ts">
+import { useSourceOutlineNavigation } from '../composables/useSourceOutlineNavigation'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -258,6 +260,12 @@ const updatePreview = (source?: string) => {
 
 const analyzedSource = ref('')
 const selectedElementStart = ref<number | undefined>()
+const outlineNav = useSourceOutlineNavigation({
+  entries: () => analysis.value?.outline || [], visible: () => filteredOutline.value,
+  identity: () => [xmlPath.value, isExternal.value, store.libraryPath].join('\0'),
+  ready: () => !loading.value && !analysisPending.value && analyzedSource.value === sourceContent.value,
+  preferredOffset: () => selectedElementStart.value,
+})
 const session = useStructuredSession({
   path: () => xmlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
@@ -532,6 +540,7 @@ const load = async (discardDraft = false) => {
 }
 
 const reveal = (range: Pick<Diagnostic, 'start' | 'end'>) => {
+  outlineNav.selectRange(range)
   if (analyzedSource.value !== sourceContent.value) { message.info('正在更新定位，请稍候再试'); return }
   if (!editor) return
   const bytes = new TextEncoder().encode(sourceContent.value)

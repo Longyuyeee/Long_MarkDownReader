@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "fullProductionEditor": true,
+  "sourceUserContentIncluded": false,
+  "normalInputExact": true,
+  "cdpTextCommitOmitsInitialNewline": true,
+  "keyboardPrefixExact": true,
+  "expected": "\n   \n{\"first\":\"我的草稿\",\"second\":\"保留😀\",\"third\":\"最后\"}\n",
+  "normalInput": "\n   \n{\"first\":\"我的草稿\",\"second\":\"保留😀\",\"third\":\"最后\"}\n",
+  "textCommit": "   \n{\"first\":\"我的草稿\",\"second\":\"保留😀\",\"third\":\"最后\"}\n",
+  "keyboardPrefix": "\n   \n{\"first\":\"我的草稿\",\"second\":\"保留😀\",\"third\":\"最后\"}\n"
+}

@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5L",
+  "capturedAt": "2026-10-28T01:54:46.384Z",
+  "environment": "disposable-windows-installed-current-artifact",
+  "status": "passed",
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "installed-release-formal-config-load",
+      "status": "passed"
+    },
+    {
+      "id": "management-backup-export",
+      "status": "passed"
+    },
+    {
+      "id": "management-backup-privacy-preflight",
+      "status": "passed"
+    },
+    {
+      "id": "knowledge-index-delete-rebuild",
+      "status": "passed"
+    },
+    {
+      "id": "post-rollback-management-backup-restore",
+      "status": "passed"
+    },
+    {
+      "id": "post-restore-knowledge-index-rebuild",
+      "status": "passed"
+    },
+    {
+      "id": "post-restore-representative-file-reopen",
+      "status": "passed"
+    }
+  ],
+  "backup": {
+    "bytes": 14643,
+    "sha256": "73ea159c962c5ca670b37528704cbf404a3dae47a3ff2a2a24f8bbc229d854ce",
+    "entryCount": 5,
+    "redactedLibraryCount": 2,
+    "excluded": [
+      "document-body",
+      "api-key",
+      "system-credential",
+      "absolute-user-path",
+      "recoverable-cache-body",
+      "external-library-content"
+    ]
+  },
+  "preflight": {
+    "valid": true,
+    "schemaVersion": 1,
+    "stage": "R3B",
+    "entryCount": 5,
+    "redactedLibraryCount": 2,
+    "savedSearchCount": 4,
+    "requiresLibraryMapping": true,
+    "mappingCount": 2,
+    "excluded": [
+      "document-body",
+      "api-key",
+      "system-credential",
+      "absolute-user-path",
+      "recoverable-cache-body",
+      "external-library-content"
+    ],
+    "blockedReasons": []
+  },
+  "collectionSnapshot": [
+    {
+      "id": "collection-52e8efac-280a-4448-9a24-208b4f3201ee",
+      "name": "二七复用（导入 1）",
+      "query": "__longedit_graph_collection__",
+      "libraryPath": "C:\\LongEditR5ILibrary\\000-v1127-reuse-d3dc34c5-660a-4e9b-bd4d-7496390a0fd1\\目标项目",
+      "objectTypes": [],
+      "filters": null,
+      "graphRoot": "中心.md",
+      "graphDepth": 2,
+      "createdAt": 1793152379892
+    },
+    {
+      "id": "collection-75b864de-a026-47c1-b9f2-938563fc904d",
+      "name": "二七复用",
+      "query": "预算",
+      "libraryPath": "C:\\LongEditR5ILibrary\\000-v1127-reuse-d3dc34c5-660a-4e9b-bd4d-7496390a0fd1\\目标项目",
+      "objectTypes": [
+        "markdown"
+      ],
+      "filters": {
+        "directory": "项目",
+        "tag": "工作",
+        "modifiedWithinDays": 7
+      },
+      "graphRoot": null,
+      "graphDepth": null,
+      "createdAt": 1793152379892
+    },
+    {
+      "id": "collection-a91fff19-7a5b-4e52-aaf7-0a2a64558ee5",
+      "name": "本版标签集合验收",
+      "query": "",
+      "libraryPath": "C:\\LongEditR5ILibrary",
+      "objectTypes": [],
+      "filters": {
+        "directory": "v1110-tags-e9bee922-bf92-4d51-8748-8c65471e14d6",
+        "tag": "验收一零",
+        "modifiedWithinDays": null
+      },
+      "graphRoot": null,
+      "graphDepth": null,
+      "createdAt": 1793151953674
+    },
+    {
+      "id": "r5l-saved-search",
+      "name": "R5L Restore Marker",
+      "query": "R5L",
+      "libraryPath": "C:\\LongEditR5ILibrary",
+      "objectTypes": [
+        "plain-text",
+        "json"
+      ],
+      "filters": null,
+      "graphRoot": null,
+      "graphDepth": null,
+      "createdAt": 1
+    }
+  ],
+  "libraryPaths": [
+    "C:\\LongEditR5ILibrary",
+    "C:\\LongEditR5ILibrary\\000-v1127-reuse-d3dc34c5-660a-4e9b-bd4d-7496390a0fd1\\目标项目"
+  ],
+  "indexBeforeRollback": {
+    "state": "ready",
+    "schemaVersion": 2,
+    "sourceCount": 838,
+    "objectCount": 1741,
+    "relationCount": 1297,
+    "cacheBytes": 10510683
+  },
+  "completedAt": "2026-10-28T01:55:33.900Z",
+  "restore": {
+    "libraryCount": 2,
+    "savedSearchCount": 4,
+    "warningCount": 4
+  },
+  "indexAfterRestore": {
+    "state": "ready",
+    "schemaVersion": 2,
+    "sourceCount": 838,
+    "objectCount": 1741,
+    "relationCount": 1297,
+    "cacheBytes": 10510634
+  }
+}

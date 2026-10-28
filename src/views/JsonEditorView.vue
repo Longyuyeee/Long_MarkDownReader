@@ -427,13 +427,13 @@
           >
             <template #prefix><SearchIcon :size="14" /></template>
           </n-input>
-          <div class="path-results">
+          <div :ref="outlineNav.element" role="group" aria-label="JSON 结构提纲" class="path-results">
             <div
               v-for="entry in filteredPaths"
               :key="`${entry.path}-${entry.start}`"
               class="path-item" @contextmenu.prevent.stop="nodeMenu.open($event, entry)"
             >
-              <button type="button" @click="showSourceRange(entry)">
+              <button type="button" @click="showSourceRange(entry)" :aria-current="entry === outlineNav.selected.value ? 'true' : undefined" :data-outline-node="outlineNav.key(entry)" :tabindex="outlineNav.tabIndex(entry)" @focus="outlineNav.select(entry)" @keydown="outlineNav.keydown($event, entry)">
                 <code>{{ entry.path }}</code>
                 <small>{{ kindLabel(entry.kind) }} · 第 {{ entry.line }} 行</small>
                 <span>{{ entry.preview }}</span>
@@ -664,6 +664,7 @@
 </template>
 
 <script setup lang="ts">
+import { useSourceOutlineNavigation } from '../composables/useSourceOutlineNavigation'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -1089,6 +1090,11 @@ const treeWindowOffset = computed(() => treeWindow.value.start * TREE_ROW_HEIGHT
 const treeVirtualHeight = computed(() => expandedTreePaths.value.length * TREE_ROW_HEIGHT)
 
 const analyzedSource = ref('')
+const outlineNav = useSourceOutlineNavigation({
+  entries: () => analysis.value?.paths || [], visible: () => filteredPaths.value,
+  identity: () => [jsonPath.value, isExternal.value, store.libraryPath].join('\0'),
+  ready: () => !loading.value && !analysisPending.value && analyzedSource.value === sourceContent.value,
+})
 const session = useStructuredSession({
   path: () => jsonPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
@@ -1912,6 +1918,7 @@ const moveArrayItem = async (entry: JsonPathEntry, direction: -1 | 1) => {
 const locatePathQuery = () => { deferredPathQuery.value = pathQuery.value; const entry = filteredPaths.value[0]; if (entry) void showSourceRange(entry) }
 
 const showSourceRange = async (entry: JsonPathEntry) => {
+  outlineNav.selectRange(entry)
   const owner = session.capture()
   if (!owner) return
   viewMode.value = 'source'
