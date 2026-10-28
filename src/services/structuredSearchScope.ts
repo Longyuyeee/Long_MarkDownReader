@@ -2,6 +2,7 @@ import { EditorState, StateEffect, StateField, type ChangeDesc, type Transaction
 import { Decoration, EditorView } from '@codemirror/view'
 import { invertedEffects } from '@codemirror/commands'
 import { getSearchQuery, SearchQuery, setSearchQuery } from '@codemirror/search'
+import { BoundedSearchQuery } from './boundedSearchQuery.ts'
 
 export type SearchScopeReason = 'empty' | 'changed' | 'external' | 'waiting'
 export interface SourceSearchScope {
@@ -44,8 +45,11 @@ const inScope = (_match: string, state: EditorState, from: number, to: number) =
   const scope = state.field(sourceSearchScope, false)
   return !!scope && (!scope.enabled || !!scope.range && from >= scope.range.from && to <= scope.range.to)
 }
-const queryWithScope = (query: SearchQuery) => new SearchQuery({ search: query.search, replace: query.replace,
-  caseSensitive: query.caseSensitive, regexp: query.regexp, wholeWord: query.wholeWord, literal: query.literal, test: inScope })
+const queryWithScope = (query: SearchQuery) => new BoundedSearchQuery({ search: query.search, replace: query.replace,
+  caseSensitive: query.caseSensitive, regexp: query.regexp, wholeWord: query.wholeWord, literal: query.literal, test: inScope }, state => {
+    const scope = state.field(sourceSearchScope)
+    return scope.enabled ? scope.range || null : undefined
+  })
 const scopeTransaction = (tr: Transaction) => tr.docChanged || tr.effects.some(effect =>
   effect.is(setSearchQuery) || effect.is(setSourceSearchScope) || effect.is(restoreScope))
 export const sourceSearchScopeExtensions = [sourceSearchScope,

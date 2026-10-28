@@ -33,6 +33,8 @@ export async function runInstalledV136SourceScopeWorkflow({send,evaluate,navigat
    await ui.waitFor(`!!document.querySelector(${q(field)})`,'selected text search panel')
    assert.equal(await evaluate(`document.querySelector(${q(scope)}).checked`),false)
    await ui.fill(field,'我的草稿');await ui.fill(replacement,'选区修改的新值');await ui.click(scope);await waitText('选区内 · 3项');entry.explicitScope=true
+   await ui.fill(field,'field[\\s\\S]*保留');await ui.click(panel+' input[name=re]');await waitText('1项');await ui.click(panel+' button[name=next]');assert.ok((await evaluate(`(()=>{const v=${view};return v.state.doc.sliceString(v.state.selection.main.from,v.state.selection.main.to)})()`)).includes('field003'));entry.regexBoundaryExact=true
+   await ui.click(panel+' input[name=re]');await ui.fill(field,'我的草稿');await waitText('3项')
    await ui.click(panel+' button[name=next]');await waitText('1/3项');await ui.click(panel+' button[name=prev]');await waitText('3/3项');entry.navigationAndCount=true
    await ui.click(panel+' button[name=select]');assert.equal(await evaluate(`${view}.state.selection.ranges.length`),3);entry.selectAllScoped=true
    await ui.click(panel+' button[name=replaceAll]');await fresh();assert.equal(await body(),changed);assert.equal(await fs.readFile(file,'utf8'),'\uFEFF'+positionSource(mode).replaceAll('\n','\r\n'))

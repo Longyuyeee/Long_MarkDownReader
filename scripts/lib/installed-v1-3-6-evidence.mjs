@@ -13,7 +13,7 @@ export function validateInstalledSourceScope(r,m){
  assert.ok(r.inputTrace.length>20&&r.inputTrace.every(e=>e.trusted)&&r.inputTrace.some(e=>e.type==='keydown'))
  for(const k of ['otherDraftsPreserved','disposableDraftsExplicitlySaved'])assert.equal(r[k],true,k)
  assert.deepEqual(r.viewportWidths,[1280,800]);assert.deepEqual(r.modes.map(e=>e.mode),['json','yaml','xml','toml'])
- for(const e of r.modes)for(const k of ['explicitScope','navigationAndCount','selectAllScoped','replaceUndoRedoExact','explicitSaveExact','scopeAndClosedPanelRetained','changedBodyFailsClosed','emptyAndUpdatedScope','renameExact','closeResetExact','readOnlyExact'])assert.equal(e[k],true,e.mode+' '+k)
+ for(const e of r.modes)for(const k of ['explicitScope','regexBoundaryExact','navigationAndCount','selectAllScoped','replaceUndoRedoExact','explicitSaveExact','scopeAndClosedPanelRetained','changedBodyFailsClosed','emptyAndUpdatedScope','renameExact','closeResetExact','readOnlyExact'])assert.equal(e[k],true,e.mode+' '+k)
 }
 export function assertSourceScopeOutputBytes(r,read){
  assert.deepEqual(r.outputs.map(o=>o.fileName),sourceScopeOutputFiles)

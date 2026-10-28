@@ -53,13 +53,24 @@ test('later explicit scope choices win over old edit history',()=>{
   if(enabled)assert.deepEqual(v.state.field(sourceSearchScope).range,{from:2,to:5})
  }
 })
-test('regex, zero width, full words and crossing boundaries use full-document semantics',()=>{
+test('bounded regex, zero width, full words and crossing boundaries stay within the scope',()=>{
  const v=editor('cat catfish cat\ncat');scope(v,4,15)
  query(v,{wholeWord:true});assert.deepEqual(ranges(v),[[12,15]])
- query(v,{search:'cat.*cat',regexp:true});assert.deepEqual(ranges(v),[])
+ query(v,{search:'cat.*cat',regexp:true});assert.deepEqual(ranges(v),[[4,15]])
  query(v,{search:'^cat',regexp:true});assert.deepEqual(ranges(v),[])
  query(v,{search:'(?=cat)',regexp:true});assert.deepEqual(ranges(v),[[4,4],[12,12]])
  query(v,{search:'[',regexp:true});assert.equal(getSearchQuery(v.state).valid,false)
+})
+
+test('greedy regex starts and ends inside the scope; counts, navigation and captures agree',()=>{
+ const v=editor('cat cat cat outside');scope(v,4,11);query(v,{search:'(cat).*?(cat)',regexp:true,replace:'$2-$1'})
+ assert.deepEqual(ranges(v),[[4,11]]);findNext(v);assert.deepEqual([v.state.selection.main.from,v.state.selection.main.to],[4,11])
+ selectMatches(v);replaceNext(v);assert.equal(v.state.doc.toString(),'cat cat-cat outside');undo(v)
+ replaceAll(v);assert.equal(v.state.doc.toString(),'cat cat-cat outside');undo(v)
+ query(v,{search:'cat.*cat',regexp:true});assert.deepEqual(ranges(v),[[4,11]])
+ query(v,{search:'cat[\\s\\S]*cat',regexp:true});assert.deepEqual(ranges(v),[[4,11]])
+ const highlighted=[];getSearchQuery(v.state).create().highlight(v.state,0,v.state.doc.length,(from,to)=>highlighted.push([from,to]))
+ assert.deepEqual(highlighted,[[4,11]])
 })
 test('read-only documents remain searchable without replacement or history changes',()=>{
  const v=editor(undefined,true);query(v);scope(v,6,13);findNext(v);assert.equal(v.state.selection.main.from,6)

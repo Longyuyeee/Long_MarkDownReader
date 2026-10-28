@@ -19,6 +19,9 @@ try{
   const show=async()=>{await page.keyboard.press('Control+f');await find.waitFor({state:'visible'});await find.fill('我的草稿');await panel.locator('input[name=replace]').fill('选区修改的新值')}
   await fresh();await source.fill(positionDraft(mode));await fresh();await select();await show();assert.equal(await scope.isChecked(),false)
   await scope.check();await feedback.filter({hasText:'选区内 · 3项'}).waitFor()
+  await find.fill('field[\\s\\S]*保留');await panel.locator('input[name=re]').check();await feedback.filter({hasText:'1项'}).waitFor()
+  await panel.locator('button[name=next]').click();assert.ok((await page.evaluate(()=>structuredAudit.sourceSelection())).includes('field003'))
+  await panel.locator('input[name=re]').uncheck();await find.fill('我的草稿');await feedback.filter({hasText:'3项'}).waitFor()
   await panel.locator('button[name=next]').click();await feedback.filter({hasText:'1/3项'}).waitFor();await panel.locator('button[name=prev]').click();await feedback.filter({hasText:'3/3项'}).waitFor()
   await panel.locator('button[name=select]').click();assert.equal((await page.evaluate(()=>structuredAudit.sourceSelection())).includes('我的草稿'),true)
   await panel.locator('button[name=replaceAll]').click();await fresh()
