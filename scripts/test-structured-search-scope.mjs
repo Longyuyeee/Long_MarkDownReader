@@ -53,6 +53,35 @@ test('later explicit scope choices win over old edit history',()=>{
   if(enabled)assert.deepEqual(v.state.field(sourceSearchScope).range,{from:2,to:5})
  }
 })
+
+test('rewrites crossing scope boundaries fail closed and undo restores exact scope',()=>{
+ for(const change of [{from:0,to:16,insert:'new source'},{from:0,to:8,insert:'prefix'},{from:7,to:16,insert:'suffix'}]){
+  const v=editor('0123456789abcdef');scope(v,4,10);query(v,{search:'e',replace:'WRONG'})
+  v.dispatch({changes:change});assert.equal(v.state.field(sourceSearchScope).reason,'changed');assert.deepEqual(ranges(v),[])
+  const body=v.state.doc.toString();replaceAll(v);assert.equal(v.state.doc.toString(),body)
+  undo(v);assert.equal(v.state.doc.toString(),'0123456789abcdef');assert.deepEqual(v.state.field(sourceSearchScope).range,{from:4,to:10})
+  redo(v);assert.equal(v.state.field(sourceSearchScope).reason,'changed')
+ }
+})
+
+test('all adjacent outside edits preserve the subsection; internal edits map only its own text',()=>{
+ const doc='0123456789abcdef'
+ for(let from=0;from<=doc.length;from++)for(let to=from;to<=doc.length;to++)for(const insert of ['', 'XY']){
+  const internal=from>=4&&to<=10,outside=to<=4||from>=10
+  if(!internal&&!outside)continue
+  if(from===to&&(from===4||from===10))continue // boundary inserts deliberately join the scope
+  const v=editor(doc);scope(v,4,10);v.dispatch({changes:{from,to,insert}})
+  const expected=internal?doc.slice(4,from)+insert+doc.slice(to,10):doc.slice(4,10),range=v.state.field(sourceSearchScope).range
+  if(!expected)assert.equal(range,undefined)
+  else{assert.ok(range,JSON.stringify({from,to,insert}));assert.equal(v.state.doc.sliceString(range.from,range.to),expected)}
+ }
+})
+
+test('undo never resurrects an asynchronous waiting state without its verification owner',()=>{
+ const v=editor();v.dispatch({effects:setSourceSearchScope.of({enabled:true,intent:{},reason:'waiting'})})
+ v.dispatch({changes:{from:0,insert:'edit'}});assert.equal(v.state.field(sourceSearchScope).reason,'changed')
+ undo(v);assert.equal(v.state.field(sourceSearchScope).reason,'changed');assert.deepEqual(ranges(v),[])
+})
 test('bounded regex, zero width, full words and crossing boundaries stay within the scope',()=>{
  const v=editor('cat catfish cat\ncat');scope(v,4,15)
  query(v,{wholeWord:true});assert.deepEqual(ranges(v),[[12,15]])
