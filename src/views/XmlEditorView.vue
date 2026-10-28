@@ -167,6 +167,7 @@
 
 <script setup lang="ts">
 import { useSourceOutlineNavigation } from '../composables/useSourceOutlineNavigation'
+import { useStructuredOutlineState } from '../composables/useStructuredOutlineState'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -223,8 +224,9 @@ const isSvg = computed(() => format.value?.id === 'svg')
 const formatLabel = computed(() => isSvg.value ? 'SVG' : 'XML')
 const fileName = computed(() => xmlPath.value.split(/[\\/]/).pop() || `未命名 ${formatLabel.value}`)
 const currentTab = computed(() => store.tabs.find(tab => tab.path === xmlPath.value))
+const outlineState = useStructuredOutlineState({ tab: () => currentTab.value, path: () => xmlPath.value, root: () => store.libraryPath, external: () => isExternal.value, format: () => format.value?.id || '' })
 const loading = ref(true), saving = ref(false), loadError = ref(''), dirty = ref(false), analysisPending = ref(false)
-const sourceContent = ref(''), signature = ref(''), encoding = ref('utf-8'), readOnlyReason = ref(''), query = ref('')
+const sourceContent = ref(''), signature = ref(''), encoding = ref('utf-8'), readOnlyReason = ref(''), query = outlineState.query
 const fileSize = ref(0), modified = ref(0), sourceSize = ref(0), lineCount = ref(1), cursorLine = ref(1), cursorColumn = ref(1)
 const analysis = ref<Analysis | null>(null)
 const previewUrl = ref('')
@@ -261,6 +263,7 @@ const updatePreview = (source?: string) => {
 const analyzedSource = ref('')
 const selectedElementStart = ref<number | undefined>()
 const outlineNav = useSourceOutlineNavigation({
+  selection: outlineState.selection,
   entries: () => analysis.value?.outline || [], visible: () => filteredOutline.value,
   identity: () => [xmlPath.value, isExternal.value, store.libraryPath].join('\0'),
   ready: () => !loading.value && !analysisPending.value && analyzedSource.value === sourceContent.value,

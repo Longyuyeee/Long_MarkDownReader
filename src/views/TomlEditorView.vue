@@ -129,6 +129,7 @@
 
 <script setup lang="ts">
 import { useSourceOutlineNavigation } from '../composables/useSourceOutlineNavigation'
+import { useStructuredOutlineState } from '../composables/useStructuredOutlineState'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -166,13 +167,14 @@ const { inspectorVisible, toggleInspector } = useResponsiveInspector()
 const editorHost = ref<HTMLElement | null>(null), path = computed(() => String(route.query.path || '')), format = computed(() => findFileFormat(path.value))
 const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => path.value.split(/[\\/]/).pop() || '未命名 TOML'), currentTab = computed(() => store.tabs.find(tab => tab.path === path.value))
-const loading = ref(true), saving = ref(false), dirty = ref(false), analysisPending = ref(false), loadError = ref(''), query = ref('')
+const outlineState = useStructuredOutlineState({ tab: () => currentTab.value, path: () => path.value, root: () => store.libraryPath, external: () => isExternal.value, format: () => format.value?.id || '' })
+const loading = ref(true), saving = ref(false), dirty = ref(false), analysisPending = ref(false), loadError = ref(''), query = outlineState.query
 const content = ref(''), signature = ref(''), encoding = ref('utf-8'), readOnlyReason = ref(''), fileSize = ref(0), modified = ref(0), lines = ref(1), cursorLine = ref(1), cursorColumn = ref(1)
 const analysis = ref<Analysis | null>(null), readOnly = computed(() => Boolean(readOnlyReason.value))
 function emptyArrayRecord<T>():Record<string,T>{return Object.create(null)}
 function updateArrayRecord<T>(record:Record<string,T>,key:string,value:T):Record<string,T>{return Object.assign(emptyArrayRecord<T>(),record,{[key]:value})}
 // Paths are user data: avoid both inherited keys and Vue's proxy flag names.
-const expandedArrays=shallowRef(emptyArrayRecord<boolean>()),arrayItems=shallowRef(emptyArrayRecord<Entry[]>()),arrayErrors=shallowRef(emptyArrayRecord<string>()),arrayLoading=shallowRef(emptyArrayRecord<boolean>())
+const expandedArrays=computed({get:()=>Object.assign(emptyArrayRecord<boolean>(),Object.fromEntries(outlineState.expanded.value.map(path=>[path,true]))),set:(value:Record<string,boolean>)=>{outlineState.expanded.value=Object.keys(value).filter(path=>value[path])}}),arrayItems=shallowRef(emptyArrayRecord<Entry[]>()),arrayErrors=shallowRef(emptyArrayRecord<string>()),arrayLoading=shallowRef(emptyArrayRecord<boolean>())
 const arraySource=ref('')
 const outlineEntries = computed(() => {
   const rows:Entry[]=[]
@@ -199,6 +201,7 @@ const clearTimer = () => { if (timer) clearTimeout(timer); timer = null }
 const selectedFieldStart = ref<number>()
 const analyzedSource = ref('')
 const outlineNav = useSourceOutlineNavigation({
+  selection: outlineState.selection,
   entries: () => outlineEntries.value, visible: () => filteredOutline.value,
   identity: () => [path.value, isExternal.value, store.libraryPath].join('\0'),
   ready: () => !loading.value && !analysisPending.value && analyzedSource.value === content.value && !Object.values(arrayLoading.value).some(Boolean),
@@ -394,8 +397,12 @@ const toggleArray=async(entry:Entry)=>{
   expandedArrays.value=updateArrayRecord(expandedArrays.value,entry.path,true);await loadArrayItems(entry)
 }
 const clearArrayItems=()=>{arrayRequests=emptyArrayRecord<object>();arrayItems.value=emptyArrayRecord<Entry[]>();arrayErrors.value=emptyArrayRecord<string>();arrayLoading.value=emptyArrayRecord<boolean>();arraySource.value=''}
-const resetArrayOutline=()=>{expandedArrays.value=emptyArrayRecord<boolean>();clearArrayItems()}
-const refreshExpandedArrays=(result:Analysis)=>{for(const entry of result.outline)if(entry.array&&expandedArrays.value[entry.path])void loadArrayItems(entry)}
+const refreshExpandedArrays=(result:Analysis)=>{
+  if(!result.valid)return
+  const paths=new Set(result.outline.filter(entry=>entry.array).map(entry=>entry.path))
+  outlineState.expanded.value=outlineState.expanded.value.filter(path=>paths.has(path))
+  for(const entry of result.outline)if(entry.array&&expandedArrays.value[entry.path])void loadArrayItems(entry)
+}
 watch(content,clearArrayItems,{flush:'sync'})
 const copyPending=ref(false),copyError=ref(''),copyEntry=ref<Entry|null>(null)
 let copyRequest:object|undefined,pendingCopyReveal:(()=>void)|undefined
@@ -564,7 +571,7 @@ const load = async (discardDraft = false) => {
   copyRequest=undefined;copyOwner=undefined;pendingCopyReveal=undefined;copyPending.value=false;copyError.value='';copyEntry.value=null
   moveRequest=undefined;moveOwner=undefined;pendingMoveReveal=undefined;movePending.value=false;moveError.value='';moveEntry.value=null
   valueEditVisible.value = false; valueEditPending.value = false; valueOwner = undefined; valueEntry.value = null; pendingValuePreview = undefined; resumeValue=false;valueReadFailed.value=false
-  resetArrayOutline();arrayVisible.value=false;arrayPending.value=false;arrayOwner=undefined;arrayEntry.value=null;pendingArray=undefined;resumeArray=false
+  clearArrayItems();arrayVisible.value=false;arrayPending.value=false;arrayOwner=undefined;arrayEntry.value=null;pendingArray=undefined;resumeArray=false
   fieldVisible.value=false;fieldPending.value=false;fieldOwner=undefined;fieldEntry.value=null;pendingField=undefined;resumeField=false
   duplicateVisible.value=false;duplicatePending.value=false;duplicateOwner=undefined;duplicateEntry.value=null;pendingDuplicate=undefined;resumeDuplicate=false
   renameVisible.value = false; renamePending.value = false; renameOwner = undefined; renameEntry.value = null; pendingRename = undefined; resumeRename = false; selectedFieldStart.value = undefined

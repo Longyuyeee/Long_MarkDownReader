@@ -153,7 +153,7 @@
                   role="treeitem"
                   :aria-level="entry.depth"
                   :aria-expanded="entry.childCount ? !collapsedTreeNodes.has(entry.start) : undefined"
-                  @click="selectedTreeStart = entry.start"
+                  @click="selectTreeEntry(entry)"
                 >
               <button
                 v-if="entry.childCount"
@@ -665,6 +665,7 @@
 
 <script setup lang="ts">
 import { useSourceOutlineNavigation } from '../composables/useSourceOutlineNavigation'
+import { useStructuredOutlineState } from '../composables/useStructuredOutlineState'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -830,6 +831,7 @@ const format = computed(() => findFileFormat(jsonPath.value))
 const formatLabel = computed(() => format.value?.label || 'JSON')
 const fileName = computed(() => jsonPath.value.split(/[\\/]/).pop() || '未命名 JSON')
 const currentTab = computed(() => store.tabs.find(tab => tab.path === jsonPath.value))
+const outlineState = useStructuredOutlineState({ tab: () => currentTab.value, path: () => jsonPath.value, root: () => store.libraryPath, external: () => isExternal.value, format: () => format.value?.id || '' })
 const loading = ref(true)
 const saving = ref(false)
 const loadingRange = ref(false)
@@ -839,10 +841,10 @@ const analysisPending = ref(false)
 const schemaValidation = ref<JsonSchemaValidation | null>(null)
 const schemaPending = ref(false)
 const transformPending = ref(false)
-const pathQuery = ref('')
-const deferredPathQuery = ref('')
+const pathQuery = outlineState.query
+const deferredPathQuery = ref(pathQuery.value)
 const advancedToolsVisible = ref(true)
-const viewMode = ref<'source' | 'tree'>('source')
+const viewMode = outlineState.mode
 const collapsedTreeNodes = ref<Set<number>>(new Set())
 const selectedTreeStart = ref<number | null>(null)
 const treeScrollTop = ref(0)
@@ -1091,6 +1093,7 @@ const treeVirtualHeight = computed(() => expandedTreePaths.value.length * TREE_R
 
 const analyzedSource = ref('')
 const outlineNav = useSourceOutlineNavigation({
+  selection: outlineState.selection,
   entries: () => analysis.value?.paths || [], visible: () => filteredPaths.value,
   identity: () => [jsonPath.value, isExternal.value, store.libraryPath].join('\0'),
   ready: () => !loading.value && !analysisPending.value && analyzedSource.value === sourceContent.value,
@@ -1143,11 +1146,20 @@ const handleTreeScroll = (event: Event) => {
 }
 
 const resetTreeForAnalysis = (result: JsonSourceAnalysis) => {
-  collapsedTreeNodes.value = result.paths.length >= LARGE_TREE_AUTO_COLLAPSE_NODES
+  const collapsed = outlineState.collapsed.value
+  const collapsedKeys = collapsed && new Set(collapsed)
+  collapsedTreeNodes.value = collapsed !== undefined
+    ? new Set(result.paths.filter(entry => entry.childCount > 0 && collapsedKeys!.has(outlineNav.key(entry))).map(entry => entry.start))
+    : result.paths.length >= LARGE_TREE_AUTO_COLLAPSE_NODES
     ? new Set(result.paths.filter(entry => entry.childCount > 0 && entry.depth > 1).map(entry => entry.start))
     : new Set()
   const focus = movedItemFocus?.source === analyzedSource.value ? movedItemFocus : undefined
-  selectedTreeStart.value = focus?.start ?? null
+  selectedTreeStart.value = focus?.start ?? result.paths.find(entry => outlineNav.key(entry) === outlineState.treeSelection.value)?.start ?? null
+  if (result.valid) {
+    if (collapsed !== undefined) outlineState.collapsed.value = result.paths.filter(entry => collapsedTreeNodes.value.has(entry.start)).map(entry => outlineNav.key(entry))
+    const selected = result.paths.find(entry => entry.start === selectedTreeStart.value)
+    outlineState.treeSelection.value = selected && outlineNav.key(selected)
+  }
   movedItemFocus = undefined
   if (focus) {
     for (const entry of result.paths) {
@@ -1926,11 +1938,14 @@ const showSourceRange = async (entry: JsonPathEntry) => {
   if (session.owns(owner)) revealSourceRange(entry)
 }
 
+const selectTreeEntry = (entry: JsonPathEntry) => { selectedTreeStart.value = entry.start; outlineState.treeSelection.value = outlineNav.key(entry) }
+const rememberTreeCollapse = () => { outlineState.collapsed.value = (analysis.value?.paths || []).filter(entry => collapsedTreeNodes.value.has(entry.start)).map(entry => outlineNav.key(entry)) }
 const toggleTreeNode = (start: number) => {
   const next = new Set(collapsedTreeNodes.value)
   if (next.has(start)) next.delete(start)
   else next.add(start)
   collapsedTreeNodes.value = next
+  rememberTreeCollapse()
 }
 
 const collapseAllTree = () => {
@@ -1939,10 +1954,12 @@ const collapseAllTree = () => {
       .filter(entry => entry.childCount > 0)
       .map(entry => entry.start),
   )
+  rememberTreeCollapse()
 }
 
 const expandAllTree = () => {
   collapsedTreeNodes.value = new Set()
+  rememberTreeCollapse()
   message.success('已展开全部节点，长列表将按可见区域渲染')
 }
 
@@ -2016,6 +2033,10 @@ watch(pathQuery, query => {
     deferredPathQuery.value = query
   }, 120)
 })
+watch(outlineState.revision, () => {
+  if (pathQueryTimer) clearTimeout(pathQueryTimer)
+  deferredPathQuery.value = pathQuery.value
+}, { flush: 'sync' })
 watch(viewMode, async mode => {
   if (mode !== 'tree') return
   await nextTick()

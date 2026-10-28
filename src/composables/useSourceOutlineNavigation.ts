@@ -1,4 +1,4 @@
-import { computed, nextTick, shallowRef, watch } from 'vue'
+import { computed, nextTick, shallowRef, watch, type Ref } from 'vue'
 import '../styles/source-outline-navigation.scss'
 
 interface Entry { path: string; start: number; end: number; depth: number; field?: { start: number } }
@@ -10,9 +10,10 @@ export function useSourceOutlineNavigation<T extends Entry>(options: {
   entries: () => readonly T[]; visible: () => readonly T[]
   identity: () => string; ready: () => boolean
   key?: (entry: T) => string; preferredOffset?: () => number | undefined
+  selection?: Ref<string | undefined>
 }) {
   const element = shallowRef<HTMLElement | null>(null)
-  const selectedKey = shallowRef<string>()
+  const selectedKey = options.selection || shallowRef<string>()
   const baseKey = options.key || ((entry: T) => entry.path)
   const keyCache = new WeakMap<T, string>()
   const keys = computed(() => {
@@ -56,7 +57,7 @@ export function useSourceOutlineNavigation<T extends Entry>(options: {
       : Math.max(0, Math.min(rows.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))]
     select(next); focus(next)
   }
-  watch(options.identity, () => { selectedKey.value = undefined; previous = []; pendingOffset = false; acceptedIdentity = undefined; pendingFocusOwner = undefined }, { flush: 'sync' })
+  watch(options.identity, () => { if (!options.selection) selectedKey.value = undefined; previous = []; pendingOffset = false; acceptedIdentity = undefined; pendingFocusOwner = undefined }, { flush: 'sync' })
   if (options.preferredOffset) watch(options.preferredOffset, value => { if (value !== undefined) pendingOffset = true }, { flush: 'sync' })
   watch([options.entries, options.visible, options.ready], () => {
     const owner = options.identity()
