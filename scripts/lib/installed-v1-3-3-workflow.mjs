@@ -23,7 +23,7 @@ export async function runInstalledV133OutlineContinuityWorkflow({send,evaluate,n
    const ensure=async()=>{if(!await evaluate(`!!document.querySelector(${q(filter)})?.getClientRects().length`))await ui.clickText(root+' header button',mode==='json'?'结构与诊断':mode==='yaml'?'结构与问题':mode==='xml'?'元素与问题':'分区与问题');await ui.waitFor(`!!document.querySelector(${q(filter)})?.getClientRects().length`,'visible outline filter')}
    const open=async target=>{await navigate('#/library?path='+encodeURIComponent(target),root,'continuity '+mode);await fresh();await ensure()}
    const query=()=>evaluate(`document.querySelector(${q(filter)}).value`)
-   const filtered=async value=>{await ui.fill(filter,value);await ui.waitFor(`document.querySelectorAll('${rows}[data-outline-node*=${q(value)}]').length===1`,'matching '+value+' field')}
+   const filtered=async value=>{await ui.fill(filter,value);await ui.waitFor(`document.querySelectorAll('${rows}').length===${mode==='json'?2:1}&&document.querySelectorAll('${rows}[data-outline-node*=${q(value)}]').length===1`,'accepted filter results for '+value)}
    const pick=async name=>{await ui.tabTo(rows);await ui.key('End','End',35);await ui.waitFor(`document.activeElement?.dataset.outlineNode?.includes(${q(name)})`,'focused '+name);await ui.key('Enter','Enter',13);await ui.waitFor(`document.activeElement?.matches(${q(source)})`,'source has keyboard focus')}
    await fs.writeFile(file,'\uFEFF'+original.replaceAll('\n','\r\n'));await fs.writeFile(other,original.replace('原稿','另一份资料'))
    await open(file);await filtered('second');await pick('second')
