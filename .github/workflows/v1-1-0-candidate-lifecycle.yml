@@ -29,6 +29,8 @@ jobs:
     timeout-minutes: 75
     env:
       CARGO_TERM_COLOR: always
+      # Keep all assertions while isolating shared-runtime regression fixtures.
+      RUST_TEST_THREADS: "1"
       LONGEDIT_INSTALLED_VERSION_SCENARIO: "1"
       LONGEDIT_R5I_DISPOSABLE: "1"
       PREVIOUS_VERSION: ${{ inputs.previous_version }}

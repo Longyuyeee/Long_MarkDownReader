@@ -21,6 +21,8 @@ jobs:
 
     env:
       CARGO_TERM_COLOR: always
+      # Regression fixtures share process-global async runtimes and stores.
+      RUST_TEST_THREADS: "1"
 
     steps:
       - name: Check out repository
