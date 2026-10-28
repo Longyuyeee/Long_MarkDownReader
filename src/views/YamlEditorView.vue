@@ -226,6 +226,7 @@
 
 <script setup lang="ts">
 import { useSourceOutlineNavigation } from '../composables/useSourceOutlineNavigation'
+import { useStructuredOutlineState } from '../composables/useStructuredOutlineState'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'
@@ -330,6 +331,7 @@ const isExternal = computed(() => route.query.external === '1')
 const format = computed(() => findFileFormat(yamlPath.value))
 const fileName = computed(() => yamlPath.value.split(/[\\/]/).pop() || '未命名 YAML')
 const currentTab = computed(() => store.tabs.find(tab => tab.path === yamlPath.value))
+const outlineState = useStructuredOutlineState({ tab: () => currentTab.value, path: () => yamlPath.value, root: () => store.libraryPath, external: () => isExternal.value, format: () => format.value?.id || '' })
 const loading = ref(true)
 const saving = ref(false)
 const loadError = ref('')
@@ -346,7 +348,7 @@ const cursorColumn = ref(1)
 const lineCount = ref(1)
 const analysis = ref<YamlSourceAnalysis | null>(null)
 const analysisPending = ref(false)
-const outlineQuery = ref('')
+const outlineQuery = outlineState.query
 const readOnly = computed(() => Boolean(readOnlyReason.value))
 const specialSyntaxCount = computed(() => (
   (analysis.value?.anchorCount || 0)
@@ -400,6 +402,7 @@ const kindIcon = (kind: string) => {
 const analyzedSource = ref('')
 const selectedFieldStart = ref<number>()
 const outlineNav = useSourceOutlineNavigation({
+  selection: outlineState.selection,
   entries: () => analysis.value?.outline || [], visible: () => filteredOutline.value,
   identity: () => [yamlPath.value, isExternal.value, store.libraryPath].join('\0'),
   ready: () => !loading.value && !analysisPending.value && analyzedSource.value === sourceContent.value,

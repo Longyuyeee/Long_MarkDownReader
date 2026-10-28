@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.3.2 已发布：JSON字段路径及YAML、XML、TOML提纲支持方向键浏览、Enter定位源码；刷新保留有效选择和行焦点，换文件保留未保存正文。[本版审计](docs/V1_3_2_Unsigned_Community_Release_Audit_2026-10-27.md)。1.3.0—1.3.2已交付；下一版1.3.3规划按文件隔离提纲筛选与继续浏览状态。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_3_2026-10-27.md)。
+v1.3.3正在实现按文件接续筛选、有效选择以及JSON/TOML展开状态，保护草稿，沿用现有界面。[本版记录](docs/V1_3_3_Unsigned_Community_Release_Audit_2026-10-28.md)。当前公开下载仍为v1.3.2。
 
 ## 不只是打开文件，更是接续你的工作
 
