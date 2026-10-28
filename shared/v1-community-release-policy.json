@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.3.4",
-  "releaseCandidate": true,
+  "appVersion": "1.3.5",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-28",
-  "currentStatus": "v1.3.4-community-release-published",
+  "currentStatus": "v1.3.5-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.3.3",
+    "previousPublicVersion": "1.3.4",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.3.3-to-1.3.4-pending",
-    "scope": "source-position-continuity"
+    "managedUpdaterUpgradePath": "1.3.4-to-1.3.5-pending",
+    "scope": "source-search-continuity"
   },
   "targetRelease": {
-    "tag": "v1.3.4",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.4",
+    "tag": "v1.3.5",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.5",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "53866074bbf2bf4d04d236215352f32a4199ba53",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40654482441,
-    "hostedInstalledLifecycleRunId": 40665610451,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.3.4_x64_zh-CN.msi",
-        "sizeBytes": 78237696,
-        "sha256": "536a2ba8ac695d7234ad5e5e4dfeee31ca3765acfc8f0f566db87c41dff3b091",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.3.4_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.3.4_x64-setup.exe",
-        "sizeBytes": 68837943,
-        "sha256": "6aaf463a960cdbffbc532ddbf8edee699a66d2343c3c12195dea4aa3bae2d9b4",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.3.4_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.3.4",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.4",
-    "databaseId": 426528114,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "53866074bbf2bf4d04d236215352f32a4199ba53",
-    "publishedAt": "2026-10-28T10:33:05Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -172,7 +141,8 @@
     "v1.3.0-to-v1.3.1-managed-update-observation-pending",
     "v1.3.1-to-v1.3.2-managed-update-observation-pending",
     "v1.3.2-to-v1.3.3-managed-update-observation-pending",
-    "v1.3.3-to-v1.3.4-managed-update-observation-pending"
+    "v1.3.3-to-v1.3.4-managed-update-observation-pending",
+    "v1.3.4-to-v1.3.5-managed-update-observation-pending"
   ],
-  "nextAction": "v1.3.5-structured-source-search-continuity-planned"
+  "nextAction": "validate-and-build-v1.3.5-installers"
 }

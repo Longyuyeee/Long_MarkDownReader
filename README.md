@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.3.4已发布：JSON、YAML、XML、TOML切换文件后接续源码光标、选区、滚动和提纲／JSON树滚动，保护草稿，主动定位优先。[本版审计](docs/V1_3_4_Unsigned_Community_Release_Audit_2026-10-28.md)。1.3.4已交付；下一版1.3.5规划结构化源码查找与替换接续。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_5_2026-10-28.md)。
+v1.3.5正在实现按文件接续查找及替换输入与条件，保护草稿，沿用现有面板。[本版记录](docs/V1_3_5_Unsigned_Community_Release_Audit_2026-10-28.md)。当前公开下载仍为v1.3.4。
 
 ## 不只是打开文件，更是接续你的工作
 

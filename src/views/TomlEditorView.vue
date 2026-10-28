@@ -558,7 +558,7 @@ const schedule = () => {
     void analyze(source).catch(e => message.error(`实时分析失败：${errorText(e)}`))
   }, analysisPending.value ? STRUCTURED_ANALYSIS_BUSY_RETRY_MS : structuredAnalysisDelay(content.value.length))
 }
-const extensions = (locked: boolean) => [basicSetup, StreamLanguage.define(toml), EditorState.readOnly.of(locked), EditorView.editable.of(!locked), EditorView.lineWrapping,
+const extensions = (locked: boolean) => [basicSetup, session.searchExtension, StreamLanguage.define(toml), EditorState.readOnly.of(locked), EditorView.editable.of(!locked), EditorView.lineWrapping,
   EditorView.updateListener.of(update => { if (update.docChanged) { content.value = update.state.doc.toString(); lines.value = update.state.doc.lines; if (!applying) { session.refreshDirty(); schedule() } } if (update.docChanged || update.selectionSet) { const p = update.state.selection.main.head, line = update.state.doc.lineAt(p); cursorLine.value = line.number; cursorColumn.value = p - line.from + 1 } }),
   ...codeMirrorThemeExtensions]
 const replace = (source: string, locked: boolean) => { if (!editor) return; session.beforeReplace(); applying = true; editor.setState(EditorState.create({ doc: source, extensions: extensions(locked) })); applying = false; content.value = editor.state.doc.toString(); lines.value = editor.state.doc.lines }
