@@ -30,6 +30,23 @@ try{
   // A real outline navigation takes precedence over the return position.
   await filter.fill('field002');await root.locator('[data-outline-node*="field002"]').click();assert.ok((await page.evaluate(()=>structuredAudit.sourceSelection())).includes('我的草稿 2'))
   const located=await position();await open('B');await open('A');await equal(located)
+  // A closed tab can expose A only briefly before another navigation. Its
+  // loading/default position must not replace the previous return location.
+  await open('B');await page.evaluate(m=>{
+   const button=document.createElement('button');button.id='position-switch-file';button.role='treeitem';button.textContent='打开另一份资料'
+   Object.assign(button.style,{position:'fixed',zIndex:9999,left:'4px',top:'4px'});button.onclick=()=>{void structuredAudit.router.push('/editor?path=C:/ui/B.'+m)};document.body.append(button)
+   structuredAudit.holdAnalysis=true;void structuredAudit.router.push('/editor?path=C:/ui/A.'+m)
+  },mode)
+  await page.waitForFunction(()=>structuredAudit.pending.some(item=>item.kind==='holdAnalysis'))
+  await page.locator('#position-switch-file').click();await page.waitForFunction(m=>structuredAudit.store.activeTabId==='C:/ui/B.'+m,mode);await fresh()
+  await page.evaluate(()=>{structuredAudit.release('holdAnalysis');document.querySelector('#position-switch-file').remove()});await open('A');await equal(located)
+  await open('B');await page.evaluate(m=>{
+   structuredAudit.positionTabKey=event=>{if(event.ctrlKey&&event.key==='Tab'){event.preventDefault();void structuredAudit.router.push('/editor?path=C:/ui/B.'+m)}}
+   document.addEventListener('keydown',structuredAudit.positionTabKey);structuredAudit.holdAnalysis=true;void structuredAudit.router.push('/editor?path=C:/ui/A.'+m)
+  },mode)
+  await page.waitForFunction(()=>structuredAudit.pending.some(item=>item.kind==='holdAnalysis'))
+  await source.focus();await page.keyboard.press('Control+Tab');await page.waitForFunction(m=>structuredAudit.store.activeTabId==='C:/ui/B.'+m,mode);await fresh()
+  await page.evaluate(()=>{document.removeEventListener('keydown',structuredAudit.positionTabKey);structuredAudit.release('holdAnalysis')});await open('A');await equal(located)
   await filter.fill('');await page.waitForTimeout(180)
   if(mode==='json'){
    await root.locator('header button').filter({hasText:'树形'}).click();const tree=root.locator('.tree-rows');await tree.hover();await page.mouse.wheel(0,1900);await page.waitForTimeout(120);const top=await tree.evaluate(e=>e.scrollTop);assert.ok(top>300)
@@ -55,7 +72,7 @@ try{
   await open('B');await page.evaluate(m=>{structuredAudit.files['C:/ui/B.'+m].content=structuredAudit.files['C:/ui/B.'+m].content.replaceAll('原稿','外改');structuredAudit.files['C:/ui/B.'+m].signature+='changed'},mode)
   await open('A');await open('B');await page.waitForTimeout(80);assert.deepEqual((await position()).ranges,[{anchor:0,head:0}]);assert.equal((await position()).top,0)
   assert.equal(await page.evaluate(m=>structuredAudit.store.tabs.find(t=>t.path==='C:/ui/A.'+m).isDirty,mode),true)
-  assert.deepEqual(errors,[]);checks.push({mode,reusedComponent:reuse,status:'passed',sourceSelectionAndScroll:true,reverseSelection:true,outlineScroll:true,explicitNavigationWins:true,pendingAnalysisDoesNotStealFilterFocus:true,changedContentFallsBack:true,draftsPreserved:true,jsonTreeScroll:mode==='json',combinations,runtimeErrors:errors});await page.close();page=undefined
+  assert.deepEqual(errors,[]);checks.push({mode,reusedComponent:reuse,status:'passed',sourceSelectionAndScroll:true,reverseSelection:true,outlineScroll:true,explicitNavigationWins:true,interruptedReturnRetainsPosition:true,pendingAnalysisDoesNotStealFilterFocus:true,changedContentFallsBack:true,draftsPreserved:true,jsonTreeScroll:mode==='json',combinations,runtimeErrors:errors});await page.close();page=undefined
  }
  await writeFile(resolve(output,'results.json'),JSON.stringify({status:'passed',nativeBridgeMocked:true,sourceUserContentIncluded:false,checks},null,2)+'\n');console.log(checks.length+' ownership cases and'+checks.reduce((n,c)=>n+c.combinations.length,0)+' style/window combinations: source selection/scroll, outline/tree scroll, navigation priority, changed-source fallback and drafts passed.')
 }catch(error){await page?.screenshot({path:resolve(output,'failure.png'),fullPage:true}).catch(()=>{});await writeFile(resolve(output,'failure.json'),JSON.stringify({error:String(error.stack),checks},null,2));throw error}finally{await browser.close()}

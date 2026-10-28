@@ -1,0 +1,11 @@
+{
+  "status": "rejected-not-published",
+  "sourceCommit": "cc5180bbf12d905e4eb6356ce3eed78d3a35d837",
+  "buildRun": 40638018911,
+  "reviewRun": 40642316057,
+  "reason": "Closing a clean tab briefly reopened the preceding document; leaving before its reading state was restored replaced the previous return location with the default cursor.",
+  "correction": "Keep the last return location until actual source positioning or document/selection change. Restore verified source selection before analysis; navigation in the file tree and Ctrl+Tab must not discard it.",
+  "newBrowserCases": "8 remount/reuse cases include interrupted analysis, trusted external treeitem click and Ctrl+Tab; current code reruns all72 style/window cases and prior regressions.",
+  "previousFailedProofReusedAsCurrent": false,
+  "sourceUserContentIncluded": false
+}

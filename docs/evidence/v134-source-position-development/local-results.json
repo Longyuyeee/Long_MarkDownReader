@@ -12,5 +12,11 @@
   "sourceUserContentIncluded": false,
   "localQualityActualExit": 0,
   "localQualityCommands": 96,
-  "exactSourceReleaseGate": "pending-frozen-source-cloud-quality-and-builder"
+  "exactSourceReleaseGate": "pending-corrected-frozen-source-cloud-quality-and-new-original-builder",
+  "interruptedReturnCases": 8,
+  "initialNativeCandidateRejected": true,
+  "initialNativeReviewRun": 40642316057,
+  "correctiveBrowserActualExit": 0,
+  "correctiveTargetedAndProductionBuildActualExit": 0,
+  "localQualityScope": "96-step preliminary pass followed by final corrected-source browser/unit/type/production-build checks; final full gate is independently required on the frozen corrected cloud source"
 }
