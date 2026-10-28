@@ -5,6 +5,37 @@ import {test} from 'node:test'
 import { searchFeedbackContract, paletteFileOpenExpression } from './lib/search-feedback-contract.mjs'
 const evaluate=(expression,nodes)=>vm.runInNewContext(expression,{document:{querySelector:selector=>nodes[selector]||null}})
 
+function installedResultWaiter(initial, refreshed) {
+  const source=fs.readFileSync('scripts/lib/installed-v1-1-5-workflow.mjs','utf8')
+  const helper=source.slice(source.indexOf('  const resultReady ='),source.indexOf('  const normalize ='))
+  const files=new Set(initial), calls={waits:0,refreshes:0}
+  const context=vm.createContext({files,palette:'.palette',result:name=>`files.has(${JSON.stringify(name)})`,document:{querySelector:()=>({})}})
+  context.evaluate=async expression=>vm.runInContext(expression,context)
+  context.waitFor=async expression=>{calls.waits++;assert.ok(await context.evaluate(expression))}
+  context.mouse=async expression=>{assert.match(expression,/search-page-update button:not\(\[disabled\]\)/);calls.refreshes++;for(const name of refreshed)files.add(name)}
+  return {wait:vm.runInContext(helper+';resultReady',context),calls,files}
+}
+
+test('installed all-library probe waits for all expected files after the smaller library finishes',async()=>{
+  const probe=installedResultWaiter(['remote'],['main','data'])
+  await probe.wait(['main','data','remote'],'all three files')
+  assert.equal(probe.calls.refreshes,1)
+  assert.equal(probe.calls.waits,2)
+  assert.deepEqual([...probe.files].sort(),['data','main','remote'])
+})
+
+test('installed one-file probe keeps an already visible result without unnecessary refresh',async()=>{
+  const probe=installedResultWaiter(['remote'],[])
+  await probe.wait('remote','one file')
+  assert.equal(probe.calls.refreshes,0)
+})
+
+test('installed all-library probe still rejects a missing file after its bounded visible updates',async()=>{
+  const probe=installedResultWaiter(['remote'],[])
+  await assert.rejects(probe.wait(['main','remote'],'missing file'),/Expected search files absent/)
+  assert.equal(probe.calls.refreshes,8)
+})
+
 test('grouped palette targets the exact filename open button, never its row, substring or reference',()=>{
   const name='v115-预算资料.txt', scope='.command-palette-container '
   const button=label=>({getAttribute:key=>key==='aria-label'?label:null})

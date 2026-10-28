@@ -50,13 +50,15 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
   // Paged searches preserve the visible order until the user accepts a new
   // snapshot. Follow that visible action when more libraries complete.
   const resultReady = async (name, label) => {
+    const names = Array.isArray(name) ? name : [name]
+    const ready = names.map(file => `!!(${result(file)})`).join('&&')
     const refresh = `document.querySelector('${palette} .search-page-update button:not([disabled])')`
     for (let step = 0; step < 8; step++) {
-      await waitFor(`!!(${result(name)})||!!(${refresh})`, label+' or explicit refresh')
-      if (await evaluate(`!!(${result(name)})`)) return
+      await waitFor(`(${ready})||!!(${refresh})`, label+' or explicit refresh')
+      if (await evaluate(ready)) return
       await mouse(refresh)
     }
-    throw Error('Expected search file absent after explicit refresh: '+name)
+    throw Error('Expected search files absent after explicit refresh: '+names.join(', '))
   }
 
   const normalize = p => { const value = p.replaceAll('\\', '/'); return (value.startsWith('//?/') ? value.slice(4) : value).toLowerCase() }
@@ -136,7 +138,10 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await navigate('#/library?path=' + encodeURIComponent(draft), '.library-mode', 'v115 actual command panel')
     await waitFor(`(${editor})?.textContent.includes('安装态草稿')`, 'v115 draft ready')
     await open(); await query(expression); await waitFor(`!!(${result(path.basename(main))})&&!!(${result(path.basename(data))})`, 'v115 TXT and JSON results')
-    await scopeAll(); await resultReady(path.basename(remote), 'v115 all-library result visible')
+    // A small library may finish first. Its one visible result is not evidence
+    // that the larger library has completed its page; accept the normal update
+    // action until all three expected files are visible in the same snapshot.
+    await scopeAll(); await resultReady([main, data, remote].map(file => path.basename(file)), 'v115 all-library results visible')
     check('palette-scope-dropdown-is-clickable-and-shows-real-native-results', await evaluate(`!!(${result(path.basename(main))})&&!!(${result(path.basename(data))})&&!!(${result(path.basename(remote))})`))
     await snap('installed-v115-search.jpg')
     // This shared fixture retains earlier format/failure examples. The paged
