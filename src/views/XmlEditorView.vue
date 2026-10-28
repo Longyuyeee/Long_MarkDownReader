@@ -485,7 +485,7 @@ const scheduleAnalysis = () => {
   }, analysisPending.value ? STRUCTURED_ANALYSIS_BUSY_RETRY_MS : structuredAnalysisDelay(sourceContent.value.length))
 }
 const extensions = (locked: boolean) => [
-  basicSetup, xml(), EditorState.readOnly.of(locked), EditorView.editable.of(!locked), EditorView.lineWrapping,
+  basicSetup, session.searchExtension, xml(), EditorState.readOnly.of(locked), EditorView.editable.of(!locked), EditorView.lineWrapping,
   EditorView.updateListener.of(update => {
     if (update.docChanged) {
       sourceContent.value = update.state.doc.toString(); lineCount.value = update.state.doc.lines

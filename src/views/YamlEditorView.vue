@@ -734,7 +734,7 @@ const scheduleAnalysis = () => {
 }
 
 const editorExtensions = (isReadOnly: boolean) => [
-  basicSetup,
+  basicSetup, session.searchExtension,
   yaml(),
   EditorState.readOnly.of(isReadOnly),
   EditorView.editable.of(!isReadOnly),

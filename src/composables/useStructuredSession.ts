@@ -1,4 +1,5 @@
 import { useStructuredPosition } from './useStructuredPosition'
+import { useStructuredSearch } from './useStructuredSearch'
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, type Ref } from 'vue'
 import { isolateHistory } from '@codemirror/commands'
 import { Text } from '@codemirror/state'
@@ -41,6 +42,8 @@ const key = (owner: Pick<Owner, 'path'>) => fileStylePathKey(owner.path)
 export function useStructuredSession(options: Options) {
   let disposed = false, bound: Owner | undefined
   const position = useStructuredPosition({ ready: () => !options.loading.value && (options.positionReady?.() ?? true), panes: options.positionPanes, enabled: options.positionEnabled })
+  const sourceSearch = useStructuredSearch({ enabled: options.positionEnabled })
+  const beforeReplace = () => { sourceSearch.beforeReplace(); position.beforeReplace() }
   const conflict = shallowRef<Owner>()
   const history = shallowRef<Owner & { historyTimestamp?: number }>()
   const historyDraft = computed(() => history.value?.tab?.content ?? history.value?.source ?? '')
@@ -92,7 +95,10 @@ export function useStructuredSession(options: Options) {
       path: owner.path, external: owner.external, isDirty: options.dirty.value })
     owner.tab = options.store.tabs.find(tab => tab.path === owner.path)
     bound = owner
-    if (owner.tab) position.bind(owner.editor, owner.tab, owner.root, owner.external, owner.format)
+    if (owner.tab) {
+      sourceSearch.bind(owner.editor, owner.tab, owner.root, owner.external, owner.format)
+      position.bind(owner.editor, owner.tab, owner.root, owner.external, owner.format)
+    }
     if (snapshot && owner.tab) {
       cacheSnapshot(owner.tab, snapshot)
       recordStructuredSavepoint(owner.tab, { ...owner, signature: snapshot.signature, encoding: snapshot.encoding }, snapshot.content)
@@ -269,8 +275,8 @@ export function useStructuredSession(options: Options) {
       void listen(command, () => { void action() }).then(stop => { if (disposed) stop(); else subscriptions.push(stop) })
     }
   })
-  onBeforeUnmount(() => { sync(); position.beforeReplace(); disposed = true; cancelChange(); closeConflict(); closeHistory(); subscriptions.forEach(stop => stop()); window.removeEventListener('keydown', keydown, true); window.removeEventListener('beforeunload', beforeUnload) })
-  return { beforeReplace: position.beforeReplace, capture, owns, unchanged, bind, sync, refreshDirty, hasDocument, waitForWrite, save, reload, conflict, applyConflict, closeConflict, finishCopy,
+  onBeforeUnmount(() => { sync(); sourceSearch.dispose(); position.beforeReplace(); disposed = true; cancelChange(); closeConflict(); closeHistory(); subscriptions.forEach(stop => stop()); window.removeEventListener('keydown', keydown, true); window.removeEventListener('beforeunload', beforeUnload) })
+  return { beforeReplace, searchExtension: sourceSearch.extension, capture, owns, unchanged, bind, sync, refreshDirty, hasDocument, waitForWrite, save, reload, conflict, applyConflict, closeConflict, finishCopy,
     preview, previewError, offerChange, applyChange, cancelChange, history, historyDraft, historyCurrent, openHistory, closeHistory, applyHistoryDraft }
 }
 const errorText = (error: unknown) => (error as { message?: string })?.message || String(error)

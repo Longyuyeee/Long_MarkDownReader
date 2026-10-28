@@ -19,6 +19,7 @@ function harness(){
   // This isolated save test has no DOM. Real position restoration is covered
   // with the actual Vue/CodeMirror editors in the source-position browser suite.
   if(name.includes('useStructuredPosition'))return{useStructuredPosition:()=>({bind(){},beforeReplace(){}})}
+  if(name.includes('useStructuredSearch'))return{useStructuredSearch:()=>({extension:[],bind(){},beforeReplace(){},dispose(){}})}
   if(name.includes('tauriRuntime'))return{invoke:(command,args)=>{calls.push({command,args});return opts.mockInvoke?opts.mockInvoke(command,args):write.promise},listen:async()=>()=>{}}
   if(name.includes('appDialog'))return{confirmAppAction:()=>confirmation.promise}
   if(name.includes('windowDrafts'))return{beginWindowSave:()=>{pending++;return()=>pending--},recordWindowDraftActivity(){},useWindowDraft(){},useWindowDraftSnapshot(){}}
