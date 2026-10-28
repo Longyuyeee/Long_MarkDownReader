@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.3.3",
-  "releaseCandidate": true,
+  "appVersion": "1.3.4",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-28",
-  "currentStatus": "v1.3.3-community-release-published",
+  "currentStatus": "v1.3.4-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.3.2",
+    "previousPublicVersion": "1.3.3",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.3.2-to-1.3.3-pending",
-    "scope": "outline-reading-continuity"
+    "managedUpdaterUpgradePath": "1.3.3-to-1.3.4-pending",
+    "scope": "source-position-continuity"
   },
   "targetRelease": {
-    "tag": "v1.3.3",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.3",
+    "tag": "v1.3.4",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.4",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "6f20a61f94de7948ed2bdbc437725590829de1fb",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40623704189,
-    "hostedInstalledLifecycleRunId": 40628012430,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.3.3_x64_zh-CN.msi",
-        "sizeBytes": 78233600,
-        "sha256": "c2f11b9d6fafa0158e864a4d840aeca66c3cbab413d6d2b689d69d2d7dfd89ae",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.3.3_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.3.3_x64-setup.exe",
-        "sizeBytes": 68860015,
-        "sha256": "ad89417531890730f976bab2d30d974dc7a3c49070f04faa7e4de2c514b5db2c",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.3.3_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.3.3",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.3",
-    "databaseId": 426266363,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "6f20a61f94de7948ed2bdbc437725590829de1fb",
-    "publishedAt": "2026-10-28T04:38:31Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -171,7 +140,8 @@
     "v1.2.45-to-v1.3.0-managed-update-observation-pending",
     "v1.3.0-to-v1.3.1-managed-update-observation-pending",
     "v1.3.1-to-v1.3.2-managed-update-observation-pending",
-    "v1.3.2-to-v1.3.3-managed-update-observation-pending"
+    "v1.3.2-to-v1.3.3-managed-update-observation-pending",
+    "v1.3.3-to-v1.3.4-managed-update-observation-pending"
   ],
-  "nextAction": "v1.3.4-structured-source-position-continuity-planned"
+  "nextAction": "validate-and-build-v1.3.4-installers"
 }

@@ -270,6 +270,8 @@ const outlineNav = useSourceOutlineNavigation({
   preferredOffset: () => selectedElementStart.value,
 })
 const session = useStructuredSession({
+  positionPanes: () => ({ outline: outlineNav.element.value, inspector: outlineNav.element.value?.closest('aside') || null }),
+  positionReady: () => !analysisPending.value && analyzedSource.value === sourceContent.value,
   path: () => xmlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
   analyze: source => analyze(source), clearAnalysis: () => clearTimer(), scheduleAnalysis: () => scheduleAnalysis(),
@@ -498,7 +500,7 @@ const extensions = (locked: boolean) => [
 ]
 const replaceDocument = (content: string, locked: boolean) => {
   if (!editor) return
-  applying = true; editor.setState(EditorState.create({ doc: content, extensions: extensions(locked) })); applying = false
+  session.beforeReplace(); applying = true; editor.setState(EditorState.create({ doc: content, extensions: extensions(locked) })); applying = false
   sourceContent.value = editor.state.doc.toString(); sourceSize.value = new TextEncoder().encode(content).length; lineCount.value = editor.state.doc.lines
 }
 const applySnapshot = async (value: Snapshot) => {
@@ -555,7 +557,7 @@ const save = () => session.save()
 
 const reload = () => session.reload()
 
-watch([xmlPath, isExternal, () => store.libraryPath], () => { syncTab(); saving.value = false; void load() }, {flush:'sync'})
+watch([xmlPath, isExternal, () => store.libraryPath], () => { syncTab(); session.beforeReplace(); saving.value = false; void load() }, {flush:'sync'})
 onMounted(async () => {
   await nextTick()
   if (editorHost.value) editor = new EditorView({ state: EditorState.create({ doc: '', extensions: extensions(true) }), parent: editorHost.value })

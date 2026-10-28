@@ -16,6 +16,9 @@ function harness(){
   if(name==='@codemirror/commands')return{isolateHistory:{of:value=>({isolateHistory:value})}}
   if(name==='@codemirror/state')return{Text}
   if(name.includes('structuredSavepoints'))return savepoints
+  // This isolated save test has no DOM. Real position restoration is covered
+  // with the actual Vue/CodeMirror editors in the source-position browser suite.
+  if(name.includes('useStructuredPosition'))return{useStructuredPosition:()=>({bind(){},beforeReplace(){}})}
   if(name.includes('tauriRuntime'))return{invoke:(command,args)=>{calls.push({command,args});return opts.mockInvoke?opts.mockInvoke(command,args):write.promise},listen:async()=>()=>{}}
   if(name.includes('appDialog'))return{confirmAppAction:()=>confirmation.promise}
   if(name.includes('windowDrafts'))return{beginWindowSave:()=>{pending++;return()=>pending--},recordWindowDraftActivity(){},useWindowDraft(){},useWindowDraftSnapshot(){}}

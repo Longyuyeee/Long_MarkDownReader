@@ -1099,6 +1099,9 @@ const outlineNav = useSourceOutlineNavigation({
   ready: () => !loading.value && !analysisPending.value && analyzedSource.value === sourceContent.value,
 })
 const session = useStructuredSession({
+  positionPanes: () => ({ outline: outlineNav.element.value, tree: treeViewport.value, inspector: outlineNav.element.value?.closest('aside') || null }),
+  positionReady: () => !analysisPending.value && analyzedSource.value === sourceContent.value,
+  positionEnabled: () => !rangeMode.value,
   path: () => jsonPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
   generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
   analyze: source => analyzeContent(source), clearAnalysis: () => clearAnalysisTimer(), scheduleAnalysis: () => scheduleAnalysis(),
@@ -1283,6 +1286,7 @@ const createEditor = () => {
 
 const replaceDocument = (content: string, isReadOnly: boolean) => {
   if (!editor) return
+  session.beforeReplace()
   applyingDocument = true
   editor.setState(EditorState.create({ doc: content, extensions: editorExtensions(isReadOnly) }))
   applyingDocument = false
@@ -2026,7 +2030,7 @@ const save = () => session.save()
 const reloadFromDisk = () => session.reload()
 
 const leaveEditor = () => router.push({ name: 'LibraryMode' })
-watch([jsonPath, isExternal, () => store.libraryPath], () => { syncCurrentTab(); saving.value = false; void load() }, {flush:'sync'})
+watch([jsonPath, isExternal, () => store.libraryPath], () => { syncCurrentTab(); session.beforeReplace(); saving.value = false; void load() }, {flush:'sync'})
 watch(pathQuery, query => {
   if (pathQueryTimer) clearTimeout(pathQueryTimer)
   pathQueryTimer = setTimeout(() => {
@@ -2041,6 +2045,7 @@ watch(viewMode, async mode => {
   if (mode !== 'tree') return
   await nextTick()
   measureTreeViewport()
+  if (treeViewport.value) treeViewport.value.scrollTop = treeScrollTop.value
 })
 const handleTreeHistoryKey = (event: KeyboardEvent) => {
   if (!editor || viewMode.value !== 'tree' || loading.value || saving.value || readOnly.value

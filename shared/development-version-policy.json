@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.3.4",
-  "runtimeBaseVersion": "1.3.3",
+  "runtimeBaseVersion": "1.3.4",
   "publicVersion": "1.3.3",
   "publicTag": "v1.3.3",
   "publicTagCommit": "6f20a61f94de7948ed2bdbc437725590829de1fb",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-203-v1.3.3-published",
-  "binaryVersionTransition": "v1.3.3-public-release-published",
-  "displayLabel": "v1.3.3 已发布 · 下一目标 v1.3.4",
+  "currentStage": "M8-204-v1.3.4-source-position-continuity-candidate",
+  "binaryVersionTransition": "v1.3.4-quality-gate-pending",
+  "displayLabel": "v1.3.4 源码位置接续候选 · 当前公开 v1.3.3",
   "activeSlice": {
-    "id": "v1.3.3-outline-reading-continuity",
-    "status": "published-and-remote-assets-verified",
-    "document": "docs/V1_3_3_Unsigned_Community_Release_Audit_2026-10-28.md"
+    "id": "v1.3.4-source-position-continuity",
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_3_4_Unsigned_Community_Release_Audit_2026-10-28.md"
   }
 }
