@@ -12,11 +12,14 @@
   "sourceUserContentIncluded": false,
   "localQualityActualExit": 0,
   "localQualityCommands": 96,
-  "exactSourceReleaseGate": "pending-corrected-frozen-source-cloud-quality-and-new-original-builder",
+  "exactSourceReleaseGate": "passed-current-frozen-cloud-quality-and-builder",
   "interruptedReturnCases": 8,
   "initialNativeCandidateRejected": true,
   "initialNativeReviewRun": 40642316057,
   "correctiveBrowserActualExit": 0,
   "correctiveTargetedAndProductionBuildActualExit": 0,
-  "localQualityScope": "96-step preliminary pass followed by final corrected-source browser/unit/type/production-build checks; final full gate is independently required on the frozen corrected cloud source"
+  "localQualityScope": "96-step preliminary pass followed by final corrected-source browser/unit/type/production-build checks; final full gate is independently required on the frozen corrected cloud source",
+  "finalSourceCommit": "53866074bbf2bf4d04d236215352f32a4199ba53",
+  "sourceQualityRun": 40653423295,
+  "buildRun": 40654482441
 }
