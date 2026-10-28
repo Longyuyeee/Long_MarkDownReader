@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-202-v1.3.3-outline-reading-continuity-candidate",
-  "binaryVersionTransition": "v1.3.3-quality-gate-pending",
+  "binaryVersionTransition": "v1.3.3-release-ready",
   "displayLabel": "v1.3.3 提纲浏览状态接续候选 · 当前公开 v1.3.2",
   "activeSlice": {
     "id": "v1.3.3-outline-reading-continuity",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_3_3_Unsigned_Community_Release_Audit_2026-10-28.md"
   }
 }
