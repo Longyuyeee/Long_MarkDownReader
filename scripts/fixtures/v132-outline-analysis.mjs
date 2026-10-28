@@ -1,6 +1,8 @@
 // Explicitly simulated IPC analysis for real Vue/CodeMirror interaction tests.
 export function outlineNavigationAnalysis(content,mode){
  const size=s=>new TextEncoder().encode(s).length, root={path:mode==='xml'?'/root[1]':'$',label:'root',name:'root',kind:mode==='json'?'object':'mapping',depth:0,start:0,end:size(content),childCount:3,preview:'',documentIndex:0,line:1,column:1,attributeCount:0}
+ // Match the production JSON analyser: container previews include child names.
+ if(mode==='json')root.preview=content.replace(/\s+/g,' ').trim()
  const entries=[]
  for(const name of ['first','second','third']){
   const expression=mode==='json'?new RegExp('"'+name+'"\\s*:\\s*("[^"\\n]*")'):mode==='xml'?new RegExp('<'+name+'>[\\s\\S]*?</'+name+'>'):new RegExp('^'+name+'\\s*[:=]\\s*(.*)$','m')
