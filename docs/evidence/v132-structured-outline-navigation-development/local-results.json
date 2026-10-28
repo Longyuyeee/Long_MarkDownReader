@@ -11,5 +11,10 @@
   "localQualityGateScope": "before-final-json-pending-focus-repair",
   "finalTypeCheckActualExit": 0,
   "finalBrowserFocusRepairVerified": true,
-  "exactSourceReleaseGate": "pending-frozen-source-cloud-quality-and-builder"
+  "exactSourceReleaseGate": "passed-current-frozen-cloud-quality-and-builder",
+  "finalSourceCommit": "cf7e5332b9e028e5b64457e7e99e1efcf8a2edc3",
+  "sourceQualityRun": 40472773480,
+  "buildRun": 40473154526,
+  "matchingContainerPreviewRegressionVerified": true,
+  "browserEvidenceRun": "browser-r6"
 }
