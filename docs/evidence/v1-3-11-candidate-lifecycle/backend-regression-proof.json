@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "version": "1.3.11",
+  "sourceCommit": "9008034eded2d251edc6a0e5292d9a97b0f2824a",
+  "reused": true,
+  "reason": "backend-code-dependencies-and-compiled-contracts-unchanged",
+  "currentFingerprint": {
+    "sha256": "92df3053ba5b524f35fc1b724bb375215d3899360893b07db42d0f7101c497b1",
+    "files": 219
+  },
+  "baselineFingerprint": {
+    "sha256": "92df3053ba5b524f35fc1b724bb375215d3899360893b07db42d0f7101c497b1",
+    "files": 219
+  },
+  "baseline": {
+    "version": "1.3.9",
+    "tag": "v1.3.9",
+    "sourceCommit": "2efec7db99b39641f84e280a9c8c64ff8df0c49b",
+    "manifestPath": "docs/evidence/v1.3.9-release/artifact-manifest.json",
+    "manifestSha256": "7c045c7c51fe203675d1cd25e12ce3cc635f5be355ab479b50624aaaccc0ea74",
+    "releaseReceiptPath": "docs/evidence/v1.3.9-release/release-receipt.json"
+  },
+  "historicalFunctionalResultsCountedAsCurrent": false,
+  "currentInstallerBuildRequired": true
+}
