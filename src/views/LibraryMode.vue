@@ -331,7 +331,7 @@
             <div class="document-menu-content" aria-label="文档操作菜单">
         <n-button data-testid="library-relation-context" quaternary size="small" @click="openRelationContext">查看文件关系</n-button>
         <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" quaternary size="small" @mousedown.prevent @click="openDocumentFind">查找替换… · Ctrl+H</n-button>
-        <n-button v-if="searchReturnCommand" data-testid="library-search-return" quaternary size="small" @mousedown.prevent @click="returnToSearchOrigin">返回查找前的位置</n-button>
+        <n-button v-if="searchReturnCommand" data-testid="library-search-return" quaternary size="small" @mousedown.prevent @click="returnToSearchOrigin">{{ searchReturnCommand.title }}</n-button>
         <n-button quaternary size="small" :disabled="fileOperationBusy || editorLoading || editorModeChangeBusy" @click="openAttachments(activeTabId)"><template #icon><n-icon :component="AttachmentIcon" /></template>管理附件…</n-button>
         <n-button v-if="activeIsMarkdown && activeTextTab?.content?.includes('longedit:')" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="openPdfReadingUpdate">更新 PDF 阅读笔记…</n-button>
         <n-button v-if="activeIsMarkdown" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="saveCurrentAsTemplate"><template #icon><n-icon :component="FileIcon" /></template>保存为模板…</n-button>

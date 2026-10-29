@@ -212,6 +212,10 @@ const outlineNav = useSourceOutlineNavigation({
   preferredOffset: () => selectedFieldStart.value,
 })
 const session = useStructuredSession({
+  navigation: {
+    capture: () => ({ view: 'source', outline: outlineState.selection.value }),
+    restore: (point, current) => { if (current()) outlineNav.restoreSelection(point?.outline); return false },
+  },
   positionPanes: () => ({ outline: outlineNav.element.value, inspector: outlineNav.element.value?.closest('aside') || null }),
   positionReady: () => !analysisPending.value && analyzedSource.value === content.value && !Object.values(arrayLoading.value).some(Boolean),
   path: () => path.value, external: () => isExternal.value, format: () => format.value?.id || '',
@@ -604,8 +608,7 @@ const load = async (discardDraft = false) => {
 }
 
 const reveal = (range: Range) => {
-  outlineNav.selectRange(range)
-  if (analyzedSource.value !== content.value) { message.info('正在更新定位，请稍候再试'); return } if (!editor) return; const bytes = new TextEncoder().encode(content.value), point = (n: number) => new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0, Math.min(n, bytes.length))).length, from = point(range.start), to = Math.max(from, point(range.end)); editor.dispatch({ selection: { anchor: from, head: to }, effects: EditorView.scrollIntoView(from, { y: 'center' }) }); editor.focus() }
+  if (analyzedSource.value !== content.value) { message.info('正在更新定位，请稍候再试'); return } if (!editor) return; const bytes = new TextEncoder().encode(content.value), point = (n: number) => new TextDecoder('utf-8',{ignoreBOM:true}).decode(bytes.slice(0, Math.min(n, bytes.length))).length, from = point(range.start), to = Math.max(from, point(range.end)); const origin = session.sourceSearch.captureNavigation(); outlineNav.selectRange(range); session.sourceSearch.locateStructure(from, to, origin) }
 const save = () => session.save()
 
 const reload = () => session.reload()

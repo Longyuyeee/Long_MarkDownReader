@@ -12,11 +12,14 @@ import { isolateHistory } from '@codemirror/commands'
 import { buildReplacementPlan, selectedReplacementChanges, type ReplacementPlan } from '../services/structuredReplacementPlan'
 
 import { buildSearchMatches, type SearchMatchPlan } from '../services/structuredSearchMatches'
-import { clearSearchReturn, locateSearchMatch, returnFromSearch, searchReturnPoints } from '../services/structuredSearchReturn'
+import { captureSearchReturn, clearSearchReturn, locateSearchMatch, returnFromSearch, searchReturnPoints, type StructuredNavigationContext } from '../services/structuredSearchReturn'
 import { useContextCommands } from '../services/contextCommands'
 
 let feedbackId = 0
-export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; readOnly?: () => boolean; context?: () => string; library?: () => string }) {
+export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; readOnly?: () => boolean; context?: () => string; library?: () => string
+  navigation?: { capture: () => StructuredNavigationContext; scroll: () => ReturnType<EditorView['scrollSnapshot']> | undefined
+    restore: (context: StructuredNavigationContext | undefined, current: () => boolean) => boolean | Promise<boolean> }
+}) {
   let active: { editor: EditorView; claim: ReturnType<typeof claimStructuredSearch>; library: string; history: ReturnType<typeof structuredSearchHistory>
     pendingScope?: { intent: object; doc: EditorView['state']['doc']; snapshot: NonNullable<StructuredSearchState['scope']> } } | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -43,7 +46,8 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
       if (matchList.value || owner !== matchOwner) return
       if (jump && matchCurrent(jump.plan)) {
         const range = jump.plan.ranges[jump.index], editor = active!.editor
-        locateSearchMatch(editor, range.from, range.to)
+        navigationTicket++
+        locateSearchMatch(editor, range.from, range.to, captureSearchReturn(editor, options.navigation?.capture(), options.navigation?.scroll()))
         editor.focus()
       } else if (!jump && owner && owner.active === active && active?.claim.current() && options.ready?.() !== false && owner.origin?.isConnected) owner.origin.focus({ preventScroll: true })
       if (owner === matchOwner) matchOwner = undefined
@@ -203,12 +207,40 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     if (active) feedback(active.editor)
   }, { flush: 'sync' })
   const returnDepth = shallowRef(0)
+  const returnKind = shallowRef<'search' | 'structure'>('search')
+  let navigationTicket = 0
+  const captureNavigation = () => {
+    if (!active?.claim.current() || options.ready?.() === false) return
+    return { owner: active, doc: active.editor.state.doc,
+      point: captureSearchReturn(active.editor, options.navigation?.capture(), options.navigation?.scroll()) }
+  }
+  const locateStructure = (from: number, to: number, origin = captureNavigation()) => {
+    if (!origin || origin.owner !== active || !active.claim.current() || options.ready?.() === false || origin.doc !== active.editor.state.doc) return false
+    navigationTicket++
+    locateSearchMatch(active.editor, from, to, origin.point, 'structure'); active.editor.focus()
+    return true
+  }
   // Menus can be evaluated before the non-reactive editor owner is bound.
   // Always observe depth so the first navigation also refreshes cached menus.
   const canReturn = () => returnDepth.value > 0 && !!active?.claim.current() && options.ready?.() !== false && !matchList.value && !preview.value
   useContextCommands(() => options.context?.() || '', () => canReturn() ? [{
-    id: 'structured-search-return', title: '返回查找前的位置', description: '回到上一次定位前的光标、选区和阅读位置', keywords: '查找 返回 位置 光标 导航 back search',
-    run: () => { if (canReturn() && active) returnFromSearch(active.editor) },
+    id: 'structured-search-return', title: returnKind.value === 'structure' ? '返回上次浏览位置' : '返回查找前的位置', description: '回到上一次定位前的视图、选区和阅读位置', keywords: '查找 提纲 树形 返回 位置 光标 导航 back search outline',
+    run: async () => {
+      if (!canReturn() || !active) return
+      const owner = active, doc = owner.editor.state.doc, context = options.context?.(), ticket = ++navigationTicket
+      const points = owner.editor.state.field(searchReturnPoints), point = points[points.length - 1]
+      if (!point || !returnFromSearch(owner.editor, false)) return
+      const selection = owner.editor.state.selection
+      const current = () => ticket === navigationTicket && active === owner && owner.claim.current() && owner.editor.state.doc === doc
+        && owner.editor.state.selection === selection && options.ready?.() !== false && options.context?.() === context && !matchList.value && !preview.value
+      await nextTick()
+      if (!current()) return
+      // Let CodeMirror apply its source snapshot before a tree view hides it.
+      if (point.context?.view === 'tree') await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+      if (!current()) return
+      const focused = await options.navigation?.restore(point.context, current)
+      if (current() && !focused) owner.editor.focus()
+    },
   }] : [])
   const extension = [search({ createPanel: editor => {
     const owner = active, current = () => owner === active && active?.editor === editor && active.claim.current()
@@ -236,10 +268,14 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
       || getSearchQuery(update.state).literal !== getSearchQuery(update.startState).literal
       || update.state.field(sourceSearchScope) !== update.startState.field(sourceSearchScope)
     if (changed) invalidatePreview()
-    if (active?.editor === update.view) returnDepth.value = update.state.field(searchReturnPoints).length
+    if (active?.editor === update.view) {
+      const points = update.state.field(searchReturnPoints)
+      returnDepth.value = points.length; returnKind.value = points[points.length - 1]?.kind || 'search'
+    }
     if (changed || update.selectionSet || searchPanelOpen(update.state) !== searchPanelOpen(update.startState)) feedback(update.view)
   })]
   const beforeReplace = () => {
+    navigationTicket++
     if (active?.editor.state.field(searchReturnPoints, false)?.length) active.editor.dispatch({ effects: clearSearchReturn.of() })
     returnDepth.value = 0
     closeMatches(); matchOwner = undefined; pendingMatch = undefined
@@ -265,6 +301,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     clearTimeout(timer)
   }
   const bind = (editor: EditorView, tab: object, root: string, external: boolean, format: string) => {
+    navigationTicket++
     returnDepth.value = 0
     closeMatches(); matchOwner = undefined; pendingMatch = undefined
     closePreview(); epoch++; previewFeedback = undefined
@@ -299,5 +336,5 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     feedback(editor)
   }
   const dispose = () => { beforeReplace(); active = undefined; matches = undefined; stopContext(); stopReady() }
-  return { extension, bind, beforeReplace, dispose, matchList, closeMatches, finishMatches, jumpToMatch, refreshMatches: () => openMatches(active?.editor, true), preview, closePreview, finishPreview, selectPreview, refreshPreview: () => openPreview(active?.editor, true), applyPreview }
+  return { extension, bind, beforeReplace, dispose, captureNavigation, locateStructure, matchList, closeMatches, finishMatches, jumpToMatch, refreshMatches: () => openMatches(active?.editor, true), preview, closePreview, finishPreview, selectPreview, refreshPreview: () => openPreview(active?.editor, true), applyPreview }
 }

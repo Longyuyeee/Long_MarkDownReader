@@ -36,14 +36,14 @@ test('imported primary reports match only the current core and affected selectio
  const end=source.indexOf('].map(([key, file, count])',start)+1
  const expression=source.slice(start,end),names=[...new Set([...expression.matchAll(/\b(\w+Checks)\b/g)].map(m=>m[1]))]
  const supplemental=['routes','searchBaseline','searchUser','searchOffice']
- for(const version of ['1.3.10','1.3.11']){
+ for(const version of ['1.3.10','1.3.11', '1.3.12']){
   const rows=vm.runInNewContext(expression,{version,...Object.fromEntries(names.map(name=>[name,Array(9)]))})
   assert.deepEqual(Array.from(rows,r=>r[0]).sort(),[...releaseValidationProfile(version).currentReportKeys.filter(k=>!supplemental.includes(k)),'lifecycle','management'].sort())
  }
 })
 test('runtime validators require exactly the selected reports and keep historical groups outside current counts',()=>{
  const lines=fs.readFileSync('scripts/lib/installed-release-runtime.mjs','utf8').split('\n')
- for(const version of ['1.3.10','1.3.11']){
+ for(const version of ['1.3.10','1.3.11', '1.3.12']){
  const all=[],current=[]
  for(let i=0;i<lines.length;i++){
   const guard=lines[i].match(/^\s*if\s*\((.*)\)\s*\{/),target=lines[i+1]?.match(/validateInstalled\w+\(reports\.(\w+)/)
@@ -86,4 +86,15 @@ test('1.3.11 selects previous affected tasks plus return navigation, while histo
   }
   assert.equal(actual,expected,file)
  }
+})
+
+test('1.3.12 adds the actual structure navigation workflow without rerunning inherited features',()=>{
+ const previous=releaseValidationProfile('1.3.11'),current=releaseValidationProfile('1.3.12')
+ assert.deepEqual(current.currentReportKeys,[...previous.currentReportKeys,'structureNavigation']);assert.deepEqual(current.inheritedReportKeys,previous.inheritedReportKeys)
+ const lines=fs.readFileSync('scripts/capture-r5j-installed-artifact-smoke.mjs','utf8').split('\n'),names=[]
+ for(let i=0;i<lines.length;i++){
+  const guard=lines[i].match(/^\s*if\s*\((.*)\)\s*\{/),call=lines[i+1]?.match(/\b(runInstalledV\d+\w*)\s*}/)
+  if(guard&&call&&new Function('appVersion','process','return '+guard[1])('1.3.12',{env:{LONGEDIT_INSTALLED_VERSION_SCENARIO:'1'}}))names.push(call[1])
+ }
+ assert.equal(names.length,15);assert.ok(names.includes('runInstalledV1312StructureNavigationWorkflow'))
 })

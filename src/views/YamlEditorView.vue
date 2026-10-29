@@ -414,6 +414,10 @@ const outlineNav = useSourceOutlineNavigation({
   key: entry => entry.documentIndex + ':' + entry.path,
 })
 const session = useStructuredSession({
+  navigation: {
+    capture: () => ({ view: 'source', outline: outlineState.selection.value }),
+    restore: (point, current) => { if (current()) outlineNav.restoreSelection(point?.outline); return false },
+  },
   positionPanes: () => ({ outline: outlineNav.element.value, inspector: outlineNav.element.value?.closest('aside') || null }),
   positionReady: () => !analysisPending.value && analyzedSource.value === sourceContent.value,
   path: () => yamlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
@@ -849,16 +853,13 @@ const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
 }
 
 const revealRange = (range: Pick<YamlDiagnostic, 'start' | 'end'>) => {
-  outlineNav.selectRange(range)
   if (analyzedSource.value !== sourceContent.value) { message.info('正在更新定位，请稍候再试'); return }
   if (!editor) return
   const from = byteOffsetToCodeUnit(sourceContent.value, range.start)
   const to = Math.max(from, byteOffsetToCodeUnit(sourceContent.value, range.end))
-  editor.dispatch({
-    selection: { anchor: from, head: to },
-    effects: EditorView.scrollIntoView(from, { y: 'center' }),
-  })
-  editor.focus()
+  const origin = session.sourceSearch.captureNavigation()
+  outlineNav.selectRange(range)
+  session.sourceSearch.locateStructure(from, to, origin)
 }
 
 const openSourceSearch = () => editor && openSearchPanel(editor)
