@@ -35,20 +35,25 @@ test('imported primary reports match only the current core and affected selectio
  const start=source.indexOf('const reports = Object.fromEntries([')+'const reports = Object.fromEntries('.length
  const end=source.indexOf('].map(([key, file, count])',start)+1
  const expression=source.slice(start,end),names=[...new Set([...expression.matchAll(/\b(\w+Checks)\b/g)].map(m=>m[1]))]
- const rows=vm.runInNewContext(expression,{version:'1.3.10',...Object.fromEntries(names.map(name=>[name,Array(9)]))})
  const supplemental=['routes','searchBaseline','searchUser','searchOffice']
- assert.deepEqual(Array.from(rows,r=>r[0]).sort(),[...profile.currentReportKeys.filter(k=>!supplemental.includes(k)),'lifecycle','management'].sort())
+ for(const version of ['1.3.10','1.3.11']){
+  const rows=vm.runInNewContext(expression,{version,...Object.fromEntries(names.map(name=>[name,Array(9)]))})
+  assert.deepEqual(Array.from(rows,r=>r[0]).sort(),[...releaseValidationProfile(version).currentReportKeys.filter(k=>!supplemental.includes(k)),'lifecycle','management'].sort())
+ }
 })
 test('runtime validators require exactly the selected reports and keep historical groups outside current counts',()=>{
- const lines=fs.readFileSync('scripts/lib/installed-release-runtime.mjs','utf8').split('\n'),all=[],current=[]
+ const lines=fs.readFileSync('scripts/lib/installed-release-runtime.mjs','utf8').split('\n')
+ for(const version of ['1.3.10','1.3.11']){
+ const all=[],current=[]
  for(let i=0;i<lines.length;i++){
   const guard=lines[i].match(/^\s*if\s*\((.*)\)\s*\{/),target=lines[i+1]?.match(/validateInstalled\w+\(reports\.(\w+)/)
   if(!guard||!target||!guard[1].includes('manifest.appVersion'))continue
-  all.push(target[1]);if(new Function('manifest','return '+guard[1])({appVersion:'1.3.10'}))current.push(target[1])
+  all.push(target[1]);if(new Function('manifest','return '+guard[1])({appVersion:version}))current.push(target[1])
  }
  assert.ok(all.length>70)
- assert.deepEqual(current.sort(),profile.currentReportKeys.filter(key=>all.includes(key)).sort())
+ assert.deepEqual(current.sort(),releaseValidationProfile(version).currentReportKeys.filter(key=>all.includes(key)).sort())
  for(const key of ['sourceMatches','recentSearch','sourcePosition','sourceScope','replacementPreview','savepoint'])assert.ok(current.includes(key),key)
+ }
 })
 test('selected search reports load all three supplemental proofs instead of depending on an old version list',()=>{
  const source=fs.readFileSync('scripts/import-community-release-review.mjs','utf8'),anchor=source.indexOf("  for (const [key, file] of [['searchBaseline'")
@@ -59,5 +64,26 @@ test('selected search reports load all three supplemental proofs instead of depe
   for(const[key,file]of [['searchBaseline','installed-v118-baseline.json'],['searchUser','installed-v118-user.json'],['searchOffice','installed-v118-office.json']]){
    if(selected){assert.equal(reports[key].file,file);assert.equal(reports[key].report.observed,'owned/'+file)}else assert.equal(reports[key],undefined)
   }
+ }
+})
+
+test('1.3.11 selects previous affected tasks plus return navigation, while historical scope is unchanged',()=>{
+ const current=releaseValidationProfile('1.3.11')
+ assert.deepEqual(current.currentReportKeys,[...profile.currentReportKeys,'sourceReturn'])
+ assert.deepEqual(current.inheritedReportKeys,profile.inheritedReportKeys)
+ const manifest={appVersion:'1.3.11',validationProfile:current,runtimeSmoke:{reports:Object.fromEntries(current.currentReportKeys.map(key=>[key,{path:'docs/evidence/v1-3-11-candidate-lifecycle/'+key+'.json'}]))}}
+ assertReleaseValidationProfile(manifest)
+ for(const[file,variable,pattern,expected]of [
+  ['scripts/capture-r5j-installed-artifact-smoke.mjs','appVersion',/runInstalledV\d+\w*/,14],
+  ['scripts/lib/installed-release-runtime.mjs','manifest',/validateInstalled\w+\(reports\.(\w+)/,10],
+ ]){
+  const lines=fs.readFileSync(file,'utf8').split('\n');let actual=0
+  for(let i=0;i<lines.length;i++){
+   const guard=lines[i].match(/^\s*if\s*\((.*)\)\s*\{/)
+   if(!guard||!pattern.test(lines[i+1]||''))continue
+   if(variable==='appVersion'&&new Function('appVersion','process','return '+guard[1])('1.3.11',{env:{LONGEDIT_INSTALLED_VERSION_SCENARIO:'1'}}))actual++
+   else if(variable==='manifest'&&guard[1].includes('manifest.appVersion')&&new Function('manifest','return '+guard[1])({appVersion:'1.3.11'}))actual++
+  }
+  assert.equal(actual,expected,file)
  }
 })

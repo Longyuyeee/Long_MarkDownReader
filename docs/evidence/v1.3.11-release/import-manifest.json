@@ -1,0 +1,990 @@
+{
+  "schemaVersion": 1,
+  "status": "hosted-installer-lifecycle-passed",
+  "githubRunId": 40913895699,
+  "artifactBuildRunId": 40910229793,
+  "productSourceCommit": "9008034eded2d251edc6a0e5292d9a97b0f2824a",
+  "appVersion": "1.3.11",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "checks": {
+    "sourcePositionPassed": 9,
+    "sourceSearchPassed": 9,
+    "sourceScopePassed": 9,
+    "replacementPreviewPassed": 9,
+    "selectiveReplacementPassed": 9,
+    "recentSearchPassed": 9,
+    "sourceMatchesPassed": 9,
+    "sourceReturnPassed": 9,
+    "savepointPassed": 14,
+    "lifecyclePassed": 22,
+    "lifecycleFailed": 0,
+    "installedArtifactPassed": 18,
+    "installedArtifactFailed": 0,
+    "installedRoutesPassed": 11,
+    "managementRollbackPassed": 7,
+    "workflowPassed": 8,
+    "experiencePassed": 8,
+    "fileManagementPassed": 9,
+    "foundationPassed": 8,
+    "versionPassed": 4,
+    "searchCompletenessPassed": 20
+  },
+  "files": [
+    {
+      "path": "backend-regression-proof.json",
+      "sizeBytes": 933,
+      "sha256": "702ae5c47098dbe65c2977839c9ff20a3249870c02c01a38697272ff4dc728db"
+    },
+    {
+      "path": "installed-artifact-smoke.json",
+      "sizeBytes": 9881,
+      "sha256": "eb2c1161202b386e5acafb3f47e4214a45e2c0f3dfff1f6c40c394ad154bca7c"
+    },
+    {
+      "path": "installed-default-app-candidates.jpg",
+      "sizeBytes": 87596,
+      "sha256": "43e7d5a5d49f813d1bcaf536c15f6182b6f18b8d858c13a3ac788ec2ae89238a"
+    },
+    {
+      "path": "installed-default-app-lifecycle-evidence.json",
+      "sizeBytes": 981,
+      "sha256": "acebbecdb78c71f4df08530ce516d91c2bf72bd1f82e9fb936eb9a2620c5c99f"
+    },
+    {
+      "path": "installed-docx-hyperlink-evidence.json",
+      "sizeBytes": 2859,
+      "sha256": "a7b671c4f274a32f6f5f17a140baac9c63461a2a6c78a75fe9c8b585bf43cd7c"
+    },
+    {
+      "path": "installed-graph-outcome-entry.jpg",
+      "sizeBytes": 78946,
+      "sha256": "0ba6bbd04e0dfd14fd81b03579ce9040f025a46282d240c7ec998f90c453414f"
+    },
+    {
+      "path": "installed-json-save-reopen.jpg",
+      "sizeBytes": 105706,
+      "sha256": "b2b34e395ec7c292504421576bb6773a9d4ecb245fe06ad842721f5cccfc8696"
+    },
+    {
+      "path": "installed-knowledge-guidance-comparison.json",
+      "sizeBytes": 1291,
+      "sha256": "6869de76459fe181f83536ba4c7235bd60a4186d218e2827f8f0f5e9e3b4f167"
+    },
+    {
+      "path": "installed-knowledge-guidance-graph.jpg",
+      "sizeBytes": 121494,
+      "sha256": "20eb0c71b0a752e1839328222b3faabb1d75b9cb4f0e8e29db7f8bc306e2ff68"
+    },
+    {
+      "path": "installed-knowledge-guidance-outcome-evidence.json",
+      "sizeBytes": 1928,
+      "sha256": "98ac9d607d71b6ae2697ab9e7cfcaf99258797d71c4ffe5de6ec5285caabb905"
+    },
+    {
+      "path": "installed-knowledge-network-evidence.json",
+      "sizeBytes": 2041,
+      "sha256": "551b95b74b3f8c71339016774a35493c534f488c5f43ef88409e78d8ea88275f"
+    },
+    {
+      "path": "installed-knowledge-network-pulse.jpg",
+      "sizeBytes": 117931,
+      "sha256": "1b717bf40d2bc1cf6f4b8a8827a8114d4fe1888c48d94aafa2481b371a23cbfc"
+    },
+    {
+      "path": "installed-knowledge-observation-baseline.json",
+      "sizeBytes": 1421,
+      "sha256": "97ec282fa1e754488b26a02e179aa64fe29edf665e363f48ff4ac71215bf3fd1"
+    },
+    {
+      "path": "installed-knowledge-observation-entry-evidence.json",
+      "sizeBytes": 409,
+      "sha256": "ec090b28721c1babbf626e22a0fd643052dbed89a06d321f2295413a6adeda00"
+    },
+    {
+      "path": "installed-knowledge-observation-settings.jpg",
+      "sizeBytes": 76524,
+      "sha256": "7bdba82aa9598cfdabd0a6805a5297616373d080bd05bddfc4313172ac3b207f"
+    },
+    {
+      "path": "installed-knowledge-receipt-review-entry.jpg",
+      "sizeBytes": 84981,
+      "sha256": "6321804820805975854b9d177c79777ed40d439e0b081afd83ecaad2be76cde8"
+    },
+    {
+      "path": "installed-knowledge-receipt-review-evidence.json",
+      "sizeBytes": 1871,
+      "sha256": "2162ef2574118ab5d1db601b2f4163cf9db5aee626a700097149eb049ef0914a"
+    },
+    {
+      "path": "installed-knowledge-session-evidence.json",
+      "sizeBytes": 529,
+      "sha256": "2b4efdc70868c9136f97410fafca763e3e34d70d8720a0146850981373818d7e"
+    },
+    {
+      "path": "installed-knowledge-session-ready.jpg",
+      "sizeBytes": 84795,
+      "sha256": "45b672c075e1a7fa63cb3f8968f893d8b6e1162b779c15d4e71acfa452c2fad1"
+    },
+    {
+      "path": "installed-knowledge-session-start.jpg",
+      "sizeBytes": 84029,
+      "sha256": "653e4ebaa0608eaa44276c5b41e4d93e5d5b623f653140378f2d03f9fa0c5512"
+    },
+    {
+      "path": "installed-knowledge-topic-centered.jpg",
+      "sizeBytes": 128640,
+      "sha256": "6e1b3871554b0fe7030795483e3d3c4fad753d05bace00740dfaeeff56dce32b"
+    },
+    {
+      "path": "installed-libreoffice-writer-docx-hyperlink.jpg",
+      "sizeBytes": 140757,
+      "sha256": "3a3a2ad6c031f271c6e99459e1ea6dd351487bddffe5d670efa792d2e292e047"
+    },
+    {
+      "path": "installed-microsoft-word-docx-hyperlink.jpg",
+      "sizeBytes": 136848,
+      "sha256": "9eadb577fa434ea09114721a0e5980c218b3bce61402b9c2847ed09b4d856dde"
+    },
+    {
+      "path": "installed-route-mount-evidence.json",
+      "sizeBytes": 1708,
+      "sha256": "09d48ecd5a3c86714a7d0c7868a961499c40fb49f0275e51ffe03080c4fad8fe"
+    },
+    {
+      "path": "installed-route-performance-evidence.json",
+      "sizeBytes": 4607,
+      "sha256": "fd416057e70e64cdb1f5b90407b39ac9991ba69e90c09cc65a9b4270ca7c5afe"
+    },
+    {
+      "path": "installed-txt-save-reopen.jpg",
+      "sizeBytes": 69867,
+      "sha256": "efacd7b4aab1865f5f463800b0c6d28b5ff0096c08922a2d6d3c4864f57c9eb2"
+    },
+    {
+      "path": "installed-v110-workflow.jpg",
+      "sizeBytes": 80497,
+      "sha256": "365fa4b286d5d4b067c07084fb6761341329198219482d762fb18cb76c0a41a2"
+    },
+    {
+      "path": "installed-v110-workflow.json",
+      "sizeBytes": 1361,
+      "sha256": "e3aa36a3b98c7a0d00e4c3347517a84a4fd5796f9c941bce3671f5a3cd995cf1"
+    },
+    {
+      "path": "installed-v111-relation-dialog.jpg",
+      "sizeBytes": 78461,
+      "sha256": "0fee17943137a08137ab929e542c472fb94b39b560d5d0772377be1b750735b5"
+    },
+    {
+      "path": "installed-v111-workflow.json",
+      "sizeBytes": 1167,
+      "sha256": "4e5f43ad38aab4d12f6703ed7c229aa057c38f1ab654bf765b414e5ce389071e"
+    },
+    {
+      "path": "installed-v112-context-result.jpg",
+      "sizeBytes": 92755,
+      "sha256": "4e7a38777a49ad270f8dd3c42594ac6b2c16cd31d6cd7fe87a75090c84d22ff6"
+    },
+    {
+      "path": "installed-v112-move-dialog.jpg",
+      "sizeBytes": 75931,
+      "sha256": "faa781ade60aa0c30ff572d55fcf6985cac1ed830ab095f6dfcefb930fcf69c2"
+    },
+    {
+      "path": "installed-v112-trash-dialog.jpg",
+      "sizeBytes": 74565,
+      "sha256": "2a539769303e294f10ba4246bb1438a59d4e1da1bc39ab36daa7bca4f6e8cdc8"
+    },
+    {
+      "path": "installed-v112-workflow.json",
+      "sizeBytes": 1330,
+      "sha256": "58c13d105963aa43e141582b1b829e10bb29634fd0ded0a22a2a2807893f7723"
+    },
+    {
+      "path": "installed-v113-main.jpg",
+      "sizeBytes": 81897,
+      "sha256": "e1991950cfac8012b04f175029367a6d14f6b88e6646321a7f980384e144df3b"
+    },
+    {
+      "path": "installed-v113-template-dialog.jpg",
+      "sizeBytes": 57076,
+      "sha256": "df45023b3a439b2db917eddcad6a07667b883812817c01c8aa12ffdac6a4e3cc"
+    },
+    {
+      "path": "installed-v113-text-history-result.jpg",
+      "sizeBytes": 61848,
+      "sha256": "1ac0f6af6e1da57ae42f81cff12b71deb1c5b17c6a9aaa4517c094e6438f41d8"
+    },
+    {
+      "path": "installed-v113-workflow.json",
+      "sizeBytes": 1102,
+      "sha256": "c9f13f2308aab3ea40976eb1583cb47f8403a7f69b434ddfff4304931f728344"
+    },
+    {
+      "path": "installed-v118-baseline.json",
+      "sizeBytes": 210565,
+      "sha256": "008304d68024bdc27a82838958ee74e823eddb2933ac44bb308332c009ee6e67"
+    },
+    {
+      "path": "installed-v118-office.json",
+      "sizeBytes": 8407,
+      "sha256": "63c6b1c023e6918e7164ca75e2be96cd03c8680ea81996729d56632b9e574906"
+    },
+    {
+      "path": "installed-v118-user.json",
+      "sizeBytes": 14643,
+      "sha256": "95ac83fbdb3cd60a2c2c4d7734f1f02df95e1070b52dbb33949ad20a487afa83"
+    },
+    {
+      "path": "installed-v118-workflow.json",
+      "sizeBytes": 3015,
+      "sha256": "ea65565ace4b265ce160bcd5280e37d8afba9f284ff02b31df3c3ad677692389"
+    },
+    {
+      "path": "installed-v1217-copy.xml",
+      "sizeBytes": 65,
+      "sha256": "0b13ee002e6f93f90712ed386bf87cd89b30a91cbbe78a900ab609c4b505100c"
+    },
+    {
+      "path": "installed-v1217-external.xml",
+      "sizeBytes": 69,
+      "sha256": "7f2e7de9d21dab5adfec092b2bdef3314d4ec90c0c577317bf356cb85c9a6b58"
+    },
+    {
+      "path": "installed-v1217-saved.json",
+      "sizeBytes": 72,
+      "sha256": "45f014088755dff4879f036e46c44514efa12704c8270f7bae8a586fdab476b4"
+    },
+    {
+      "path": "installed-v1217-saved.svg",
+      "sizeBytes": 84,
+      "sha256": "d6e6e3a7cc67110793b5aa3e95a6273be17aa11fe5be0a913982977015f652a3"
+    },
+    {
+      "path": "installed-v1217-saved.toml",
+      "sizeBytes": 59,
+      "sha256": "0fab12e769bfe9b9940dab39d1f375a05ccf6d9016f3972c0264b22ae18282cc"
+    },
+    {
+      "path": "installed-v1217-saved.xml",
+      "sizeBytes": 66,
+      "sha256": "9fa3198ba21396963a0562170efe8a168b132858080582fc48a22156182db8bd"
+    },
+    {
+      "path": "installed-v1217-saved.yaml",
+      "sizeBytes": 80,
+      "sha256": "4f85b649ef710d9b5828845f8b47cffbe386dd1e9c41be04aa60b515085d22fb"
+    },
+    {
+      "path": "installed-v1217-savepoint-clean.jpg",
+      "sizeBytes": 90030,
+      "sha256": "6bcaeac3ce42b2a51d036789b3e8f4c2b17368a13105de57d1793f6111f2ffdd"
+    },
+    {
+      "path": "installed-v1217-savepoint-observations.json",
+      "sizeBytes": 764,
+      "sha256": "8eb2cc2e42058350a6f99ca57d77bc9076468f491253b4c4c0c1577af78ef291"
+    },
+    {
+      "path": "installed-v1217-savepoint-range.jpg",
+      "sizeBytes": 103577,
+      "sha256": "09c419228d6c16f1bcbffe8c36a15de6cbfc45c74f5f7d08838fbb37d2a76286"
+    },
+    {
+      "path": "installed-v1217-savepoint-workflow.json",
+      "sizeBytes": 24206,
+      "sha256": "a8e4ecbd98ef6a420e9fe7b3b4a6a481cd4a9b822352d54cd0c56b7173a8553e"
+    },
+    {
+      "path": "installed-v1310-matches-json-1280.jpg",
+      "sizeBytes": 114378,
+      "sha256": "2ee66106634b69d71c3e6c5e6deb991ad9a5039acda39c95ef4858ff35f5a607"
+    },
+    {
+      "path": "installed-v1310-matches-json-800.jpg",
+      "sizeBytes": 42758,
+      "sha256": "01616855fe0d1520599e27f959e56ae568496fe08b67aca91a0ee9bfec341333"
+    },
+    {
+      "path": "installed-v1310-matches-observations.json",
+      "sizeBytes": 364,
+      "sha256": "d012d5cfae6ef8b0e237d2f9bedff8585f0ca0adc37858bd819625e1cb22b3fc"
+    },
+    {
+      "path": "installed-v1310-matches-toml-1280.jpg",
+      "sizeBytes": 101462,
+      "sha256": "854cf50a8a32fc8f17e23ac50a9d624e651927b04c9167d0583ca1ad129c8682"
+    },
+    {
+      "path": "installed-v1310-matches-toml-800.jpg",
+      "sizeBytes": 42417,
+      "sha256": "3f1031e3d9bc0fb54949df92a84a400ff583df3b44698628ff4fd48000c61d79"
+    },
+    {
+      "path": "installed-v1310-matches-workflow.json",
+      "sizeBytes": 70997,
+      "sha256": "c9e3f80c852c708812b4a774945665d9eba41c35e32f713b5d1d04d06a2c143c"
+    },
+    {
+      "path": "installed-v1310-matches-xml-1280.jpg",
+      "sizeBytes": 106549,
+      "sha256": "615721aa87b3c71c5527ce46c8e158c8eb43831d2b3aafcd9f397ba0a2283dec"
+    },
+    {
+      "path": "installed-v1310-matches-xml-800.jpg",
+      "sizeBytes": 45583,
+      "sha256": "7d6afcf8cb3c5f350321a64e9b5803e2d87eb81081acc10a69f488b7db5ba8dd"
+    },
+    {
+      "path": "installed-v1310-matches-yaml-1280.jpg",
+      "sizeBytes": 102627,
+      "sha256": "62cec8e1e2ff990afd1d6297d5fc830fc9cd9a082e817dac2758b403c185d090"
+    },
+    {
+      "path": "installed-v1310-matches-yaml-800.jpg",
+      "sizeBytes": 42273,
+      "sha256": "cb024d9bcd469ca98f23d1cadab57b3045cb1a38d0fcb5bd4973476fa0a23a37"
+    },
+    {
+      "path": "installed-v1310-saved.json",
+      "sizeBytes": 4498,
+      "sha256": "d24412a461bccf034342aa8f58764c9951ef5af0e28c17f98f7211f21bac98c0"
+    },
+    {
+      "path": "installed-v1310-saved.toml",
+      "sizeBytes": 4093,
+      "sha256": "e3445a89f1082a94824f788fe715a4e5a3eb2c84880d199bffa2066b7e05f72b"
+    },
+    {
+      "path": "installed-v1310-saved.xml",
+      "sizeBytes": 5110,
+      "sha256": "0f7b490b4d31f483a59b7780d9ccaa5025ba418fa53b9ecbb5fa3582df4e1de8"
+    },
+    {
+      "path": "installed-v1310-saved.yaml",
+      "sizeBytes": 3993,
+      "sha256": "c96f352a9ed25029cfb6b5ce306daaeb430bb8f7873a1aaeab0c765f737e3919"
+    },
+    {
+      "path": "installed-v1311-return-json-1280.jpg",
+      "sizeBytes": 206911,
+      "sha256": "3dcb08dcc955cfbde0430a961148fbd56a4f5043fc5be76c8d72ecf665e3b0dd"
+    },
+    {
+      "path": "installed-v1311-return-json-800.jpg",
+      "sizeBytes": 115581,
+      "sha256": "2f5cbe943194da24beee72b78b762e29a0bd290ef78ae46e5310e1a1d5342d7b"
+    },
+    {
+      "path": "installed-v1311-return-observations.json",
+      "sizeBytes": 350,
+      "sha256": "d100b8b0b167d246043feaa930e10c68d1c90528132645be0999fa3897b2520f"
+    },
+    {
+      "path": "installed-v1311-return-toml-1280.jpg",
+      "sizeBytes": 194071,
+      "sha256": "8ab01e583867bebd5fc4ebfbaa410469dd0ca40a241a05fd52b606cb706cb49a"
+    },
+    {
+      "path": "installed-v1311-return-toml-800.jpg",
+      "sizeBytes": 106662,
+      "sha256": "461b99b5a6169fb714625ab5354f2d921afaad0b093cd7860049107d41682f99"
+    },
+    {
+      "path": "installed-v1311-return-workflow.json",
+      "sizeBytes": 89009,
+      "sha256": "7ba96688df506e5392e4d3091337cc888255b404fce96ed4582e4f4e4845dc4f"
+    },
+    {
+      "path": "installed-v1311-return-xml-1280.jpg",
+      "sizeBytes": 214443,
+      "sha256": "12cb23952be776505f7955415439b7417a4b1702b1200722308b26460e5cf4ac"
+    },
+    {
+      "path": "installed-v1311-return-xml-800.jpg",
+      "sizeBytes": 122154,
+      "sha256": "34f400bd819477663982f830940e4889fa2550ffbb2fbd1a1cce337a31c07e09"
+    },
+    {
+      "path": "installed-v1311-return-yaml-1280.jpg",
+      "sizeBytes": 192565,
+      "sha256": "771cad56aa89064fb9366f76b383d220f5f064995ee9d680bd3a3dfd9e2708f6"
+    },
+    {
+      "path": "installed-v1311-return-yaml-800.jpg",
+      "sizeBytes": 107447,
+      "sha256": "23d5c726795aa730103f3fd8e90420147699a32680f78fd058311f1c5a994ea6"
+    },
+    {
+      "path": "installed-v1311-saved.json",
+      "sizeBytes": 4498,
+      "sha256": "d24412a461bccf034342aa8f58764c9951ef5af0e28c17f98f7211f21bac98c0"
+    },
+    {
+      "path": "installed-v1311-saved.toml",
+      "sizeBytes": 4093,
+      "sha256": "e3445a89f1082a94824f788fe715a4e5a3eb2c84880d199bffa2066b7e05f72b"
+    },
+    {
+      "path": "installed-v1311-saved.xml",
+      "sizeBytes": 5110,
+      "sha256": "0f7b490b4d31f483a59b7780d9ccaa5025ba418fa53b9ecbb5fa3582df4e1de8"
+    },
+    {
+      "path": "installed-v1311-saved.yaml",
+      "sizeBytes": 3993,
+      "sha256": "c96f352a9ed25029cfb6b5ce306daaeb430bb8f7873a1aaeab0c765f737e3919"
+    },
+    {
+      "path": "installed-v134-continuity-observations.json",
+      "sizeBytes": 494,
+      "sha256": "b2b122247855e6cfc5a2a6dfda399b8e45ec06c8fc3b39eaa3864b5c055c00ca"
+    },
+    {
+      "path": "installed-v134-json-tree-return.jpg",
+      "sizeBytes": 112909,
+      "sha256": "7aecd346c1235832117b049929c52f40f96cd74390f20a09327dcbdd56f61237"
+    },
+    {
+      "path": "installed-v134-position-json-1280.jpg",
+      "sizeBytes": 202365,
+      "sha256": "2238787b940730898b0f2664d71bb085954cbfc97c7d43228a352f339c171c9b"
+    },
+    {
+      "path": "installed-v134-position-json-800.jpg",
+      "sizeBytes": 85867,
+      "sha256": "db5887addf4e2f2c61ed5fbecfb9e6d10e027674e6a77d8e23e912e516a2cd27"
+    },
+    {
+      "path": "installed-v134-position-toml-1280.jpg",
+      "sizeBytes": 193417,
+      "sha256": "6b60579c367a3b406f3ba5a45b1fccfa5194a913ef2067c73333387ff5f7b21a"
+    },
+    {
+      "path": "installed-v134-position-toml-800.jpg",
+      "sizeBytes": 81468,
+      "sha256": "d5a5356617b3d24d2b4c5c61074381bf098720cca4259e35dc384fe29a27e81d"
+    },
+    {
+      "path": "installed-v134-position-workflow.json",
+      "sizeBytes": 72722,
+      "sha256": "19c9621adcfde19a4f649a35a031ea73ba2fe3a35a23fd0327413291e442177f"
+    },
+    {
+      "path": "installed-v134-position-xml-1280.jpg",
+      "sizeBytes": 217113,
+      "sha256": "fe22735f933a537ec15061b426e05f0047c818869962a7b38eaaf170fef676aa"
+    },
+    {
+      "path": "installed-v134-position-xml-800.jpg",
+      "sizeBytes": 90035,
+      "sha256": "6a80b88704762aca2f78705e14390ca15c568996bc6bf54f07a20b8d23e47b33"
+    },
+    {
+      "path": "installed-v134-position-yaml-1280.jpg",
+      "sizeBytes": 194655,
+      "sha256": "0b30a06785d588b5a92a4b42a2666c6c982d24a5eb863454701b38a0165b84be"
+    },
+    {
+      "path": "installed-v134-position-yaml-800.jpg",
+      "sizeBytes": 82088,
+      "sha256": "619645e2e1f618762215c13e4650492c986d5c8f92cca1c9120c6d7a2b31e9d3"
+    },
+    {
+      "path": "installed-v134-saved.json",
+      "sizeBytes": 4498,
+      "sha256": "d24412a461bccf034342aa8f58764c9951ef5af0e28c17f98f7211f21bac98c0"
+    },
+    {
+      "path": "installed-v134-saved.toml",
+      "sizeBytes": 4093,
+      "sha256": "e3445a89f1082a94824f788fe715a4e5a3eb2c84880d199bffa2066b7e05f72b"
+    },
+    {
+      "path": "installed-v134-saved.xml",
+      "sizeBytes": 5110,
+      "sha256": "0f7b490b4d31f483a59b7780d9ccaa5025ba418fa53b9ecbb5fa3582df4e1de8"
+    },
+    {
+      "path": "installed-v134-saved.yaml",
+      "sizeBytes": 3993,
+      "sha256": "c96f352a9ed25029cfb6b5ce306daaeb430bb8f7873a1aaeab0c765f737e3919"
+    },
+    {
+      "path": "installed-v135-saved.json",
+      "sizeBytes": 4498,
+      "sha256": "69f00d4f9995640b7102244ef5d6e907359aebc0a8088e562aab01477f0ae473"
+    },
+    {
+      "path": "installed-v135-saved.toml",
+      "sizeBytes": 4093,
+      "sha256": "f17216156e71ad2b4ea3ccd163ec3d3f1219ce78f6e46ea1ad63e3001232ef50"
+    },
+    {
+      "path": "installed-v135-saved.xml",
+      "sizeBytes": 5110,
+      "sha256": "f09c66a01fb700e85b22220c00c016e6147b864979c9737671b3d2d74e5f9b64"
+    },
+    {
+      "path": "installed-v135-saved.yaml",
+      "sizeBytes": 3993,
+      "sha256": "122609084d9d3eb1ec2c937c8d0cfc4cf674b0678cc7b4fba8ee862124ab2da0"
+    },
+    {
+      "path": "installed-v135-search-json-1280.jpg",
+      "sizeBytes": 217767,
+      "sha256": "49e2032c8b315fa0cb8e5c38f2d186ec546c495c554ae4998b1c38c7d78cbb5f"
+    },
+    {
+      "path": "installed-v135-search-json-800.jpg",
+      "sizeBytes": 105031,
+      "sha256": "7c2a70b0ebd96f6deca1c1f2276dbab1ea7215caef4e058b2be605a6ea048c76"
+    },
+    {
+      "path": "installed-v135-search-observations.json",
+      "sizeBytes": 458,
+      "sha256": "aec2d95dc08af5a98d1eb9dce5dfe007f6215f1a2e5f7be526c601138aadb89c"
+    },
+    {
+      "path": "installed-v135-search-toml-1280.jpg",
+      "sizeBytes": 204019,
+      "sha256": "0cdeea4f4d80a27e2859e7e45f881fe3df41d9327c9b729893fbb9c6aab02446"
+    },
+    {
+      "path": "installed-v135-search-toml-800.jpg",
+      "sizeBytes": 102065,
+      "sha256": "658e3db64037d02703eb29a7bdf13e59525ee063c356f588bf2c58188bb03348"
+    },
+    {
+      "path": "installed-v135-search-workflow.json",
+      "sizeBytes": 89086,
+      "sha256": "609f9bcb09af482a9035714727fb08e2fad5ff94a1899a261df381490d41767b"
+    },
+    {
+      "path": "installed-v135-search-xml-1280.jpg",
+      "sizeBytes": 227126,
+      "sha256": "b9a1209c810b86b7d8c6d4d1112bafa67c129ef4701880e9ba1eb1f9ce17c90c"
+    },
+    {
+      "path": "installed-v135-search-xml-800.jpg",
+      "sizeBytes": 118109,
+      "sha256": "337495c6dbac9cf43513c752d0bb4777e5b68e020779ebafdd0e6ee3aacc0787"
+    },
+    {
+      "path": "installed-v135-search-yaml-1280.jpg",
+      "sizeBytes": 202759,
+      "sha256": "335f736f44d23bb9bea1fcba8c3d6930b292ab080904f3264d356245a0285bae"
+    },
+    {
+      "path": "installed-v135-search-yaml-800.jpg",
+      "sizeBytes": 102284,
+      "sha256": "feede789a9f229f22d448f63b522ba9bd16b0681e38aac66833eaa9eeb7515e8"
+    },
+    {
+      "path": "installed-v136-saved.json",
+      "sizeBytes": 4525,
+      "sha256": "054980f8868fdeb357f9c086842381c92b9ffdedb86267767033641d72f707c6"
+    },
+    {
+      "path": "installed-v136-saved.toml",
+      "sizeBytes": 4120,
+      "sha256": "ebfc4c85bf9f3e34ad9cb0b6b4f2acf133c5482842b23c5750cb81be3fe28293"
+    },
+    {
+      "path": "installed-v136-saved.xml",
+      "sizeBytes": 5137,
+      "sha256": "1a648b7921fe19722225a26bba4a0954a119bf8999c400557e982d2329303c93"
+    },
+    {
+      "path": "installed-v136-saved.yaml",
+      "sizeBytes": 4020,
+      "sha256": "3a232570a62b86235454fd4f06578d0d7665e8e81a25840a1fbb6c7635a56069"
+    },
+    {
+      "path": "installed-v136-scope-json-1280.jpg",
+      "sizeBytes": 210629,
+      "sha256": "d22378207df0e972953c7c308aa7d6803eb85be10249191da27e99da2409aa58"
+    },
+    {
+      "path": "installed-v136-scope-json-800.jpg",
+      "sizeBytes": 104938,
+      "sha256": "61ef08688e58aa7acd6aa862a9beeecc46603bf3b858f3e1afd43a71c4af6caf"
+    },
+    {
+      "path": "installed-v136-scope-observations.json",
+      "sizeBytes": 424,
+      "sha256": "21ada6ab871f0e345a42089ef91c7c2b7ed16d430bee3dffb31150b124565b24"
+    },
+    {
+      "path": "installed-v136-scope-toml-1280.jpg",
+      "sizeBytes": 202206,
+      "sha256": "ea284666c1a290b427812e844cfed1c692cf275493cb621bd920f52a09233e90"
+    },
+    {
+      "path": "installed-v136-scope-toml-800.jpg",
+      "sizeBytes": 102003,
+      "sha256": "20138cf6265c91b43c019e9108a09b0f76f54a0669972abe1e02c2bb94b83faf"
+    },
+    {
+      "path": "installed-v136-scope-workflow.json",
+      "sizeBytes": 134744,
+      "sha256": "801a521a651938508ffd3b8efc5c02e566f99a6c3834c9f8af0011f0badf9e7d"
+    },
+    {
+      "path": "installed-v136-scope-xml-1280.jpg",
+      "sizeBytes": 221951,
+      "sha256": "78650a4f7e1b8b7328b452e6178a9243661500671c57c851a5f00e527e0bcbc9"
+    },
+    {
+      "path": "installed-v136-scope-xml-800.jpg",
+      "sizeBytes": 115728,
+      "sha256": "4cecc9d783c764780405234a59e3d1b0319dac3b7e719a44bd42fc531e36ff92"
+    },
+    {
+      "path": "installed-v136-scope-yaml-1280.jpg",
+      "sizeBytes": 200279,
+      "sha256": "d6a20b8d4c039187b35532a05df0d736c32af4cb583cf54e95fc1cf983c229e4"
+    },
+    {
+      "path": "installed-v136-scope-yaml-800.jpg",
+      "sizeBytes": 101480,
+      "sha256": "2fb0eb76e7a1a670d4890549cbbfb7782d770ca76ab3c3b2593d6cc40fa93108"
+    },
+    {
+      "path": "installed-v137-preview-json-1280.jpg",
+      "sizeBytes": 118475,
+      "sha256": "de84f5675f3c34543e6a4e567b89ade44ed31993b58d96a575b94db619c3840a"
+    },
+    {
+      "path": "installed-v137-preview-json-800.jpg",
+      "sizeBytes": 49012,
+      "sha256": "1626faa22c2fc7841fa05ee5005f35c4fe070523930e432c3b0c3bdb0554200b"
+    },
+    {
+      "path": "installed-v137-preview-observations.json",
+      "sizeBytes": 400,
+      "sha256": "7ece636116b08dea858f13252ce77af2569615c929582fd208a73c86f2948555"
+    },
+    {
+      "path": "installed-v137-preview-toml-1280.jpg",
+      "sizeBytes": 107328,
+      "sha256": "97b1dfca37b35d5fadf26753a02799f96e0001d9d6f72cb821e391a44765a484"
+    },
+    {
+      "path": "installed-v137-preview-toml-800.jpg",
+      "sizeBytes": 47481,
+      "sha256": "4509659adf88831449d031964ad711a0081e04461933d9372dc653b8c68425b6"
+    },
+    {
+      "path": "installed-v137-preview-workflow.json",
+      "sizeBytes": 72967,
+      "sha256": "11f6a6085e90f0ce09f61d4e918688bae7a6e75a04bfd4a98d2d95382ab70d46"
+    },
+    {
+      "path": "installed-v137-preview-xml-1280.jpg",
+      "sizeBytes": 112386,
+      "sha256": "6eaf71ddd0e94d5be00286abf0d1d344e276e00cf290fcef50c7195ff957fd5e"
+    },
+    {
+      "path": "installed-v137-preview-xml-800.jpg",
+      "sizeBytes": 50919,
+      "sha256": "6800108b999ebac92144ef31e331cac03965c67636ad4c7d44c5cc8e3036b269"
+    },
+    {
+      "path": "installed-v137-preview-yaml-1280.jpg",
+      "sizeBytes": 108161,
+      "sha256": "be14c958e67c266340fe2557a44377c763ce81e51e9beca5cecdf30323caa547"
+    },
+    {
+      "path": "installed-v137-preview-yaml-800.jpg",
+      "sizeBytes": 47811,
+      "sha256": "ef55de9cbb3b3657fef6edf116611547b2f196e3a12e6a684b9034fd5c0a1b14"
+    },
+    {
+      "path": "installed-v137-saved.json",
+      "sizeBytes": 4480,
+      "sha256": "5bb0e133667a1a2d49a28416e551b8c76e7a06a6e693224fe3ebd6fc0f2cc125"
+    },
+    {
+      "path": "installed-v137-saved.toml",
+      "sizeBytes": 4075,
+      "sha256": "e110f47f0bd61e42c1f335837d3329e536043f95999888632d562447f659eb61"
+    },
+    {
+      "path": "installed-v137-saved.xml",
+      "sizeBytes": 5092,
+      "sha256": "426c3dc7c3226daf0b8a8923c40d8734cef081b740487813eb9113bce20a37f5"
+    },
+    {
+      "path": "installed-v137-saved.yaml",
+      "sizeBytes": 3975,
+      "sha256": "e3346c981bbdf85880db7d84251759f17c48cbcf6e9faddf31685d85067acf14"
+    },
+    {
+      "path": "installed-v138-saved.json",
+      "sizeBytes": 4486,
+      "sha256": "31dcec632153024181cb58593c8bfc74ad2186dd8a5c0c2a4ba259cdbc0ca7dd"
+    },
+    {
+      "path": "installed-v138-saved.toml",
+      "sizeBytes": 4081,
+      "sha256": "5da5aa0a9aa04912062422ba03a5e79a987db15a3879f5e97db52cc18f45bcc9"
+    },
+    {
+      "path": "installed-v138-saved.xml",
+      "sizeBytes": 5098,
+      "sha256": "4c38858aa48272bd30af22b2b8f2e2d7e4a0a6410e27c91e5fccbd0640b9db83"
+    },
+    {
+      "path": "installed-v138-saved.yaml",
+      "sizeBytes": 3981,
+      "sha256": "725a8b7a6b6d522e8fc7105329d6a86f06642451618266e4769ecd0f92376f7c"
+    },
+    {
+      "path": "installed-v138-selection-json-1280.jpg",
+      "sizeBytes": 122391,
+      "sha256": "9765702cdd57a0c99ed76b27efc8559aa6a5ac8fad8d28a2f34628fc03ff6d2e"
+    },
+    {
+      "path": "installed-v138-selection-json-800.jpg",
+      "sizeBytes": 57513,
+      "sha256": "b0b8fc7038bd3fe5ca313af8f59a5aa011fa2878edfa6b13cd6f543a2d924185"
+    },
+    {
+      "path": "installed-v138-selection-observations.json",
+      "sizeBytes": 412,
+      "sha256": "f3a6891b84107ce4136d22902d93810402dbdbc3e6057e2621daf7ed74e56200"
+    },
+    {
+      "path": "installed-v138-selection-toml-1280.jpg",
+      "sizeBytes": 111610,
+      "sha256": "83226aac8224cfc9d50d35d5f2a218f7dafc416b8b6a267370efcbac383936d6"
+    },
+    {
+      "path": "installed-v138-selection-toml-800.jpg",
+      "sizeBytes": 54976,
+      "sha256": "b868bf5b8d65ed3423108ee6b8a8d8cf98c3690a60a04cb0d1f9b9c3f5299943"
+    },
+    {
+      "path": "installed-v138-selection-workflow.json",
+      "sizeBytes": 79695,
+      "sha256": "f38dee9538ef24aa3d36b8ee8dd5057b8eccab90351fa02deea7a0b21cee6b2d"
+    },
+    {
+      "path": "installed-v138-selection-xml-1280.jpg",
+      "sizeBytes": 115687,
+      "sha256": "67df33c4fb0dc5512fca6a2b576a6f3d5ea7d69342ab6c46d6029b3b6eec30e9"
+    },
+    {
+      "path": "installed-v138-selection-xml-800.jpg",
+      "sizeBytes": 57322,
+      "sha256": "edc76e66ef7a1e4c9315d283a73b750d80e57df5353d075a32ee5d1d674a36a5"
+    },
+    {
+      "path": "installed-v138-selection-yaml-1280.jpg",
+      "sizeBytes": 112577,
+      "sha256": "34d11b066683d7ff2bdad665b42dd602f886f4fa4b0871488499d0657f07cd5b"
+    },
+    {
+      "path": "installed-v138-selection-yaml-800.jpg",
+      "sizeBytes": 55275,
+      "sha256": "05dda561376b40d46718f28ac2dd13f719e243f39af3d0e25ef63d684239cb62"
+    },
+    {
+      "path": "installed-v139-recent-json-1280.jpg",
+      "sizeBytes": 121080,
+      "sha256": "66d0abda6acc7e79125a2b17dd08d0bc71942f83c54667751934d6e02fcd5126"
+    },
+    {
+      "path": "installed-v139-recent-json-800.jpg",
+      "sizeBytes": 57167,
+      "sha256": "235b41af34a73e4bf3c848684d4902ff82126fcd501718c4bad77cbdac54dbfd"
+    },
+    {
+      "path": "installed-v139-recent-observations.json",
+      "sizeBytes": 405,
+      "sha256": "71e782152237361a2b0e7bde083e4c85ba2d7ccd4825ea354da7220fdb513157"
+    },
+    {
+      "path": "installed-v139-recent-toml-1280.jpg",
+      "sizeBytes": 111709,
+      "sha256": "e45d305f46d64285f695ac906eda0b6fc08d039e923f85f8974ff029006a2e8b"
+    },
+    {
+      "path": "installed-v139-recent-toml-800.jpg",
+      "sizeBytes": 54976,
+      "sha256": "b868bf5b8d65ed3423108ee6b8a8d8cf98c3690a60a04cb0d1f9b9c3f5299943"
+    },
+    {
+      "path": "installed-v139-recent-workflow.json",
+      "sizeBytes": 89285,
+      "sha256": "bcdd32d715bfe9368824fb3c6296d6c7770afbddc4d220b3e96cfd7d3012a02c"
+    },
+    {
+      "path": "installed-v139-recent-xml-1280.jpg",
+      "sizeBytes": 115611,
+      "sha256": "2862a2d28a71f6d2f03b58d1082c6a3643d7f521ff7f7f10b786bb51beb44db4"
+    },
+    {
+      "path": "installed-v139-recent-xml-800.jpg",
+      "sizeBytes": 57322,
+      "sha256": "edc76e66ef7a1e4c9315d283a73b750d80e57df5353d075a32ee5d1d674a36a5"
+    },
+    {
+      "path": "installed-v139-recent-yaml-1280.jpg",
+      "sizeBytes": 112413,
+      "sha256": "c3bcc3c6bd693016e85abcf96c812bf4f95deb753b4952a95884ee3aa130080f"
+    },
+    {
+      "path": "installed-v139-recent-yaml-800.jpg",
+      "sizeBytes": 55275,
+      "sha256": "05dda561376b40d46718f28ac2dd13f719e243f39af3d0e25ef63d684239cb62"
+    },
+    {
+      "path": "installed-v139-saved.json",
+      "sizeBytes": 4486,
+      "sha256": "31dcec632153024181cb58593c8bfc74ad2186dd8a5c0c2a4ba259cdbc0ca7dd"
+    },
+    {
+      "path": "installed-v139-saved.toml",
+      "sizeBytes": 4081,
+      "sha256": "5da5aa0a9aa04912062422ba03a5e79a987db15a3879f5e97db52cc18f45bcc9"
+    },
+    {
+      "path": "installed-v139-saved.xml",
+      "sizeBytes": 5098,
+      "sha256": "4c38858aa48272bd30af22b2b8f2e2d7e4a0a6410e27c91e5fccbd0640b9db83"
+    },
+    {
+      "path": "installed-v139-saved.yaml",
+      "sizeBytes": 3981,
+      "sha256": "725a8b7a6b6d522e8fc7105329d6a86f06642451618266e4769ecd0f92376f7c"
+    },
+    {
+      "path": "installed-version-capabilities.jpg",
+      "sizeBytes": 69042,
+      "sha256": "8778cce9825176bf287d268ea99ce0a2608fa897646b7e8831378f796411d407"
+    },
+    {
+      "path": "installed-version-identity.json",
+      "sizeBytes": 4516,
+      "sha256": "745a75204d540ade75a08e6bb4546c2f2b6108efa0d252d3d4ff310ed4bd0e47"
+    },
+    {
+      "path": "installed-version-library.jpg",
+      "sizeBytes": 61848,
+      "sha256": "1ac0f6af6e1da57ae42f81cff12b71deb1c5b17c6a9aaa4517c094e6438f41d8"
+    },
+    {
+      "path": "installed-version-settings.jpg",
+      "sizeBytes": 49038,
+      "sha256": "79d23abb6316c868bc121643464f7259bbaf63cfef97798925609e487c13a5a7"
+    },
+    {
+      "path": "installed-wps-writer-docx-hyperlink-readonly.jpg",
+      "sizeBytes": 129509,
+      "sha256": "4b45550007f4f15c9386e8883a832ca2c1fc023087572c6d11119a7dee45deb5"
+    },
+    {
+      "path": "installer-build-receipt.json",
+      "sizeBytes": 1405,
+      "sha256": "315bec7ebe49f8cb80974a7a83f77d48a499c14db3833e6c8ceb268e3f7ffaf7"
+    },
+    {
+      "path": "installer-network-preflight.json",
+      "sizeBytes": 436,
+      "sha256": "b3a2be5dda54102b0b3920189da42b20c8339b0578a5696bd2554eaed2f29055"
+    },
+    {
+      "path": "installer-payload-identity.json",
+      "sizeBytes": 1128,
+      "sha256": "74b234f1bafed8ccbe162136b7b92a4dbfdb8c10c48805627813c8e4d6b53035"
+    },
+    {
+      "path": "lifecycle-result.json",
+      "sizeBytes": 5803,
+      "sha256": "e12f1a07aa0e58ebc30d94943bbd7bfce156b23a1f7f509a0e25e8b530eb4091"
+    },
+    {
+      "path": "management-backup-index-evidence.json",
+      "sizeBytes": 2580,
+      "sha256": "ccff4355f376d5feb1e164a6050565faf1433e79759c7d8f57b6ab6dfa4b5b4a"
+    },
+    {
+      "path": "management-config-observation.json",
+      "sizeBytes": 481,
+      "sha256": "d796948b8763b91d95804c8761e541fef8bd60ff1eb308fa41df39cf6e91d8c1"
+    },
+    {
+      "path": "native-baseline.png",
+      "sizeBytes": 74124,
+      "sha256": "d1e1c63b2bff75085bcb82c1f0f8a5eec0e771eb825755f148a0e80e3cc55c78"
+    },
+    {
+      "path": "user-cross-library-draft-block.png",
+      "sizeBytes": 209088,
+      "sha256": "807ca432d25f9cbb541cea4bfe7c3cd63712886219a22e80150e2c6ff9a39c35"
+    },
+    {
+      "path": "user-draft-reference.png",
+      "sizeBytes": 90841,
+      "sha256": "bd5dbd70dbce45cc70f42b2c41e49589141ba73d89534be8d10dff99f0fe0731"
+    },
+    {
+      "path": "user-expired-page.png",
+      "sizeBytes": 65045,
+      "sha256": "360a851261525a0b038010ad27a6a6670858d489289ed50094cc36ca51f0a9e9"
+    },
+    {
+      "path": "user-final.png",
+      "sizeBytes": 74259,
+      "sha256": "b1ee93daf14c64e162ffdc0646162715e7c72c0a9041efcc73056dbfb26b1fb0"
+    },
+    {
+      "path": "user-modified-sort.png",
+      "sizeBytes": 64032,
+      "sha256": "d5f8db073d74c97243f6dcd743e953524c694c7d3fa3e408ad89699c85cb900d"
+    },
+    {
+      "path": "user-office-docx-block.png",
+      "sizeBytes": 204665,
+      "sha256": "160d8fad06c7cabbb74257a6c80a33be7dc4abe75c797bfdc0cf9611a132b4f2"
+    },
+    {
+      "path": "user-office-pptx-notes.png",
+      "sizeBytes": 92163,
+      "sha256": "9fa7a6311e2291f827626d41e741411a9e9dc98b30a746d49d9c4609ec3d8af2"
+    },
+    {
+      "path": "user-office-pptx-object.png",
+      "sizeBytes": 77716,
+      "sha256": "a17b6f8f8a0b1ff15b7d055fe99901e78b2135bc37170ac88de1ad29f096a4bf"
+    },
+    {
+      "path": "user-office-workbook-details.png",
+      "sizeBytes": 74259,
+      "sha256": "b1ee93daf14c64e162ffdc0646162715e7c72c0a9041efcc73056dbfb26b1fb0"
+    },
+    {
+      "path": "user-office-workbook-inventory.png",
+      "sizeBytes": 75124,
+      "sha256": "032ce3f3f673b452bd8be63bf75ff0a3ea555065f4fdc9fe53e44008fc228f54"
+    },
+    {
+      "path": "user-office-workbook-repeat-sheet.png",
+      "sizeBytes": 74259,
+      "sha256": "b1ee93daf14c64e162ffdc0646162715e7c72c0a9041efcc73056dbfb26b1fb0"
+    },
+    {
+      "path": "user-pdf-annotation.png",
+      "sizeBytes": 90761,
+      "sha256": "4c161a8c7a7865078de3432fccb98cb369de301e0fbef5c3f0464c3cf1b86d5d"
+    },
+    {
+      "path": "user-refresh-retained.png",
+      "sizeBytes": 67071,
+      "sha256": "c3747c60e39def9ba672b620c4e75b4b92197d66ae61de6f6af6a76da75055ce"
+    }
+  ]
+}

@@ -24,11 +24,11 @@ test('publisher validates each installed report once using a registered filename
   assert.ok(!reports.includes(primary[1]),`Repeated validation block: ${primary[1]}`)
   reports.push(primary[1])
  }
- assert.ok(reports.length>=(version==='1.3.10'?8:30),`Expected current and historical installed validation blocks; found ${reports.length}`)
+ assert.ok(reports.length>=(releaseValidationProfile(version)?8:30),`Expected current and historical installed validation blocks; found ${reports.length}`)
  const profile=releaseValidationProfile(version)
  if(profile){
   const baseline=JSON.parse(fs.readFileSync(profile.baseline.manifestPath,'utf8'))
-  const expected=profile.currentReportKeys.map(key=>key==='sourceMatches'?'installed-v1310-matches-workflow.json':path.basename(baseline.runtimeSmoke.reports[key].path)).filter(file=>allPrimary.includes(file))
+  const expected=profile.currentReportKeys.map(key=>key==='sourceReturn'?'installed-v1311-return-workflow.json':key==='sourceMatches'?'installed-v1310-matches-workflow.json':path.basename(baseline.runtimeSmoke.reports[key].path)).filter(file=>allPrimary.includes(file))
   assert.deepEqual(reports.sort(),expected.sort(),'Publisher requirements must match current reruns; omitted features require only their historical reference')
  }
  // The 1.3.0 audit extends the existing history workflow and retains the

@@ -12,6 +12,8 @@ import { isolateHistory } from '@codemirror/commands'
 import { buildReplacementPlan, selectedReplacementChanges, type ReplacementPlan } from '../services/structuredReplacementPlan'
 
 import { buildSearchMatches, type SearchMatchPlan } from '../services/structuredSearchMatches'
+import { clearSearchReturn, locateSearchMatch, returnFromSearch, searchReturnPoints } from '../services/structuredSearchReturn'
+import { useContextCommands } from '../services/contextCommands'
 
 let feedbackId = 0
 export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; readOnly?: () => boolean; context?: () => string; library?: () => string }) {
@@ -41,7 +43,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
       if (matchList.value || owner !== matchOwner) return
       if (jump && matchCurrent(jump.plan)) {
         const range = jump.plan.ranges[jump.index], editor = active!.editor
-        editor.dispatch({ selection: { anchor: range.from, head: range.to }, effects: EditorView.scrollIntoView(range.from, { y: 'center' }) })
+        locateSearchMatch(editor, range.from, range.to)
         editor.focus()
       } else if (!jump && owner && owner.active === active && active?.claim.current() && options.ready?.() !== false && owner.origin?.isConnected) owner.origin.focus({ preventScroll: true })
       if (owner === matchOwner) matchOwner = undefined
@@ -200,6 +202,14 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     if (ready === false) invalidatePreview('当前文件状态已变化，请稍后刷新预览')
     if (active) feedback(active.editor)
   }, { flush: 'sync' })
+  const returnDepth = shallowRef(0)
+  // Menus can be evaluated before the non-reactive editor owner is bound.
+  // Always observe depth so the first navigation also refreshes cached menus.
+  const canReturn = () => returnDepth.value > 0 && !!active?.claim.current() && options.ready?.() !== false && !matchList.value && !preview.value
+  useContextCommands(() => options.context?.() || '', () => canReturn() ? [{
+    id: 'structured-search-return', title: '返回查找前的位置', description: '回到上一次定位前的光标、选区和阅读位置', keywords: '查找 返回 位置 光标 导航 back search',
+    run: () => { if (canReturn() && active) returnFromSearch(active.editor) },
+  }] : [])
   const extension = [search({ createPanel: editor => {
     const owner = active, current = () => owner === active && active?.editor === editor && active.claim.current()
       && (!options.library || fileStylePathKey(options.library()) === active.library)
@@ -215,7 +225,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
         return true
       },
     } : undefined, () => openMatches(editor))
-  } }), sourceSearchScopeExtensions,
+  } }), sourceSearchScopeExtensions, searchReturnPoints,
     // Non-editable content still needs a focus target for locating and copying.
     EditorView.contentAttributes.of(editor => editor.state.readOnly ? { tabindex: '0' } : null),
     EditorState.phrases.of({ Find: '查找', Replace: '替换', next: '下一个', previous: '上一个',
@@ -226,9 +236,12 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
       || getSearchQuery(update.state).literal !== getSearchQuery(update.startState).literal
       || update.state.field(sourceSearchScope) !== update.startState.field(sourceSearchScope)
     if (changed) invalidatePreview()
+    if (active?.editor === update.view) returnDepth.value = update.state.field(searchReturnPoints).length
     if (changed || update.selectionSet || searchPanelOpen(update.state) !== searchPanelOpen(update.startState)) feedback(update.view)
   })]
   const beforeReplace = () => {
+    if (active?.editor.state.field(searchReturnPoints, false)?.length) active.editor.dispatch({ effects: clearSearchReturn.of() })
+    returnDepth.value = 0
     closeMatches(); matchOwner = undefined; pendingMatch = undefined
     closePreview(); returnFocus = undefined; previewOwner = undefined; appliedFocus = undefined
     epoch++; previewFeedback = undefined
@@ -252,6 +265,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     clearTimeout(timer)
   }
   const bind = (editor: EditorView, tab: object, root: string, external: boolean, format: string) => {
+    returnDepth.value = 0
     closeMatches(); matchOwner = undefined; pendingMatch = undefined
     closePreview(); epoch++; previewFeedback = undefined
     clearTimeout(timer); active = undefined; matches = undefined
