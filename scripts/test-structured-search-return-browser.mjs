@@ -7,6 +7,11 @@ const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_
 const base=process.env.LONGEDIT_BROWSER_BASE||'http://127.0.0.1:15986',output=resolve(process.env.LONGEDIT_BROWSER_OUTPUT||'.release-secrets/v1311-browser')
 await mkdir(output,{recursive:true});const browser=await chromium.launch({headless:true,args:['--no-proxy-server']}),checks=[];let page
 try{
+ const probe=await browser.newPage()
+ await probe.goto(base+'/scripts/fixtures/v1311-search-return-reactivity-browser.html',{waitUntil:'domcontentloaded',timeout:120000})
+ await probe.waitForFunction(()=>window.probeResult)
+ assert.equal((await probe.evaluate(()=>probeResult)).status,'passed','cached menus must update after a late draft binding')
+ await probe.close()
  for(const reuse of [false,true])for(const mode of ['json','yaml','xml','toml']){
   console.log('Search return',mode,reuse);page=await browser.newPage({viewport:{width:1440,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message))
   await page.goto(base+'/scripts/fixtures/v1311-search-return-browser.html?mode='+mode+'&reuse='+(reuse?'1':'0'),{waitUntil:'domcontentloaded',timeout:120000})
@@ -45,5 +50,5 @@ try{
   assert.equal(await page.evaluate(()=>structuredAudit.calls.filter(c=>/^write_.*_source_document$/.test(c.command)).length),0);assert.deepEqual(errors,[])
   checks.push({mode,reusedComponent:reuse,status:'passed',selectionAndScrollExact:true,consecutiveReturn:true,mappedEdit:true,noTextUndoStep:true,cancelCreatesNoPosition:true,staleOwnerRejected:true,readonlyReturn:true,noDiskWrites:true,runtimeErrors:errors,combinations});await page.close();page=undefined
  }
- await writeFile(resolve(output,'results.json'),JSON.stringify({status:'passed',nativeBridgeMocked:true,sourceUserContentIncluded:false,checks},null,2)+'\n');console.log('Search return 8 ownership / 72 style-window combinations passed')
+ await writeFile(resolve(output,'results.json'),JSON.stringify({status:'passed',cachedMenuReactive:true,nativeBridgeMocked:true,sourceUserContentIncluded:false,checks},null,2)+'\n');console.log('Search return 8 ownership / 72 style-window combinations passed')
 }catch(error){await page?.screenshot({path:resolve(output,'failure.png'),fullPage:true}).catch(()=>{});await writeFile(resolve(output,'failure.json'),JSON.stringify({error:String(error.stack),checks},null,2));throw error}finally{await browser.close()}

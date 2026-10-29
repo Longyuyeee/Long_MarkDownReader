@@ -203,7 +203,9 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     if (active) feedback(active.editor)
   }, { flush: 'sync' })
   const returnDepth = shallowRef(0)
-  const canReturn = () => !!active?.claim.current() && options.ready?.() !== false && !matchList.value && !preview.value && returnDepth.value > 0
+  // Menus can be evaluated before the non-reactive editor owner is bound.
+  // Always observe depth so the first navigation also refreshes cached menus.
+  const canReturn = () => returnDepth.value > 0 && !!active?.claim.current() && options.ready?.() !== false && !matchList.value && !preview.value
   useContextCommands(() => options.context?.() || '', () => canReturn() ? [{
     id: 'structured-search-return', title: '返回查找前的位置', description: '回到上一次定位前的光标、选区和阅读位置', keywords: '查找 返回 位置 光标 导航 back search',
     run: () => { if (canReturn() && active) returnFromSearch(active.editor) },
