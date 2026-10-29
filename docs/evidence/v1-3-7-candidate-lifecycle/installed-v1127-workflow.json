@@ -1,0 +1,604 @@
+{
+  "appVersion": "1.3.7",
+  "sourceCommit": "6efb950492dd2f31cb06f283b1731b4c0c210124",
+  "installerSha256": "ba5828cce6538345722f68a47638aa83692e85133bcfd32392c93b8764723804",
+  "harnessSourceCommit": "6efb950492dd2f31cb06f283b1731b4c0c210124",
+  "executableSha256": "794aeebdf747867e40199f30cc01d1dc106081c3b4ed4e4a8b84d6d8c1924f88",
+  "status": "passed",
+  "evidenceLevel": "installed-trusted-input-native-conditions-and-file-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "nativeFileDialogsAutomated": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "native-bundle-roundtrip-without-machine-identities",
+      "status": "passed"
+    },
+    {
+      "id": "tag-menu-explicit-scope-and-cancel",
+      "status": "passed"
+    },
+    {
+      "id": "saved-tag-rename-preserves-draft-history-and-prefix",
+      "status": "passed"
+    },
+    {
+      "id": "import-preview-cancel-keeps-config",
+      "status": "passed"
+    },
+    {
+      "id": "missing-conditions-can-remap-and-skip",
+      "status": "passed"
+    },
+    {
+      "id": "cross-project-import-keeps-original-collections",
+      "status": "passed"
+    },
+    {
+      "id": "files-and-other-unsaved-drafts-unchanged",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-input-and-no-runtime-errors",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1127-conditions.json",
+      "sizeBytes": 604,
+      "sha256": "b227b3d3b8d248700ab82dc25b05276c2c150aa62f68e1d675e19489b5cece60"
+    },
+    {
+      "fileName": "installed-v1127-input.json",
+      "sizeBytes": 521,
+      "sha256": "c28886fa99b8ea95863d016d7555c56cf67143f7fe5df30068a0a3fb5d14fe66"
+    },
+    {
+      "fileName": "installed-v1127-saved.md",
+      "sizeBytes": 80,
+      "sha256": "f9a26dd1fd66255ec63e2ed9ed50093662eea72cbd182041368fcc0ba4fda646"
+    },
+    {
+      "fileName": "installed-v1127-dirty.md",
+      "sizeBytes": 36,
+      "sha256": "88712b7d6b4f3b07ddbc38c79c14743f4dda1dddd0b19baed7ebd8524a71166b"
+    },
+    {
+      "fileName": "installed-v1127-center.md",
+      "sizeBytes": 15,
+      "sha256": "b557d910a950c7b13fc4cee2eaa63f6f906b9446cc86b224bed83504e79e473b"
+    }
+  ],
+  "expectedBytes": {
+    "saved": "f9a26dd1fd66255ec63e2ed9ed50093662eea72cbd182041368fcc0ba4fda646",
+    "dirty": "88712b7d6b4f3b07ddbc38c79c14743f4dda1dddd0b19baed7ebd8524a71166b",
+    "center": "b557d910a950c7b13fc4cee2eaa63f6f906b9446cc86b224bed83504e79e473b"
+  },
+  "portableExact": true,
+  "cancelTagExact": true,
+  "tagExact": true,
+  "dirtyExact": true,
+  "historyExact": true,
+  "failedReadKeptPreview": true,
+  "cancelImportExact": true,
+  "remapExact": true,
+  "added": [
+    {
+      "id": "collection-da4e7d43-6103-4bda-8880-bd7ba17d7fa1",
+      "name": "二七复用",
+      "query": "预算",
+      "libraryPath": "C:\\LongEditR5ILibrary\\000-v1127-reuse-d3330793-5cb3-413e-a40e-5010a7096114\\目标项目",
+      "objectTypes": [
+        "markdown"
+      ],
+      "filters": {
+        "directory": "项目",
+        "tag": "工作",
+        "modifiedWithinDays": 7
+      },
+      "graphRoot": null,
+      "graphDepth": null,
+      "createdAt": 1793250916780
+    },
+    {
+      "id": "collection-809507ad-ed73-469b-a265-596217abfaa8",
+      "name": "二七复用（导入 1）",
+      "query": "__longedit_graph_collection__",
+      "libraryPath": "C:\\LongEditR5ILibrary\\000-v1127-reuse-d3330793-5cb3-413e-a40e-5010a7096114\\目标项目",
+      "objectTypes": [],
+      "filters": null,
+      "graphRoot": "中心.md",
+      "graphDepth": 2,
+      "createdAt": 1793250916780
+    }
+  ],
+  "originalCollectionsExact": true,
+  "documentsExact": true,
+  "otherDraftsPreserved": true,
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}
