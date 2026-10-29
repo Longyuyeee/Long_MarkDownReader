@@ -222,7 +222,7 @@
             <!-- 当前文件关系面板 -->
             <div v-else-if="activeSidebarTab === 'links'" :key="'links'" class="tab-pane links-pane" role="tabpanel" id="panel-links" aria-labelledby="tab-links">
               <NoteRelationsPanel :note="currentLinkedNote" :other-file-open="Boolean(activeTabId && !activeIsMarkdown)" :pinned="localGraphPinned"
-                @open="path => handleNodeSelect([path])" @graph="openCurrentRelations" @pin="setLocalGraphPinned" @browse="findReferenceDocument" @search="searchReferencedNote" />
+                @open="path => handleNodeSelect([path])" @open-link="openNoteLink" @graph="openCurrentRelations" @pin="setLocalGraphPinned" @browse="findReferenceDocument" @search="searchReferencedNote" />
             </div>
 
             <!-- 历史面板 -->
@@ -333,6 +333,7 @@
         <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" quaternary size="small" @mousedown.prevent @click="openDocumentFind">查找替换… · Ctrl+H</n-button>
         <n-button v-if="searchReturnCommand" data-testid="library-search-return" quaternary size="small" @mousedown.prevent @click="returnToSearchOrigin">{{ searchReturnCommand.title }}</n-button>
         <n-button v-if="searchForwardCommand" data-testid="library-search-forward" quaternary size="small" @mousedown.prevent @click="forwardToSearchPosition">{{ searchForwardCommand.title }}</n-button>
+        <n-button v-if="canReturnLinkSource" data-testid="library-link-source-return" quaternary size="small" @mousedown.prevent @click="returnToLinkSource">返回链接来源</n-button>
         <n-button quaternary size="small" :disabled="fileOperationBusy || editorLoading || editorModeChangeBusy" @click="openAttachments(activeTabId)"><template #icon><n-icon :component="AttachmentIcon" /></template>管理附件…</n-button>
         <n-button v-if="activeIsMarkdown && activeTextTab?.content?.includes('longedit:')" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="openPdfReadingUpdate">更新 PDF 阅读笔记…</n-button>
         <n-button v-if="activeIsMarkdown" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="saveCurrentAsTemplate"><template #icon><n-icon :component="FileIcon" /></template>保存为模板…</n-button>
@@ -405,7 +406,7 @@
             <template #description>同步中...</template>
           </n-spin>
         </div>
-        <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance" @click.capture="openSourceReference"></div>
+        <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance" @pointerdown.capture="rememberLinkPosition" @click.capture="openSourceReference"></div>
         <Teleport v-if="documentShortcutHost && activeIsMarkdown && !activeEmbeddedEditor" :to="documentShortcutHost">
           <div class="document-inline-shortcuts" aria-label="文档快捷操作">
             <n-dropdown trigger="click" :options="[{label:'所见即所得',key:'wysiwyg'},{label:'即时渲染 IR',key:'ir'},{label:'源码编辑',key:'sv'}]" @select="switchEditorMode">
@@ -770,6 +771,8 @@ import PdfReadingUpdateDialog from '../components/PdfReadingUpdateDialog.vue'
 import { applyVditorDraftUpdate } from '../utils/vditorDraftUpdate'
 import { applyVditorSourceRepair } from '../utils/vditorSourceRepair'
 import { localMarkdownLink, markdownAnchorTarget } from '../utils/localMarkdownLinks'
+import { captureMarkdownPosition, captureMarkdownSession, restoreMarkdownPosition, restoreMarkdownSession, type MarkdownPosition, type MarkdownEditorSession } from '../utils/markdownEditorSession'
+import { useLinkSourceReturn } from '../composables/useLinkSourceReturn'
 import { isPortableChapterLink, parsePortableChapterLink, chapterHeadingTarget } from '../utils/portableChapterLinks'
 import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
@@ -1026,6 +1029,7 @@ const activeEmbeddedEditor = computed(() => {
 const activeIsMarkdown = computed(() => activeDocumentFormat.value?.id === 'markdown')
 type VditorMode = 'wysiwyg' | 'ir' | 'sv'
 const desiredVditorMode = (path: string | null = activeTabId.value): VditorMode => {
+  if (pendingLinkReturn && path && sameLibrary(path, pendingLinkReturn.source.path)) return pendingLinkReturn.position.mode
   const format = path ? findFileFormat(path) : undefined
   return format?.id === 'markdown' ? store.editorMode || 'wysiwyg' : 'sv'
 }
@@ -2208,7 +2212,7 @@ const selectLibrary = async (path: string) => {
 }
 useWindowDraftSnapshot(() => {
   const tab = tabs.value.find(item => item.id === activeTabId.value)
-  if (tab && vditor && isVditorReady && activeIsMarkdown.value && !suppressEditorInput && !tab.textReadOnlyReason) {
+  if (tab && vditor && isVditorReady && lastLoadedPath === activeTabId.value && activeIsMarkdown.value && !suppressEditorInput && !tab.textReadOnlyReason) {
     const content = vditor.getValue()
     if (tab.content !== content && (tab.isDirty || content !== editorDisplayBaseline)) { tab.content = content; tab.isDirty = true }
   }
@@ -2798,6 +2802,68 @@ const documentFindAdapter=createVditorFindAdapter(()=>vditor,()=>({key:store.lib
 }), (content,path)=>{recordWindowDraftActivity();store.updateTabContent(path,content);const tab=tabs.value.find(item=>item.path===path);if(tab)tab.isDirty=true;updateWordCount();syncOutlineManual(true);void fixEditorImages()})
 const openDocumentFind=()=>{documentActionsVisible.value=false;documentFind.value?.open()}
 const handleFindShortcut=(event:KeyboardEvent)=>{if(!isVditorReady||!vditor?.vditor?.[vditor.getCurrentMode()]?.element?.isConnected)return;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='h'&&activeIsMarkdown.value&&!activeEmbeddedEditor.value&&!document.querySelector('.n-modal')){event.preventDefault();event.stopImmediatePropagation();openDocumentFind()}}
+const linkReturn = useLinkSourceReturn({ root: () => store.libraryPath, tabs: () => allTabs.value, active: () => activeTabId.value })
+const markdownSessions = new WeakMap<TabInfo, { session: MarkdownEditorSession; revision: string | undefined }>()
+let loadedMarkdownTab: TabInfo | undefined, loadedMarkdownRoot = '', linkNavigationTicket = 0
+let pendingLinkReturn: NonNullable<typeof linkReturn.current.value> | undefined
+let pressedLinkPosition: { tab: TabInfo; editor: any; generation: number; position: MarkdownPosition } | undefined
+const rememberMarkdownSession = () => {
+  const tab = loadedMarkdownTab
+  if (!tab || !allTabs.value.includes(tab) || loadedMarkdownRoot !== store.libraryPath || !isVditorReady || !lastLoadedPath || suppressEditorInput) return
+  const content = vditor.getValue()
+  if (!tab.textReadOnlyReason && tab.content !== content && (tab.isDirty || content !== editorDisplayBaseline)) { tab.content = content; tab.isDirty = true }
+  const session = captureMarkdownSession(vditor, editorDisplayBaseline)
+  if (session) markdownSessions.set(tab, { session, revision: tab.content })
+}
+const rememberLinkPosition = (event: PointerEvent) => {
+  pressedLinkPosition = undefined
+  if (!(event.target as HTMLElement | null)?.closest('a[href]') || !activeTextTab.value || lastLoadedPath !== activeTabId.value || suppressEditorInput) return
+  const position = captureMarkdownPosition(vditor)
+  if (position) pressedLinkPosition = { tab: activeTextTab.value, editor: vditor, generation: editorLoadGeneration, position }
+}
+const canReturnLinkSource = computed(() => Boolean(linkReturn.current.value && !fileOperationBusy.value && !editorModeChangeBusy.value && !currentFileReloadBusy.value && !editorLoading.value))
+const openLinkedFile = async (path: string, query: Record<string, string> = {}) => {
+  const source = activeTextTab.value, editor = vditor, root = store.libraryPath, generation = editorLoadGeneration, ticket = ++linkNavigationTicket
+  if (!source || !activeIsMarkdown.value || !isVditorReady || lastLoadedPath !== source.path || suppressEditorInput || editorModeChangeBusy.value || currentFileReloadBusy.value || fileOperationBusy.value) return
+  const before = pressedLinkPosition
+  pressedLinkPosition = undefined
+  const selectedPosition = captureMarkdownPosition(editor)
+  const position = before?.tab === source && before.editor === editor && before.generation === generation && before.position.content === editor.getValue()
+    ? before.position : selectedPosition?.selection ? selectedPosition : captureMarkdownPosition(editor, referenceBookmark?.path === source.path ? referenceBookmark.range : undefined)
+  if (!position) return
+  const current = () => ticket === linkNavigationTicket && store.libraryPath === root && activeTextTab.value === source && allTabs.value.includes(source)
+    && vditor === editor && editorLoadGeneration === generation && lastLoadedPath === source.path && editor.getValue() === position.content
+  try {
+    if (!findFileFormat(path)) { message.warning('暂不支持在编辑区打开此类文件'); return }
+    await invoke('get_file_stats', { libraryRoot: root, path })
+    if (!current()) return
+    snapshotWindowDrafts()
+    const existing = allTabs.value.find(tab => tab.isDirty && sameLibrary(tab.path, path)) || allTabs.value.find(tab => sameLibrary(tab.path, path))
+    await openManagedFile(router, existing?.path || path, query)
+    const target = allTabs.value.find(tab => tab.id === activeTabId.value && sameLibrary(tab.path, path))
+    if (ticket === linkNavigationTicket && store.libraryPath === root && target && allTabs.value.includes(source)) linkReturn.push(source, target, position)
+    void nextTick(revealLinkedHeading)
+  } catch (error) { if (current()) message.warning(`无法打开链接文件，当前草稿已保留：${String(error)}`) }
+}
+const openNoteLink = (path: string) => { void openLinkedFile(path) }
+const returnToLinkSource = async () => {
+  const entry = linkReturn.current.value
+  if (!entry || !canReturnLinkSource.value) return
+  documentActionsVisible.value = false
+  const ticket = ++linkNavigationTicket, target = allTabs.value.find(tab => tab.id === activeTabId.value)
+  const current = () => ticket === linkNavigationTicket && linkReturn.current.value === entry && allTabs.value.includes(entry.source)
+    && allTabs.value.find(tab => tab.id === activeTabId.value) === target && sameLibrary(store.libraryPath, entry.root)
+  try {
+    await invoke('get_file_stats', { libraryRoot: entry.root, path: entry.source.path })
+    if (!current()) return
+    snapshotWindowDrafts()
+    pendingLinkReturn = entry
+    await openManagedFile(router, entry.source.path)
+    if (ticket !== linkNavigationTicket || !sameLibrary(store.libraryPath, entry.root)) { pendingLinkReturn = undefined; return }
+    if (activeTabId.value === entry.source.id) linkReturn.consume(entry)
+  } catch (error) { pendingLinkReturn = undefined; if (current()) message.warning(`暂时无法返回来源，当前内容已保留：${String(error)}`) }
+}
+watch(() => store.libraryPath, () => { ++linkNavigationTicket; pendingLinkReturn = undefined; pressedLinkPosition = undefined }, { flush: 'sync' })
 let readingPositionTimer: ReturnType<typeof setTimeout> | undefined
 const editorScroller = () => Array.from(document.querySelectorAll<HTMLElement>('.editor-main .vditor-content .vditor-reset, .editor-main .vditor-sv')).find(element => element.getClientRects().length > 0 && ['auto', 'scroll'].includes(getComputedStyle(element).overflowY))
 const captureEditorPosition = () => {
@@ -2811,6 +2877,10 @@ const rememberEditorScroll = (event: Event) => {
 }
 onBeforeUnmount(() => { clearTimeout(readingPositionTimer); captureEditorPosition() })
 const loadFileToEditor = async (path: string, forceRead = false) => {
+  rememberMarkdownSession()
+  const loadingTab = tabs.value.find(tab => tab.path === path)
+  const failedReadSession = loadingTab ? markdownSessions.get(loadingTab) : undefined
+  if (forceRead && loadingTab) { markdownSessions.delete(loadingTab); linkReturn.invalidate(loadingTab); pendingLinkReturn = undefined }
   clearTimeout(readingPositionTimer); captureEditorPosition()
   if (!vditor || !path) return; lastLoadedPath = '' 
   const generation = ++editorLoadGeneration
@@ -2831,7 +2901,7 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
     if (forceRead && currentTab?.content !== undefined) {
       // Reload is transactional: unavailable disk content must not replace the
       // existing draft or its save identity with an empty editor.
-      setEditorValue(currentTab.content, Boolean(currentTab.textReadOnlyReason), false)
+      setEditorValue(currentTab.content, Boolean(currentTab.textReadOnlyReason), false, true)
       handleError(error, `${label}，已保留当前内容：${path.split(/[\\/]/).pop()}`, 'loadFileToEditor')
       return
     }
@@ -2846,15 +2916,20 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
     handleError(error, `${label}：${path.split(/[\\/]/).pop()}`, 'loadFileToEditor')
   }
   
-  const setEditorValue = (content: string, readOnly = false, refreshHistory = true) => {
+  const setEditorValue = (content: string, readOnly = false, refreshHistory = true, recoverSession = false) => {
     if (!isCurrentRequest()) return
     referenceBookmark = null
     // Reusing Vditor must not leave a link-editing popover from another note.
     const popover = vditor.vditor?.wysiwyg?.popover
     if (popover) popover.style.display = 'none'
     suppressEditorInput = true
-    vditor.setValue(content)
+    vditor.setValue(content, true)
+    loadedMarkdownTab = findFileFormat(path)?.id === 'markdown' ? currentTab : undefined
+    loadedMarkdownRoot = store.libraryPath
+    const cached = recoverSession ? failedReadSession : !forceRead && currentTab ? markdownSessions.get(currentTab) : undefined
+    const restoredSession = cached && cached.revision === currentTab?.content && restoreMarkdownSession(vditor, cached.session) ? cached.session : undefined
     editorDisplayBaseline = vditor.getValue()
+    if (restoredSession) editorDisplayBaseline = restoredSession.baseline
     startAdaptiveMotion()
     setTimeout(() => {
       if (!isCurrentRequest()) return
@@ -2879,6 +2954,11 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
         scheduleWorkspaceTaskReveal();
         scheduleRelationEvidenceReveal();
         void openRequestedReadingUpdate();
+        const returning = pendingLinkReturn
+        if (returning && returning.source === currentTab && sameLibrary(returning.root, store.libraryPath)) {
+          pendingLinkReturn = undefined
+          restoreMarkdownPosition(vditor, returning.position, true)
+        } else if (restoredSession && !route.query.searchLocator && !route.query.taskLine && !route.query.relationId && !route.query.markdownAnchor) restoreMarkdownPosition(vditor, restoredSession.position)
       }, 50) 
     })
   }
@@ -4037,6 +4117,7 @@ const ensureVditorModeForFile = (path: string) => {
   if (!vditor || !isVditorReady) return true
   const desiredMode = desiredVditorMode(path)
   if (vditor.getCurrentMode() === desiredMode) return false
+  rememberMarkdownSession()
   clearTimeout(readingPositionTimer); captureEditorPosition(); lastLoadedPath = ''
   editorLoading.value = true
   cleanupEditorListeners()
@@ -4332,32 +4413,17 @@ const openSourceReference = async (event: MouseEvent) => {
   const href = anchor?.getAttribute('href') || ''
   if (isPortableChapterLink(href)) {
     event.preventDefault(); event.stopPropagation()
-    const root = store.libraryPath, ownerPath = activeTabId.value, generation = ++chapterLinkGeneration
+    const root = store.libraryPath, generation = ++chapterLinkGeneration
     const target = parsePortableChapterLink(href, root)
     if (!target) { message.warning('章节链接格式无法识别，请从原文大纲重新复制；当前内容保持不变。'); return }
-    try {
-      await invoke('get_file_stats', {libraryRoot:root,path:target.path})
-      if (generation !== chapterLinkGeneration || store.libraryPath !== root || activeTabId.value !== ownerPath) return
-      snapshotWindowDrafts()
-      const existing = allTabs.value.find(tab => tab.isDirty && sameLibrary(tab.path, target.path)) || allTabs.value.find(tab => sameLibrary(tab.path, target.path))
-      await openManagedFile(router, existing?.path || target.path, {markdownAnchor:target.fragment,markdownHeading:target.title,markdownLocator:String(generation)})
-      void nextTick(revealLinkedHeading)
-    } catch { if (generation === chapterLinkGeneration && store.libraryPath === root && activeTabId.value === ownerPath) message.warning('找不到章节所在文件，位置可能已变化；请在当前资料库查找原文后重新复制链接。当前草稿已保留。') }
+    await openLinkedFile(target.path, { markdownAnchor: target.fragment, markdownHeading: target.title, markdownLocator: String(generation) })
     return
   }
   const local = activeTabId.value && localMarkdownLink(activeTabId.value, href)
   if (local) {
     event.preventDefault(); event.stopPropagation()
-    const libraryRoot = store.libraryPath, documentPath = activeTabId.value
     if (!local.path) { message.warning('链接地址无法识别，请检查文件路径'); return }
-    try {
-      await invoke('get_file_stats', { libraryRoot, path: local.path })
-      if (store.libraryPath !== libraryRoot || activeTabId.value !== documentPath) return
-      snapshotWindowDrafts()
-      const existing = allTabs.value.find(tab => tab.isDirty && sameLibrary(tab.path, local.path!)) || allTabs.value.find(tab => sameLibrary(tab.path, local.path!))
-      await openManagedFile(router, existing?.path || local.path, local.fragment ? { markdownAnchor: local.fragment } : {})
-      void nextTick(revealLinkedHeading)
-    } catch (error) { message.warning(`无法打开链接文件：${String(error)}`) }
+    await openLinkedFile(local.path, local.fragment ? { markdownAnchor: local.fragment } : {})
     return
   }
   if (href.toLowerCase().startsWith('longedit://source')) {
@@ -4850,6 +4916,10 @@ const scheduleKnowledgeSearch = (q: string) => {
 watch(searchQuery, scheduleKnowledgeSearch)
 watch(knowledgeSort, () => { if (searchQuery.value.trim()) scheduleKnowledgeSearch(searchQuery.value) })
 watch(activeTabId, (newId, oldId) => { 
+  // Markdown loads capture before replacing/rebuilding Vditor. Embedded
+  // targets keep it hidden, so transfer the outgoing Markdown state here.
+  if (newId !== oldId && activeEmbeddedEditor.value) rememberMarkdownSession()
+  if (pendingLinkReturn && newId !== pendingLinkReturn.source.id) pendingLinkReturn = undefined
   void requestLibraryTreeReveal(newId)
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 
@@ -4871,6 +4941,7 @@ useContextCommands(
     ]
     if (!activeTabId.value || editorLoading.value || editorModeChangeBusy.value || fileOperationBusy.value || currentFileReloadBusy.value) return commands
     commands.unshift({id:'attachments',title:'管理附件…',description:activeIsMarkdown.value?'查看当前笔记附件和引用位置':'查看哪些笔记引用了当前文件',keywords:'图片 附件 引用 attachment',run:()=>openAttachments(activeTabId.value)})
+    if (canReturnLinkSource.value) commands.push({ id: 'link-source-return', title: '返回链接来源', description: '回到打开此文件的原文和阅读位置，保留两边草稿', keywords: '返回 链接 来源 原文 back link source', run: returnToLinkSource })
     if (activeEmbeddedEditor.value) return commands
     if (activeFormatCanEdit.value) commands.push({id:'save-file',title:'保存文件',description:'保存当前文档 · Ctrl+S',keywords:'保存 save',run:()=>saveCurrentFile()})
     if (activeIsMarkdown.value) {

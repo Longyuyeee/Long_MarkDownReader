@@ -5,7 +5,7 @@ export const sourceScopeChecks=['json-explicit-selection-scope','yaml-explicit-s
 export const sourceScopeOutputFiles=['installed-v136-scope-observations.json',...['json','yaml','xml','toml'].map(mode=>'installed-v136-saved.'+mode)]
 export const scopedOutput=mode=>positionDraft(mode).replace(/我的草稿 ([345])(?!\d)/g,'选区修改的新值 $1')
 export function validateInstalledSourceScope(r,m){
- assert.ok(['1.3.6','1.3.7', '1.3.8', '1.3.9', '1.3.10', '1.3.11', '1.3.12', '1.3.13'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.3.6','1.3.7', '1.3.8', '1.3.9', '1.3.10', '1.3.11', '1.3.12', '1.3.13', '1.3.14'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-source-scope-trusted-input-and-output-bytes');assert.equal(r.inputProtocol,'trusted-keyboard-and-pointer')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(r[k],false)

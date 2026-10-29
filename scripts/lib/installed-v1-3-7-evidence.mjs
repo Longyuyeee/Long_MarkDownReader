@@ -5,7 +5,7 @@ export const replacementPreviewChecks=['json-replacement-preview','yaml-replacem
 export const replacementPreviewOutputFiles=['installed-v137-preview-observations.json',...['json','yaml','xml','toml'].map(mode=>'installed-v137-saved.'+mode)]
 export const replacementPreviewOutput=mode=>positionDraft(mode).replace(/我的草稿 ([345])(?!\d)/g,'确认 $1')
 export function validateInstalledReplacementPreview(r,m){
- assert.ok(['1.3.7','1.3.8', '1.3.9', '1.3.10', '1.3.11', '1.3.12', '1.3.13'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.3.7','1.3.8', '1.3.9', '1.3.10', '1.3.11', '1.3.12', '1.3.13', '1.3.14'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-replacement-preview-trusted-input-and-output-bytes');assert.equal(r.inputProtocol,'trusted-keyboard-and-pointer')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(r[k],false)
