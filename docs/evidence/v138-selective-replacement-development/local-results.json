@@ -22,8 +22,11 @@
   "finalUnitTestsPassed": 56,
   "finalTypeCheckPassed": true,
   "previousRegressionBoundary": "all-four-regressions-passed-current-native-checkbox-source",
-  "exactSourceReleaseGate": "required-refrozen-source-whole-cloud-quality-and-builder",
+  "exactSourceReleaseGate": "passed-current-frozen-cloud-quality-and-builder",
   "checkboxThenFirstCtrlAPassed": true,
   "localQualityFailureKind": "audit-endpoint-network",
-  "localQualitySequenceCompleted": false
+  "localQualitySequenceCompleted": false,
+  "finalSourceCommit": "5c592aa2ab89251e95ed7e92194a35d600ca8bc0",
+  "sourceQualityRun": 40840049727,
+  "buildRun": 40840085228
 }

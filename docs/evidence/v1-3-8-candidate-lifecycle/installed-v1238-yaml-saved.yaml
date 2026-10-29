@@ -1,0 +1,29 @@
+﻿# 配置 中文😀
+label: '我的草稿'
+strip:
+  - >- # 保留
+    第一行😀
+    
+    修改后的第二行
+
+# 独立注释
+clip:
+  - > # 保留
+    文本
+keep:
+  - >+
+    留白
+
+number: 0xFF
+literal: |-
+  原有多行
+tagged: !custom value
+nested:
+  text:
+    - >2-
+      嵌套
+  next: keep
+rows:
+  - |-
+    列表
+  - keep

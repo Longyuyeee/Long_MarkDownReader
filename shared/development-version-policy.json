@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-212-v1.3.8-selective-replacement-candidate",
-  "binaryVersionTransition": "v1.3.8-quality-gate-pending",
+  "binaryVersionTransition": "v1.3.8-release-ready",
   "displayLabel": "v1.3.8 按处选择替换候选 · 当前公开 v1.3.7",
   "activeSlice": {
     "id": "v1.3.8-selective-replacement",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_3_8_Unsigned_Community_Release_Audit_2026-10-29.md"
   }
 }

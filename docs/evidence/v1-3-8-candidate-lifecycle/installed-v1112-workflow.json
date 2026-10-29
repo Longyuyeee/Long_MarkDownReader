@@ -1,0 +1,1287 @@
+{
+  "appVersion": "1.3.8",
+  "sourceCommit": "5c592aa2ab89251e95ed7e92194a35d600ca8bc0",
+  "installerSha256": "5b3f4c39a72e6dc2a8918f433a6f281b6d0e69bba7ef0d7022ac326eda48efae",
+  "harnessSourceCommit": "5c592aa2ab89251e95ed7e92194a35d600ca8bc0",
+  "executableSha256": "ec325961ca95e1a78d7467d5984de7cc3912e30c2e2ca9937725eb6b3646ad08",
+  "evidenceLevel": "installed-webview-input-native-content-backup-picker-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "installed-identity-and-preserved-settings-entries",
+      "status": "passed"
+    },
+    {
+      "id": "scoped-native-preflight-and-exclusions",
+      "status": "passed"
+    },
+    {
+      "id": "source-change-rejected-without-zip",
+      "status": "passed"
+    },
+    {
+      "id": "real-save-picker-and-independent-zip-digests",
+      "status": "passed"
+    },
+    {
+      "id": "existing-zip-never-overwritten",
+      "status": "passed"
+    },
+    {
+      "id": "malformed-package-rejected-before-target",
+      "status": "passed"
+    },
+    {
+      "id": "existing-restore-directory-blocked",
+      "status": "passed"
+    },
+    {
+      "id": "restored-file-bytes-and-pdf-time-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "restored-pdf-annotations-rebound",
+      "status": "passed"
+    },
+    {
+      "id": "restored-history-content-pins-and-notes",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-add-keeps-current-library-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "seven-secondary-window-command-denials",
+      "status": "passed"
+    },
+    {
+      "id": "native-cancellation-cleans-owned-stage",
+      "status": "passed"
+    },
+    {
+      "id": "draft-model-and-disk-unchanged-before-explicit-save",
+      "status": "passed"
+    },
+    {
+      "id": "restored-markdown-image-and-pdf-actually-open",
+      "status": "passed"
+    },
+    {
+      "id": "original-files-and-no-runtime-errors",
+      "status": "passed"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1112-content-566a1708-8d41-4188-8cab-8477e90142e4\\备份方案.md",
+      "before": "8642f8795e74f2b4a2204131d126783db08c020cd306564d0360a26738dbb9fd",
+      "restored": "8642f8795e74f2b4a2204131d126783db08c020cd306564d0360a26738dbb9fd",
+      "after": "8642f8795e74f2b4a2204131d126783db08c020cd306564d0360a26738dbb9fd"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1112-content-566a1708-8d41-4188-8cab-8477e90142e4\\项目数据.json",
+      "before": "8f18eaae2a8c4d40192447e749a7b2c84bfbf4d82b012cf0dd2c95d8d5f6bd49",
+      "restored": "8f18eaae2a8c4d40192447e749a7b2c84bfbf4d82b012cf0dd2c95d8d5f6bd49",
+      "after": "8f18eaae2a8c4d40192447e749a7b2c84bfbf4d82b012cf0dd2c95d8d5f6bd49"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1112-content-566a1708-8d41-4188-8cab-8477e90142e4\\示意.png",
+      "before": "d522dbab37e9ccad4b62959d92e9fe890cc8b4d5bd3da8f381aec1248434382f",
+      "restored": "d522dbab37e9ccad4b62959d92e9fe890cc8b4d5bd3da8f381aec1248434382f",
+      "after": "d522dbab37e9ccad4b62959d92e9fe890cc8b4d5bd3da8f381aec1248434382f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1112-content-566a1708-8d41-4188-8cab-8477e90142e4\\参考.pdf",
+      "before": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+      "restored": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+      "after": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v1112-content-566a1708-8d41-4188-8cab-8477e90142e4\\参考.pdf.annotations.json",
+      "before": "21a4d724a8f4e058c0e3c9e20022030266337cafb01ecca927919e80c7af2532",
+      "restored": "21a4d724a8f4e058c0e3c9e20022030266337cafb01ecca927919e80c7af2532",
+      "after": "21a4d724a8f4e058c0e3c9e20022030266337cafb01ecca927919e80c7af2532"
+    }
+  ],
+  "nativePickers": [
+    {
+      "status": "selected-real-native-dialog",
+      "processId": 7656,
+      "dialogProcessId": 7656,
+      "executable": "C:\\LongEditR5I\\tauri-app.exe",
+      "title": "导出资料内容包（不覆盖同名文件）",
+      "fileNameAutomationId": "1001",
+      "selectedPath": "C:\\LongEditV1112Backup-566a1708-8d41-4188-8cab-8477e90142e4\\资料内容.longedit-backup.zip",
+      "inputCharacters": 84,
+      "method": "Windows-Win32-filename-character-input-and-OK-notification",
+      "desktopUserSession": "disposable-github-hosted",
+      "controlCandidates": [
+        {
+          "Handle": 459526,
+          "ParentHandle": 1311310,
+          "ControlId": 0,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 66322,
+          "ParentHandle": 459526,
+          "ControlId": 1001,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 1114834,
+          "ParentHandle": 852652,
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "Handle": 66340,
+          "ParentHandle": 66338,
+          "ControlId": 0,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 852642,
+          "ParentHandle": 1180004,
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 459536,
+          "ParentHandle": 1180004,
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 1049290,
+          "ParentHandle": 1180004,
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 852648,
+          "ParentHandle": 1180004,
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 66360,
+          "ParentHandle": 1049262,
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 66362,
+          "ParentHandle": 66360,
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 66366,
+          "ParentHandle": 66362,
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 656124,
+          "ParentHandle": 1114450,
+          "ControlId": 0,
+          "ClassName": "UniversalSearchBand",
+          "Title": ""
+        },
+        {
+          "Handle": 983690,
+          "ParentHandle": 656124,
+          "ControlId": 0,
+          "ClassName": "Search Box",
+          "Title": ""
+        },
+        {
+          "Handle": 852600,
+          "ParentHandle": 983690,
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ],
+      "dialogClosed": true,
+      "folderConfirmedAgain": false,
+      "folderObservations": []
+    },
+    {
+      "status": "selected-real-native-dialog",
+      "processId": 7656,
+      "dialogProcessId": 7656,
+      "executable": "C:\\LongEditR5I\\tauri-app.exe",
+      "title": "选择资料内容备份包（不是管理备份）",
+      "fileNameAutomationId": "1148",
+      "selectedPath": "C:\\LongEditV1112Backup-566a1708-8d41-4188-8cab-8477e90142e4\\损坏.zip",
+      "inputCharacters": 66,
+      "method": "Windows-Win32-filename-character-input-and-OK-notification",
+      "desktopUserSession": "disposable-github-hosted",
+      "controlCandidates": [
+        {
+          "Handle": 1180364,
+          "ParentHandle": 131882,
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "Handle": 852698,
+          "ParentHandle": 721666,
+          "ControlId": 1090,
+          "ClassName": "Static",
+          "Title": "File &name:"
+        },
+        {
+          "Handle": 525072,
+          "ParentHandle": 721666,
+          "ControlId": 1148,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 3670148,
+          "ParentHandle": 525072,
+          "ControlId": 1148,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 1442502,
+          "ParentHandle": 3670148,
+          "ControlId": 1148,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 983780,
+          "ParentHandle": 721666,
+          "ControlId": 1089,
+          "ClassName": "Static",
+          "Title": "Files of &type:"
+        },
+        {
+          "Handle": 1049230,
+          "ParentHandle": 721666,
+          "ControlId": 1136,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 1114720,
+          "ParentHandle": 721666,
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 131916,
+          "ParentHandle": 721666,
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 1245540,
+          "ParentHandle": 721666,
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 918184,
+          "ParentHandle": 721666,
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 525070,
+          "ParentHandle": 1311482,
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 1114824,
+          "ParentHandle": 525070,
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 328500,
+          "ParentHandle": 1114824,
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 918136,
+          "ParentHandle": 1114768,
+          "ControlId": 0,
+          "ClassName": "UniversalSearchBand",
+          "Title": ""
+        },
+        {
+          "Handle": 1180326,
+          "ParentHandle": 918136,
+          "ControlId": 0,
+          "ClassName": "Search Box",
+          "Title": ""
+        },
+        {
+          "Handle": 1311440,
+          "ParentHandle": 1180326,
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ],
+      "dialogClosed": true,
+      "folderConfirmedAgain": false,
+      "folderObservations": []
+    },
+    {
+      "status": "selected-real-native-dialog",
+      "processId": 7656,
+      "dialogProcessId": 7656,
+      "executable": "C:\\LongEditR5I\\tauri-app.exe",
+      "title": "选择资料内容备份包（不是管理备份）",
+      "fileNameAutomationId": "1148",
+      "selectedPath": "C:\\LongEditV1112Backup-566a1708-8d41-4188-8cab-8477e90142e4\\资料内容.longedit-backup.zip",
+      "inputCharacters": 84,
+      "method": "Windows-Win32-filename-character-input-and-OK-notification",
+      "desktopUserSession": "disposable-github-hosted",
+      "controlCandidates": [
+        {
+          "Handle": 197420,
+          "ParentHandle": 1311298,
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "Handle": 983720,
+          "ParentHandle": 197414,
+          "ControlId": 1090,
+          "ClassName": "Static",
+          "Title": "File &name:"
+        },
+        {
+          "Handle": 1311076,
+          "ParentHandle": 197414,
+          "ControlId": 1148,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 197452,
+          "ParentHandle": 1311076,
+          "ControlId": 1148,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 852580,
+          "ParentHandle": 197452,
+          "ControlId": 1148,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 1114766,
+          "ParentHandle": 197414,
+          "ControlId": 1089,
+          "ClassName": "Static",
+          "Title": "Files of &type:"
+        },
+        {
+          "Handle": 1180252,
+          "ParentHandle": 197414,
+          "ControlId": 1136,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 328470,
+          "ParentHandle": 197414,
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 1049190,
+          "ParentHandle": 197414,
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 131922,
+          "ParentHandle": 197414,
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 1180148,
+          "ParentHandle": 197414,
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 262982,
+          "ParentHandle": 918098,
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 394034,
+          "ParentHandle": 262982,
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 262942,
+          "ParentHandle": 394034,
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 1180334,
+          "ParentHandle": 197444,
+          "ControlId": 0,
+          "ClassName": "UniversalSearchBand",
+          "Title": ""
+        },
+        {
+          "Handle": 983672,
+          "ParentHandle": 1180334,
+          "ControlId": 0,
+          "ClassName": "Search Box",
+          "Title": ""
+        },
+        {
+          "Handle": 1245862,
+          "ParentHandle": 983672,
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ],
+      "dialogClosed": true,
+      "folderConfirmedAgain": false,
+      "folderObservations": []
+    },
+    {
+      "status": "selected-real-native-dialog",
+      "processId": 7656,
+      "dialogProcessId": 7656,
+      "executable": "C:\\LongEditR5I\\tauri-app.exe",
+      "title": "选择新恢复文件夹的父目录",
+      "fileNameAutomationId": "1152",
+      "selectedPath": "C:\\LongEditV1112Backup-566a1708-8d41-4188-8cab-8477e90142e4\\RestoreTargets",
+      "inputCharacters": 74,
+      "method": "Windows-Win32-filename-character-input-and-OK-notification",
+      "desktopUserSession": "disposable-github-hosted",
+      "controlCandidates": [
+        {
+          "Handle": 1442410,
+          "ParentHandle": 262954,
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "Handle": 852738,
+          "ParentHandle": 1769566,
+          "ControlId": 1090,
+          "ClassName": "Static",
+          "Title": "Folder:"
+        },
+        {
+          "Handle": 197458,
+          "ParentHandle": 1769566,
+          "ControlId": 1152,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 1049250,
+          "ParentHandle": 1769566,
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 983678,
+          "ParentHandle": 1769566,
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 262950,
+          "ParentHandle": 1769566,
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 1245684,
+          "ParentHandle": 1769566,
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 1376880,
+          "ParentHandle": 1180298,
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 262968,
+          "ParentHandle": 1376880,
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 262986,
+          "ParentHandle": 262968,
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 1442482,
+          "ParentHandle": 1311320,
+          "ControlId": 0,
+          "ClassName": "UniversalSearchBand",
+          "Title": ""
+        },
+        {
+          "Handle": 1376834,
+          "ParentHandle": 1442482,
+          "ControlId": 0,
+          "ClassName": "Search Box",
+          "Title": ""
+        },
+        {
+          "Handle": 262956,
+          "ParentHandle": 1376834,
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ],
+      "dialogClosed": true,
+      "folderConfirmedAgain": true,
+      "folderObservations": [
+        {
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "ControlId": 1090,
+          "ClassName": "Static",
+          "Title": "Folder:"
+        },
+        {
+          "ControlId": 1152,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "ControlId": 1,
+          "ClassName": "Button",
+          "Title": "Select Folder"
+        },
+        {
+          "ControlId": 2,
+          "ClassName": "Button",
+          "Title": "Cancel"
+        },
+        {
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "ControlId": 1038,
+          "ClassName": "Button",
+          "Title": "&Help"
+        },
+        {
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ]
+    }
+  ],
+  "draftChecks": [
+    {
+      "dirty": true,
+      "exactModel": true,
+      "contentSha256": "6f3523874006bf1b860a9b2f57982638b9d52b841fc198ab8f4cb4aa9a7552ee",
+      "diskSha256": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3"
+    },
+    {
+      "dirty": true,
+      "exactModel": true,
+      "contentSha256": "6f3523874006bf1b860a9b2f57982638b9d52b841fc198ab8f4cb4aa9a7552ee",
+      "diskSha256": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3"
+    },
+    {
+      "dirty": true,
+      "exactModel": true,
+      "contentSha256": "6f3523874006bf1b860a9b2f57982638b9d52b841fc198ab8f4cb4aa9a7552ee",
+      "diskSha256": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3"
+    },
+    {
+      "dirty": true,
+      "exactModel": true,
+      "contentSha256": "6f3523874006bf1b860a9b2f57982638b9d52b841fc198ab8f4cb4aa9a7552ee",
+      "diskSha256": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3"
+    },
+    {
+      "dirty": true,
+      "exactModel": true,
+      "contentSha256": "6f3523874006bf1b860a9b2f57982638b9d52b841fc198ab8f4cb4aa9a7552ee",
+      "diskSha256": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3"
+    },
+    {
+      "dirty": true,
+      "exactModel": true,
+      "contentSha256": "6f3523874006bf1b860a9b2f57982638b9d52b841fc198ab8f4cb4aa9a7552ee",
+      "diskSha256": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3"
+    }
+  ],
+  "denials": [
+    {
+      "command": "preview_content_backup",
+      "rejected": true,
+      "error": "只能在主工作台备份或恢复资料内容"
+    },
+    {
+      "command": "export_content_backup",
+      "rejected": true,
+      "error": "只能在主工作台备份或恢复资料内容"
+    },
+    {
+      "command": "preflight_content_restore",
+      "rejected": true,
+      "error": "只能在主工作台备份或恢复资料内容"
+    },
+    {
+      "command": "check_content_restore_target",
+      "rejected": true,
+      "error": "只能在主工作台备份或恢复资料内容"
+    },
+    {
+      "command": "restore_content_backup",
+      "rejected": true,
+      "error": "只能在主工作台备份或恢复资料内容"
+    },
+    {
+      "command": "cancel_content_backup",
+      "rejected": true,
+      "error": "只能在主工作台备份或恢复资料内容"
+    },
+    {
+      "command": "discard_content_backup_plan",
+      "rejected": true,
+      "error": "只能在主工作台备份或恢复资料内容"
+    }
+  ],
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "history": {
+    "before": [
+      [
+        1793265426,
+        "# 恢复前保留的版本\n"
+      ]
+    ],
+    "metadataBefore": {
+      "1793265426": {
+        "pinned": true,
+        "note": "跨位置恢复也要保留"
+      }
+    },
+    "pinned": true,
+    "restored": [
+      [
+        1793265426,
+        "# 恢复前保留的版本\n"
+      ]
+    ],
+    "metadataRestored": {
+      "1793265426": {
+        "pinned": true,
+        "note": "跨位置恢复也要保留"
+      }
+    }
+  },
+  "pdfAnnotations": {
+    "before": {
+      "schemaVersion": 1,
+      "source": {
+        "pdfFile": "参考.pdf",
+        "size": 1650,
+        "modifiedAt": 1793263060
+      },
+      "annotations": [
+        {
+          "id": "实际备份批注",
+          "kind": "comment",
+          "page": 1,
+          "color": "yellow",
+          "rects": [],
+          "quote": "",
+          "comment": "恢复后应保留的页评论",
+          "createdAt": 1,
+          "updatedAt": 2
+        }
+      ]
+    },
+    "restored": {
+      "schemaVersion": 1,
+      "source": {
+        "pdfFile": "参考.pdf",
+        "size": 1650,
+        "modifiedAt": 1793263060
+      },
+      "annotations": [
+        {
+          "id": "实际备份批注",
+          "kind": "comment",
+          "page": 1,
+          "color": "yellow",
+          "rects": [],
+          "quote": "",
+          "comment": "恢复后应保留的页评论",
+          "createdAt": 1,
+          "updatedAt": 2
+        }
+      ]
+    }
+  },
+  "draftPath": "C:\\LongEditR5ILibrary\\v1111-graph-72f865e0-5f0d-4146-b77d-234f1f9a2026\\图谱验收主题017 - 项目长期研究与来源证据核对.md",
+  "draftDiskBefore": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3",
+  "draftSha256": "6f3523874006bf1b860a9b2f57982638b9d52b841fc198ab8f4cb4aa9a7552ee",
+  "preflight": {
+    "observedFrom": "rendered-native-preflight",
+    "entryCount": 7,
+    "counts": {
+      "documents": 3,
+      "attachments": 1,
+      "annotations": 1,
+      "history": 2
+    },
+    "excludedCount": 2
+  },
+  "sourceChangeRejected": true,
+  "exportReceipt": {
+    "observedFrom": "rendered-native-completion",
+    "path": "\\\\?\\C:\\LongEditV1112Backup-566a1708-8d41-4188-8cab-8477e90142e4\\资料内容.longedit-backup.zip",
+    "sha256": "60ed3e3546c6418afd58137288f1da3547cec66b29c39f899e1f87c173044bae",
+    "entryCount": 7,
+    "status": "completed",
+    "sourceUnchanged": true
+  },
+  "zip": {
+    "status": "passed",
+    "reader": "dotnet-system-io-compression-independent-no-extraction",
+    "archive": "C:\\LongEditV1112Backup-566a1708-8d41-4188-8cab-8477e90142e4\\资料内容.longedit-backup.zip",
+    "sha256": "60ed3e3546c6418afd58137288f1da3547cec66b29c39f899e1f87c173044bae",
+    "manifest": {
+      "kind": "longedit-library-content",
+      "schemaVersion": 1,
+      "appVersion": "1.3.8",
+      "libraryName": "LongEditR5ILibrary",
+      "createdAt": 1793265430,
+      "options": {
+        "directory": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4",
+        "documents": true,
+        "attachments": true,
+        "annotations": true,
+        "history": true
+      },
+      "entries": [
+        {
+          "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/参考.pdf",
+          "relativePath": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/参考.pdf",
+          "category": "documents",
+          "bytes": 1650,
+          "sha256": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+          "modifiedNanos": 1793263060252539400,
+          "sourceRelative": null
+        },
+        {
+          "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/参考.pdf.annotations.json",
+          "relativePath": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/参考.pdf.annotations.json",
+          "category": "annotations",
+          "bytes": 389,
+          "sha256": "21a4d724a8f4e058c0e3c9e20022030266337cafb01ecca927919e80c7af2532",
+          "modifiedNanos": 1793265426692958000,
+          "sourceRelative": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/参考.pdf"
+        },
+        {
+          "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/备份方案.md",
+          "relativePath": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/备份方案.md",
+          "category": "documents",
+          "bytes": 79,
+          "sha256": "8642f8795e74f2b4a2204131d126783db08c020cd306564d0360a26738dbb9fd",
+          "modifiedNanos": 1793265426679599000,
+          "sourceRelative": null
+        },
+        {
+          "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/示意.png",
+          "relativePath": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/示意.png",
+          "category": "attachments",
+          "bytes": 248699,
+          "sha256": "d522dbab37e9ccad4b62959d92e9fe890cc8b4d5bd3da8f381aec1248434382f",
+          "modifiedNanos": 1793263059447598600,
+          "sourceRelative": null
+        },
+        {
+          "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/项目数据.json",
+          "relativePath": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/项目数据.json",
+          "category": "documents",
+          "bytes": 50,
+          "sha256": "8f18eaae2a8c4d40192447e749a7b2c84bfbf4d82b012cf0dd2c95d8d5f6bd49",
+          "modifiedNanos": 1793265428537769500,
+          "sourceRelative": null
+        },
+        {
+          "path": "history/a89b13dbe9b07834df1748420fd701696b4e64a5440bf1ff6b6d9879d53f0192/1793265426.md",
+          "relativePath": "1793265426.md",
+          "category": "history",
+          "bytes": 27,
+          "sha256": "ecdfaf9512909dc5d40ca7fdc4aff436ac30a9fafb108e36edf05bc60cd3b120",
+          "modifiedNanos": 1793265426703011000,
+          "sourceRelative": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/备份方案.md"
+        },
+        {
+          "path": "history/a89b13dbe9b07834df1748420fd701696b4e64a5440bf1ff6b6d9879d53f0192/metadata.json",
+          "relativePath": "metadata.json",
+          "category": "history",
+          "bytes": 67,
+          "sha256": "04e7242442ae8f4122110bbc0303a9fec2b13687d66e906cd34b12f26bfd73a1",
+          "modifiedNanos": 1793265426732841200,
+          "sourceRelative": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/备份方案.md"
+        }
+      ],
+      "directories": [
+        "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4"
+      ],
+      "excluded": [
+        {
+          "path": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/.env",
+          "reason": "隐藏、依赖目录或敏感配置，未包含"
+        },
+        {
+          "path": "v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/.v1112-owned",
+          "reason": "隐藏、依赖目录或敏感配置，未包含"
+        }
+      ],
+      "boundary": [
+        "未保存草稿",
+        "应用配置与系统凭据",
+        "所选范围外链接目标（不会自动跟随）",
+        "隐藏和依赖目录",
+        "已知敏感配置文件",
+        "自定义模板（使用模板导入导出）"
+      ],
+      "workSession": {
+        "activePath": "v1111-graph-72f865e0-5f0d-4146-b77d-234f1f9a2026/图谱验收主题017 - 项目长期研究与来源证据核对.md",
+        "files": [
+          {
+            "relativePath": "v116-continuity/notes/renamed.md",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 1451
+            }
+          },
+          {
+            "relativePath": "v116-continuity/reference-final.txt",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 0
+            }
+          },
+          {
+            "relativePath": "v116-continuity/incoming.md",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 0
+            }
+          },
+          {
+            "relativePath": "v116-continuity/draft.md",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 0
+            }
+          },
+          {
+            "relativePath": "v116-continuity/plain-new.md",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 0
+            }
+          },
+          {
+            "relativePath": "v116-continuity/接续草稿.txt",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 0
+            }
+          },
+          {
+            "relativePath": "v117-save-history/整理后/方案.md",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 0
+            }
+          },
+          {
+            "relativePath": "v117-save-history/记录.txt",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 0
+            }
+          },
+          {
+            "relativePath": "v1110-tags-3ed5dabf-60dd-4544-bb9f-04224976f2f9/标签笔记000.md",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 0
+            }
+          },
+          {
+            "relativePath": "v1111-graph-72f865e0-5f0d-4146-b77d-234f1f9a2026/图谱验收主题017 - 项目长期研究与来源证据核对.md",
+            "view": {
+              "scrollLeft": 0,
+              "scrollTop": 218
+            }
+          }
+        ],
+        "kind": "longedit-work-session",
+        "name": "备份时的工作现场",
+        "reference": {
+          "query": "私人参考词",
+          "relativePath": "v119-session-865b4387-c016-4769-a5d5-3e1466db589d/阅读01.txt"
+        },
+        "savedAt": 1793265430213,
+        "schemaVersion": 1
+      }
+    },
+    "entries": [
+      {
+        "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/参考.pdf",
+        "sha256": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+        "bytes": 1650
+      },
+      {
+        "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/参考.pdf.annotations.json",
+        "sha256": "21a4d724a8f4e058c0e3c9e20022030266337cafb01ecca927919e80c7af2532",
+        "bytes": 389
+      },
+      {
+        "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/备份方案.md",
+        "sha256": "8642f8795e74f2b4a2204131d126783db08c020cd306564d0360a26738dbb9fd",
+        "bytes": 79
+      },
+      {
+        "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/示意.png",
+        "sha256": "d522dbab37e9ccad4b62959d92e9fe890cc8b4d5bd3da8f381aec1248434382f",
+        "bytes": 248699
+      },
+      {
+        "path": "files/v1112-content-566a1708-8d41-4188-8cab-8477e90142e4/项目数据.json",
+        "sha256": "8f18eaae2a8c4d40192447e749a7b2c84bfbf4d82b012cf0dd2c95d8d5f6bd49",
+        "bytes": 50
+      },
+      {
+        "path": "history/a89b13dbe9b07834df1748420fd701696b4e64a5440bf1ff6b6d9879d53f0192/1793265426.md",
+        "sha256": "ecdfaf9512909dc5d40ca7fdc4aff436ac30a9fafb108e36edf05bc60cd3b120",
+        "bytes": 27
+      },
+      {
+        "path": "history/a89b13dbe9b07834df1748420fd701696b4e64a5440bf1ff6b6d9879d53f0192/metadata.json",
+        "sha256": "04e7242442ae8f4122110bbc0303a9fec2b13687d66e906cd34b12f26bfd73a1",
+        "bytes": 67
+      }
+    ],
+    "nativeBridgeMocked": false,
+    "sourceUserContentIncluded": false
+  },
+  "existingZipPreserved": true,
+  "badPackageRejected": true,
+  "targetConflictBlocked": true,
+  "pdfTime": {
+    "before": "1793263060252539500",
+    "restored": "1793263060252539500"
+  },
+  "restoreReceipt": {
+    "observedFrom": "rendered-native-completion",
+    "path": "\\\\?\\C:\\LongEditV1112Backup-566a1708-8d41-4188-8cab-8477e90142e4\\RestoreTargets\\恢复后的资料-新副本",
+    "sha256": "60ed3e3546c6418afd58137288f1da3547cec66b29c39f899e1f87c173044bae",
+    "entryCount": 7,
+    "status": "completed",
+    "sourceUnchanged": true
+  },
+  "explicitAddOnly": true,
+  "activeLibraryUnchanged": true,
+  "cancel": {
+    "stageObserved": true,
+    "accepted": true,
+    "published": false,
+    "error": "已取消；未发布内容包或恢复资料目录",
+    "remainingStages": 0
+  },
+  "explicitSaveAfterChecks": true,
+  "markdownBodyVisible": true,
+  "editorModes": {
+    "before": "sv",
+    "after": "sv"
+  },
+  "markdownImageLoaded": true,
+  "pdfRender": {
+    "width": 612,
+    "height": 792,
+    "opaquePixels": 30294,
+    "inkPixels": 331,
+    "placeholderAbsent": true
+  },
+  "pdfPageVisible": true,
+  "errorOverlay": false,
+  "restoredRegistrationRemovedOnly": true
+}

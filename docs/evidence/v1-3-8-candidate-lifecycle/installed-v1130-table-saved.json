@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 2,
+  "kind": "longedit.table",
+  "data": {
+    "columns": [
+      {
+        "id": "task",
+        "name": "任务",
+        "type": "text"
+      },
+      {
+        "id": "state",
+        "name": "状态",
+        "type": "text",
+        "validation": {
+          "kind": "options",
+          "required": true,
+          "options": [
+            "已完成"
+          ]
+        }
+      },
+      {
+        "id": "code",
+        "name": "编号",
+        "type": "integer"
+      }
+    ],
+    "rows": [
+      {
+        "id": "r-a",
+        "values": {
+          "code": "00077",
+          "state": "已完成",
+          "task": "会议"
+        }
+      },
+      {
+        "id": "r-hidden",
+        "values": {
+          "code": "9007199254740993123",
+          "state": "隐藏",
+          "task": "合同"
+        }
+      },
+      {
+        "id": "r-b",
+        "values": {
+          "code": "00002",
+          "state": "已完成",
+          "task": "文档"
+        }
+      }
+    ]
+  },
+  "views": [
+    {
+      "id": "grid",
+      "name": "表格",
+      "kind": "grid",
+      "config": {
+        "filter": "",
+        "sort": {
+          "column": "code",
+          "direction": "asc"
+        },
+        "frozenColumns": 0,
+        "columnWidths": {
+          "code": 190,
+          "state": 160,
+          "task": 160
+        },
+        "groupBy": "task",
+        "titleColumn": "task",
+        "cardColumns": [],
+        "categoryColumn": "task",
+        "valueColumn": null,
+        "aggregation": "count",
+        "chartType": "bar",
+        "seriesColumn": null,
+        "nullStrategy": "skip",
+        "showLegend": true,
+        "dashboardItems": []
+      }
+    }
+  ],
+  "activeView": "grid"
+}
