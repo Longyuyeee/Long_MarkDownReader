@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-208-v1.3.6-selection-source-search-candidate",
-  "binaryVersionTransition": "v1.3.6-quality-gate-pending",
+  "binaryVersionTransition": "v1.3.6-release-ready",
   "displayLabel": "v1.3.6 选区内查找与替换候选 · 当前公开 v1.3.5",
   "activeSlice": {
     "id": "v1.3.6-selection-source-search",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_3_6_Unsigned_Community_Release_Audit_2026-10-28.md"
   }
 }
