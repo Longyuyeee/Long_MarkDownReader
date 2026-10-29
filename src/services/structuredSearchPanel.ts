@@ -5,8 +5,9 @@ import { scopeFromSelection, setSourceSearchScope, sourceSearchScope } from './s
 
 // Keep the existing CodeMirror controls and commands. A custom public panel
 // preserves query predicates when committing input (the default panel drops them).
-export function createStructuredSearchPanel(view: EditorView, scoped: boolean, feedbackId: string): Panel {
+export function createStructuredSearchPanel(view: EditorView, scoped: boolean, feedbackId: string, preview?: () => void): Panel {
   let query = getSearchQuery(view.state)
+  let composing = false
   const dom = document.createElement('div'); dom.className = 'cm-search'
   const field = (name: string, value: string) => {
     const input = document.createElement('input'); input.name = name; input.value = value
@@ -26,19 +27,22 @@ export function createStructuredSearchPanel(view: EditorView, scoped: boolean, f
     button.textContent = view.state.phrase(phrase); button.onclick = () => { action() }; return button
   }
   const commit = (event?: Event) => {
-    if (event instanceof InputEvent && event.isComposing) return
+    if (composing || event instanceof InputEvent && event.isComposing) return
     const current = getSearchQuery(view.state)
     const next = new SearchQuery({ search: search.value, replace: replacement.value, caseSensitive: caseSensitive.input.checked,
       regexp: regexp.input.checked, wholeWord: wholeWord.input.checked, literal: current.literal, test: current.test })
     if (!next.eq(current) || next.literal !== current.literal) view.dispatch({ effects: setSearchQuery.of(next) })
   }
   for (const input of [search, replacement, caseSensitive.input, regexp.input, wholeWord.input]) {
-    input.addEventListener('input', commit); input.addEventListener('change', commit); input.addEventListener('compositionend', commit)
+    input.addEventListener('input', commit); input.addEventListener('change', commit)
+    input.addEventListener('compositionstart', () => { composing = true })
+    input.addEventListener('compositionend', () => { composing = false; commit() })
   }
   dom.append(search, button('next', 'next', () => findNext(view)), button('prev', 'previous', () => findPrevious(view)),
     button('select', 'all', () => selectMatches(view)), caseSensitive.wrap, regexp.wrap, wholeWord.wrap)
   if (!view.state.readOnly) dom.append(document.createElement('br'), replacement,
     button('replace', 'replace', () => replaceNext(view)), button('replaceAll', 'replace all', () => replaceAll(view)))
+  if (!view.state.readOnly && scoped && preview) dom.append(button('previewReplace', '预览替换…', preview))
   const close = button('close', 'close', () => closeSearchPanel(view)); close.textContent = '×'; close.ariaLabel = view.state.phrase('close'); dom.append(close)
   if (scoped) {
     const enabled = view.state.field(sourceSearchScope).enabled
@@ -53,6 +57,7 @@ export function createStructuredSearchPanel(view: EditorView, scoped: boolean, f
     dom.append(scope.wrap, update, status)
   }
   dom.onkeydown = event => {
+    if (composing || event.isComposing || event.keyCode === 229) return
     if (runScopeHandlers(view, event, 'search-panel')) event.preventDefault()
     else if (event.key === 'Enter' && event.target === search) { event.preventDefault(); (event.shiftKey ? findPrevious : findNext)(view) }
     else if (event.key === 'Enter' && event.target === replacement) { event.preventDefault(); replaceNext(view) }

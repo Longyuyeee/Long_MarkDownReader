@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.3.6已发布：JSON、YAML、XML、TOML支持显式选区内查找与替换及匹配数量，范围随草稿编辑和撤销／重做接续，失效时保留输入并暂停替换。[本版审计](docs/V1_3_6_Unsigned_Community_Release_Audit_2026-10-28.md)。下一版1.3.7规划源码替换预览，在提交批量修改前查看变化。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_7_2026-10-29.md)。
+v1.3.7正在实现按需弹窗的源码替换预览，保护草稿和显式保存。[本版记录](docs/V1_3_7_Unsigned_Community_Release_Audit_2026-10-29.md)。当前公开下载仍为v1.3.6。
 
 ## 不只是打开文件，更是接续你的工作
 

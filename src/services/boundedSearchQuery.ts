@@ -19,6 +19,15 @@ interface NativeQuery {
 // The native command tests exercise this boundary when the dependency changes.
 const factory = Reflect.get(SearchQuery.prototype, 'create') as (this: SearchQuery) => NativeQuery
 
+export function createNativeSearchQuery(query: SearchQuery): NativeQuery {
+  if (typeof factory !== 'function') throw new Error('源码查找组件不兼容，请更新应用')
+  const native = factory.call(query)
+  for (const name of ['nextMatch', 'prevMatch', 'matchAll', 'getReplacement', 'highlight'] as const) {
+    if (typeof native[name] !== 'function') throw new Error('源码查找组件不兼容，请更新应用')
+  }
+  return native
+}
+
 export class BoundedSearchQuery extends SearchQuery {
   private bounds: (state: EditorState) => Bounds
   constructor(config: ConstructorParameters<typeof SearchQuery>[0], bounds: (state: EditorState) => Bounds) { super(config); this.bounds = bounds }
@@ -29,11 +38,7 @@ export class BoundedSearchQuery extends SearchQuery {
     return to !== undefined && from > to ? [][Symbol.iterator]() : super.getCursor(state, from, to)
   }
   create(): NativeQuery {
-    if (typeof factory !== 'function') throw new Error('源码查找组件不兼容，请更新应用')
-    const native = factory.call(this), query = this
-    for (const name of ['nextMatch', 'prevMatch', 'matchAll', 'getReplacement', 'highlight'] as const) {
-      if (typeof native[name] !== 'function') throw new Error('源码查找组件不兼容，请更新应用')
-    }
+    const native = createNativeSearchQuery(this), query = this
     const all = (state: EditorState, limit: number) => {
       const result: Match[] = [], cursor = query.getCursor(state)
       for (let next = cursor.next(); !next.done; next = cursor.next()) {

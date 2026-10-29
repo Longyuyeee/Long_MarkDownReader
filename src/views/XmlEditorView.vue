@@ -161,6 +161,7 @@
         <n-button type="primary" :loading="attributeEditPending" @click="previewAttributeEdit()">{{ attributeAdding ? '预览新增' : '预览修改' }}</n-button></div></template>
     </n-modal>
     <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
+    <StructuredReplacementDialog :search="session.sourceSearch" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
 </template>
@@ -186,6 +187,7 @@ import {
 } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextConflictDialog from '../components/TextConflictDialog.vue'
+import StructuredReplacementDialog from '../components/StructuredReplacementDialog.vue'
 import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
 import StructuredHistoryMenu from '../components/StructuredHistoryMenu.vue'
 import SourceNodeMenu from '../components/SourceNodeMenu.vue'
