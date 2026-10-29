@@ -1,0 +1,419 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "mode": "json",
+      "reusedComponent": false,
+      "status": "passed",
+      "selectionAndScrollExact": true,
+      "consecutiveReturn": true,
+      "mappedEdit": true,
+      "noTextUndoStep": true,
+      "cancelCreatesNoPosition": true,
+      "staleOwnerRejected": true,
+      "readonlyReturn": true,
+      "noDiskWrites": true,
+      "runtimeErrors": [],
+      "combinations": [
+        {
+          "style": "soft",
+          "width": 1440
+        },
+        {
+          "style": "soft",
+          "width": 800
+        },
+        {
+          "style": "soft",
+          "width": 640
+        },
+        {
+          "style": "neo",
+          "width": 1440
+        },
+        {
+          "style": "neo",
+          "width": 800
+        },
+        {
+          "style": "neo",
+          "width": 640
+        },
+        {
+          "style": "glass",
+          "width": 1440
+        },
+        {
+          "style": "glass",
+          "width": 800
+        },
+        {
+          "style": "glass",
+          "width": 640
+        },
+        {
+          "style": "minimal",
+          "width": 1440
+        },
+        {
+          "style": "minimal",
+          "width": 800
+        },
+        {
+          "style": "minimal",
+          "width": 640
+        },
+        {
+          "style": "sharp",
+          "width": 1440
+        },
+        {
+          "style": "sharp",
+          "width": 800
+        },
+        {
+          "style": "sharp",
+          "width": 640
+        },
+        {
+          "style": "airy",
+          "width": 1440
+        },
+        {
+          "style": "airy",
+          "width": 800
+        },
+        {
+          "style": "airy",
+          "width": 640
+        }
+      ]
+    },
+    {
+      "mode": "yaml",
+      "reusedComponent": false,
+      "status": "passed",
+      "selectionAndScrollExact": true,
+      "consecutiveReturn": true,
+      "mappedEdit": true,
+      "noTextUndoStep": true,
+      "cancelCreatesNoPosition": true,
+      "staleOwnerRejected": true,
+      "readonlyReturn": true,
+      "noDiskWrites": true,
+      "runtimeErrors": [],
+      "combinations": [
+        {
+          "style": "soft",
+          "width": 1440
+        },
+        {
+          "style": "soft",
+          "width": 800
+        },
+        {
+          "style": "soft",
+          "width": 640
+        },
+        {
+          "style": "neo",
+          "width": 1440
+        },
+        {
+          "style": "neo",
+          "width": 800
+        },
+        {
+          "style": "neo",
+          "width": 640
+        },
+        {
+          "style": "glass",
+          "width": 1440
+        },
+        {
+          "style": "glass",
+          "width": 800
+        },
+        {
+          "style": "glass",
+          "width": 640
+        },
+        {
+          "style": "minimal",
+          "width": 1440
+        },
+        {
+          "style": "minimal",
+          "width": 800
+        },
+        {
+          "style": "minimal",
+          "width": 640
+        },
+        {
+          "style": "sharp",
+          "width": 1440
+        },
+        {
+          "style": "sharp",
+          "width": 800
+        },
+        {
+          "style": "sharp",
+          "width": 640
+        },
+        {
+          "style": "airy",
+          "width": 1440
+        },
+        {
+          "style": "airy",
+          "width": 800
+        },
+        {
+          "style": "airy",
+          "width": 640
+        }
+      ]
+    },
+    {
+      "mode": "xml",
+      "reusedComponent": false,
+      "status": "passed",
+      "selectionAndScrollExact": true,
+      "consecutiveReturn": true,
+      "mappedEdit": true,
+      "noTextUndoStep": true,
+      "cancelCreatesNoPosition": true,
+      "staleOwnerRejected": true,
+      "readonlyReturn": true,
+      "noDiskWrites": true,
+      "runtimeErrors": [],
+      "combinations": [
+        {
+          "style": "soft",
+          "width": 1440
+        },
+        {
+          "style": "soft",
+          "width": 800
+        },
+        {
+          "style": "soft",
+          "width": 640
+        },
+        {
+          "style": "neo",
+          "width": 1440
+        },
+        {
+          "style": "neo",
+          "width": 800
+        },
+        {
+          "style": "neo",
+          "width": 640
+        },
+        {
+          "style": "glass",
+          "width": 1440
+        },
+        {
+          "style": "glass",
+          "width": 800
+        },
+        {
+          "style": "glass",
+          "width": 640
+        },
+        {
+          "style": "minimal",
+          "width": 1440
+        },
+        {
+          "style": "minimal",
+          "width": 800
+        },
+        {
+          "style": "minimal",
+          "width": 640
+        },
+        {
+          "style": "sharp",
+          "width": 1440
+        },
+        {
+          "style": "sharp",
+          "width": 800
+        },
+        {
+          "style": "sharp",
+          "width": 640
+        },
+        {
+          "style": "airy",
+          "width": 1440
+        },
+        {
+          "style": "airy",
+          "width": 800
+        },
+        {
+          "style": "airy",
+          "width": 640
+        }
+      ]
+    },
+    {
+      "mode": "toml",
+      "reusedComponent": false,
+      "status": "passed",
+      "selectionAndScrollExact": true,
+      "consecutiveReturn": true,
+      "mappedEdit": true,
+      "noTextUndoStep": true,
+      "cancelCreatesNoPosition": true,
+      "staleOwnerRejected": true,
+      "readonlyReturn": true,
+      "noDiskWrites": true,
+      "runtimeErrors": [],
+      "combinations": [
+        {
+          "style": "soft",
+          "width": 1440
+        },
+        {
+          "style": "soft",
+          "width": 800
+        },
+        {
+          "style": "soft",
+          "width": 640
+        },
+        {
+          "style": "neo",
+          "width": 1440
+        },
+        {
+          "style": "neo",
+          "width": 800
+        },
+        {
+          "style": "neo",
+          "width": 640
+        },
+        {
+          "style": "glass",
+          "width": 1440
+        },
+        {
+          "style": "glass",
+          "width": 800
+        },
+        {
+          "style": "glass",
+          "width": 640
+        },
+        {
+          "style": "minimal",
+          "width": 1440
+        },
+        {
+          "style": "minimal",
+          "width": 800
+        },
+        {
+          "style": "minimal",
+          "width": 640
+        },
+        {
+          "style": "sharp",
+          "width": 1440
+        },
+        {
+          "style": "sharp",
+          "width": 800
+        },
+        {
+          "style": "sharp",
+          "width": 640
+        },
+        {
+          "style": "airy",
+          "width": 1440
+        },
+        {
+          "style": "airy",
+          "width": 800
+        },
+        {
+          "style": "airy",
+          "width": 640
+        }
+      ]
+    },
+    {
+      "mode": "json",
+      "reusedComponent": true,
+      "status": "passed",
+      "selectionAndScrollExact": true,
+      "consecutiveReturn": true,
+      "mappedEdit": true,
+      "noTextUndoStep": true,
+      "cancelCreatesNoPosition": true,
+      "staleOwnerRejected": true,
+      "readonlyReturn": true,
+      "noDiskWrites": true,
+      "runtimeErrors": [],
+      "combinations": []
+    },
+    {
+      "mode": "yaml",
+      "reusedComponent": true,
+      "status": "passed",
+      "selectionAndScrollExact": true,
+      "consecutiveReturn": true,
+      "mappedEdit": true,
+      "noTextUndoStep": true,
+      "cancelCreatesNoPosition": true,
+      "staleOwnerRejected": true,
+      "readonlyReturn": true,
+      "noDiskWrites": true,
+      "runtimeErrors": [],
+      "combinations": []
+    },
+    {
+      "mode": "xml",
+      "reusedComponent": true,
+      "status": "passed",
+      "selectionAndScrollExact": true,
+      "consecutiveReturn": true,
+      "mappedEdit": true,
+      "noTextUndoStep": true,
+      "cancelCreatesNoPosition": true,
+      "staleOwnerRejected": true,
+      "readonlyReturn": true,
+      "noDiskWrites": true,
+      "runtimeErrors": [],
+      "combinations": []
+    },
+    {
+      "mode": "toml",
+      "reusedComponent": true,
+      "status": "passed",
+      "selectionAndScrollExact": true,
+      "consecutiveReturn": true,
+      "mappedEdit": true,
+      "noTextUndoStep": true,
+      "cancelCreatesNoPosition": true,
+      "staleOwnerRejected": true,
+      "readonlyReturn": true,
+      "noDiskWrites": true,
+      "runtimeErrors": [],
+      "combinations": []
+    }
+  ]
+}

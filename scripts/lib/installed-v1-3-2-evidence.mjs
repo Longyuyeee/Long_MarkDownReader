@@ -4,7 +4,7 @@ import {outlineNavigationDraft} from './structured-outline-navigation-fixture.mj
 export const outlineNavigationChecks=['json-path-keyboard-and-current-source-range','yaml-outline-keyboard-and-current-source-range','xml-outline-keyboard-and-current-source-range','toml-outline-keyboard-and-current-source-range','filter-empty-list-and-input-shortcut-scope','file-switch-clears-old-selection-and-preserves-unsaved-drafts','wide-narrow-library-outline-and-context-menu','explicit-save-exact-bytes-prior-drafts-and-no-runtime-error']
 export const outlineNavigationOutputFiles=['installed-v132-outline-observations.json',...['json','yaml','xml','toml'].map(mode=>'installed-v132-saved.'+mode)]
 export function validateInstalledOutlineNavigation(r,m){
- assert.ok(['1.3.2','1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.3.2','1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10', '1.3.11'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-outline-navigation-trusted-input-and-output-bytes')
  assert.equal(r.inputProtocol,'leading-empty-lines-use-trusted-enter')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))

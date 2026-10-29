@@ -72,7 +72,7 @@ jobs:
           }
           node scripts/assert-current-review-profile.mjs $env:RELEASE_VERSION $env:PRODUCT_COMMIT $review.head_sha verified-review
           if ($LASTEXITCODE -ne 0) { throw 'Current native report selection or published historical baseline drifted' }
-          if ($env:RELEASE_VERSION -in @('1.1.3','1.1.4','1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37','1.2.0', '1.2.1', '1.2.2','1.2.3','1.2.4','1.2.5','1.2.6','1.2.7','1.2.8','1.2.9','1.2.10','1.2.11','1.2.12','1.2.13','1.2.14','1.2.15','1.2.16','1.2.17','1.2.18','1.2.19','1.2.20','1.2.21','1.2.22','1.2.23','1.2.24','1.2.25','1.2.26','1.2.27','1.2.28','1.2.29','1.2.30','1.2.31','1.2.32','1.2.33','1.2.34','1.2.35','1.2.36','1.2.37','1.2.38','1.2.39','1.2.40','1.2.41','1.2.42','1.2.43','1.2.44','1.2.45','1.3.0','1.3.1','1.3.2','1.3.3','1.3.4','1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.1.3','1.1.4','1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37','1.2.0', '1.2.1', '1.2.2','1.2.3','1.2.4','1.2.5','1.2.6','1.2.7','1.2.8','1.2.9','1.2.10','1.2.11','1.2.12','1.2.13','1.2.14','1.2.15','1.2.16','1.2.17','1.2.18','1.2.19','1.2.20','1.2.21','1.2.22','1.2.23','1.2.24','1.2.25','1.2.26','1.2.27','1.2.28','1.2.29','1.2.30','1.2.31','1.2.32','1.2.33','1.2.34','1.2.35','1.2.36','1.2.37','1.2.38','1.2.39','1.2.40','1.2.41','1.2.42','1.2.43','1.2.44','1.2.45','1.3.0','1.3.1','1.3.2','1.3.3','1.3.4','1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10','1.3.11')) {
             $foundation = Get-Content verified-review/installed-v113-workflow.json -Raw | ConvertFrom-Json
             if ($foundation.status -ne 'passed' -or $foundation.checks.Count -ne 8 -or @($foundation.checks | Where-Object status -ne 'passed').Count -or $foundation.sourceCommit -ne $env:PRODUCT_COMMIT -or $foundation.appVersion -ne $env:RELEASE_VERSION -or $foundation.sourceUserContentIncluded -ne $false) { throw 'Foundation workflows did not pass in the exact installed product' }
           }
@@ -92,7 +92,7 @@ jobs:
             $history = Get-Content verified-review/installed-v117-workflow.json -Raw | ConvertFrom-Json
             if ($history.status -ne 'passed' -or $history.checks.Count -ne 12 -or @($history.checks | Where-Object status -ne 'passed').Count -or $history.sourceCommit -ne $env:PRODUCT_COMMIT -or $history.appVersion -ne $env:RELEASE_VERSION -or $history.sourceUserContentIncluded -ne $false -or $history.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Save/history workflows did not pass in the exact installed product' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37','1.2.0', '1.2.1', '1.2.2','1.2.3','1.2.4','1.2.5','1.2.6','1.2.7','1.2.8','1.2.9','1.2.10','1.2.11','1.2.12','1.2.13','1.2.14','1.2.15','1.2.16','1.2.17','1.2.18','1.2.19','1.2.20','1.2.21','1.2.22','1.2.23','1.2.24','1.2.25','1.2.26','1.2.27','1.2.28','1.2.29','1.2.30','1.2.31','1.2.32','1.2.33','1.2.34','1.2.35','1.2.36','1.2.37','1.2.38','1.2.39','1.2.40','1.2.41','1.2.42','1.2.43','1.2.44','1.2.45','1.3.0','1.3.1','1.3.2','1.3.3','1.3.4','1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37','1.2.0', '1.2.1', '1.2.2','1.2.3','1.2.4','1.2.5','1.2.6','1.2.7','1.2.8','1.2.9','1.2.10','1.2.11','1.2.12','1.2.13','1.2.14','1.2.15','1.2.16','1.2.17','1.2.18','1.2.19','1.2.20','1.2.21','1.2.22','1.2.23','1.2.24','1.2.25','1.2.26','1.2.27','1.2.28','1.2.29','1.2.30','1.2.31','1.2.32','1.2.33','1.2.34','1.2.35','1.2.36','1.2.37','1.2.38','1.2.39','1.2.40','1.2.41','1.2.42','1.2.43','1.2.44','1.2.45','1.3.0','1.3.1','1.3.2','1.3.3','1.3.4','1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10','1.3.11')) {
             $searchReview = Get-Content verified-review/installed-v118-workflow.json -Raw | ConvertFrom-Json
             if ($searchReview.harnessSourceCommit -ne $review.head_sha) { throw 'Installed search report does not belong to the successful review driver' }
             @'
@@ -547,7 +547,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed outline continuity tasks or original bytes failed' }
           }
-          if ($env:RELEASE_VERSION -in @('1.3.4','1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.3.4','1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10','1.3.11')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
@@ -560,7 +560,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed outline continuity tasks or original bytes failed' }
           }
-          if ($env:RELEASE_VERSION -in @('1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10','1.3.11')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
@@ -573,7 +573,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed outline continuity tasks or original bytes failed' }
           }
-          if ($env:RELEASE_VERSION -in @('1.3.6','1.3.7','1.3.8','1.3.9','1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.3.6','1.3.7','1.3.8','1.3.9','1.3.10','1.3.11')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
@@ -586,7 +586,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed outline continuity tasks or original bytes failed' }
           }
-          if ($env:RELEASE_VERSION -in @('1.3.7','1.3.8','1.3.9','1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.3.7','1.3.8','1.3.9','1.3.10','1.3.11')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
@@ -599,7 +599,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed outline continuity tasks or original bytes failed' }
           }
-          if ($env:RELEASE_VERSION -in @('1.3.8','1.3.9','1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.3.8','1.3.9','1.3.10','1.3.11')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
@@ -612,7 +612,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed outline continuity tasks or original bytes failed' }
           }
-          if ($env:RELEASE_VERSION -in @('1.3.9','1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.3.9','1.3.10','1.3.11')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
@@ -625,7 +625,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed outline continuity tasks or original bytes failed' }
           }
-          if ($env:RELEASE_VERSION -in @('1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.3.10','1.3.11')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
@@ -635,6 +635,19 @@ jobs:
           validateInstalledSourceMatches(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});
           for(const key of ['executableSha256','harnessSourceCommit'])assert.equal(report[key],prior[key]);
           assertSourceMatchesOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));
+          '@ | node --input-type=module
+            if ($LASTEXITCODE -ne 0) { throw 'Installed outline continuity tasks or original bytes failed' }
+          }
+          if ($env:RELEASE_VERSION -in @('1.3.11')) {
+            @'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          import {validateInstalledSourceReturn,assertSourceReturnOutputBytes} from './scripts/lib/installed-v1-3-11-evidence.mjs';
+          const read=p=>JSON.parse(fs.readFileSync(p,'utf8').replace(/^\uFEFF/,''));
+          const report=read('verified-review/installed-v1311-return-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),prior=read('verified-review/installed-v118-workflow.json');
+          validateInstalledSourceReturn(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});
+          for(const key of ['executableSha256','harnessSourceCommit'])assert.equal(report[key],prior[key]);
+          assertSourceReturnOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed outline continuity tasks or original bytes failed' }
           }
@@ -820,7 +833,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Installed XML creation and rename tasks or original bytes failed' }
           }
-          if ($env:RELEASE_VERSION -in @('1.2.17','1.2.18','1.2.19','1.2.20','1.2.21','1.2.22','1.2.23','1.2.24','1.2.25','1.2.26','1.2.27','1.2.28','1.2.29','1.2.30','1.2.31','1.2.32','1.2.33','1.2.34','1.2.35','1.2.36','1.2.37','1.2.38','1.2.39','1.2.40','1.2.41','1.2.42','1.2.43','1.2.44','1.2.45','1.3.0','1.3.1','1.3.2','1.3.3','1.3.4','1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10')) {
+          if ($env:RELEASE_VERSION -in @('1.2.17','1.2.18','1.2.19','1.2.20','1.2.21','1.2.22','1.2.23','1.2.24','1.2.25','1.2.26','1.2.27','1.2.28','1.2.29','1.2.30','1.2.31','1.2.32','1.2.33','1.2.34','1.2.35','1.2.36','1.2.37','1.2.38','1.2.39','1.2.40','1.2.41','1.2.42','1.2.43','1.2.44','1.2.45','1.3.0','1.3.1','1.3.2','1.3.3','1.3.4','1.3.5','1.3.6','1.3.7','1.3.8','1.3.9','1.3.10','1.3.11')) {
             @'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
