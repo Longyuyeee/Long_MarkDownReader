@@ -6,13 +6,14 @@ import { fileStylePathKey } from '../utils/fileDisplayStyles'
 import { structuredDocumentDigest } from '../services/structuredPositionState'
 import { sourceSearchScope, sourceSearchScopeExtensions, setSourceSearchScope } from '../services/structuredSearchScope'
 import { createStructuredSearchPanel } from '../services/structuredSearchPanel'
+import { structuredSearchHistory } from '../services/structuredSearchHistory'
 import { nextTick, shallowRef, watch } from 'vue'
 import { isolateHistory } from '@codemirror/commands'
 import { buildReplacementPlan, selectedReplacementChanges, type ReplacementPlan } from '../services/structuredReplacementPlan'
 
 let feedbackId = 0
-export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; context?: () => string }) {
-  let active: { editor: EditorView; claim: ReturnType<typeof claimStructuredSearch>
+export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; context?: () => string; library?: () => string }) {
+  let active: { editor: EditorView; claim: ReturnType<typeof claimStructuredSearch>; library: string; history: ReturnType<typeof structuredSearchHistory>
     pendingScope?: { intent: object; doc: EditorView['state']['doc']; snapshot: NonNullable<StructuredSearchState['scope']> } } | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   let matches: { doc: EditorView['state']['doc']; query: SearchQuery; scope: string; wordHead: number
@@ -150,7 +151,22 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     if (ready === false) invalidatePreview('当前文件状态已变化，请稍后刷新预览')
     if (active) feedback(active.editor)
   }, { flush: 'sync' })
-  const extension = [search({ createPanel: editor => createStructuredSearchPanel(editor, active?.editor === editor && active.claim.current(), id, () => openPreview(editor)) }), sourceSearchScopeExtensions,
+  const extension = [search({ createPanel: editor => {
+    const owner = active, current = () => owner === active && active?.editor === editor && active.claim.current()
+      && (!options.library || fileStylePathKey(options.library()) === active.library)
+    return createStructuredSearchPanel(editor, !!current(), id, () => openPreview(editor), current() ? {
+      list: () => current() ? owner!.history.list() : [],
+      remember: query => { if (current() && query.valid) owner!.history.remember(query) },
+      clear: () => { if (current()) owner!.history.clear() },
+      choose: condition => {
+        if (!current()) return false
+        // Keep the current predicate and selection scope. Applying inputs never
+        // runs a search command, changes a draft, or carries old match offsets.
+        editor.dispatch({ effects: setSearchQuery.of(new SearchQuery({ ...condition, test: getSearchQuery(editor.state).test })) })
+        return true
+      },
+    } : undefined)
+  } }), sourceSearchScopeExtensions,
     EditorState.phrases.of({ Find: '查找', Replace: '替换', next: '下一个', previous: '上一个',
     all: '选中全部', 'match case': '区分大小写', regexp: '正则', 'by word': '完整词', replace: '替换',
     'replace all': '全部替换', close: '关闭', 'current match': '当前匹配', 'replaced $ matches': '已替换 $ 处',
@@ -188,7 +204,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     clearTimeout(timer); active = undefined; matches = undefined
     if (options.enabled?.() === false || !['json', 'jsonc', 'yaml', 'xml', 'toml'].includes(format)) return
     const claim = claimStructuredSearch(tab, JSON.stringify([fileStylePathKey(root), external, format]))
-    active = { editor, claim }
+    active = { editor, claim, library: fileStylePathKey(root), history: structuredSearchHistory(fileStylePathKey(root)) }
     const point = claim.state
     if (point) {
       const intent = {}, snapshot = point.scope, doc = editor.state.doc

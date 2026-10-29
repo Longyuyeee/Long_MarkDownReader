@@ -43,6 +43,7 @@ export function useStructuredSession(options: Options) {
   let disposed = false, bound: Owner | undefined
   const position = useStructuredPosition({ ready: () => !options.loading.value && (options.positionReady?.() ?? true), panes: options.positionPanes, enabled: options.positionEnabled })
   const sourceSearch = useStructuredSearch({ enabled: options.positionEnabled,
+    library: () => options.store.libraryPath,
     ready: () => !disposed && !options.loading.value && !options.saving.value && !options.readOnlyReason.value && Boolean(bound
       && bound.editor === options.editor() && bound.path === options.path() && bound.root === options.store.libraryPath
       && bound.external === options.external() && bound.format === options.format()),

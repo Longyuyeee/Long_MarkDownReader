@@ -68,6 +68,13 @@ const workspaceTheme = EditorView.theme({
     borderColor: 'var(--code-editor-border)',
   },
   '.cm-panel.cm-search': { padding: '8px 10px' },
+  '.cm-search select.structured-search-recent': {
+    width: '96px', maxWidth: '96px', marginInline: '4px', height: '24px', verticalAlign: 'middle', borderRadius: '4px',
+    color: 'var(--code-editor-text)', backgroundColor: 'var(--code-editor-surface)',
+    appearance: 'none', paddingInline: '6px 18px',
+    backgroundImage: 'linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%)',
+    backgroundPosition: 'calc(100% - 11px) 50%, calc(100% - 7px) 50%', backgroundSize: '4px 4px', backgroundRepeat: 'no-repeat',
+  },
   '.cm-textfield': {
     color: 'var(--code-editor-text)',
     backgroundColor: 'var(--code-editor-surface)',

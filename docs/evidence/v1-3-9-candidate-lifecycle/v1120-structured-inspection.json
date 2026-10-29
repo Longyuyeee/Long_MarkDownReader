@@ -1,0 +1,52 @@
+{
+  "status": "passed",
+  "reader": "stdlib-json-tomllib-defusedxml-and-exact-yaml-bytes",
+  "nativeBridgeMocked": false,
+  "outputs": [
+    {
+      "fileName": "installed-v1120-json-copy.jsonc",
+      "sizeBytes": 95,
+      "sha256": "b5d17159412be378e34bb74b1504de3646d06539388512e0756e15e34d0b8b07"
+    },
+    {
+      "fileName": "installed-v1120-json-saved.jsonc",
+      "sizeBytes": 94,
+      "sha256": "70016a0ed978d4bdacdaccd52442c628364bf08453802af87e45df606423dba0"
+    },
+    {
+      "fileName": "installed-v1120-toml-copy.toml",
+      "sizeBytes": 67,
+      "sha256": "db9172a546ab40823ea103f71bc2178292e4f7f307afcba13b0518ad3f171856"
+    },
+    {
+      "fileName": "installed-v1120-toml-saved.toml",
+      "sizeBytes": 67,
+      "sha256": "eeb324d85d09b572f93c9383a01212662a9f9331733a30ff70e5da981199ddb5"
+    },
+    {
+      "fileName": "installed-v1120-unselected.md",
+      "sizeBytes": 28,
+      "sha256": "da1e814cc968e54f338acce5be69503e10420454fb8b4223e10df5eb1f85af56"
+    },
+    {
+      "fileName": "installed-v1120-xml-copy.xml",
+      "sizeBytes": 88,
+      "sha256": "aa26e08b26a91ea3fa43fcceff5f9e271461ebc98de93212c94a6127a1ad2568"
+    },
+    {
+      "fileName": "installed-v1120-xml-saved.xml",
+      "sizeBytes": 88,
+      "sha256": "1bad2f605f0636c9870f7203c3f2c0063243df47427cff4100e9d70f853eba7d"
+    },
+    {
+      "fileName": "installed-v1120-yaml-copy.yaml",
+      "sizeBytes": 79,
+      "sha256": "2697a9e00323b97b2ec2ac596d29cc805b150a40c29786e16dab01e4d2305917"
+    },
+    {
+      "fileName": "installed-v1120-yaml-saved.yaml",
+      "sizeBytes": 80,
+      "sha256": "8755518287c7d05c83eb9afa8b784752c689eea956cc9ea0c8805b4a51f28d81"
+    }
+  ]
+}

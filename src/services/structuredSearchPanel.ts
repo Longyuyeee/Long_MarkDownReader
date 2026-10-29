@@ -2,10 +2,18 @@ import { type EditorView, type Panel, type ViewUpdate, runScopeHandlers } from '
 import { closeSearchPanel, findNext, findPrevious, getSearchQuery, replaceAll, replaceNext,
   SearchQuery, selectMatches, setSearchQuery } from '@codemirror/search'
 import { scopeFromSelection, setSourceSearchScope, sourceSearchScope } from './structuredSearchScope'
+import type { StructuredSearchCondition } from './structuredSearchHistory'
+
+export interface StructuredSearchHistoryControls {
+  list(): StructuredSearchCondition[]
+  remember(query: SearchQuery): void
+  choose(condition: StructuredSearchCondition): boolean
+  clear(): void
+}
 
 // Keep the existing CodeMirror controls and commands. A custom public panel
 // preserves query predicates when committing input (the default panel drops them).
-export function createStructuredSearchPanel(view: EditorView, scoped: boolean, feedbackId: string, preview?: () => void): Panel {
+export function createStructuredSearchPanel(view: EditorView, scoped: boolean, feedbackId: string, preview?: () => void, history?: StructuredSearchHistoryControls): Panel {
   let query = getSearchQuery(view.state)
   let composing = false
   const dom = document.createElement('div'); dom.className = 'cm-search'
@@ -24,7 +32,12 @@ export function createStructuredSearchPanel(view: EditorView, scoped: boolean, f
   const caseSensitive = checkbox('case', query.caseSensitive, 'match case'), regexp = checkbox('re', query.regexp, 'regexp'), wholeWord = checkbox('word', query.wholeWord, 'by word')
   const button = (name: string, phrase: string, action: () => unknown) => {
     const button = document.createElement('button'); button.type = 'button'; button.name = name; button.className = 'cm-button'
-    button.textContent = view.state.phrase(phrase); button.onclick = () => { action() }; return button
+    button.textContent = view.state.phrase(phrase); button.onclick = () => {
+      if (['next', 'prev', 'select', 'replace', 'replaceAll', 'previewReplace'].includes(name)) {
+        commit(); history?.remember(getSearchQuery(view.state))
+      }
+      action()
+    }; return button
   }
   const commit = (event?: Event) => {
     if (composing || event instanceof InputEvent && event.isComposing) return
@@ -38,7 +51,30 @@ export function createStructuredSearchPanel(view: EditorView, scoped: boolean, f
     input.addEventListener('compositionstart', () => { composing = true })
     input.addEventListener('compositionend', () => { composing = false; commit() })
   }
-  dom.append(search, button('next', 'next', () => findNext(view)), button('prev', 'previous', () => findPrevious(view)),
+  dom.append(search)
+  if (history) {
+    const recent = document.createElement('select'); recent.name = 'recentSearch'; recent.ariaLabel = '最近查找条件'
+    recent.className = 'cm-textfield structured-search-recent'
+    let entries: StructuredSearchCondition[] = []
+    const refresh = () => {
+      entries = history.list(); recent.replaceChildren(new Option('最近条件', ''))
+      if (!entries.length) { const empty = new Option('暂无使用记录', 'empty'); empty.disabled = true; recent.append(empty) }
+      entries.forEach((entry, index) => {
+        const flags = [entry.caseSensitive && '区分大小写', entry.wholeWord && '完整词', entry.regexp && '正则'].filter(Boolean).join(' · ')
+        recent.append(new Option(entry.search + (entry.replace ? ' → ' + entry.replace : '') + (flags ? ' · ' + flags : ''), String(index)))
+      })
+      if (entries.length) recent.append(new Option('清空最近条件', 'clear'))
+    }
+    recent.onfocus = refresh
+    recent.onpointerdown = refresh
+    recent.onchange = () => {
+      const value = recent.value
+      if (value === 'clear') { history.clear(); refresh() }
+      else if (value !== '' && entries[Number(value)]) history.choose(entries[Number(value)])
+    }
+    refresh(); dom.append(recent)
+  }
+  dom.append(button('next', 'next', () => findNext(view)), button('prev', 'previous', () => findPrevious(view)),
     button('select', 'all', () => selectMatches(view)), caseSensitive.wrap, regexp.wrap, wholeWord.wrap)
   if (!view.state.readOnly) dom.append(document.createElement('br'), replacement,
     button('replace', 'replace', () => replaceNext(view)), button('replaceAll', 'replace all', () => replaceAll(view)))
@@ -58,6 +94,9 @@ export function createStructuredSearchPanel(view: EditorView, scoped: boolean, f
   }
   dom.onkeydown = event => {
     if (composing || event.isComposing || event.keyCode === 229) return
+    if (event.key === 'Enter' && (event.target === search || event.target === replacement)) {
+      commit(); history?.remember(getSearchQuery(view.state))
+    }
     if (runScopeHandlers(view, event, 'search-panel')) event.preventDefault()
     else if (event.key === 'Enter' && event.target === search) { event.preventDefault(); (event.shiftKey ? findPrevious : findNext)(view) }
     else if (event.key === 'Enter' && event.target === replacement) { event.preventDefault(); replaceNext(view) }
