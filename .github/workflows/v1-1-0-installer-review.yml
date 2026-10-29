@@ -9,11 +9,11 @@ name: Community Release Same Installer Review
       current_version:
         description: Current package version
         required: true
-        default: "1.3.9"
+        default: "1.3.10"
       previous_version:
         description: Previous official version
         required: true
-        default: "1.3.8"
+        default: "1.3.9"
       candidate_commit:
         description: Exact source commit from the original installer build receipt
         required: true
@@ -62,7 +62,7 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or $run.status -ne 'completed' -or $run.conclusion -ne 'success' -or $run.path -ne '.github/workflows/v1-1-0-candidate-lifecycle.yml') { throw 'Original frozen build is unavailable or failed' }
           & node scripts/assert-frozen-build-source.mjs --head $run.head_sha --product $env:CANDIDATE_COMMIT
           if ($LASTEXITCODE -ne 0) { throw 'Original frozen builder definitions differ from the product' }
-          & node scripts/assert-frozen-build-gates.mjs --run-id $env:INSTALLER_RUN_ID
+          & node scripts/assert-frozen-build-gates.mjs --run-id $env:INSTALLER_RUN_ID --backend-proof immutable-build/community-release-output/backend-regression-proof.json --candidate-commit $env:CANDIDATE_COMMIT
           if ($LASTEXITCODE -ne 0) { throw 'Original frozen build gates did not pass' }
           $root = Join-Path $env:GITHUB_WORKSPACE 'immutable-build'
           $receipt = Get-Content -Encoding UTF8 -LiteralPath (Join-Path $root 'community-release-output\installer-build-receipt.json') -Raw | ConvertFrom-Json
@@ -157,6 +157,8 @@ jobs:
             New-Item -ItemType Directory -Path $destination -Force | Out-Null
             Copy-Item -LiteralPath $source -Destination (Join-Path $destination 'installer-build-receipt.json')
           }
+          $backend = Join-Path $env:GITHUB_WORKSPACE 'immutable-build\community-release-output\backend-regression-proof.json'
+          if (Test-Path -LiteralPath $backend) { Copy-Item -LiteralPath $backend -Destination (Join-Path $destination 'backend-regression-proof.json') }
           $payload = Join-Path $env:GITHUB_WORKSPACE 'installer-payload-identity.json'
           if (Test-Path -LiteralPath $payload) {
             New-Item -ItemType Directory -Path $destination -Force | Out-Null
