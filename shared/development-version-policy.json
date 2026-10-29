@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.3.6",
+  "developmentTargetVersion": "1.3.7",
   "runtimeBaseVersion": "1.3.6",
-  "publicVersion": "1.3.5",
-  "publicTag": "v1.3.5",
-  "publicTagCommit": "1608ce417f9e3e90a43e9a4af4e2a4e6472f6d4a",
+  "publicVersion": "1.3.6",
+  "publicTag": "v1.3.6",
+  "publicTagCommit": "140f0e492e451652faeffb161acdd798bb0ab163",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-208-v1.3.6-selection-source-search-candidate",
-  "binaryVersionTransition": "v1.3.6-release-ready",
-  "displayLabel": "v1.3.6 选区内查找与替换候选 · 当前公开 v1.3.5",
+  "currentStage": "M8-209-v1.3.6-published",
+  "binaryVersionTransition": "v1.3.6-public-release-published",
+  "displayLabel": "v1.3.6 已发布 · 下一目标 v1.3.7",
   "activeSlice": {
     "id": "v1.3.6-selection-source-search",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-and-remote-assets-verified",
     "document": "docs/V1_3_6_Unsigned_Community_Release_Audit_2026-10-28.md"
   }
 }
