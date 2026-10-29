@@ -17,7 +17,10 @@
   "localQualityCommands": 101,
   "finalUnitTestsPassed": 63,
   "finalTypeCheckPassed": true,
-  "exactSourceReleaseGate": "pending-single-frozen-source-builder",
+  "exactSourceReleaseGate": "passed-single-frozen-source-builder",
   "fixedSpeculativeStateReproduction": "failed-before-passed-after-with-single-state-update",
-  "localPreviousSelectionTransientFailure": "TOML-parse-viewport-in-provisional-transaction-state"
+  "localPreviousSelectionTransientFailure": "TOML-parse-viewport-in-provisional-transaction-state",
+  "finalSourceCommit": "2efec7db99b39641f84e280a9c8c64ff8df0c49b",
+  "sourceQualityRun": 40856077167,
+  "buildRun": 40856077167
 }
