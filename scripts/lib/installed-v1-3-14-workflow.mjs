@@ -6,6 +6,7 @@ import {nativeUserInput} from './v118-native-user-input.mjs'
 import {linkSourceText,linkTargetText,linkSourceAddition,linkTargetAddition,linkSourceDraft,linkTargetDraft,linkPlainDraft} from './link-source-fixture.mjs'
 import {linkSourceReturnChecks,linkSourceReturnOutputFiles,validateInstalledLinkSourceReturn,assertLinkSourceReturnOutputBytes} from './installed-v1-3-14-evidence.mjs'
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex'),key=p=>String(p||'').replaceAll('\\','/').replace('//?/','').toLowerCase()
+export const linkSourceLibrarySelector='[data-ui-shell="library-editor"]'
 export async function runInstalledV1314LinkSourceReturnWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
  assert.equal(appVersion,'1.3.14');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
@@ -17,7 +18,7 @@ export async function runInstalledV1314LinkSourceReturnWorkflow({send,evaluate,n
  const editor=`(() => {let vm=document.querySelector('#vditor-lib').__vueParentComponent;while(vm&&!vm.setupState?.vditor)vm=vm.parent;return vm?.setupState?.vditor})()`
  const value=()=>evaluate(`${editor}.getValue()`),draft=p=>evaluate(`${store}.tabs.find(t=>t.path===${q(p)})?.content`)
  const readyMarkdown=()=>ui.waitFor(`!!${editor}&&${store}.tabs.find(t=>t.id===${store}.activeTabId)?.content!==undefined&&${editor}.getValue().trimEnd()===${store}.tabs.find(t=>t.id===${store}.activeTabId).content.trimEnd()`,'current Markdown loaded')
- const open=async(p,anyMode=false)=>{await navigate('/library?path='+encodeURIComponent(p),'.library-layout','link source '+path.basename(p));await ui.waitFor(active(p),'current link document');if(p.endsWith('.md')){await ui.waitFor(visible(anyMode?'#vditor-lib .vditor-content':source),'Markdown source visible');await readyMarkdown();await pause(220)}}
+ const open=async(p,anyMode=false)=>{await navigate('#/library?path='+encodeURIComponent(p),linkSourceLibrarySelector,'link source '+path.basename(p));await ui.waitFor(active(p),'current link document');if(p.endsWith('.md')){await ui.waitFor(visible(anyMode?'#vditor-lib .vditor-content':source),'Markdown source visible');await readyMarkdown();await pause(220)}}
  const menu=()=>ui.click('[data-testid=library-document-menu]')
  const back=async p=>{await menu();await ui.click('[data-testid=library-link-source-return]');await ui.waitFor(active(p),'link source active');await ui.waitFor(`document.activeElement===document.querySelector(${q(source)})`,'returned source focused');await pause(200)}
  const focus=()=>ui.clickTarget(`document.querySelector(${q(source)})?.lastElementChild`)
@@ -33,7 +34,7 @@ export async function runInstalledV1314LinkSourceReturnWorkflow({send,evaluate,n
   await fs.mkdir(folder,{recursive:true});await fs.writeFile(path.join(folder,'.v119-installed-owner'),'owned link return fixture')
   for(const[p,text]of [[A,linkSourceText],[B,linkTargetText]])await fs.writeFile(p,'\uFEFF'+text.replaceAll('\n','\r\n'))
   await fs.writeFile(C,'{"readonly":true}\n');await fs.writeFile(D,'文本目标\n保留原文。\n');await fs.writeFile(E,linkSourceText)
-  await open(A,true);await menu();await ui.clickText('.mode-toggle button','所见');await closeMenu();await ui.waitFor(visible(source),'WYSIWYG source');await readyMarkdown();await pause(250);const sourceBaseline=await value();assert.equal(sourceBaseline.trimEnd(),linkSourceText.trimEnd())
+  await open(A,true);await ui.click('#tab-files');await ui.click('button[title="刷新列表"]');await menu();await ui.clickText('.mode-toggle button','所见');await closeMenu();await ui.waitFor(visible(source),'WYSIWYG source');await readyMarkdown();await pause(250);const sourceBaseline=await value();assert.equal(sourceBaseline.trimEnd(),linkSourceText.trimEnd())
   await append(linkSourceAddition);await exact(linkSourceDraft);for(let i=0;i<4;i++)await ui.key('ArrowLeft','ArrowLeft',37,8);const origin=await point();assert.ok(origin.top>0)
   await link('B.md',B);await ui.waitFor(visible(source),'target Markdown');const targetBaseline=await value();assert.equal(targetBaseline.trimEnd(),linkTargetText.trimEnd());await append(linkTargetAddition);await exact(linkTargetDraft)
   await ui.key('z','KeyZ',90,2);await exact(targetBaseline);await ui.key('y','KeyY',89,2);await exact(linkTargetDraft)

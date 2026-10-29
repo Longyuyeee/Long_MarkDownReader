@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import {mkdir,writeFile} from 'node:fs/promises'
 import {resolve} from 'node:path'
+import {linkSourceLibrarySelector} from './lib/installed-v1-3-14-workflow.mjs'
 const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
 const output=resolve(process.env.LONGEDIT_BROWSER_OUTPUT||'.release-secrets/v1314-browser'),base=process.env.LONGEDIT_BROWSER_BASE||'http://127.0.0.1:15989'
 await mkdir(output,{recursive:true});const browser=await chromium.launch({headless:true,args:['--no-proxy-server']}),checks=[],layouts=[];let page
@@ -9,6 +10,7 @@ try{
  for(const mode of ['wysiwyg','ir','sv']){
   page=await browser.newPage({viewport:{width:1440,height:900}});page.setDefaultTimeout(20000);const errors=[];page.on('pageerror',e=>errors.push(e.message))
   await page.goto(base+'/scripts/fixtures/v1314-library-links-browser.html?editor='+mode,{waitUntil:'domcontentloaded',timeout:120000})
+  await page.locator(linkSourceLibrarySelector).waitFor({state:'visible'})
   const selector=mode==='sv'?'#vditor-lib .vditor-sv':`#vditor-lib .vditor-${mode} > pre`,source=()=>page.locator(selector)
   const ready=async name=>{await page.waitForFunction(name=>shellAudit.store.activeTabId==='C:/shell-fixture/'+name,name);await source().waitFor({state:'visible'});await page.waitForTimeout(200)}
   const menu=()=>page.locator('[data-testid=library-document-menu]').click()

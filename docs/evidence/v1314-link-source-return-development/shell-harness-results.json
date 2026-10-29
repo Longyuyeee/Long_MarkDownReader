@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "kind": "real-LibraryMode-mocked-file-IPC-and-protocol-unit-checks",
+  "status": "passed",
+  "compiledProductChanged": false,
+  "compiledSourceCommit": "5524648049844fcbd9e9ccdde1dadf3a89b4388f",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "protocolTestsPassed": 13,
+  "actualLibraryCases": 13,
+  "styleWindowCombinations": 54,
+  "files": [
+    {
+      "path": "scripts/lib/installed-v1-3-14-workflow.mjs",
+      "sha256": "af6cd0ff007779ef935e1132f38163fc53c79e4da39ef5895e9dac931b3442f6"
+    },
+    {
+      "path": "scripts/test-link-source-return-browser.mjs",
+      "sha256": "8dedf437c6feace619b6e6eebba95aee1c64e864103051ea156be2b4c4cd3f15"
+    }
+  ]
+}
