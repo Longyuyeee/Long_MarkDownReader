@@ -19,6 +19,7 @@ const root = 'C:/shell-fixture'
 const directories = [root + '/项目资料.md']
 const pinia = createPinia(), store = useAppStore(pinia)
 const disk=new Map([[root+'/A.md',linkSourceText],[root+'/B.md',linkTargetText],[root+'/C.json',positionSource(mode)],[root+'/D.txt','文本目标\n保留原文。\n']])
+if(new URLSearchParams(location.search).get('crlf')==='1')for(const file of [root+'/A.md',root+'/B.md'])disk.set(file,disk.get(file).replaceAll('\n','\r\n'))
 
 const snapshot = path => ({path,content:disk.get(path),encoding:'utf-8',encodingConfidence:'high',bom:'none',lineEnding:'lf',hasFinalNewline:true,signature:disk.get(path),contentDigest:disk.get(path),size:disk.get(path)?.length || 0,modified:1})
 window.shellAudit = { calls: [], store, disk, failSave: false, commands: 0 }

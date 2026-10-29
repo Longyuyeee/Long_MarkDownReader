@@ -3,6 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import {nativeUserInput} from './v118-native-user-input.mjs'
+import {installedMarkdownValueExpression} from './installed-markdown-observation.mjs'
 import {linkSourceText,linkTargetText,linkSourceAddition,linkTargetAddition,linkSourceDraft,linkTargetDraft,linkPlainDraft} from './link-source-fixture.mjs'
 import {linkSourceReturnChecks,linkSourceReturnOutputFiles,validateInstalledLinkSourceReturn,assertLinkSourceReturnOutputBytes} from './installed-v1-3-14-evidence.mjs'
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex'),key=p=>String(p||'').replaceAll('\\','/').replace('//?/','').toLowerCase()
@@ -15,15 +16,15 @@ export async function runInstalledV1314LinkSourceReturnWorkflow({send,evaluate,n
  const r={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-link-source-return-trusted-input-and-output-bytes',inputProtocol:'trusted-keyboard-and-pointer',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[],viewportWidths:[]},observations={},outputs=[]
  const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms)),mark=i=>{r.checks.push({id:linkSourceReturnChecks[i],status:'passed'});observations[linkSourceReturnChecks[i]]=true}
  const visible=s=>`!!document.querySelector(${q(s)})?.getClientRects().length`,active=p=>`${store}.activeTabId===${q(p)}`
- const editor=`(() => {let vm=document.querySelector('#vditor-lib').__vueParentComponent;while(vm&&!vm.setupState?.vditor)vm=vm.parent;return vm?.setupState?.vditor})()`
- const value=()=>evaluate(`${editor}.getValue()`),draft=p=>evaluate(`${store}.tabs.find(t=>t.path===${q(p)})?.content`)
- const readyMarkdown=()=>ui.waitFor(`!!${editor}&&${store}.tabs.find(t=>t.id===${store}.activeTabId)?.content!==undefined&&${editor}.getValue().trimEnd()===${store}.tabs.find(t=>t.id===${store}.activeTabId).content.trimEnd()`,'current Markdown loaded')
+ const editor=installedMarkdownValueExpression
+ const value=()=>evaluate(editor),draft=p=>evaluate(`${store}.tabs.find(t=>t.path===${q(p)})?.content`)
+ const readyMarkdown=()=>ui.waitFor(String.raw`(() => {const value=${editor},tab=${store}.tabs.find(t=>t.id===${store}.activeTabId),normal=s=>s.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').trimEnd();return typeof value==='string'&&typeof tab?.content==='string'&&normal(value)===normal(tab.content)})()`,'current Markdown loaded')
  const open=async(p,anyMode=false)=>{await navigate('#/library?path='+encodeURIComponent(p),linkSourceLibrarySelector,'link source '+path.basename(p));await ui.waitFor(active(p),'current link document');if(p.endsWith('.md')){await ui.waitFor(visible(anyMode?'#vditor-lib .vditor-content':source),'Markdown source visible');await readyMarkdown();await pause(220)}}
  const menu=()=>ui.click('[data-testid=library-document-menu]')
  const back=async p=>{await menu();await ui.click('[data-testid=library-link-source-return]');await ui.waitFor(active(p),'link source active');await ui.waitFor(`document.activeElement===document.querySelector(${q(source)})`,'returned source focused');await pause(200)}
  const focus=()=>ui.clickTarget(`document.querySelector(${q(source)})?.lastElementChild`)
  const append=async text=>{await focus();await ui.key('End','End',35,2);await send('Input.insertText',{text});await pause(1000)}
- const exact=async text=>{await ui.waitFor(`${editor}.getValue()===${q(text)}&&${store}.tabs.find(t=>t.id===${store}.activeTabId)?.content===${q(text)}`,'Markdown draft and editor agree')}
+ const exact=async text=>{await ui.waitFor(`${editor}===${q(text)}&&${store}.tabs.find(t=>t.id===${store}.activeTabId)?.content===${q(text)}`,'Markdown draft and editor agree')}
  const point=()=>evaluate(`(() => {const root=document.querySelector(${q(source)}),s=getSelection(),offset=(n,o)=>{if(!n||!root.contains(n))return null;const a=document.createRange();a.selectNodeContents(root);a.setEnd(n,o);return a.toString().length};return {top:root.scrollTop,left:root.scrollLeft,anchor:offset(s?.anchorNode,s?.anchorOffset),focus:offset(s?.focusNode,s?.focusOffset),selected:s?.toString()}})()`)
  const same=(a,b)=>{assert.equal(a.anchor,b.anchor);assert.equal(a.focus,b.focus);assert.equal(a.selected,b.selected);assert.ok(Math.abs(a.top-b.top)<3,JSON.stringify({actual:a,expected:b}));assert.ok(Math.abs(a.left-b.left)<3)}
  const link=async(name,p)=>{await ui.clickTarget(`[...document.querySelectorAll('#vditor-lib a[href]')].filter(e=>e.getAttribute('href')===${q(name)}).at(-1)`);await ui.waitFor(active(p),'linked file active');if(p.endsWith('.md'))await readyMarkdown();await pause(220)}
