@@ -4,7 +4,7 @@ import {createRequire} from 'node:module'
 import {mkdir,writeFile} from 'node:fs/promises'
 import {nativeUserInput} from './lib/v118-native-user-input.mjs'
 import {installedMarkdownValueExpression} from './lib/installed-markdown-observation.mjs'
-import {linkSourceRefreshSelector} from './lib/installed-v1-3-14-workflow.mjs'
+import {linkSourceRefreshSelector,linkSourcePathKey} from './lib/installed-v1-3-14-workflow.mjs'
 import {linkSourceText,linkSourceAddition,linkTargetAddition,linkSourceDraft,linkTargetDraft,linkPlainDraft} from './lib/link-source-fixture.mjs'
 const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright'),q=JSON.stringify
 const base=process.env.LONGEDIT_PRODUCTION_BROWSER_BASE||'http://127.0.0.1:15990',output=process.env.LONGEDIT_BROWSER_OUTPUT||'.release-secrets/production-native-actions',browser=await chromium.launch({headless:true,args:['--no-proxy-server']})
@@ -12,7 +12,7 @@ const page=await browser.newPage({viewport:{width:1280,height:820}}),errors=[],c
 try{
  await page.goto(base+'/scripts/fixtures/v1314-library-links-browser.html?crlf=1');await page.locator('#vditor-lib .vditor-wysiwyg > pre').waitFor()
  const session=await page.context().newCDPSession(page),send=(m,a)=>session.send(m,a),evaluate=e=>page.evaluate(e),ui=nativeUserInput({send,evaluate},{timeoutMs:15000}),source='#vditor-lib .vditor-wysiwyg > pre',store='shellAudit.store',root='C:/shell-fixture/'
- const value=()=>evaluate(installedMarkdownValueExpression),active=n=>ui.waitFor(store+'.activeTabId==='+q(root+n),'active '+n),pause=ms=>page.waitForTimeout(ms)
+ const value=()=>evaluate(installedMarkdownValueExpression),active=n=>ui.waitFor('('+linkSourcePathKey.toString()+')('+store+'.activeTabId)==='+q(linkSourcePathKey((root+n).replaceAll('/','\\'))),'active '+n),pause=ms=>page.waitForTimeout(ms)
  const menu=()=>ui.click('[data-testid=library-document-menu]'),back=async n=>{await menu();await ui.click('[data-testid=library-link-source-return]');await active(n);await pause(250)}
  const exact=text=>ui.waitFor(installedMarkdownValueExpression+'==='+q(text)+'&&'+store+'.tabs.find(t=>t.id==='+store+'.activeTabId)?.content==='+q(text),'exact draft')
  const append=async text=>{await ui.clickTarget('document.querySelector('+q(source)+').lastElementChild');await ui.key('End','End',35,2);await send('Input.insertText',{text});await pause(1100)}
@@ -29,5 +29,5 @@ try{
  await ui.clickTarget('document.querySelector('+q('[data-drop-path="'+root+'E.md"]')+')','right');await ui.clickTarget('[...document.querySelectorAll(".n-dropdown-option-body__label")].find(e=>e.getClientRects().length&&e.textContent.trim().startsWith("重命名"))');await ui.fill('#library-rename-input input','改名来源.md');await ui.clickText('.n-dialog__action button','更新名称');await back('改名来源.md');assert.equal((await value()).trimEnd(),linkSourceText.trimEnd());checks.push('source-renamed-return')
  await link('B.md','B.md');await evaluate('shellAudit.failStats=true');await menu();await ui.click('[data-testid=library-link-source-return]');await pause(250);await active('B.md');await exact(linkTargetDraft);await evaluate('shellAudit.failStats=false');await back('改名来源.md');checks.push('local-failure-retry')
  await link('B.md','B.md');await ui.click('[data-drop-path="'+root+'改名来源.md"]');await active('改名来源.md');await menu();await ui.clickText('.tab-actions button','重新读取文件');await menu();await pause(300);await ui.click('[data-drop-path="'+root+'B.md"]');await active('B.md');await menu();assert.equal(await page.locator('[data-testid=library-link-source-return]').count(),0);await menu();checks.push('source-reload-invalidates')
- assert.deepEqual(errors,[]);await mkdir(output,{recursive:true});await writeFile(output+'/production-native-actions.json',JSON.stringify({status:'passed',productionVue:true,nativeBridgeMocked:true,checks,runtimeErrors:errors},null,2)+'\n');console.log('Production trusted actions passed',checks.length)
+ assert.deepEqual(errors,[]);await mkdir(output,{recursive:true});await writeFile(output+'/production-native-actions.json',JSON.stringify({status:'passed',productionVue:true,nativeBridgeMocked:true,mixedWindowsPathExpectations:true,checks,runtimeErrors:errors},null,2)+'\n');console.log('Production trusted actions passed',checks.length)
 }catch(error){await mkdir(output,{recursive:true});await page.screenshot({path:output+'/failure.png'});console.error('Completed',checks);throw error}finally{await browser.close()}
