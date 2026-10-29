@@ -21,6 +21,14 @@ export function useStructuredPosition(options: {
   }
   let source: { top: number; left: number; snapshot?: ReturnType<EditorView['scrollSnapshot']> } = { top: 0, left: 0 }
   let sourceDoc: Text | undefined
+  let sourceNeedsRestore = false
+  const restoreSource = () => {
+    if (!sourceNeedsRestore || !active?.claim.current()) return
+    if (sourceDoc !== active.editor.state.doc) { sourceNeedsRestore = false; return }
+    if (!options.ready() || !active.editor.scrollDOM.clientHeight) return
+    sourceNeedsRestore = false
+    if (source.snapshot) active.editor.dispatch({ effects: source.snapshot })
+  }
   const cancel = () => { ticket++; pending = undefined; if (active) active.preserveReturn = false }
   const remember = () => {
     if (!active || !active.claim.current()) return
@@ -29,7 +37,7 @@ export function useStructuredPosition(options: {
     // again. Until the user positions it, retain the previous return point;
     // the temporary default cursor/scroll must not replace it during loading.
     if (active.preserveReturn && editor.state.doc === active.doc && editor.state.selection.eq(active.selection)) return
-    if (editor.scrollDOM.clientHeight) {
+    if (editor.scrollDOM.clientHeight && !sourceNeedsRestore) {
       editor.lineBlockAtHeight(editor.scrollDOM.scrollTop)
       source = { top: editor.scrollDOM.scrollTop, left: editor.scrollDOM.scrollLeft, snapshot: editor.scrollSnapshot() }
       sourceDoc = editor.state.doc
@@ -37,6 +45,7 @@ export function useStructuredPosition(options: {
       // A tree edit can change a hidden source. Its old scroll target belongs
       // to different text; keep the current selection and let scrolling reset.
       source = { top: 0, left: 0 }
+      sourceNeedsRestore = false
     }
     const panes = Object.fromEntries(Object.entries(options.panes?.() || {})
       .filter((entry): entry is [string, HTMLElement] => options.ready() && !!entry[1]?.clientHeight)
@@ -44,7 +53,7 @@ export function useStructuredPosition(options: {
     claim.remember({ digest: digest(editor.state.doc), ranges: editor.state.selection.ranges.map(({ anchor, head }) => ({ anchor, head })),
       mainIndex: editor.state.selection.mainIndex, source, panes })
   }
-  const beforeReplace = () => { remember(); cancel(); detach(); active = undefined; sourceDoc = undefined }
+  const beforeReplace = () => { remember(); cancel(); detach(); active = undefined; sourceDoc = undefined; sourceNeedsRestore = false }
   const bind = (editor: EditorView, tab: object, root: string, external: boolean, format: string) => {
     cancel(); detach(); active = undefined
     if (options.enabled?.() === false) return
@@ -53,8 +62,8 @@ export function useStructuredPosition(options: {
     editor.scrollDOM.scrollTop = 0; editor.scrollDOM.scrollLeft = 0
     const claim = claimStructuredPosition(tab, JSON.stringify([fileStylePathKey(root), external, format]))
     active = { editor, tab, claim, doc: editor.state.doc, selection: editor.state.selection, preserveReturn: !!claim.position }
-    source = { top: 0, left: 0 }; sourceDoc = editor.state.doc
-    const scroll = () => { if (editor.scrollDOM.clientHeight) { source = { top: editor.scrollDOM.scrollTop, left: editor.scrollDOM.scrollLeft, snapshot: editor.scrollSnapshot() }; sourceDoc = editor.state.doc } }
+    source = { top: 0, left: 0 }; sourceDoc = editor.state.doc; sourceNeedsRestore = false
+    const scroll = () => { if (editor.scrollDOM.clientHeight && !sourceNeedsRestore) { source = { top: editor.scrollDOM.scrollTop, left: editor.scrollDOM.scrollLeft, snapshot: editor.scrollSnapshot() }; sourceDoc = editor.state.doc } }
     // New positioning input wins. Merely showing the source/inspector must
     // still restore its deferred position when that pane becomes visible.
     const input = (event: Event) => {
@@ -65,11 +74,12 @@ export function useStructuredPosition(options: {
           || (key.ctrlKey || key.metaKey) && !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(key.key)) return
       }
       const target = event.target, paneInput = Object.values(options.panes?.() || {}).some(pane => pane?.contains(target))
-      if (editor.dom.contains(target) || paneInput && (event.type === 'wheel' || target.closest('[data-outline-node],[role="treeitem"],[role="tree"]'))) cancel()
+      if (editor.dom.contains(target)) { sourceNeedsRestore = false; cancel() }
+      else if (paneInput && (event.type === 'wheel' || target.closest('[data-outline-node],[role="treeitem"],[role="tree"]'))) cancel()
     }
     for (const type of ['pointerdown', 'keydown', 'wheel']) document.addEventListener(type, input, true)
     editor.scrollDOM.addEventListener('scroll', scroll, { passive: true })
-    observer = new ResizeObserver(() => pending?.()); observe()
+    observer = new ResizeObserver(() => { pending?.(); restoreSource() }); observe()
     detach = () => {
       for (const type of ['pointerdown', 'keydown', 'wheel']) document.removeEventListener(type, input, true)
       editor.scrollDOM.removeEventListener('scroll', scroll); observer?.disconnect(); observer = undefined; observed.clear(); detach = () => {}
@@ -121,9 +131,16 @@ export function useStructuredPosition(options: {
     })
   }
   // Analysis, TOML expanded children and JSON's tree can arrive after bind.
-  watch(() => [options.ready(), ...Object.values(options.panes?.() || {})], () => { void nextTick(() => { observe(); pending?.() }) }, { flush: 'post' })
+  watch(() => [options.ready(), ...Object.values(options.panes?.() || {})], () => { void nextTick(() => { observe(); pending?.(); restoreSource() }) }, { flush: 'post' })
   onScopeDispose(() => { beforeReplace() })
   const sourceSnapshot = () => active && (active.editor.scrollDOM.clientHeight
     ? active.editor.scrollSnapshot() : sourceDoc === active.editor.state.doc ? source.snapshot : undefined)
-  return { remember, beforeReplace, bind, sourceSnapshot }
+  const rememberSource = (snapshot: ReturnType<EditorView['scrollSnapshot']>) => {
+    if (!active?.claim.current()) return
+    source = { ...source, snapshot }; sourceDoc = active.editor.state.doc
+    // A hidden source cannot measure its target. Retain that explicit anchor
+    // through tree-to-tree travel and apply it once source is visible again.
+    sourceNeedsRestore = !active.editor.scrollDOM.clientHeight
+  }
+  return { remember, beforeReplace, bind, sourceSnapshot, rememberSource }
 }

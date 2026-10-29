@@ -18,7 +18,7 @@ import { useContextCommands } from '../services/contextCommands'
 let feedbackId = 0
 export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; readOnly?: () => boolean; context?: () => string; library?: () => string
   navigation?: { capture: () => StructuredNavigationContext; scroll: () => ReturnType<EditorView['scrollSnapshot']> | undefined
-    restore: (context: StructuredNavigationContext | undefined, current: () => boolean) => boolean | Promise<boolean> }
+    restore: (context: StructuredNavigationContext | undefined, current: () => boolean, snapshot: ReturnType<EditorView['scrollSnapshot']>) => boolean | Promise<boolean> }
 }) {
   let active: { editor: EditorView; claim: ReturnType<typeof claimStructuredSearch>; library: string; history: ReturnType<typeof structuredSearchHistory>
     pendingScope?: { intent: object; doc: EditorView['state']['doc']; snapshot: NonNullable<StructuredSearchState['scope']> } } | undefined
@@ -239,7 +239,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     // Let CodeMirror apply its source snapshot before a tree view hides it.
     if (point.context?.view === 'tree') await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
     if (!current()) return
-    const focused = await options.navigation?.restore(point.context, current)
+    const focused = await options.navigation?.restore(point.context, current, point.scroll)
     if (current() && !focused) {
       // Showing source may restore its remembered viewport. The explicit
       // navigation target takes precedence over that automatic restoration.

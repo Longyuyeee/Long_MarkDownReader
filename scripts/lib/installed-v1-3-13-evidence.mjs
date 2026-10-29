@@ -13,7 +13,7 @@ export function validateInstalledNavigationForward(r,m){
  for(const k of ['otherDraftsPreserved','disposableDraftsExplicitlySaved'])assert.equal(r[k],true,k)
  assert.deepEqual(r.viewportWidths,[1280,800]);assert.deepEqual(r.modes.map(e=>e.mode),['json','yaml','xml','toml'])
  for(const e of r.modes)for(const k of ['forwardExact','filterExact','searchForwardExact','branchResetExact','mappedForwardExact','undoRedoExact','explicitSaveExact','ownerResetExact','readOnlyExact','viewportExact'])assert.equal(e[k],true,e.mode+' '+k)
- for(const k of ['treeForwardExact','collapsePreservedExact','invalidTreeFallbackExact'])assert.equal(r.modes[0][k],true,k)
+ for(const k of ['treeForwardExact','collapsePreservedExact','invalidTreeFallbackExact','nestedTreeHistoryExact'])assert.equal(r.modes[0][k],true,k)
 }
 export function assertNavigationForwardOutputBytes(r,read){
  assert.deepEqual(r.outputs.map(o=>o.fileName),navigationForwardOutputFiles)
