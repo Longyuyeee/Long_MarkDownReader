@@ -12,7 +12,7 @@ test('installed proof binds each query, draft/save/readonly task to real executa
  const read=n=>buffers[replacementPreviewOutputFiles.indexOf(n)];validateInstalledReplacementPreview(r,manifest);assertReplacementPreviewOutputBytes(r,read)
  for(const mutate of [v=>v.modes[0].cancelDraftExact=false,v=>v.modes[1].readOnlyExact=false,v=>v.modes[2].applyUndoRedoExact=false,v=>v.otherDraftsPreserved=false,v=>v.checks.pop(),v=>v.nativeBridgeMocked=true,v=>v.inputTrace[0].trusted=false]){const copy=structuredClone(r);mutate(copy);assert.throws(()=>validateInstalledReplacementPreview(copy,manifest))}
  assert.throws(()=>assertReplacementPreviewOutputBytes(r,n=>n.endsWith('.xml')?Buffer.from('changed output'):read(n)))
- assert.throws(()=>validateInstalledReplacementPreview(r,{...manifest,appVersion:'1.3.8'}))
+ assert.throws(()=>validateInstalledReplacementPreview(r,{...manifest,appVersion:'1.3.9'}))
 })
 test('installed search task uses trusted existing controls with valid evaluated expressions',()=>{
  const source=fs.readFileSync('scripts/lib/installed-v1-3-7-workflow.mjs','utf8');assert.ok(!/dispatchEvent|__TAURI|\.focus\(/.test(source));for(const text of ['nativeUserInput','下一页','应用到草稿','fs.chmod','button[name=previewReplace]'])assert.ok(source.includes(text))

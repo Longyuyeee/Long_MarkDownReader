@@ -1,0 +1,45 @@
+{
+  "widths": {
+    "grid": {
+      "task": 120,
+      "state": 150,
+      "code": 180,
+      "scope": 210
+    },
+    "board": {
+      "task": 140,
+      "state": 170,
+      "code": 200,
+      "scope": 230
+    },
+    "chart": {
+      "task": 160,
+      "state": 190,
+      "code": 220,
+      "scope": 250
+    },
+    "dashboard": {
+      "task": 180,
+      "state": 210,
+      "code": 240,
+      "scope": 270
+    }
+  },
+  "move-current-draft-whole-column-and-one-undo": true,
+  "boundary-sort-filter-and-frozen-prefix-follow-field": true,
+  "newColumnId": "column-2e55a615-6d06-4940-8730-2b4764a26789",
+  "copyId": "row-118cf776-f1f7-4a5d-90b9-786441197578",
+  "add-edit-move-and-row-history-stay-on-stable-fields": true,
+  "saved-views-widths-rules-and-field-references-match": true,
+  "real-locked-save-keeps-column-draft-retries-reopens": true,
+  "csv-tsv-column-order-preserves-original-text-and-encoding": true,
+  "column-rule-entry-and-source-switch-clear-old-menu": true,
+  "conflictDraftOrder": [
+    "code",
+    "task",
+    "state",
+    "column-2e55a615-6d06-4940-8730-2b4764a26789",
+    "scope"
+  ],
+  "external-conflict-keeps-file-and-reordered-draft": true
+}

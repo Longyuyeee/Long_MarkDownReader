@@ -8,7 +8,7 @@ export const yamlBlockFieldDeleteConflict="# 配置 中文😀\nlabel: 我的草
 export const yamlBlockFieldDeleteEmpty="# 配置 中文😀\nlabel: 我的草稿\nitems:\n  # 第一段\n\n  # independent\n\n  # 第二段\n  {} # 第三段\nkept:\n  text: |+ # keep\n    # 正文\n    text\n\n  other: true\nempty:\n  text: >-\n  other: false\nblocked:\n  text: [1,2]\n  other: false\nambiguous:\n  # attached?\n  text: |-\n    old\n    body\n  other: false\nunique:\n  text: >- # unique\nunchanged:\n  last: 8_080\n"
 export const yamlBlockFieldDeleteOutputFiles=['installed-v131-block-field-delete-observations.json','installed-v131-yaml-saved.yaml','installed-v131-yaml-copy.yaml','installed-v131-yaml-external.yaml']
 export function validateInstalledYamlBlockFieldDelete(r,m){
- assert.ok(['1.3.1','1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.3.1','1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-yaml-block-field-deletion-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const prefix of ['locked','external']){assert.match(r[prefix+'Before'],/^[a-f0-9]{64}$/);assert.equal(r[prefix+'Before'],r[prefix+'After'])}

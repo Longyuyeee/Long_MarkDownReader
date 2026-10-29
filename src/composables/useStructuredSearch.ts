@@ -6,9 +6,9 @@ import { fileStylePathKey } from '../utils/fileDisplayStyles'
 import { structuredDocumentDigest } from '../services/structuredPositionState'
 import { sourceSearchScope, sourceSearchScopeExtensions, setSourceSearchScope } from '../services/structuredSearchScope'
 import { createStructuredSearchPanel } from '../services/structuredSearchPanel'
-import { shallowRef, watch } from 'vue'
+import { nextTick, shallowRef, watch } from 'vue'
 import { isolateHistory } from '@codemirror/commands'
-import { buildReplacementPlan, type ReplacementPlan } from '../services/structuredReplacementPlan'
+import { buildReplacementPlan, selectedReplacementChanges, type ReplacementPlan } from '../services/structuredReplacementPlan'
 
 let feedbackId = 0
 export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; context?: () => string }) {
@@ -18,18 +18,42 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
   let matches: { doc: EditorView['state']['doc']; query: SearchQuery; scope: string; wordHead: number
     ranges: { from: number; to: number }[]; capped: boolean } | undefined
   const id = `structured-search-feedback-${++feedbackId}`
-  const preview = shallowRef<{ plan: ReplacementPlan; scope: string; error?: string }>()
+  const preview = shallowRef<{ plan: ReplacementPlan; scope: string; excluded: ReadonlySet<number>; error?: string }>()
   let epoch = 0, previewFeedback: { epoch: number; text: string } | undefined
   let previewOwner: { active: NonNullable<typeof active>; epoch: number; context: string } | undefined
   let returnFocus: HTMLElement | undefined
+  let appliedFocus: { active: NonNullable<typeof active>; doc: EditorView['state']['doc']; context: string } | undefined
   const invalidatePreview = (error = '正文、查找条件或范围已变化，请刷新预览') => {
     epoch++; previewFeedback = undefined
     if (preview.value) preview.value = { ...preview.value, error }
   }
   const closePreview = () => { preview.value = undefined }
   const finishPreview = () => {
-    if (!preview.value && previewOwner?.active === active && active?.claim.current() && options.ready?.() !== false && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true })
-    if (!preview.value) { returnFocus = undefined; previewOwner = undefined }
+    if (preview.value) return
+    const applied = appliedFocus, owner = previewOwner, origin = returnFocus
+    returnFocus = undefined; previewOwner = undefined; appliedFocus = undefined
+    // Let the modal finish removing its focus trap before returning to the
+    // source. Recheck the captured owner after that tick to avoid focus theft.
+    void nextTick(() => {
+      if (preview.value) return
+      if (applied) {
+        if (applied.active === active && active?.claim.current() && options.ready?.() !== false
+          && active.editor.state.doc === applied.doc && (options.context?.() || '') === applied.context) active.editor.focus()
+      } else if (owner?.active === active && active?.claim.current() && options.ready?.() !== false && origin?.isConnected) origin.focus({ preventScroll: true })
+    })
+  }
+  const selectPreview = (plan: ReplacementPlan, index: number | 'all', checked: boolean) => {
+    const value = preview.value
+    if (!value || value.plan !== plan || value.error) return
+    const excluded = new Set(value.excluded)
+    if (index === 'all') {
+      excluded.clear()
+      if (!checked) for (let i = 0; i < plan.edits.length; i++) excluded.add(i)
+    } else {
+      if (!Number.isInteger(index) || index < 0 || index >= plan.edits.length) return
+      if (checked) excluded.delete(index); else excluded.add(index)
+    }
+    preview.value = { ...value, excluded }
   }
   const panelQuery = (editor: EditorView) => {
     const previous = getSearchQuery(editor.state)
@@ -98,9 +122,10 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
       const result = buildReplacementPlan(editor.state)
       if (!result.plan) { fail(result.message || '没有需要替换的内容'); return }
       if (!refresh) returnFocus = editor.root.activeElement instanceof HTMLElement ? editor.root.activeElement : undefined
+      appliedFocus = undefined
       previewFeedback = undefined
       previewOwner = { active, epoch, context: options.context?.() || '' }
-      preview.value = { plan: result.plan, scope: scope.enabled ? '选区内' : '全文' }
+      preview.value = { plan: result.plan, scope: scope.enabled ? '选区内' : '全文', excluded: new Set() }
     } catch { fail('暂时无法预览这次替换，当前草稿仍保留') }
   }
   const applyPreview = () => {
@@ -112,9 +137,12 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
       || editor.state.doc !== value.plan.doc || !current.eq(value.plan.query) || current.literal !== value.plan.query.literal) {
       preview.value = { ...value, error: '文件、正文或查找条件已变化，请刷新预览' }; return false
     }
+    const changes = selectedReplacementChanges(value.plan, value.excluded)
+    if (!changes || changes.empty) return false
     closePreview()
-    editor.dispatch({ changes: value.plan.changes, annotations: isolateHistory.of('full'), userEvent: 'input.replace.all',
-      effects: EditorView.announce.of(`已替换 ${value.plan.edits.length} 处，当前草稿尚未保存`) })
+    editor.dispatch({ changes, annotations: isolateHistory.of('full'), userEvent: 'input.replace.all',
+      effects: EditorView.announce.of(`已替换 ${value.plan.edits.length - value.excluded.size} 处，当前草稿尚未保存`) })
+    appliedFocus = { active, doc: editor.state.doc, context: options.context?.() || '' }
     return true
   }
   const stopContext = watch(() => options.context?.(), () => invalidatePreview('文件状态已变化，请刷新预览'), { flush: 'sync' })
@@ -134,7 +162,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     if (changed || update.selectionSet || searchPanelOpen(update.state) !== searchPanelOpen(update.startState)) feedback(update.view)
   })]
   const beforeReplace = () => {
-    closePreview(); returnFocus = undefined; previewOwner = undefined
+    closePreview(); returnFocus = undefined; previewOwner = undefined; appliedFocus = undefined
     epoch++; previewFeedback = undefined
     if (active?.claim.current()) {
       const query = panelQuery(active.editor)
@@ -188,5 +216,5 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     feedback(editor)
   }
   const dispose = () => { beforeReplace(); active = undefined; matches = undefined; stopContext(); stopReady() }
-  return { extension, bind, beforeReplace, dispose, preview, closePreview, finishPreview, refreshPreview: () => openPreview(active?.editor, true), applyPreview }
+  return { extension, bind, beforeReplace, dispose, preview, closePreview, finishPreview, selectPreview, refreshPreview: () => openPreview(active?.editor, true), applyPreview }
 }

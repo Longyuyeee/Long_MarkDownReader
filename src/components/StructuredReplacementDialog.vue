@@ -3,13 +3,14 @@
     :style="{ width: 'min(900px,94vw)', maxHeight: 'calc(100dvh - 24px)' }"
     @update:show="value => { if (!value) search.closePreview() }" @close="search.closePreview" @after-leave="finish">
     <template v-if="shown">
-      <div class="replacement-summary"><strong>将修改 {{ shown.plan.edits.length.toLocaleString() }} 处 <span>· {{ shown.scope }}{{ flags }}</span><span v-if="shown.plan.matches > shown.plan.edits.length"> · 另 {{ shown.plan.matches - shown.plan.edits.length }} 处保持原样</span></strong>
+      <div class="replacement-summary"><strong>共 {{ shown.plan.edits.length.toLocaleString() }} 处 <span>· {{ shown.scope }}{{ flags }}</span><span v-if="shown.plan.matches > shown.plan.edits.length"> · 另 {{ shown.plan.matches - shown.plan.edits.length }} 处保持原样</span></strong>
         <n-button size="small" @click="search.refreshPreview">刷新预览</n-button></div>
       <div class="replacement-query"><code>{{ short(shown.plan.query.search) }}</code><span aria-label="替换为">→</span><code>{{ short(shown.plan.query.replace) || '（删除）' }}</code></div>
       <p v-if="shown.error" role="alert" class="replacement-error">{{ shown.error }}</p>
+      <div class="replacement-selection"><label class="replacement-toggle"><input type="checkbox" :checked="selected === shown.plan.edits.length" :indeterminate.prop="selected > 0 && selected < shown.plan.edits.length" :disabled="!!shown.error" aria-label="全选替换项" @change="event => search.selectPreview(shown!.plan, 'all', (event.target as HTMLInputElement).checked)">全选</label><span v-if="resetNotice" role="status">已按当前结果重新全选</span></div>
       <div ref="list" class="replacement-list" aria-label="替换前后内容">
-        <article v-for="row in rows" :key="row.id" class="replacement-item">
-          <div class="replacement-location">{{ row.id }} · 第 {{ row.line }} 行，第 {{ row.column }} 列</div>
+        <article v-for="row in rows" :key="row.id" class="replacement-item" :class="{ 'replacement-skipped': shown.excluded.has(row.id - 1) }">
+          <div class="replacement-location"><label class="replacement-toggle"><input type="checkbox" :checked="!shown.excluded.has(row.id - 1)" :disabled="!!shown.error" :aria-label="`选择第 ${row.id} 处修改`" @change="event => search.selectPreview(shown!.plan, row.id - 1, (event.target as HTMLInputElement).checked)">{{ row.id }} · 第 {{ row.line }} 行，第 {{ row.column }} 列</label></div>
           <div class="replacement-pair">
             <div class="replacement-before"><span class="replacement-label">替换前</span><code><span class="context">{{ row.prefix }}</span><mark>{{ row.insertion ? '（插入位置）' : row.before }}</mark><span class="context">{{ row.suffix }}</span></code></div>
             <div class="replacement-after"><span class="replacement-label">替换后</span><code><span class="context">{{ row.prefix }}</span><mark>{{ row.deletion ? '（删除）' : row.after }}</mark><span class="context">{{ row.suffix }}</span></code></div>
@@ -18,7 +19,7 @@
       </div>
       <div v-if="pages > 1" class="replacement-pagination"><n-button size="small" :disabled="page === 1" @click="move(-1)">上一页</n-button><span>{{ page }} / {{ pages }}</span><n-button size="small" :disabled="page === pages" @click="move(1)">下一页</n-button></div>
     </template>
-    <template #footer><div class="replacement-actions"><span>仅修改草稿，可撤销；保存后写回。</span><n-button @click="search.closePreview">取消</n-button><n-button type="primary" :disabled="!search.preview.value || !!shown?.error" @click="search.applyPreview">应用到草稿</n-button></div></template>
+    <template #footer><div class="replacement-actions"><span class="replacement-selected-count" role="status">已选 {{ selected }} / {{ shown?.plan.edits.length || 0 }} 处<span class="replacement-save-hint"> · 仅修改草稿，可撤销；保存后写回。</span></span><n-button @click="search.closePreview">取消</n-button><n-button type="primary" :disabled="!search.preview.value || !!shown?.error || !selected" @click="search.applyPreview">应用到草稿</n-button></div></template>
   </n-modal>
 </template>
 <script setup lang="ts">
@@ -28,21 +29,25 @@ import type { useStructuredSearch } from '../composables/useStructuredSearch'
 import { replacementRows } from '../services/structuredReplacementPlan'
 const props = defineProps<{ search: ReturnType<typeof useStructuredSearch> }>()
 const shown = shallowRef<typeof props.search.preview.value>(), page = ref(1), list = ref<HTMLElement>()
+const resetNotice = ref(false)
 watch(() => props.search.preview.value, value => {
-  if (value) { if (value.plan !== shown.value?.plan) { page.value = 1; if (list.value) list.value.scrollTop = 0 }; shown.value = value }
+  if (value) { if (value.plan !== shown.value?.plan) { resetNotice.value = !!shown.value; page.value = 1; if (list.value) list.value.scrollTop = 0 }; shown.value = value }
 }, { immediate: true })
+const selected = computed(() => shown.value ? shown.value.plan.edits.length - shown.value.excluded.size : 0)
 const rows = computed(() => shown.value ? replacementRows(shown.value.plan, page.value) : [])
 const pages = computed(() => Math.ceil((shown.value?.plan.edits.length || 0) / 20))
 const flags = computed(() => { const q = shown.value?.plan.query; return (q?.regexp ? ' · 正则' : '') + (q?.caseSensitive ? ' · 区分大小写' : '') + (q?.wholeWord ? ' · 完整词' : '') })
 const short = (text: string) => text.length > 120 ? text.slice(0, 120).replace(/[\uD800-\uDBFF]$/, '') + '…' : text
 const move = (step: number) => { page.value = Math.max(1, Math.min(pages.value, page.value + step)); if (list.value) list.value.scrollTop = 0 }
-const finish = () => { if (!props.search.preview.value) shown.value = undefined; props.search.finishPreview() }
+const finish = () => { if (!props.search.preview.value) { shown.value = undefined; resetNotice.value = false }; props.search.finishPreview() }
 </script>
 <style scoped>
 :global(.structured-replacement-dialog .n-card__content){min-height:0;overflow:auto}
-.replacement-summary,.replacement-query,.replacement-actions,.replacement-pagination{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.replacement-summary,.replacement-query,.replacement-actions,.replacement-pagination,.replacement-selection{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .replacement-summary{justify-content:space-between}.replacement-summary strong{min-width:0}.replacement-summary span,.replacement-location,.replacement-label,.replacement-actions>span,.replacement-pagination>span{font-size:var(--text-sm);color:var(--theme-text-secondary)}
 .replacement-query{margin:12px 0}.replacement-query code{min-width:0;max-width:100%;overflow-wrap:anywhere;font-family:var(--font-mono);font-size:var(--text-sm)}
+.replacement-selection{margin:0 0 10px}.replacement-selection>span{font-size:var(--text-sm);color:var(--theme-text-secondary)}.replacement-skipped .replacement-pair mark{background:transparent}
+.replacement-toggle{display:inline-flex;align-items:center;gap:8px;user-select:none;cursor:pointer}.replacement-toggle input{width:16px;height:16px;margin:0;accent-color:var(--theme-primary);cursor:inherit;flex-shrink:0}.replacement-toggle:has(input:disabled){cursor:not-allowed}
 .replacement-list{max-height:48dvh;overflow:auto;border:var(--theme-border);border-radius:var(--theme-radius-sm)}
 .replacement-item+.replacement-item{border-top:var(--theme-border)}.replacement-location{padding:7px 10px;background:var(--theme-surface)}
 .replacement-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.replacement-pair>div{padding:8px 10px;min-width:0}.replacement-before{border-right:var(--theme-border)}

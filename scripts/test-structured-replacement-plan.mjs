@@ -3,7 +3,7 @@ import {test} from 'node:test'
 import {EditorState} from '@codemirror/state'
 import {search,SearchQuery,setSearchQuery,replaceAll} from '@codemirror/search'
 import {sourceSearchScopeExtensions,setSourceSearchScope,scopeFromSelection} from '../src/services/structuredSearchScope.ts'
-import {buildReplacementPlan,replacementRows} from '../src/services/structuredReplacementPlan.ts'
+import {buildReplacementPlan,replacementRows,selectedReplacementChanges} from '../src/services/structuredReplacementPlan.ts'
 function state(doc,query,range,readonly=false){
  let s=EditorState.create({doc,extensions:[search(),sourceSearchScopeExtensions,EditorState.readOnly.of(readonly)]})
  if(range){s=s.update({selection:{anchor:range[0],head:range[1]}}).state;s=s.update({effects:setSourceSearchScope.of(scopeFromSelection(s))}).state}
@@ -53,4 +53,23 @@ test('row pagination and compact Unicode snippets are bounded and contain no rep
 test('short malformed Unicode drafts are shown faithfully rather than silently truncated',()=>{
  const proposal=buildReplacementPlan(state('old\ud800',{search:'old',replace:'new\ud800'})).plan
  const row=replacementRows(proposal,1)[0];assert.equal(row.after,'new\ud800');assert.equal(row.suffix,'\ud800')
+})
+
+test('selected changes preserve skipped positions across pages, captures, Unicode and newlines',()=>{
+ const source=Array.from({length:45},(_,i)=>`项目${i}: 猫😀${i}`).join('\n')
+ const proposal=buildReplacementPlan(state(source,{search:'猫😀(\\d+)',replace:'保留$1\\n新增',regexp:true})).plan
+ const omitted=new Set([0,20,44]),changes=selectedReplacementChanges(proposal,omitted)
+ const expected=source.replace(/猫😀(\d+)/g,(text,i)=>omitted.has(Number(i))?text:`保留${i}\n新增`)
+ assert.equal(changes.apply(proposal.doc).toString(),expected)
+ assert.equal(proposal.doc.toString(),source);assert.equal(proposal.edits.length,45)
+ assert.equal(changes.invert(proposal.doc).apply(changes.apply(proposal.doc)).toString(),source)
+ assert.equal(replacementRows(proposal,2)[0].id,21)
+})
+test('all selected reuses the plan; none or invalid selections cannot produce partial changes',()=>{
+ const proposal=buildReplacementPlan(state('a a a',{search:'a',replace:'b'})).plan
+ assert.equal(selectedReplacementChanges(proposal,new Set()),proposal.changes)
+ for(const excluded of [new Set([0,1,2]),new Set([-1]),new Set([3]),new Set([.5]),new Set([NaN])])assert.equal(selectedReplacementChanges(proposal,excluded),undefined)
+ const first=selectedReplacementChanges(proposal,new Set([1,2]));assert.equal(first.apply(proposal.doc).toString(),'b a a')
+ const zero=buildReplacementPlan(state('😀猫😀猫',{search:'(?=猫)',replace:'点',regexp:true})).plan
+ assert.equal(selectedReplacementChanges(zero,new Set([0])).apply(zero.doc).toString(),'😀猫😀点猫')
 })
