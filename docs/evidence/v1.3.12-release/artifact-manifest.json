@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.3.12",
+  "status": "hosted-lifecycle-and-installed-workflows-passed-ready-to-publish",
+  "appVersion": "1.3.12",
+  "sourceVersion": "1.3.12",
+  "sourceCommit": "4911981b320a05be23e728a1992e51fe3681fcbc",
+  "hostedRunId": 40929123847,
+  "artifactBuildRunId": 40923725647,
+  "artifacts": [
+    {
+      "target": "msi",
+      "fileName": "LongEdit_1.3.12_x64_zh-CN.msi",
+      "sizeBytes": 78254080,
+      "sha256": "1debc7ffd1a2555102719270fb4f0d81718305af5a46cf6577c9d4c33b76bcff",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.3.12_x64_zh-CN.msi"
+    },
+    {
+      "target": "nsis",
+      "fileName": "LongEdit_1.3.12_x64-setup.exe",
+      "sizeBytes": 68821495,
+      "sha256": "c7332110f925114f0e4701b44f858411d9cbf187dfe2098ec455fd00a7f35d06",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.3.12_x64-setup.exe"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 192,
+    "sha256": "eca481a4aa8d8a2714b482f5d9ffb6b13e193ad62ec917765158546db521eeea"
+  },
+  "qualityGate": {
+    "status": "passed",
+    "command": "npm run ci:patch-release",
+    "runId": 40923725647
+  },
+  "runtimeSmoke": {
+    "status": "passed-installed-tauri-webview2",
+    "checksPassed": 18,
+    "routesPassed": 11,
+    "reports": {
+      "sourcePosition": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v134-position-workflow.json",
+        "sha256": "7985b9bd2d919fe2421b9d84c267c24736d92fa39589f3a4ea37d593be2fcf96"
+      },
+      "sourceSearch": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v135-search-workflow.json",
+        "sha256": "46c070eaa8c997bcefa7fbc7fe70a6c6a0996fd91698db8692f17da79ace1be6"
+      },
+      "sourceScope": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v136-scope-workflow.json",
+        "sha256": "13cad51bedb0a10ea10e8d880d2025691b9303f560acccf89d2a9e1173b68845"
+      },
+      "replacementPreview": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v137-preview-workflow.json",
+        "sha256": "bb838d0b0d1cc627b5b52c8e380724ddf82f6b8434f1e087a71010aae37ba224"
+      },
+      "selectiveReplacement": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v138-selection-workflow.json",
+        "sha256": "f7fdbbc54842478892583482f58f06fa9890526a15c2af9ff7f1fe7bbcc66103"
+      },
+      "recentSearch": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v139-recent-workflow.json",
+        "sha256": "83125f6182ffa7375f44f322908f54decd78f0d1c3a7704e70d6211b02f3bfe3"
+      },
+      "sourceMatches": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v1310-matches-workflow.json",
+        "sha256": "42dcae2cb5c044803c15d267928ff52636acdea6345bdcfaa9d874970613dbc4"
+      },
+      "sourceReturn": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v1311-return-workflow.json",
+        "sha256": "89daf427ddd382d49f348d01439d5044cd98f2f6d3a8da31734b0ee8143306f1"
+      },
+      "structureNavigation": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v1312-navigation-workflow.json",
+        "sha256": "6d7aec87a9a49469639a8b69686ae7029f8022dff59ca2dfb9ed79c2dcf6f539"
+      },
+      "savepoint": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v1217-savepoint-workflow.json",
+        "sha256": "1ce5609764715ed7212708fdb4876f245ede00f21498fdf98b543fab2f69a57e"
+      },
+      "workspace": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-artifact-smoke.json",
+        "sha256": "3146efeaca2a1aad22e02d3d5b35c4be5bb869836acfe8f25e2530418a1db453"
+      },
+      "version": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-version-identity.json",
+        "sha256": "1c2e7b95be6f0d9f38b6888d68adb7aea2cb53eb94b596315d30f7212a4285e8"
+      },
+      "workflow": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v110-workflow.json",
+        "sha256": "6ace9e003f2caf50dbe73869da6d5fcd73c96325e8033d72129d834d45a19c5c"
+      },
+      "experience": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v111-workflow.json",
+        "sha256": "362f9130a42cb8ebeaf96db1df8a3760b3ffeff77067d2c2e0b04a1904109140"
+      },
+      "fileManagement": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v112-workflow.json",
+        "sha256": "1b31bb81233edfdc4d5476fce8a30e5d4b04a61ba8700883473bab2c38459d0a"
+      },
+      "foundation": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v113-workflow.json",
+        "sha256": "3e8ce17212c2c6c774cd1438eed32c3a97e6c85ddec0254743de37eac0a92b4e"
+      },
+      "routes": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-route-mount-evidence.json",
+        "sha256": "de59abf1ebdacdd7c21210a7106db0e45749b34e49bfda56e1fc1577b8c5fd5e"
+      },
+      "searchCompleteness": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v118-workflow.json",
+        "sha256": "87aac87c01569f2b7ebbde225d4964cd2962a51c404793beff812529f763a262"
+      },
+      "searchBaseline": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v118-baseline.json",
+        "sha256": "8a9083c014c4e2d7329d2792052efce0cf9c9c9d743e94d307c3fd5d100d1a0a"
+      },
+      "searchUser": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v118-user.json",
+        "sha256": "7a1e68f46829930020c30f6247735ef12354e4e2846c0bcde5e74c0678b6f251"
+      },
+      "searchOffice": {
+        "path": "docs/evidence/v1-3-12-candidate-lifecycle/installed-v118-office.json",
+        "sha256": "d2345702e25e11ef3999523d6cae4454a7eec9e116f9e3aa1642092afb8ed5ee"
+      }
+    }
+  },
+  "hostedInstalledLifecycle": {
+    "sourcePositionChecksPassed": 9,
+    "sourceSearchChecksPassed": 9,
+    "sourceScopeChecksPassed": 9,
+    "replacementPreviewChecksPassed": 9,
+    "selectiveReplacementChecksPassed": 9,
+    "recentSearchChecksPassed": 9,
+    "sourceMatchesChecksPassed": 9,
+    "sourceReturnChecksPassed": 9,
+    "structureNavigationChecksPassed": 9,
+    "savepointChecksPassed": 14,
+    "status": "passed",
+    "runId": 40929123847,
+    "sourceCommit": "4911981b320a05be23e728a1992e51fe3681fcbc",
+    "evidenceRoot": "docs/evidence/v1-3-12-candidate-lifecycle",
+    "evidenceManifest": "docs/evidence/v1.3.12-release/import-manifest.json",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackChecksPassed": 7,
+    "workflowChecksPassed": 8,
+    "experienceChecksPassed": 8,
+    "fileManagementChecksPassed": 9,
+    "foundationChecksPassed": 8,
+    "searchCompletenessChecksPassed": 20,
+    "versionChecksPassed": 4,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false
+  },
+  "boundaries": {
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "releaseAssetsPublished": false,
+    "managedUpdaterReleaseAssetsPresent": false,
+    "legacyTauriUpdaterArtifactsPresent": false
+  },
+  "sourceUserContentIncluded": false,
+  "releasePublished": false,
+  "validationProfile": {
+    "schemaVersion": 1,
+    "kind": "core-and-affected-workflows",
+    "baseline": {
+      "version": "1.3.9",
+      "tag": "v1.3.9",
+      "sourceCommit": "2efec7db99b39641f84e280a9c8c64ff8df0c49b",
+      "manifestPath": "docs/evidence/v1.3.9-release/artifact-manifest.json",
+      "manifestSha256": "7c045c7c51fe203675d1cd25e12ce3cc635f5be355ab479b50624aaaccc0ea74",
+      "releaseReceiptPath": "docs/evidence/v1.3.9-release/release-receipt.json"
+    },
+    "currentReportKeys": [
+      "workspace",
+      "version",
+      "workflow",
+      "experience",
+      "fileManagement",
+      "foundation",
+      "routes",
+      "searchCompleteness",
+      "searchBaseline",
+      "searchUser",
+      "searchOffice",
+      "savepoint",
+      "sourcePosition",
+      "sourceSearch",
+      "sourceScope",
+      "replacementPreview",
+      "selectiveReplacement",
+      "recentSearch",
+      "sourceMatches",
+      "sourceReturn",
+      "structureNavigation"
+    ],
+    "inheritedReportKeys": [
+      "tomlFieldOrder",
+      "tomlDatetime",
+      "yamlLiteral",
+      "tomlLiteral",
+      "yamlFolded",
+      "tomlBasic",
+      "yamlSequenceBlock",
+      "tomlArrayMultiline",
+      "yamlBlockOperations",
+      "yamlBlockFields",
+      "tomlBlockArrays",
+      "tomlBlockFields",
+      "tomlBlockArrayDelete",
+      "tomlBlockFieldDelete",
+      "yamlBlockFieldDelete",
+      "outlineNavigation",
+      "outlineContinuity",
+      "yamlFieldOrder",
+      "tomlFieldCopy",
+      "yamlFieldCopy",
+      "tomlOrder",
+      "yamlOrder",
+      "listCopy",
+      "tomlItemValues",
+      "tomlArrays",
+      "yamlSequences",
+      "tomlFields",
+      "yamlFields",
+      "tomlRename",
+      "yamlRename",
+      "xmlCreate",
+      "xmlManage",
+      "xmlDelete",
+      "xmlOrder",
+      "xmlElement",
+      "xmlText",
+      "xmlAttribute",
+      "yamlValue",
+      "tomlValue",
+      "jsonNode",
+      "jsonArray",
+      "tableColumns",
+      "tableRows",
+      "tableFill",
+      "annotationBatch",
+      "annotationHistory",
+      "readingMove",
+      "portableChapters",
+      "pdfResume",
+      "contextCommands",
+      "attachmentDrafts",
+      "copyReading",
+      "restoreContinuity",
+      "workbookEntry",
+      "tableValidation",
+      "pdfContinuity",
+      "referenceRepair",
+      "collectionReuse",
+      "structuredHistory",
+      "findReplace",
+      "chapters",
+      "attachments",
+      "fileOperationHistory",
+      "crossLibraryCopy",
+      "structuredEditing",
+      "organizing",
+      "pptxEditing",
+      "docxEditing",
+      "workbookEditing",
+      "tableEditing",
+      "writingDelivery",
+      "pdfReading",
+      "contentBackup",
+      "graphExploration",
+      "tagCollections",
+      "workSession",
+      "foundationExtended",
+      "foundationHardening",
+      "moveContinuity",
+      "saveHistory"
+    ],
+    "historicalResultsCountedAsCurrent": false
+  },
+  "backendRegression": {
+    "path": "docs/evidence/v1-3-12-candidate-lifecycle/backend-regression-proof.json",
+    "sizeBytes": 933,
+    "sha256": "cf96beac94e726f371d49397b4bef4b96c43be5c87909bdf3d024fda9cd8e29e",
+    "kind": "unchanged-backend-published-baseline",
+    "historicalFunctionalResultsCountedAsCurrent": false
+  }
+}
