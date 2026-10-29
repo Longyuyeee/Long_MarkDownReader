@@ -17,10 +17,13 @@
   "nativeBridgeMocked": true,
   "desktopInputUsed": false,
   "sourceUserContentIncluded": false,
-  "localQualityActualExit": 0,
+  "localQualityActualExit": 1,
   "localQualityCommands": 100,
   "finalUnitTestsPassed": 56,
   "finalTypeCheckPassed": true,
-  "previousRegressionBoundary": "passed-before-contrast-and-aria-disabled-only-supplement",
-  "exactSourceReleaseGate": "pending-frozen-source-cloud-quality-and-builder"
+  "previousRegressionBoundary": "all-four-regressions-passed-current-native-checkbox-source",
+  "exactSourceReleaseGate": "required-refrozen-source-whole-cloud-quality-and-builder",
+  "checkboxThenFirstCtrlAPassed": true,
+  "localQualityFailureKind": "audit-endpoint-network",
+  "localQualitySequenceCompleted": false
 }

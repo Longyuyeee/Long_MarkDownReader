@@ -13,7 +13,7 @@ export function validateInstalledSelectiveReplacement(r,m){
  assert.ok(r.inputTrace.length>20&&r.inputTrace.every(e=>e.trusted)&&r.inputTrace.some(e=>e.type==='keydown'))
  for(const k of ['otherDraftsPreserved','disposableDraftsExplicitlySaved'])assert.equal(r[k],true,k)
  assert.deepEqual(r.viewportWidths,[1280,800]);assert.deepEqual(r.modes.map(e=>e.mode),['json','yaml','xml','toml'])
- for(const e of r.modes)for(const k of ['crossPageSelectionExact','allNoneProtected','refreshResetsSelection','applyFocusExact','pagedBeforeAfterExact','cancelDraftExact','scopedCapturesExact','applyUndoRedoExact','explicitSaveExact','ownerResetExact','readOnlyExact'])assert.equal(e[k],true,e.mode+' '+k)
+ for(const e of r.modes)for(const k of ['checkboxQueryExact','crossPageSelectionExact','allNoneProtected','refreshResetsSelection','applyFocusExact','pagedBeforeAfterExact','cancelDraftExact','scopedCapturesExact','applyUndoRedoExact','explicitSaveExact','ownerResetExact','readOnlyExact'])assert.equal(e[k],true,e.mode+' '+k)
 }
 export function assertSelectiveReplacementOutputBytes(r,read){
  assert.deepEqual(r.outputs.map(o=>o.fileName),selectiveReplacementOutputFiles)

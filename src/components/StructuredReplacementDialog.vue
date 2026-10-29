@@ -7,10 +7,10 @@
         <n-button size="small" @click="search.refreshPreview">刷新预览</n-button></div>
       <div class="replacement-query"><code>{{ short(shown.plan.query.search) }}</code><span aria-label="替换为">→</span><code>{{ short(shown.plan.query.replace) || '（删除）' }}</code></div>
       <p v-if="shown.error" role="alert" class="replacement-error">{{ shown.error }}</p>
-      <div class="replacement-selection"><n-checkbox :checked="selected === shown.plan.edits.length" :indeterminate="selected > 0 && selected < shown.plan.edits.length" :disabled="!!shown.error" :aria-disabled="!!shown.error" :aria-labelledby="null" aria-label="全选替换项" @update:checked="value => search.selectPreview(shown!.plan, 'all', value)">全选</n-checkbox><span v-if="resetNotice" role="status">已按当前结果重新全选</span></div>
+      <div class="replacement-selection"><label class="replacement-toggle"><input type="checkbox" :checked="selected === shown.plan.edits.length" :indeterminate.prop="selected > 0 && selected < shown.plan.edits.length" :disabled="!!shown.error" aria-label="全选替换项" @change="event => search.selectPreview(shown!.plan, 'all', (event.target as HTMLInputElement).checked)">全选</label><span v-if="resetNotice" role="status">已按当前结果重新全选</span></div>
       <div ref="list" class="replacement-list" aria-label="替换前后内容">
         <article v-for="row in rows" :key="row.id" class="replacement-item" :class="{ 'replacement-skipped': shown.excluded.has(row.id - 1) }">
-          <div class="replacement-location"><n-checkbox :checked="!shown.excluded.has(row.id - 1)" :disabled="!!shown.error" :aria-disabled="!!shown.error" :aria-labelledby="null" :aria-label="`选择第 ${row.id} 处修改`" @update:checked="value => search.selectPreview(shown!.plan, row.id - 1, value)">{{ row.id }} · 第 {{ row.line }} 行，第 {{ row.column }} 列</n-checkbox></div>
+          <div class="replacement-location"><label class="replacement-toggle"><input type="checkbox" :checked="!shown.excluded.has(row.id - 1)" :disabled="!!shown.error" :aria-label="`选择第 ${row.id} 处修改`" @change="event => search.selectPreview(shown!.plan, row.id - 1, (event.target as HTMLInputElement).checked)">{{ row.id }} · 第 {{ row.line }} 行，第 {{ row.column }} 列</label></div>
           <div class="replacement-pair">
             <div class="replacement-before"><span class="replacement-label">替换前</span><code><span class="context">{{ row.prefix }}</span><mark>{{ row.insertion ? '（插入位置）' : row.before }}</mark><span class="context">{{ row.suffix }}</span></code></div>
             <div class="replacement-after"><span class="replacement-label">替换后</span><code><span class="context">{{ row.prefix }}</span><mark>{{ row.deletion ? '（删除）' : row.after }}</mark><span class="context">{{ row.suffix }}</span></code></div>
@@ -24,7 +24,7 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, shallowRef, watch } from 'vue'
-import { NButton, NCheckbox, NModal } from 'naive-ui'
+import { NButton, NModal } from 'naive-ui'
 import type { useStructuredSearch } from '../composables/useStructuredSearch'
 import { replacementRows } from '../services/structuredReplacementPlan'
 const props = defineProps<{ search: ReturnType<typeof useStructuredSearch> }>()
@@ -47,6 +47,7 @@ const finish = () => { if (!props.search.preview.value) { shown.value = undefine
 .replacement-summary{justify-content:space-between}.replacement-summary strong{min-width:0}.replacement-summary span,.replacement-location,.replacement-label,.replacement-actions>span,.replacement-pagination>span{font-size:var(--text-sm);color:var(--theme-text-secondary)}
 .replacement-query{margin:12px 0}.replacement-query code{min-width:0;max-width:100%;overflow-wrap:anywhere;font-family:var(--font-mono);font-size:var(--text-sm)}
 .replacement-selection{margin:0 0 10px}.replacement-selection>span{font-size:var(--text-sm);color:var(--theme-text-secondary)}.replacement-skipped .replacement-pair mark{background:transparent}
+.replacement-toggle{display:inline-flex;align-items:center;gap:8px;user-select:none;cursor:pointer}.replacement-toggle input{width:16px;height:16px;margin:0;accent-color:var(--theme-primary);cursor:inherit;flex-shrink:0}.replacement-toggle:has(input:disabled){cursor:not-allowed}
 .replacement-list{max-height:48dvh;overflow:auto;border:var(--theme-border);border-radius:var(--theme-radius-sm)}
 .replacement-item+.replacement-item{border-top:var(--theme-border)}.replacement-location{padding:7px 10px;background:var(--theme-surface)}
 .replacement-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.replacement-pair>div{padding:8px 10px;min-width:0}.replacement-before{border-right:var(--theme-border)}
