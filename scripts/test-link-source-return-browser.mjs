@@ -23,10 +23,12 @@ try{
   const wiki=async()=>{await page.locator('#tab-links').click();await page.locator('.relation-list .relation-note').filter({hasText:'B'}).first().click();await ready('B.md')}
   await ready('A.md');await append('来源未保存'+mode);for(let i=0;i<4;i++)await page.keyboard.press('Shift+ArrowLeft');const origin=await point();assert.ok(origin.top>0)
   await wiki();assert.match(await draft('A.md'),new RegExp('来源未保存'+mode));assert.equal(await page.evaluate(()=>shellAudit.store.tabs.length),4)
+  await page.locator('.workspace-tab[aria-label^="B.md"]').dragTo(page.locator('.workspace-tab[aria-label="D.txt"]'))
+  assert.ok((await page.evaluate(()=>shellAudit.store.activeTabId)).endsWith('/B.md'))
   await append('目标未保存'+mode);const targetDraft=await draft('B.md');if(mode==='wysiwyg'){assert.equal(targetDraft,(await page.evaluate(()=>shellAudit.disk.get('C:/shell-fixture/B.md'))).trimEnd()+'目标未保存'+mode+'\n');assert.equal(await draft('A.md'),(await page.evaluate(()=>shellAudit.disk.get('C:/shell-fixture/A.md'))).trimEnd()+'来源未保存'+mode+'\n')}await undo();await page.waitForTimeout(180);assert.ok(!(await draft('B.md')).includes('目标未保存'));assert.ok(!(await draft('B.md')).includes('第79段'));await redo();await page.waitForTimeout(180);assert.equal(await draft('B.md'),targetDraft)
   await back();same(await point(),origin);assert.match(await draft('A.md'),new RegExp('来源未保存'+mode));await undo();await page.waitForTimeout(180);assert.ok(!(await draft('A.md')).includes('来源未保存'));assert.ok((await draft('A.md')).includes('第79段'));await redo();await page.waitForTimeout(180);assert.match(await draft('A.md'),new RegExp('来源未保存'+mode))
   await page.locator('#tab-files').click();await tab('B.md');await source().click({position:{x:12,y:12}});await undo();await page.waitForTimeout(180);assert.ok(!(await draft('B.md')).includes('目标未保存'));await redo();await page.waitForTimeout(180);assert.equal(await draft('B.md'),targetDraft);await menu();assert.equal(await page.locator('[data-testid=library-link-source-return]').count(),0);await menu();await tab('A.md')
-  checks.push({mode,case:'wiki-roundtrip',status:'passed',bothDrafts:true,bothUndoRedo:true,selectionAndScroll:true,reusedTabs:true,ordinaryTabSwitchNotRecorded:true})
+  checks.push({mode,case:'wiki-roundtrip',status:'passed',bothDrafts:true,bothUndoRedo:true,selectionAndScroll:true,reusedTabs:true,tabReorderPreserved:true,ordinaryTabSwitchNotRecorded:true})
   if(mode==='wysiwyg'){
    for(const target of ['B.md','C.json','D.txt']){
     await page.locator(`#vditor-lib a[href="${target}"]`).last().click();await page.waitForFunction(target=>shellAudit.store.activeTabId.endsWith('/'+target),target);await page.waitForTimeout(350)

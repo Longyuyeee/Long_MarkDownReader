@@ -8,7 +8,9 @@ export function useLinkSourceReturn(options: { root: () => string; tabs: () => T
   const entries = shallowRef<Entry[]>([])
   const valid = (entry: Entry) => sameWorkspacePath(entry.root, options.root()) && options.tabs().includes(entry.source)
     && options.tabs().includes(entry.target) && entry.source.content === entry.revision
-  watch(() => [options.root(), ...options.tabs()], () => { entries.value = entries.value.filter(valid) }, { flush: 'sync' })
+  // Reordering removes and reinserts the same tab in one tick. Validate after
+  // that operation settles; current still checks live ownership immediately.
+  watch(() => [options.root(), ...options.tabs()], () => { entries.value = entries.value.filter(valid) }, { flush: 'post' })
   const current = computed(() => [...entries.value].reverse().find(entry => valid(entry) && entry.target.id === options.active()))
   return {
     current,
