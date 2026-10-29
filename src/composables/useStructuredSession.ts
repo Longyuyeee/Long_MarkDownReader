@@ -13,6 +13,7 @@ import type { TabInfo, useAppStore } from '../store/app'
 import type { ConflictSnapshot } from '../components/TextConflictDialog.vue'
 import { fileStylePathKey } from '../utils/fileDisplayStyles'
 import { forgetStructuredSavepoint, matchesStructuredSavepoint, recordStructuredSavepoint, structuredEditorText as editorText } from '../services/structuredSavepoints'
+import type { StructuredNavigationContext } from '../services/structuredSearchReturn'
 
 interface Snapshot {
   content: string; signature: string; encoding: string; size: number; modified: number
@@ -33,6 +34,8 @@ interface Options {
   applySnapshot: (snapshot: Snapshot) => Promise<void>
   load: (discard: boolean) => Promise<void>
   positionReady?: () => boolean; positionPanes?: () => Record<string, HTMLElement | null>; positionEnabled?: () => boolean
+  navigation?: { capture: () => StructuredNavigationContext
+    restore: (context: StructuredNavigationContext | undefined, current: () => boolean) => boolean | Promise<boolean> }
 }
 // A write may outlive its component. A newly mounted editor must wait for it
 // before reading the same file; the owner is released only on a settled IPC.
@@ -43,6 +46,24 @@ export function useStructuredSession(options: Options) {
   let disposed = false, bound: Owner | undefined
   const position = useStructuredPosition({ ready: () => !options.loading.value && (options.positionReady?.() ?? true), panes: options.positionPanes, enabled: options.positionEnabled })
   const sourceSearch = useStructuredSearch({ enabled: options.positionEnabled,
+    navigation: {
+      capture: () => ({ ...options.navigation?.capture(), panes: Object.fromEntries(Object.entries(options.positionPanes?.() || {})
+        .filter((entry): entry is [string, HTMLElement] => !!entry[1]?.clientHeight)
+        .map(([key, pane]) => [key, { top: pane.scrollTop, left: pane.scrollLeft }])) }),
+      scroll: position.sourceSnapshot,
+      restore: async (context, current) => {
+        if (!current()) return false
+        position.remember()
+        const focused = await options.navigation?.restore(context, current)
+        await nextTick()
+        if (!current()) return false
+        for (const [key, point] of Object.entries(context?.panes || {})) {
+          const pane = options.positionPanes?.()[key]
+          if (pane?.clientHeight) { pane.scrollTop = point.top; pane.scrollLeft = point.left }
+        }
+        return !!focused
+      },
+    },
     library: () => options.store.libraryPath,
     // Finding and locating remain available in read-only sources. Replacement
     // separately checks editor.readOnly; permission changes also invalidate context.

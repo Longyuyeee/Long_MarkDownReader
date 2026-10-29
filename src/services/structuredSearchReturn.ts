@@ -1,9 +1,17 @@
 import { EditorSelection, MapMode, StateEffect, StateField, Transaction } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 
-interface ReturnPoint {
+export interface StructuredNavigationContext {
+  view?: 'source' | 'tree'
+  outline?: string
+  tree?: string
+  panes?: Record<string, { top: number; left: number }>
+}
+export interface ReturnPoint {
   selection: EditorSelection
   scroll: ReturnType<EditorView['scrollSnapshot']>
+  kind?: 'search' | 'structure'
+  context?: StructuredNavigationContext
 }
 export const SEARCH_RETURN_LIMIT = 20
 const push = StateEffect.define<ReturnPoint>()
@@ -19,7 +27,7 @@ export const searchReturnPoints = StateField.define<readonly ReturnPoint[]>({
       if (point.selection.ranges.some(range => [range.anchor, range.head].some(pos =>
         transaction.changes.mapPos(pos, 1, MapMode.TrackDel) === null))) return []
       const scroll = point.scroll.map(transaction.changes)
-      return scroll ? [{ selection: point.selection.map(transaction.changes), scroll }] : []
+      return scroll ? [{ ...point, selection: point.selection.map(transaction.changes), scroll }] : []
     })
     for (const effect of transaction.effects) {
       if (effect.is(clearSearchReturn)) points = []
@@ -30,18 +38,21 @@ export const searchReturnPoints = StateField.define<readonly ReturnPoint[]>({
   },
 })
 
-export function locateSearchMatch(view: EditorView, from: number, to: number) {
+export function captureSearchReturn(view: EditorView, context?: StructuredNavigationContext, scroll = view.scrollSnapshot()): ReturnPoint {
+  return { selection: view.state.selection, scroll, context }
+}
+export function locateSearchMatch(view: EditorView, from: number, to: number, origin = captureSearchReturn(view), kind: ReturnPoint['kind'] = 'search') {
   const selection = view.state.selection
-  const same = selection.ranges.length === 1 && selection.main.anchor === from && selection.main.head === to
+  const same = origin.context?.view !== 'tree' && selection.ranges.length === 1 && selection.main.anchor === from && selection.main.head === to
   view.dispatch({ selection: { anchor: from, head: to },
-    effects: [...(same ? [] : [push.of({ selection, scroll: view.scrollSnapshot() })]), EditorView.scrollIntoView(from, { y: 'center' })],
+    effects: [...(same ? [] : [push.of({ ...origin, kind })]), EditorView.scrollIntoView(from, { y: 'center' })],
     annotations: Transaction.addToHistory.of(false) })
 }
 
-export function returnFromSearch(view: EditorView): boolean {
+export function returnFromSearch(view: EditorView, focus = true): boolean {
   const points = view.state.field(searchReturnPoints), point = points[points.length - 1]
   if (!point) return false
   view.dispatch({ selection: point.selection, effects: [pop.of(), point.scroll], annotations: Transaction.addToHistory.of(false) })
-  view.focus()
+  if (focus) view.focus()
   return true
 }

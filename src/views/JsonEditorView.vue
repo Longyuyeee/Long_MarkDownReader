@@ -1103,6 +1103,22 @@ const outlineNav = useSourceOutlineNavigation({
   ready: () => !loading.value && !analysisPending.value && analyzedSource.value === sourceContent.value,
 })
 const session = useStructuredSession({
+  navigation: {
+    capture: () => ({ view: viewMode.value, outline: outlineState.selection.value, tree: outlineState.treeSelection.value }),
+    restore: async (point, current) => {
+      if (!current()) return false
+      outlineNav.restoreSelection(point?.outline)
+      const entry = point?.tree && analysis.value?.paths.find(item => outlineNav.key(item) === point.tree)
+      const tree = point?.view === 'tree' && !rangeMode.value && !analysisPending.value && analysis.value?.valid
+        && analyzedSource.value === sourceContent.value && (!point.tree || !!entry)
+      viewMode.value = tree ? 'tree' : 'source'
+      if (tree) { selectedTreeStart.value = entry ? entry.start : null; outlineState.treeSelection.value = point?.tree }
+      await nextTick()
+      if (!current() || !tree || !treeViewport.value) return false
+      treeViewport.value.focus({ preventScroll: true })
+      return true
+    },
+  },
   positionPanes: () => ({ outline: outlineNav.element.value, tree: treeViewport.value, inspector: outlineNav.element.value?.closest('aside') || null }),
   positionReady: () => !analysisPending.value && analyzedSource.value === sourceContent.value,
   positionEnabled: () => !rangeMode.value,
@@ -1543,16 +1559,17 @@ const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
   return new TextDecoder().decode(bytes.slice(0, Math.min(byteOffset, bytes.length))).length
 }
 
-const revealSourceRange = (range: Pick<JsonDiagnostic, 'start' | 'end'>) => {
+const revealSourceRange = async (range: Pick<JsonDiagnostic, 'start' | 'end'>) => {
   if (analyzedSource.value !== sourceContent.value) { message.info('正在更新定位，请稍候再试'); return }
   if (!editor) return
+  const owner = session.capture(), origin = session.sourceSearch.captureNavigation()
+  if (!owner || !origin) return
+  if (viewMode.value !== 'source') { viewMode.value = 'source'; await nextTick() }
+  if (!session.unchanged(owner)) return
   const from = byteOffsetToCodeUnit(sourceContent.value, range.start)
   const to = Math.max(from, byteOffsetToCodeUnit(sourceContent.value, range.end))
-  editor.dispatch({
-    selection: { anchor: from, head: to },
-    effects: EditorView.scrollIntoView(from, { y: 'center' }),
-  })
-  editor.focus()
+  outlineNav.selectRange(range)
+  session.sourceSearch.locateStructure(from, to, origin)
 }
 
 const revealDiagnostic = (diagnostic: JsonDiagnostic) => revealSourceRange(diagnostic)
@@ -1938,12 +1955,8 @@ const moveArrayItem = async (entry: JsonPathEntry, direction: -1 | 1) => {
 const locatePathQuery = () => { deferredPathQuery.value = pathQuery.value; const entry = filteredPaths.value[0]; if (entry) void showSourceRange(entry) }
 
 const showSourceRange = async (entry: JsonPathEntry) => {
-  outlineNav.selectRange(entry)
-  const owner = session.capture()
-  if (!owner) return
-  viewMode.value = 'source'
-  await nextTick()
-  if (session.owns(owner)) revealSourceRange(entry)
+  if (viewMode.value === 'tree') selectTreeEntry(entry)
+  await revealSourceRange(entry)
 }
 
 const selectTreeEntry = (entry: JsonPathEntry) => { selectedTreeStart.value = entry.start; outlineState.treeSelection.value = outlineNav.key(entry) }

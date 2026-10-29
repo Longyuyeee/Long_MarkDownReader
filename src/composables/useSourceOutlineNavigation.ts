@@ -102,5 +102,9 @@ export function useSourceOutlineNavigation<T extends Entry>(options: {
       if (current) { select(current); focus(current) }
     })
   }, { flush: 'pre' })
-  return { element, selected, key, select, selectRange, tabIndex, keydown }
+  const restoreSelection = (saved?: string) => {
+    if (!options.ready()) return
+    if (saved === undefined || options.entries().some(entry => key(entry) === saved)) selectedKey.value = saved
+  }
+  return { element, selected, key, select, selectRange, restoreSelection, tabIndex, keydown }
 }

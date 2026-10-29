@@ -123,5 +123,7 @@ export function useStructuredPosition(options: {
   // Analysis, TOML expanded children and JSON's tree can arrive after bind.
   watch(() => [options.ready(), ...Object.values(options.panes?.() || {})], () => { void nextTick(() => { observe(); pending?.() }) }, { flush: 'post' })
   onScopeDispose(() => { beforeReplace() })
-  return { remember, beforeReplace, bind }
+  const sourceSnapshot = () => active && (active.editor.scrollDOM.clientHeight
+    ? active.editor.scrollSnapshot() : sourceDoc === active.editor.state.doc ? source.snapshot : undefined)
+  return { remember, beforeReplace, bind, sourceSnapshot }
 }
