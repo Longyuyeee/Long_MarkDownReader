@@ -17,7 +17,7 @@
   "localQualityCommands": 106,
   "finalUnitTestsPassed": 50,
   "finalTypeCheckPassed": true,
-  "exactSourceReleaseGate": "pending-focus-fixed-source-builder",
+  "exactSourceReleaseGate": "passed-single-frozen-source-builder",
   "currentNativeWorkflowGroups": 16,
   "historicalResultsCountedAsCurrent": false,
   "nestedHiddenTreeSourceHistory": true,
@@ -29,5 +29,8 @@
   "blurredFocusTopScrollExact": true,
   "postFocusTypeCheckPassed": true,
   "postFocusTargetedChecksPassed": 50,
-  "postFocusBrowserResults": true
+  "postFocusBrowserResults": true,
+  "finalSourceCommit": "f5a46b8800ddfa5a7ebf1df9d7c486ed469a6251",
+  "sourceQualityRun": 40948272576,
+  "buildRun": 40948272576
 }
