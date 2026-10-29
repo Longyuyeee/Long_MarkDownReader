@@ -50,3 +50,14 @@ test('runtime validators require exactly the selected reports and keep historica
  assert.deepEqual(current.sort(),profile.currentReportKeys.filter(key=>all.includes(key)).sort())
  for(const key of ['sourceMatches','recentSearch','sourcePosition','sourceScope','replacementPreview','savepoint'])assert.ok(current.includes(key),key)
 })
+test('selected search reports load all three supplemental proofs instead of depending on an old version list',()=>{
+ const source=fs.readFileSync('scripts/import-community-release-review.mjs','utf8'),anchor=source.indexOf("  for (const [key, file] of [['searchBaseline'")
+ assert.ok(anchor>0);const start=source.lastIndexOf('\nif (',anchor),end=source.indexOf('\nassert.equal(reports.lifecycle',anchor),fragment=source.slice(start,end)
+ for(const selected of [true,false]){
+  const reports=selected?{searchCompleteness:{file:'installed-v118-workflow.json'}}:{},context={version:'1.3.10',reports,directory:'owned',path:{join:(...parts)=>parts.join('/')},json:file=>({observed:file})}
+  vm.runInNewContext(fragment,context)
+  for(const[key,file]of [['searchBaseline','installed-v118-baseline.json'],['searchUser','installed-v118-user.json'],['searchOffice','installed-v118-office.json']]){
+   if(selected){assert.equal(reports[key].file,file);assert.equal(reports[key].report.observed,'owned/'+file)}else assert.equal(reports[key],undefined)
+  }
+ }
+})
