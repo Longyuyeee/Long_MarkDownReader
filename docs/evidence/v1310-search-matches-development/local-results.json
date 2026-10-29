@@ -16,10 +16,13 @@
   "localQualityCommands": 103,
   "finalUnitTestsPassed": 30,
   "finalTypeCheckPassed": true,
-  "exactSourceReleaseGate": "pending-single-frozen-source-builder",
+  "exactSourceReleaseGate": "passed-single-frozen-source-builder",
   "currentNativeWorkflowGroups": 13,
   "historicalResultsCountedAsCurrent": false,
   "readonlyNavigationCases": 8,
   "readonlyKeyboardAndNoWrites": true,
-  "permissionGuardRegression": "installed-readonly-search-blocked-before-fixed-after"
+  "permissionGuardRegression": "installed-readonly-search-blocked-before-fixed-after",
+  "finalSourceCommit": "54608af99d5a85ec8cf83b705f05f76a5f41737d",
+  "sourceQualityRun": 40890616153,
+  "buildRun": 40890616153
 }
