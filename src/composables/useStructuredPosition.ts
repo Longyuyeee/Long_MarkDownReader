@@ -1,15 +1,9 @@
 import { nextTick, onScopeDispose, watch } from 'vue'
 import { EditorSelection, type Text } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
-import { claimStructuredPosition, structuredPositionDigest } from '../services/structuredPositionState'
+import { claimStructuredPosition, structuredDocumentDigest as digest } from '../services/structuredPositionState'
 import { fileStylePathKey } from '../utils/fileDisplayStyles'
 
-const digests = new WeakMap<Text, Promise<string>>()
-const digest = (doc: Text) => {
-  let value = digests.get(doc)
-  if (!value) { value = structuredPositionDigest(doc.toString()).catch(() => ''); digests.set(doc, value) }
-  return value
-}
 export function useStructuredPosition(options: {
   ready: () => boolean; panes?: () => Record<string, HTMLElement | null>
   enabled?: () => boolean

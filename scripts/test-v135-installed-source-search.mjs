@@ -12,7 +12,7 @@ test('installed proof binds each query, draft/save/readonly task to real executa
  const read=n=>buffers[sourceSearchOutputFiles.indexOf(n)];validateInstalledSourceSearch(r,manifest);assertSourceSearchOutputBytes(r,read)
  for(const mutate of [v=>v.modes[0].inputsExact=false,v=>v.modes[1].readOnlyExact=false,v=>v.modes[2].replaceUndoRedoExact=false,v=>v.otherDraftsPreserved=false,v=>v.checks.pop(),v=>v.nativeBridgeMocked=true,v=>v.inputTrace[0].trusted=false]){const copy=structuredClone(r);mutate(copy);assert.throws(()=>validateInstalledSourceSearch(copy,manifest))}
  assert.throws(()=>assertSourceSearchOutputBytes(r,n=>n.endsWith('.xml')?Buffer.from('changed output'):read(n)))
- assert.throws(()=>validateInstalledSourceSearch(r,{...manifest,appVersion:'1.3.6'}))
+ assert.throws(()=>validateInstalledSourceSearch(r,{...manifest,appVersion:'1.3.7'}))
 })
 test('installed search task uses trusted existing controls with valid evaluated expressions',()=>{
  const source=fs.readFileSync('scripts/lib/installed-v1-3-5-workflow.mjs','utf8');assert.ok(!/dispatchEvent|__TAURI|\.focus\(/.test(source));for(const text of ['nativeUserInput','重命名当前文档','close-tab','fs.chmod','button[name=replaceAll]'])assert.ok(source.includes(text))

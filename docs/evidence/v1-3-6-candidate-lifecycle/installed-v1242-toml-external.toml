@@ -1,0 +1,27 @@
+﻿# 配置 中文😀
+label = '外部保留'
+items = [
+  """后一段\n折叠""", # 第二段
+  """后一段\n折叠""", # 第二段
+
+# independent
+
+  '''第一行😀
+第二行''', # 第一段
+  0xFF # number
+]
+kept = [
+  """
+# 正文
+
+text
+""" # keep
+]
+empty = ['''''', 0xFF]
+blocked = ['''old''', [1]]
+ambiguous = [
+# attached?
+  '''old''',
+  false
+]
+last = 8_080

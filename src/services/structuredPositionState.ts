@@ -1,4 +1,11 @@
 import type { EditorView } from '@codemirror/view'
+import type { Text } from '@codemirror/state'
+const documentDigests = new WeakMap<Text, Promise<string>>()
+export function structuredDocumentDigest(doc: Text): Promise<string> {
+  let value = documentDigests.get(doc)
+  if (!value) { value = structuredPositionDigest(doc.toString()).catch(() => ''); documentDigests.set(doc, value) }
+  return value
+}
 // Window-local reading metadata. Neither source text nor undo history is kept.
 export interface StructuredPosition {
   digest: Promise<string>
