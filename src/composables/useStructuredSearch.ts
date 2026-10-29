@@ -241,10 +241,10 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     if (!current()) return
     const focused = await options.navigation?.restore(point.context, current, point.scroll)
     if (current() && !focused) {
-      // Showing source may restore its remembered viewport. The explicit
-      // navigation target takes precedence over that automatic restoration.
-      if (origin.context?.view === 'tree') owner.editor.dispatch({ effects: point.scroll })
       owner.editor.focus()
+      // CodeMirror's focus observer can restore its previous nonzero scroll
+      // when the explicit target is the top. Apply navigation after focus.
+      if (current()) owner.editor.dispatch({ effects: point.scroll })
     }
   }
   useContextCommands(() => options.context?.() || '', () => [
