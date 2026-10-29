@@ -15,6 +15,8 @@ import '/src/styles/vditor-content-themes.scss'
 import '/src/styles/display-preferences.scss'
 import {getThemeTone,resolveThemeName,isDarkTheme} from '/src/config/themePresets.ts'
 import {VISUAL_STYLE_RADII} from '/src/config/displayPreferences.ts'
+import {installAppTooltipPolicy} from '/src/services/appTooltipPolicy.ts'
+installAppTooltipPolicy()
 const root = 'C:/shell-fixture'
 const directories = [root + '/项目资料.md']
 const pinia = createPinia(), store = useAppStore(pinia)

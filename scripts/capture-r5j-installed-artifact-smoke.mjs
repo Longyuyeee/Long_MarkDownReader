@@ -928,6 +928,11 @@ checks.push({ id: 'installed-route-performance-export', status: 'passed' })
 const executableStats = await fs.stat(installedExecutable)
 // Check the current user workflow first, then retain all predecessor coverage.
 
+if(appVersion==='1.3.14' && process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO==='1'){
+ const {runInstalledV1314LinkSourceReturnWorkflow}=await import('./lib/installed-v1-3-14-workflow.mjs')
+ await runInstalledV1314LinkSourceReturnWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
+}
+
 if(['1.3.8','1.3.9', '1.3.10', '1.3.11', '1.3.12', '1.3.13', '1.3.14'].includes(appVersion) && process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO==='1'){
  const {runInstalledV138SelectiveReplacementWorkflow}=await import('./lib/installed-v1-3-8-workflow.mjs')
  await runInstalledV138SelectiveReplacementWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
@@ -958,10 +963,7 @@ if(['1.3.13','1.3.14'].includes(appVersion) && process.env.LONGEDIT_INSTALLED_VE
  await runInstalledV1313NavigationForwardWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
 }
 
-if(appVersion==='1.3.14' && process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO==='1'){
- const {runInstalledV1314LinkSourceReturnWorkflow}=await import('./lib/installed-v1-3-14-workflow.mjs')
- await runInstalledV1314LinkSourceReturnWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
-}
+
 if(['1.2.32','1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(appVersion) && process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO==='1'){
  const {runInstalledV1232TomlFieldOrderWorkflow}=await import('./lib/installed-v1-2-32-workflow.mjs')
  await runInstalledV1232TomlFieldOrderWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})

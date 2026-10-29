@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "kind": "production-Vue-real-Vditor-mocked-file-IPC-and-protocol-unit-checks",
+  "status": "passed",
+  "compiledProductChanged": false,
+  "compiledSourceCommit": "5524648049844fcbd9e9ccdde1dadf3a89b4388f",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "protocolTestsPassed": 22,
+  "productionChecks": [
+    {
+      "mode": "wysiwyg",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "wysiwyg",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "ir",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "ir",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "sv",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "sv",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    }
+  ],
+  "productionActions": [
+    "native-keyboard-two-drafts-return-selection-and-undo-redo",
+    "structured-target-return",
+    "text-target-draft-return",
+    "wiki-return",
+    "source-renamed-return",
+    "local-failure-retry",
+    "source-reload-invalidates"
+  ],
+  "files": [
+    {
+      "path": "scripts/lib/installed-v1-3-14-workflow.mjs",
+      "sha256": "99ad05aa36107927668292df0ce7c3aed5ff7219b67c9f7dcecf6ce7001e384b"
+    },
+    {
+      "path": "scripts/lib/installed-markdown-observation.mjs",
+      "sha256": "6707ecd32132d5105c217f9afece81f3f3c5f6fb97eb9a63da59e18709d0a27f"
+    },
+    {
+      "path": "scripts/test-installed-markdown-observation-browser.mjs",
+      "sha256": "de1c4c88e8dda14035d541395c4981ff8f22948eb8fac631c9294d730c9660d2"
+    },
+    {
+      "path": "scripts/test-v1314-installed-link-source-return.mjs",
+      "sha256": "e0c142cc43b19572fbcca02cb401a85a898960ebb4fc64382e4628b3c9ea9d2b"
+    },
+    {
+      "path": "scripts/fixtures/v1314-library-links-browser.mjs",
+      "sha256": "5737d92b8740d33bef4dbd7da9153769d5a6b2ccfeae82e1268581e6d1b85a98"
+    },
+    {
+      "path": "scripts/test-link-source-native-actions-browser.mjs",
+      "sha256": "e608eb56958df76a444688e208fa6191d4756e5c460279e7befc0efd9584c5af"
+    },
+    {
+      "path": "scripts/capture-r5j-installed-artifact-smoke.mjs",
+      "sha256": "5d95260e9266ce9b5698b47af33b550ed8831153c0b6fa60556e96fc91912bb4"
+    }
+  ]
+}
