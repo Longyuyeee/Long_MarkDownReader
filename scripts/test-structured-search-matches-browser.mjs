@@ -13,7 +13,14 @@ try{
   const root=page.locator('.'+mode+'-workspace'),source=root.locator('.cm-content'),panel=root.locator('.cm-search'),find=panel.locator('input[name=search]'),modal=page.locator('.structured-search-matches-dialog'),items=modal.locator('.matches-item')
   const fresh=()=>page.waitForFunction(m=>document.querySelector('.'+m+'-workspace')?.dataset.analysisCurrent==='true'&&document.querySelector('.'+m+'-workspace')?.dataset.loading==='false',mode)
   const exact=text=>page.waitForFunction(text=>structuredAudit.sourceText()===text,text)
-  const show=async()=>{await source.click();await page.keyboard.press('Control+f');await find.waitFor({state:'visible'})}
+  const show=async()=>{
+   if(await source.getAttribute('contenteditable')==='false'){
+    const button=root.locator('header button[aria-label^="'+(mode==='json'?'搜索源码':'查找')+'"]')
+    if(mode==='json'&&!await button.isVisible())await root.locator('header').getByRole('button',{name:'编辑工具',exact:true}).click()
+    await button.click()
+   }else{await source.click();await page.keyboard.press('Control+f')}
+   await find.waitFor({state:'visible'})
+  }
   const open=async letter=>{await page.evaluate(({mode,letter})=>structuredAudit.router.push('/editor?path=C:/ui/'+letter+'.'+mode),{mode,letter});await fresh()}
   const matches=async()=>{await panel.locator('button[name=showMatches]').click();await modal.waitFor({state:'visible'})}
   const close=async()=>{await page.keyboard.press('Escape');await modal.waitFor({state:'hidden'});await page.waitForTimeout(250)}
@@ -41,8 +48,13 @@ try{
   }
   if(!reuse){await matches();await page.waitForTimeout(350);await page.screenshot({path:resolve(output,mode+'-640.png'),fullPage:true});await page.evaluate(()=>{structuredAudit.store.theme='dark';document.body.dataset.theme='dark'});await page.waitForTimeout(350);await page.screenshot({path:resolve(output,mode+'-dark-640.png'),fullPage:true});await close()}
   assert.equal(await page.evaluate(()=>structuredAudit.sourceText()),draft);assert.equal(await page.evaluate(m=>structuredAudit.files['C:/ui/A.'+m].content,mode),positionSource(mode))
+  await page.evaluate(m=>structuredAudit.files['C:/ui/B.'+m].readOnlyReason='fixture-readonly',mode);await open('B');await show()
+  assert.equal(await source.getAttribute('contenteditable'),'false');await find.fill('另一份资料');await matches();assert.match(await modal.locator('.matches-summary').innerText(),/1 处/)
+  await items.first().click();await modal.waitFor({state:'hidden'});await page.waitForFunction(()=>document.activeElement===document.querySelector('.cm-content'))
+  const readonly=positionSource(mode).replace('原稿','另一份资料');assert.equal(await page.evaluate(()=>structuredAudit.sourceText()),readonly);await page.keyboard.press('Delete');assert.equal(await page.evaluate(()=>structuredAudit.sourceText()),readonly)
+  assert.equal(await panel.locator('button[name=previewReplace],button[name=replaceAll],input[name=replace]').count(),0)
   assert.equal(await page.evaluate(()=>structuredAudit.calls.filter(c=>/^write_.*_source_document$/.test(c.command)).length),0);assert.deepEqual(errors,[])
-  checks.push({mode,reusedComponent:reuse,status:'passed',navigationExact:true,pagingAndKeyboard:true,cancelFocus:true,scopePreserved:true,staleQueryAndDraftRejected:true,ownerReset:true,noDiskWrites:true,noUndoStep:true,runtimeErrors:errors,combinations});await page.close();page=undefined
+  checks.push({mode,reusedComponent:reuse,status:'passed',navigationExact:true,pagingAndKeyboard:true,cancelFocus:true,scopePreserved:true,staleQueryAndDraftRejected:true,ownerReset:true,readonlyNavigationWithoutEditing:true,noDiskWrites:true,noUndoStep:true,runtimeErrors:errors,combinations});await page.close();page=undefined
  }
  await writeFile(resolve(output,'results.json'),JSON.stringify({status:'passed',nativeBridgeMocked:true,sourceUserContentIncluded:false,checks},null,2)+'\n');console.log('Search matches 8 ownership / 72 style-window combinations passed')
 }catch(error){await page?.screenshot({path:resolve(output,'failure.png'),fullPage:true}).catch(()=>{});await writeFile(resolve(output,'failure.json'),JSON.stringify({error:String(error.stack),checks},null,2));throw error}finally{await browser.close()}

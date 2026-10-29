@@ -44,9 +44,12 @@ export function useStructuredSession(options: Options) {
   const position = useStructuredPosition({ ready: () => !options.loading.value && (options.positionReady?.() ?? true), panes: options.positionPanes, enabled: options.positionEnabled })
   const sourceSearch = useStructuredSearch({ enabled: options.positionEnabled,
     library: () => options.store.libraryPath,
-    ready: () => !disposed && !options.loading.value && !options.saving.value && !options.readOnlyReason.value && Boolean(bound
+    // Finding and locating remain available in read-only sources. Replacement
+    // separately checks editor.readOnly; permission changes also invalidate context.
+    ready: () => !disposed && !options.loading.value && !options.saving.value && Boolean(bound
       && bound.editor === options.editor() && bound.path === options.path() && bound.root === options.store.libraryPath
       && bound.external === options.external() && bound.format === options.format()),
+    readOnly: () => Boolean(options.readOnlyReason.value),
     context: () => JSON.stringify([options.store.libraryPath, options.path(), options.external(), options.format(), options.generation(), options.signature.value, options.readOnlyReason.value]),
   })
   const beforeReplace = () => { sourceSearch.beforeReplace(); position.beforeReplace() }

@@ -18,5 +18,8 @@
   "finalTypeCheckPassed": true,
   "exactSourceReleaseGate": "pending-single-frozen-source-builder",
   "currentNativeWorkflowGroups": 13,
-  "historicalResultsCountedAsCurrent": false
+  "historicalResultsCountedAsCurrent": false,
+  "readonlyNavigationCases": 8,
+  "readonlyKeyboardAndNoWrites": true,
+  "permissionGuardRegression": "installed-readonly-search-blocked-before-fixed-after"
 }

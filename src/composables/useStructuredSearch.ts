@@ -14,7 +14,7 @@ import { buildReplacementPlan, selectedReplacementChanges, type ReplacementPlan 
 import { buildSearchMatches, type SearchMatchPlan } from '../services/structuredSearchMatches'
 
 let feedbackId = 0
-export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; context?: () => string; library?: () => string }) {
+export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; readOnly?: () => boolean; context?: () => string; library?: () => string }) {
   let active: { editor: EditorView; claim: ReturnType<typeof claimStructuredSearch>; library: string; history: ReturnType<typeof structuredSearchHistory>
     pendingScope?: { intent: object; doc: EditorView['state']['doc']; snapshot: NonNullable<StructuredSearchState['scope']> } } | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -116,7 +116,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
       field.setAttribute('aria-invalid', String(invalid))
       for (const name of ['next', 'prev', 'select', 'replace', 'replaceAll', 'previewReplace', 'showMatches']) {
         const button = panel.querySelector<HTMLButtonElement>(`button[name="${name}"]`)
-        if (button) button.disabled = invalidScope || !query.valid || ['previewReplace', 'showMatches'].includes(name) && options.ready?.() === false
+        if (button) button.disabled = invalidScope || !query.valid || ['previewReplace', 'showMatches'].includes(name) && options.ready?.() === false || name === 'previewReplace' && options.readOnly?.() === true
       }
       if (invalid) status.textContent = '正则表达式无效'
       else if (invalidScope) status.textContent = scope.reason === 'waiting' ? '正在确认选区' : scope.reason === 'empty'
@@ -158,7 +158,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     } catch { fail('暂时无法查看匹配，当前草稿仍保留') }
   }
   const openPreview = (editor = active?.editor, refresh = false) => {
-    if (!editor || active?.editor !== editor || !active.claim.current() || options.ready?.() === false || editor.state.readOnly) return
+    if (!editor || active?.editor !== editor || !active.claim.current() || options.ready?.() === false || options.readOnly?.() === true || editor.state.readOnly) return
     const fail = (text: string) => {
       previewFeedback = { epoch, text }; feedback(editor)
       if (preview.value) preview.value = { ...preview.value, error: text }
@@ -183,7 +183,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
     if (!value || !owner || !editor) return false
     const current = panelQuery(editor)
     if (value.error || owner.active !== active || !active.claim.current() || owner.epoch !== epoch
-      || owner.context !== (options.context?.() || '') || options.ready?.() === false || editor.state.readOnly
+      || owner.context !== (options.context?.() || '') || options.ready?.() === false || options.readOnly?.() === true || editor.state.readOnly
       || editor.state.doc !== value.plan.doc || !current.eq(value.plan.query) || current.literal !== value.plan.query.literal) {
       preview.value = { ...value, error: '文件、正文或查找条件已变化，请刷新预览' }; return false
     }
@@ -216,6 +216,8 @@ export function useStructuredSearch(options: { enabled?: () => boolean; ready?: 
       },
     } : undefined, () => openMatches(editor))
   } }), sourceSearchScopeExtensions,
+    // Non-editable content still needs a focus target for locating and copying.
+    EditorView.contentAttributes.of(editor => editor.state.readOnly ? { tabindex: '0' } : null),
     EditorState.phrases.of({ Find: '查找', Replace: '替换', next: '下一个', previous: '上一个',
     all: '选中全部', 'match case': '区分大小写', regexp: '正则', 'by word': '完整词', replace: '替换',
     'replace all': '全部替换', close: '关闭', 'current match': '当前匹配', 'replaced $ matches': '已替换 $ 处',
