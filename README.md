@@ -32,18 +32,18 @@
 </p>
 
 <p align="center">
-  <img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.3.9 真实安装版，紧凑导航、多文档标签与主编辑区">
+  <img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.3.10 真实安装版，紧凑导航、多文档标签与主编辑区">
 </p>
 
 <p align="center"><sub>真实安装版工作区：紧凑导航、稳定的多文档标签与主编辑区，把更多空间留给内容。</sub></p>
 
 ## 开发进展
 
-v1.3.10 查找结果定位候选已完成开发：四格式沿现有查找面板按需查看匹配、分页并定位原文，保护草稿和撤销；当前正在构建和安装复查，尚未发布。[候选审计](docs/V1_3_10_Unsigned_Community_Release_Audit_2026-10-29.md)。当前公开稳定版仍为v1.3.9。
+v1.3.10已发布：JSON、YAML、XML、TOML在现有查找面板按需查看匹配行列和上下文，分页选择后回到原文；保留当前选区、未保存草稿及撤销。[本版审计](docs/V1_3_10_Unsigned_Community_Release_Audit_2026-10-29.md)。下一版1.3.11规划查找定位后返回原编辑位置，继续深化已有编辑流程。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_11_2026-10-29.md)。
 
 ## 不只是打开文件，更是接续你的工作
 
-> **v1.3.9 已正式发布**：最近查找条件。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.9) · [发布说明](docs/RELEASE_NOTES_v1.3.9.md)。
+> **v1.3.10 已正式发布**：查找结果定位。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.10) · [发布说明](docs/RELEASE_NOTES_v1.3.10.md)。
 
 
 
@@ -81,19 +81,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.9"><img src="https://img.shields.io/badge/Stable-v1.3.9-cca43b" alt="v1.3.9 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.10"><img src="https://img.shields.io/badge/Stable-v1.3.10-cca43b" alt="v1.3.10 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.3.9**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.3.10**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.3.9_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.9/LongEdit_1.3.9_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.3.9_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.9/LongEdit_1.3.9_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.3.9](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.9) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.3.10_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.10/LongEdit_1.3.10_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.3.10_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.10/LongEdit_1.3.10_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.3.10](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.10) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.9/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.10/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -101,12 +101,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.3.9_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.3.10_x64-setup.exe
 ```
 
 ```text
-6134b8fb6245662439673777358311394ebeb17dbff86525300fa31ff9fb30cc  LongEdit_1.3.9_x64_zh-CN.msi
-a5b01efb78039c0cfb82e9854f174e0b61e88f0bf2756ef2f30f525cb24e4d51  LongEdit_1.3.9_x64-setup.exe
+c5f16355d6fd2c1c2276dea28fcaccee09c2dcfb0d6e26821db1a00283f737b4  LongEdit_1.3.10_x64_zh-CN.msi
+97b96b5fbd31b469427dc027c1efff016b0724a7acef795b4682c33082933278  LongEdit_1.3.10_x64-setup.exe
 ```
 
 </details>
@@ -236,19 +236,19 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 ## 真实界面
 
-主图、模板、TXT 恢复、文件整理与图谱截图来自 **v1.3.9 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
+主图、模板、TXT 恢复、文件整理、图谱与查找结果截图来自 **v1.3.10 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
 
 ### 模板与文本历史
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.3.9 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.3.9 从 TXT 历史恢复独立副本"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.3.10 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.3.10 从 TXT 历史恢复独立副本"></td></tr>
   <tr><td align="center"><sub>在弹窗中编辑模板与变量</sub></td><td align="center"><sub>TXT 恢复副本，保留原文件</sub></td></tr>
 </table>
 
 ### 文件整理与回收
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.3.9 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.3.9 资料库回收站，选择文件后恢复"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.3.10 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.3.10 资料库回收站，选择文件后恢复"></td></tr>
   <tr><td align="center"><sub>选择或输入目标目录</sub></td><td align="center"><sub>在回收站选择恢复</sub></td></tr>
 </table>
 
@@ -283,10 +283,10 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 ### 知识图谱与思维导图
 
 <p align="center">
-  <img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.3.9 知识图谱与关系健康面板">
+  <img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.3.10 知识图谱与关系健康面板">
 </p>
 
-<p align="center"><sub>v1.3.9 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
+<p align="center"><sub>v1.3.10 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
 
 知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持稳定后自动全图适配、搜索、筛选、多种布局与主题、框选和拖动、缩放、适应当前选择、有界且尊重减少动效设置的选择反馈、可点击/拖动/键盘操作的语义缩略导航、右键操作、中心节点、视图保存以及 SVG/PNG 导出；密集中景会主动降低普通箭头和状态环噪声，近景仍保留方向语义。
 
@@ -586,6 +586,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.3.10 | 查找结果定位 | [发布说明](docs/RELEASE_NOTES_v1.3.10.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.10) · [审计](docs/V1_3_10_Unsigned_Community_Release_Audit_2026-10-29.md) |
 | v1.3.9 | 最近查找条件 | [发布说明](docs/RELEASE_NOTES_v1.3.9.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.9) · [审计](docs/V1_3_9_Unsigned_Community_Release_Audit_2026-10-29.md) |
 | v1.3.8 | 按处选择替换 | [发布说明](docs/RELEASE_NOTES_v1.3.8.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.8) · [审计](docs/V1_3_8_Unsigned_Community_Release_Audit_2026-10-29.md) |
 | v1.3.7 | 结构化源码替换预览 | [发布说明](docs/RELEASE_NOTES_v1.3.7.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.7) · [审计](docs/V1_3_7_Unsigned_Community_Release_Audit_2026-10-29.md) |
@@ -690,9 +691,18 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - [1.2.39—1.2.40](docs/Foundation_Deepening_Roadmap_1_2_39_to_1_2_40_2026-10-26.md) 已交付 **2/2 版**：TOML 数组多行正文与 YAML 列表条目复制排序。
 - [1.2.41—1.2.42](docs/Foundation_Deepening_Roadmap_1_2_41_to_1_2_42_2026-10-26.md) 已交付 **2/2 版**：YAML多行字段与TOML多行数组项复制排序。
 - [1.2.43—1.2.44](docs/Foundation_Deepening_Roadmap_1_2_43_to_1_2_44_2026-10-27.md) 已交付 **2/2 版**：TOML多行字段复制排序和多行数组项删除。
-- 1.3.0—1.3.2已交付；下一版1.3.3规划按文件隔离提纲筛选与继续浏览状态。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_3_2026-10-27.md)。
+- 1.3.0—1.3.10已交付；下一目标1.3.11规划查找定位后返回原编辑位置。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_11_2026-10-29.md)。
 
-### v1.3.9 本次更新
+### v1.3.10 本次更新
+
+- 在结构化文件原有查找面板按需查看匹配行列和短上下文，分页浏览，点击或键盘选择后定位原文。
+- 复用当前关键词、选项和有效选区；只读文件可用。定位不编辑、不保存，不增加正文撤销步骤；取消返回原入口。
+- 正文或条件变化后停用旧位置并提供刷新，切换文件关闭旧弹窗，保护草稿和当前焦点。
+- 保留全部界面风格及正常动效。安装复查按实际影响范围运行，历史基线独立引用，减少重复等待。
+
+<img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v1310-matches-json-1280.jpg" alt="v1.3.10 安装版查找结果定位" width="960" />
+
+### v1.3.9 既有基础能力
 
 - 现有查找面板按需打开最近条件，当前窗口按资料库保留最近10组实际使用的输入和选项，去重排序，清空入口收在下拉中。
 - 主动选择才填入条件，不自动替换、不跳到匹配、不抢正文焦点，保留当前有效选区和未保存草稿。
@@ -706,7 +716,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 应用后回到当前编辑区，可直接继续输入或撤销；取消返回原查找入口，切换文件不抢焦点。
 - 正文、查询、范围或已检测状态变化后停用旧预览；刷新重新全选当前结果并明确提示。保留原有直接替换、只读保护、全部风格及正常动效。
 
-<img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v138-selection-json-1280.jpg" width="800" alt="v1.3.9真实安装版：按处选择替换，保留未选择内容">
+<img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v138-selection-json-1280.jpg" width="800" alt="v1.3.10真实安装版：按处选择替换，保留未选择内容">
 
 ### v1.3.7 既有基础能力
 
@@ -715,7 +725,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 正文、查询、范围或已检测状态变化后停用旧预览并提供刷新，切换文件关闭预览。
 - 替换只修改草稿，保存后才写回；保留只读保护、全部风格和正常动效。
 
-<img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v137-preview-json-1280.jpg" width="800" alt="v1.3.9真实安装版：选区内正则替换预览">
+<img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v137-preview-json-1280.jpg" width="800" alt="v1.3.10真实安装版：选区内正则替换预览">
 
 ### v1.3.6 既有基础能力
 
@@ -724,7 +734,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 范围随草稿编辑及撤销／重做接续，各文件独立保留；正文变化使旧范围失效时暂停操作并保留输入。
 - 替换只修改草稿，保存后才写回；保留只读保护、全部风格和正常动效。
 
-<img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v136-scope-json-1280.jpg" width="800" alt="v1.3.9真实安装版：选区内查找、匹配数量和替换面板">
+<img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v136-scope-json-1280.jpg" width="800" alt="v1.3.10真实安装版：选区内查找、匹配数量和替换面板">
 
 ### v1.3.5 既有基础能力
 
@@ -734,7 +744,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 替换只修改当前草稿，保留撤销／重做；只读文件隐藏替换操作，保存后才写回。
 - 沿用原有入口、全部风格及正常动效，保留源码光标、选区和阅读位置接续。
 
-<img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v135-search-json-1280.jpg" width="800" alt="v1.3.9真实安装版：中文源码查找与替换面板，各文件保留独立输入和条件">
+<img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v135-search-json-1280.jpg" width="800" alt="v1.3.10真实安装版：中文源码查找与替换面板，各文件保留独立输入和条件">
 
 ### v1.3.4 既有基础能力
 
@@ -743,7 +753,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 正文变化时自然回退，首次打开的文件从头开始；提纲、搜索和正文中的主动操作优先。
 - 保护未保存内容、显式保存和原有撤销，保留全部风格与正常动效，沿用原有入口。
 
-<img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v134-position-json-1280.jpg" width="800" alt="v1.3.9真实安装版：返回JSON文件后接续源码选区和阅读位置">
+<img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v134-position-json-1280.jpg" width="800" alt="v1.3.10真实安装版：返回JSON文件后接续源码选区和阅读位置">
 
 ### v1.3.3 既有基础能力
 
@@ -996,7 +1006,7 @@ XML 元素提纲右键“添加子元素…”或“重命名元素…”，必�
 
 JSON/JSONC、YAML、TOML、XML 和 SVG 源码视图在撤销、重做、手动恢复或结构化操作回到已保存原文后，正确更新现有状态栏、标签、保存按钮与关闭确认。基线来自真实读取或保存回执，精确比较源码及所属文件、签名与编码；不重新序列化文件，也不在每次输入时读盘。保存期间后续输入、文件切换、失败重试和冲突继续保护草稿，写入未完成时回到旧基线仍保护关闭；已检测到外部修改或无法确认基线时保守保留未保存状态。不增加页面或常驻表单，全部现有功能、主题和正常动效保留。
 
-<img src="docs/evidence/v1-3-9-candidate-lifecycle/installed-v1217-savepoint-clean.jpg" width="920" alt="v1.3.9 真实安装版：XML 撤销结构操作后恢复准确的已保存状态">
+<img src="docs/evidence/v1-3-10-candidate-lifecycle/installed-v1217-savepoint-clean.jpg" width="920" alt="v1.3.10 真实安装版：XML 撤销结构操作后恢复准确的已保存状态">
 
 ### v1.2.16 XML 属性新增与移除
 
