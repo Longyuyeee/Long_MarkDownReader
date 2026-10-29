@@ -6,15 +6,31 @@ import { fileStylePathKey } from '../utils/fileDisplayStyles'
 import { structuredDocumentDigest } from '../services/structuredPositionState'
 import { sourceSearchScope, sourceSearchScopeExtensions, setSourceSearchScope } from '../services/structuredSearchScope'
 import { createStructuredSearchPanel } from '../services/structuredSearchPanel'
+import { shallowRef, watch } from 'vue'
+import { isolateHistory } from '@codemirror/commands'
+import { buildReplacementPlan, type ReplacementPlan } from '../services/structuredReplacementPlan'
 
 let feedbackId = 0
-export function useStructuredSearch(options: { enabled?: () => boolean }) {
+export function useStructuredSearch(options: { enabled?: () => boolean; ready?: () => boolean; context?: () => string }) {
   let active: { editor: EditorView; claim: ReturnType<typeof claimStructuredSearch>
     pendingScope?: { intent: object; doc: EditorView['state']['doc']; snapshot: NonNullable<StructuredSearchState['scope']> } } | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   let matches: { doc: EditorView['state']['doc']; query: SearchQuery; scope: string; wordHead: number
     ranges: { from: number; to: number }[]; capped: boolean } | undefined
   const id = `structured-search-feedback-${++feedbackId}`
+  const preview = shallowRef<{ plan: ReplacementPlan; scope: string; error?: string }>()
+  let epoch = 0, previewFeedback: { epoch: number; text: string } | undefined
+  let previewOwner: { active: NonNullable<typeof active>; epoch: number; context: string } | undefined
+  let returnFocus: HTMLElement | undefined
+  const invalidatePreview = (error = '正文、查找条件或范围已变化，请刷新预览') => {
+    epoch++; previewFeedback = undefined
+    if (preview.value) preview.value = { ...preview.value, error }
+  }
+  const closePreview = () => { preview.value = undefined }
+  const finishPreview = () => {
+    if (!preview.value && previewOwner?.active === active && active?.claim.current() && options.ready?.() !== false && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true })
+    if (!preview.value) { returnFocus = undefined; previewOwner = undefined }
+  }
   const panelQuery = (editor: EditorView) => {
     const previous = getSearchQuery(editor.state)
     const panel = editor.dom.querySelector('.cm-search')
@@ -40,13 +56,14 @@ export function useStructuredSearch(options: { enabled?: () => boolean }) {
       if (update) { update.hidden = !scope.enabled; update.disabled = editor.state.selection.main.empty }
       const invalid = !!query.search && !query.valid
       field.setAttribute('aria-invalid', String(invalid))
-      for (const name of ['next', 'prev', 'select', 'replace', 'replaceAll']) {
+      for (const name of ['next', 'prev', 'select', 'replace', 'replaceAll', 'previewReplace']) {
         const button = panel.querySelector<HTMLButtonElement>(`button[name="${name}"]`)
-        if (button) button.disabled = invalidScope || !query.valid
+        if (button) button.disabled = invalidScope || !query.valid || name === 'previewReplace' && options.ready?.() === false
       }
       if (invalid) status.textContent = '正则表达式无效'
       else if (invalidScope) status.textContent = scope.reason === 'waiting' ? '正在确认选区' : scope.reason === 'empty'
         ? '请先在正文选择范围' : '选区已变化，请重新选区'
+      else if (previewFeedback?.epoch === epoch) status.textContent = previewFeedback.text
       else if (!query.search) status.textContent = ''
       else {
         const signature = scope.enabled ? `${scope.range!.from}:${scope.range!.to}` : 'all'
@@ -67,16 +84,58 @@ export function useStructuredSearch(options: { enabled?: () => boolean }) {
       status.style.color = invalid || invalidScope && scope.reason !== 'waiting' ? 'var(--status-danger)' : 'var(--theme-text-secondary)'
     }, 100)
   }
-  const extension = [search({ createPanel: editor => createStructuredSearchPanel(editor, active?.editor === editor && active.claim.current(), id) }), sourceSearchScopeExtensions,
+  const openPreview = (editor = active?.editor, refresh = false) => {
+    if (!editor || active?.editor !== editor || !active.claim.current() || options.ready?.() === false || editor.state.readOnly) return
+    const fail = (text: string) => {
+      previewFeedback = { epoch, text }; feedback(editor)
+      if (preview.value) preview.value = { ...preview.value, error: text }
+    }
+    const query = panelQuery(editor)
+    if (!query.eq(getSearchQuery(editor.state)) || query.literal !== getSearchQuery(editor.state).literal) editor.dispatch({ effects: setSearchQuery.of(query) })
+    const scope = editor.state.field(sourceSearchScope)
+    if (scope.enabled && !scope.range) { fail(scope.reason === 'waiting' ? '正在确认选区，请稍后预览' : '请先选择有效范围再预览'); return }
+    try {
+      const result = buildReplacementPlan(editor.state)
+      if (!result.plan) { fail(result.message || '没有需要替换的内容'); return }
+      if (!refresh) returnFocus = editor.root.activeElement instanceof HTMLElement ? editor.root.activeElement : undefined
+      previewFeedback = undefined
+      previewOwner = { active, epoch, context: options.context?.() || '' }
+      preview.value = { plan: result.plan, scope: scope.enabled ? '选区内' : '全文' }
+    } catch { fail('暂时无法预览这次替换，当前草稿仍保留') }
+  }
+  const applyPreview = () => {
+    const value = preview.value, owner = previewOwner, editor = active?.editor
+    if (!value || !owner || !editor) return false
+    const current = panelQuery(editor)
+    if (value.error || owner.active !== active || !active.claim.current() || owner.epoch !== epoch
+      || owner.context !== (options.context?.() || '') || options.ready?.() === false || editor.state.readOnly
+      || editor.state.doc !== value.plan.doc || !current.eq(value.plan.query) || current.literal !== value.plan.query.literal) {
+      preview.value = { ...value, error: '文件、正文或查找条件已变化，请刷新预览' }; return false
+    }
+    closePreview()
+    editor.dispatch({ changes: value.plan.changes, annotations: isolateHistory.of('full'), userEvent: 'input.replace.all',
+      effects: EditorView.announce.of(`已替换 ${value.plan.edits.length} 处，当前草稿尚未保存`) })
+    return true
+  }
+  const stopContext = watch(() => options.context?.(), () => invalidatePreview('文件状态已变化，请刷新预览'), { flush: 'sync' })
+  const stopReady = watch(() => options.ready?.(), ready => {
+    if (ready === false) invalidatePreview('当前文件状态已变化，请稍后刷新预览')
+    if (active) feedback(active.editor)
+  }, { flush: 'sync' })
+  const extension = [search({ createPanel: editor => createStructuredSearchPanel(editor, active?.editor === editor && active.claim.current(), id, () => openPreview(editor)) }), sourceSearchScopeExtensions,
     EditorState.phrases.of({ Find: '查找', Replace: '替换', next: '下一个', previous: '上一个',
     all: '选中全部', 'match case': '区分大小写', regexp: '正则', 'by word': '完整词', replace: '替换',
     'replace all': '全部替换', close: '关闭', 'current match': '当前匹配', 'replaced $ matches': '已替换 $ 处',
     'replaced match on line $': '已替换第 $ 行的匹配' }), EditorView.updateListener.of(update => {
-    if (update.docChanged || update.selectionSet || !getSearchQuery(update.state).eq(getSearchQuery(update.startState))
+    const changed = update.docChanged || !getSearchQuery(update.state).eq(getSearchQuery(update.startState))
+      || getSearchQuery(update.state).literal !== getSearchQuery(update.startState).literal
       || update.state.field(sourceSearchScope) !== update.startState.field(sourceSearchScope)
-      || searchPanelOpen(update.state) !== searchPanelOpen(update.startState)) feedback(update.view)
+    if (changed) invalidatePreview()
+    if (changed || update.selectionSet || searchPanelOpen(update.state) !== searchPanelOpen(update.startState)) feedback(update.view)
   })]
   const beforeReplace = () => {
+    closePreview(); returnFocus = undefined; previewOwner = undefined
+    epoch++; previewFeedback = undefined
     if (active?.claim.current()) {
       const query = panelQuery(active.editor)
       // Flush paste/IME input while this view is still outside setState. The
@@ -97,6 +156,7 @@ export function useStructuredSearch(options: { enabled?: () => boolean }) {
     clearTimeout(timer)
   }
   const bind = (editor: EditorView, tab: object, root: string, external: boolean, format: string) => {
+    closePreview(); epoch++; previewFeedback = undefined
     clearTimeout(timer); active = undefined; matches = undefined
     if (options.enabled?.() === false || !['json', 'jsonc', 'yaml', 'xml', 'toml'].includes(format)) return
     const claim = claimStructuredSearch(tab, JSON.stringify([fileStylePathKey(root), external, format]))
@@ -127,6 +187,6 @@ export function useStructuredSearch(options: { enabled?: () => boolean }) {
     }
     feedback(editor)
   }
-  const dispose = () => { beforeReplace(); active = undefined; matches = undefined }
-  return { extension, bind, beforeReplace, dispose }
+  const dispose = () => { beforeReplace(); active = undefined; matches = undefined; stopContext(); stopReady() }
+  return { extension, bind, beforeReplace, dispose, preview, closePreview, finishPreview, refreshPreview: () => openPreview(active?.editor, true), applyPreview }
 }

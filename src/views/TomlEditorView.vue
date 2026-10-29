@@ -123,6 +123,7 @@
       <p role="alert">{{ moveError }}</p>
       <template #footer><div class="value-edit-actions"><n-button @click="moveError=''">关闭</n-button><n-button type="primary" @click="revealMoveSource">定位源码</n-button></div></template>
     </n-modal>
+    <StructuredReplacementDialog :search="session.sourceSearch" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
 </template>
@@ -145,6 +146,7 @@ import { useDialog, useMessage, type InputInst } from 'naive-ui'
 import { List as ArrayIcon, ChevronRight as FoldArrayIcon, ChevronDown as UnfoldArrayIcon, AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon, FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, KeyRound as KeyIcon, PanelRight as InspectorIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Search as SearchIcon, TableProperties as TableIcon, UnfoldVertical as UnfoldIcon } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextConflictDialog from '../components/TextConflictDialog.vue'
+import StructuredReplacementDialog from '../components/StructuredReplacementDialog.vue'
 import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
 import StructuredHistoryMenu from '../components/StructuredHistoryMenu.vue'
 import SourceNodeMenu from '../components/SourceNodeMenu.vue'

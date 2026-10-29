@@ -42,7 +42,12 @@ const key = (owner: Pick<Owner, 'path'>) => fileStylePathKey(owner.path)
 export function useStructuredSession(options: Options) {
   let disposed = false, bound: Owner | undefined
   const position = useStructuredPosition({ ready: () => !options.loading.value && (options.positionReady?.() ?? true), panes: options.positionPanes, enabled: options.positionEnabled })
-  const sourceSearch = useStructuredSearch({ enabled: options.positionEnabled })
+  const sourceSearch = useStructuredSearch({ enabled: options.positionEnabled,
+    ready: () => !disposed && !options.loading.value && !options.saving.value && !options.readOnlyReason.value && Boolean(bound
+      && bound.editor === options.editor() && bound.path === options.path() && bound.root === options.store.libraryPath
+      && bound.external === options.external() && bound.format === options.format()),
+    context: () => JSON.stringify([options.store.libraryPath, options.path(), options.external(), options.format(), options.generation(), options.signature.value, options.readOnlyReason.value]),
+  })
   const beforeReplace = () => { sourceSearch.beforeReplace(); position.beforeReplace() }
   const conflict = shallowRef<Owner>()
   const history = shallowRef<Owner & { historyTimestamp?: number }>()
@@ -276,7 +281,7 @@ export function useStructuredSession(options: Options) {
     }
   })
   onBeforeUnmount(() => { sync(); sourceSearch.dispose(); position.beforeReplace(); disposed = true; cancelChange(); closeConflict(); closeHistory(); subscriptions.forEach(stop => stop()); window.removeEventListener('keydown', keydown, true); window.removeEventListener('beforeunload', beforeUnload) })
-  return { beforeReplace, searchExtension: sourceSearch.extension, capture, owns, unchanged, bind, sync, refreshDirty, hasDocument, waitForWrite, save, reload, conflict, applyConflict, closeConflict, finishCopy,
+  return { beforeReplace, searchExtension: sourceSearch.extension, sourceSearch, capture, owns, unchanged, bind, sync, refreshDirty, hasDocument, waitForWrite, save, reload, conflict, applyConflict, closeConflict, finishCopy,
     preview, previewError, offerChange, applyChange, cancelChange, history, historyDraft, historyCurrent, openHistory, closeHistory, applyHistoryDraft }
 }
 const errorText = (error: unknown) => (error as { message?: string })?.message || String(error)
