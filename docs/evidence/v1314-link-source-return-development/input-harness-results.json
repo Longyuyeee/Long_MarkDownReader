@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "kind": "real-browser-mocked-file-IPC-and-protocol-unit-checks",
+  "status": "passed",
+  "compiledProductChanged": false,
+  "compiledSourceCommit": "5524648049844fcbd9e9ccdde1dadf3a89b4388f",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "protocolTestsPassed": 19,
+  "slowInputRegression": [
+    {
+      "mode": "json",
+      "afterUndoOriginal": false,
+      "afterUndoEmpty": true,
+      "replacementExact": true,
+      "delayedInputMs": 900
+    },
+    {
+      "mode": "yaml",
+      "afterUndoOriginal": false,
+      "afterUndoEmpty": true,
+      "replacementExact": true,
+      "delayedInputMs": 900
+    },
+    {
+      "mode": "xml",
+      "afterUndoOriginal": false,
+      "afterUndoEmpty": true,
+      "replacementExact": true,
+      "delayedInputMs": 900
+    },
+    {
+      "mode": "toml",
+      "afterUndoOriginal": false,
+      "afterUndoEmpty": true,
+      "replacementExact": true,
+      "delayedInputMs": 900
+    }
+  ],
+  "replacementChecks": [
+    {
+      "mode": "json",
+      "afterUndoOriginal": true,
+      "afterUndoEmpty": false,
+      "replacementExact": true,
+      "delayedInputMs": 900,
+      "redoExact": true,
+      "emptyFillUndoExact": true
+    },
+    {
+      "mode": "yaml",
+      "afterUndoOriginal": true,
+      "afterUndoEmpty": false,
+      "replacementExact": true,
+      "delayedInputMs": 900,
+      "redoExact": true,
+      "emptyFillUndoExact": true
+    },
+    {
+      "mode": "xml",
+      "afterUndoOriginal": true,
+      "afterUndoEmpty": false,
+      "replacementExact": true,
+      "delayedInputMs": 900,
+      "redoExact": true,
+      "emptyFillUndoExact": true
+    },
+    {
+      "mode": "toml",
+      "afterUndoOriginal": true,
+      "afterUndoEmpty": false,
+      "replacementExact": true,
+      "delayedInputMs": 900,
+      "redoExact": true,
+      "emptyFillUndoExact": true
+    }
+  ],
+  "files": [
+    {
+      "path": "scripts/lib/v118-native-user-input.mjs",
+      "sha256": "5bf01b06443ca58963dded34c45d234b714789f6b6cf7a3ad823515949541dcb"
+    },
+    {
+      "path": "scripts/test-native-fill-undo-browser.mjs",
+      "sha256": "3bb714bea35f37588fe685cd7c001a29dbbb823c48fd455fcbc322d6884198a7"
+    }
+  ]
+}

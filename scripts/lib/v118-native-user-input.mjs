@@ -42,8 +42,11 @@ export function nativeUserInput({send,evaluate},{timeoutMs=20000,pollMs=80,stabl
   const fill=async(selector,text)=>{
     await click(selector)
     assert.equal(await evaluate(`document.activeElement.matches(${JSON.stringify(selector)})`),true,'input must have real keyboard focus')
-    await key('a','KeyA',65,2);await key('Backspace','Backspace',8)
+    await key('a','KeyA',65,2)
+    // Replacing a selection is one user edit. Deleting first creates a second
+    // undo step when a slow runner separates deletion from text insertion.
     if(text)await send('Input.insertText',{text})
+    else await key('Backspace','Backspace',8)
   }
   const tabTo=async(selector)=>{
     await waitFor(`Array.from(document.querySelectorAll(${JSON.stringify(selector)})).some(e=>!e.disabled&&e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden'&&(e.tabIndex>=0||e.isContentEditable))`,'keyboard target '+selector)
