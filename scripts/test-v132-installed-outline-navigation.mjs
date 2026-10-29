@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import {releaseValidationProfile} from './lib/release-validation-profile.mjs'
 import crypto from 'node:crypto'
 import {test} from 'node:test'
 import vm from 'node:vm'
@@ -22,6 +23,8 @@ test('installed navigation remains bound to runtime, original installers and pub
 
 test('the current version must still execute and validate the inherited131 workflow',()=>{
  const current=JSON.parse(fs.readFileSync('package.json','utf8')).version
+ const profile=releaseValidationProfile(current),mustRun=!profile||profile.currentReportKeys.includes('yamlBlockFieldDelete'),required=mustRun?current:profile.baseline.version
+ if(!mustRun)assert.ok(profile.inheritedReportKeys.includes('yamlBlockFieldDelete'),'An omitted workflow requires an explicit immutable historical reference')
  for(const[file,anchor,guard]of [
   ['scripts/capture-r5j-installed-artifact-smoke.mjs','const {runInstalledV131YamlBlockFieldDeleteWorkflow}','if('],
   ['scripts/lib/installed-release-runtime.mjs','validateInstalledYamlBlockFieldDelete(reports.yamlBlockFieldDelete','if('],
@@ -29,6 +32,6 @@ test('the current version must still execute and validate the inherited131 workf
   ['.github/workflows/community-release-publish.yml','import {validateInstalledYamlBlockFieldDelete','if ($env:RELEASE_VERSION'],
  ]){
   const source=fs.readFileSync(file,'utf8'),end=source.indexOf(anchor);assert.ok(end>0,file)
-  const start=source.lastIndexOf(guard,end);assert.ok(start>=0,file);assert.ok(source.slice(start,end).includes("'"+current+"'"),file+' omitted the current version from the inherited workflow')
+  const start=source.lastIndexOf(guard,end);assert.ok(start>=0,file);assert.ok(source.slice(start,end).includes("'"+required+"'"),file+' omitted the declared current or historical workflow');assert.equal(source.slice(start,end).includes("'"+current+"'"),mustRun,file+' must match the declared current scope')
  }
 })

@@ -39,3 +39,14 @@ test('imported primary reports match only the current core and affected selectio
  const supplemental=['routes','searchBaseline','searchUser','searchOffice']
  assert.deepEqual(Array.from(rows,r=>r[0]).sort(),[...profile.currentReportKeys.filter(k=>!supplemental.includes(k)),'lifecycle','management'].sort())
 })
+test('runtime validators require exactly the selected reports and keep historical groups outside current counts',()=>{
+ const lines=fs.readFileSync('scripts/lib/installed-release-runtime.mjs','utf8').split('\n'),all=[],current=[]
+ for(let i=0;i<lines.length;i++){
+  const guard=lines[i].match(/^\s*if\s*\((.*)\)\s*\{/),target=lines[i+1]?.match(/validateInstalled\w+\(reports\.(\w+)/)
+  if(!guard||!target||!guard[1].includes('manifest.appVersion'))continue
+  all.push(target[1]);if(new Function('manifest','return '+guard[1])({appVersion:'1.3.10'}))current.push(target[1])
+ }
+ assert.ok(all.length>70)
+ assert.deepEqual(current.sort(),profile.currentReportKeys.filter(key=>all.includes(key)).sort())
+ for(const key of ['sourceMatches','recentSearch','sourcePosition','sourceScope','replacementPreview','savepoint'])assert.ok(current.includes(key),key)
+})

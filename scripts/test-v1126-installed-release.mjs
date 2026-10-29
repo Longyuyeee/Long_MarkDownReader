@@ -33,7 +33,9 @@ test('native workflow uses valid UI expressions and remains required in import, 
  assert.ok(fs.readFileSync('scripts/capture-r5j-installed-artifact-smoke.mjs','utf8').includes('runInstalledV1126Workflow'))
  const workflow=YAML.parse(fs.readFileSync('.github/workflows/v1-1-0-candidate-lifecycle.yml','utf8'))
  assert.equal(workflow.on.workflow_dispatch.inputs.build_only.type,'boolean')
- for(const name of ['Run frozen candidate release quality gate','Run complete Rust regression suite','Build frozen candidate MSI and NSIS','Capture immutable installer receipt']){const step=workflow.jobs['candidate-lifecycle'].steps.find(s=>s.name===name);assert.ok(step);assert.equal(step.if,undefined,'build-only must never skip '+name)}
+ for(const name of ['Run frozen candidate release quality gate','Resolve backend regression baseline','Build frozen candidate MSI and NSIS','Capture immutable installer receipt']){const step=workflow.jobs['candidate-lifecycle'].steps.find(s=>s.name===name);assert.ok(step);assert.equal(step.if,undefined,'build-only must never skip '+name)}
+ const rust=workflow.jobs['candidate-lifecycle'].steps.find(s=>s.name==='Run complete Rust regression suite')
+ assert.equal(rust.if,"${{ env.REUSE_RUST_BASELINE != '1' }}",'Only a verified unchanged backend may reuse the published functional baseline')
  assert.ok(fs.readFileSync('.github/workflows/community-release-publish.yml','utf8').includes("$review.conclusion -ne 'success'"),'A successful same-package review remains mandatory')
 
 })
