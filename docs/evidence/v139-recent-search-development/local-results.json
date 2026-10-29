@@ -1,0 +1,23 @@
+{
+  "appVersion": "1.3.9",
+  "browserFormats": 4,
+  "componentOwnershipCases": 8,
+  "styleWindowCombinations": 72,
+  "previousRegressionBoundary": "passed-before-final-select-contrast-specificity-only",
+  "previousSelectionOwnershipCases": 8,
+  "previousSelectionStyleWindowCombinations": 72,
+  "darkNarrowWindows": 4,
+  "localImagesVisuallyReviewed": 8,
+  "normalMotion": true,
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "localQualityActualExit": null,
+  "localQualitySequenceCompleted": false,
+  "localQualityCommands": 101,
+  "finalUnitTestsPassed": 63,
+  "finalTypeCheckPassed": true,
+  "exactSourceReleaseGate": "pending-single-frozen-source-builder",
+  "fixedSpeculativeStateReproduction": "failed-before-passed-after-with-single-state-update",
+  "localPreviousSelectionTransientFailure": "TOML-parse-viewport-in-provisional-transaction-state"
+}

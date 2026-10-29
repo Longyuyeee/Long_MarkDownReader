@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.3.8已发布：JSON、YAML、XML、TOML支持在现有预览逐处选择、跨页保留，只修改勾选的位置；应用后回到编辑区，可一次撤销，显式保存才写回。[本版审计](docs/V1_3_8_Unsigned_Community_Release_Audit_2026-10-29.md)。下一版1.3.9规划最近查找条件，在当前资料库内复用常用查找与替换输入。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_9_2026-10-29.md)。
+v1.3.9正在实现最近查找条件，在当前资料库复用常用输入，保护未保存草稿。[本版记录](docs/V1_3_9_Unsigned_Community_Release_Audit_2026-10-29.md)。当前公开下载仍为v1.3.8。
 
 ## 不只是打开文件，更是接续你的工作
 

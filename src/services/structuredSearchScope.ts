@@ -61,8 +61,16 @@ const queryWithScope = (query: SearchQuery) => new BoundedSearchQuery({ search: 
 const scopeTransaction = (tr: Transaction) => tr.docChanged || tr.effects.some(effect =>
   effect.is(setSearchQuery) || effect.is(setSourceSearchScope) || effect.is(restoreScope))
 export const sourceSearchScopeExtensions = [sourceSearchScope,
-  EditorState.transactionExtender.of(tr => scopeTransaction(tr)
-    ? { effects: setSearchQuery.of(queryWithScope(getSearchQuery(tr.state))) } : null),
+  EditorState.transactionExtender.of(tr => {
+    if (!scopeTransaction(tr)) return null
+    // Reading tr.state here constructs a speculative edited state, then the
+    // added effect constructs it again. Stream parsers carry mutable work
+    // between states, so that first parse can leave offsets for the wrong doc.
+    // Derive the last explicit query directly, without constructing that state.
+    let query = getSearchQuery(tr.startState)
+    for (const effect of tr.effects) if (effect.is(setSearchQuery)) query = effect.value
+    return { effects: setSearchQuery.of(queryWithScope(query)) }
+  }),
   invertedEffects.of(tr => {
     const scope = tr.startState.field(sourceSearchScope)
     // An undo record cannot restart the asynchronous verification that owned
