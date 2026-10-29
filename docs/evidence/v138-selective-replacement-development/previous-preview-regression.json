@@ -1,0 +1,427 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "mode": "json",
+      "reusedComponent": false,
+      "status": "passed",
+      "pagedBeforeAfter": true,
+      "cancelPreservesDraftAndDisk": true,
+      "staleBodyQueryScopeRejected": true,
+      "refreshCurrentProposal": true,
+      "scopedCapturesAndOneUndo": true,
+      "explicitSaveOnly": true,
+      "ownerSwitchClosesPreview": true,
+      "readonlyHidden": true,
+      "unchangedInlineFeedback": true,
+      "combinations": [
+        {
+          "style": "soft",
+          "width": 1440
+        },
+        {
+          "style": "soft",
+          "width": 800
+        },
+        {
+          "style": "soft",
+          "width": 640
+        },
+        {
+          "style": "neo",
+          "width": 1440
+        },
+        {
+          "style": "neo",
+          "width": 800
+        },
+        {
+          "style": "neo",
+          "width": 640
+        },
+        {
+          "style": "glass",
+          "width": 1440
+        },
+        {
+          "style": "glass",
+          "width": 800
+        },
+        {
+          "style": "glass",
+          "width": 640
+        },
+        {
+          "style": "minimal",
+          "width": 1440
+        },
+        {
+          "style": "minimal",
+          "width": 800
+        },
+        {
+          "style": "minimal",
+          "width": 640
+        },
+        {
+          "style": "sharp",
+          "width": 1440
+        },
+        {
+          "style": "sharp",
+          "width": 800
+        },
+        {
+          "style": "sharp",
+          "width": 640
+        },
+        {
+          "style": "airy",
+          "width": 1440
+        },
+        {
+          "style": "airy",
+          "width": 800
+        },
+        {
+          "style": "airy",
+          "width": 640
+        }
+      ],
+      "runtimeErrors": []
+    },
+    {
+      "mode": "yaml",
+      "reusedComponent": false,
+      "status": "passed",
+      "pagedBeforeAfter": true,
+      "cancelPreservesDraftAndDisk": true,
+      "staleBodyQueryScopeRejected": true,
+      "refreshCurrentProposal": true,
+      "scopedCapturesAndOneUndo": true,
+      "explicitSaveOnly": true,
+      "ownerSwitchClosesPreview": true,
+      "readonlyHidden": true,
+      "unchangedInlineFeedback": true,
+      "combinations": [
+        {
+          "style": "soft",
+          "width": 1440
+        },
+        {
+          "style": "soft",
+          "width": 800
+        },
+        {
+          "style": "soft",
+          "width": 640
+        },
+        {
+          "style": "neo",
+          "width": 1440
+        },
+        {
+          "style": "neo",
+          "width": 800
+        },
+        {
+          "style": "neo",
+          "width": 640
+        },
+        {
+          "style": "glass",
+          "width": 1440
+        },
+        {
+          "style": "glass",
+          "width": 800
+        },
+        {
+          "style": "glass",
+          "width": 640
+        },
+        {
+          "style": "minimal",
+          "width": 1440
+        },
+        {
+          "style": "minimal",
+          "width": 800
+        },
+        {
+          "style": "minimal",
+          "width": 640
+        },
+        {
+          "style": "sharp",
+          "width": 1440
+        },
+        {
+          "style": "sharp",
+          "width": 800
+        },
+        {
+          "style": "sharp",
+          "width": 640
+        },
+        {
+          "style": "airy",
+          "width": 1440
+        },
+        {
+          "style": "airy",
+          "width": 800
+        },
+        {
+          "style": "airy",
+          "width": 640
+        }
+      ],
+      "runtimeErrors": []
+    },
+    {
+      "mode": "xml",
+      "reusedComponent": false,
+      "status": "passed",
+      "pagedBeforeAfter": true,
+      "cancelPreservesDraftAndDisk": true,
+      "staleBodyQueryScopeRejected": true,
+      "refreshCurrentProposal": true,
+      "scopedCapturesAndOneUndo": true,
+      "explicitSaveOnly": true,
+      "ownerSwitchClosesPreview": true,
+      "readonlyHidden": true,
+      "unchangedInlineFeedback": true,
+      "combinations": [
+        {
+          "style": "soft",
+          "width": 1440
+        },
+        {
+          "style": "soft",
+          "width": 800
+        },
+        {
+          "style": "soft",
+          "width": 640
+        },
+        {
+          "style": "neo",
+          "width": 1440
+        },
+        {
+          "style": "neo",
+          "width": 800
+        },
+        {
+          "style": "neo",
+          "width": 640
+        },
+        {
+          "style": "glass",
+          "width": 1440
+        },
+        {
+          "style": "glass",
+          "width": 800
+        },
+        {
+          "style": "glass",
+          "width": 640
+        },
+        {
+          "style": "minimal",
+          "width": 1440
+        },
+        {
+          "style": "minimal",
+          "width": 800
+        },
+        {
+          "style": "minimal",
+          "width": 640
+        },
+        {
+          "style": "sharp",
+          "width": 1440
+        },
+        {
+          "style": "sharp",
+          "width": 800
+        },
+        {
+          "style": "sharp",
+          "width": 640
+        },
+        {
+          "style": "airy",
+          "width": 1440
+        },
+        {
+          "style": "airy",
+          "width": 800
+        },
+        {
+          "style": "airy",
+          "width": 640
+        }
+      ],
+      "runtimeErrors": []
+    },
+    {
+      "mode": "toml",
+      "reusedComponent": false,
+      "status": "passed",
+      "pagedBeforeAfter": true,
+      "cancelPreservesDraftAndDisk": true,
+      "staleBodyQueryScopeRejected": true,
+      "refreshCurrentProposal": true,
+      "scopedCapturesAndOneUndo": true,
+      "explicitSaveOnly": true,
+      "ownerSwitchClosesPreview": true,
+      "readonlyHidden": true,
+      "unchangedInlineFeedback": true,
+      "combinations": [
+        {
+          "style": "soft",
+          "width": 1440
+        },
+        {
+          "style": "soft",
+          "width": 800
+        },
+        {
+          "style": "soft",
+          "width": 640
+        },
+        {
+          "style": "neo",
+          "width": 1440
+        },
+        {
+          "style": "neo",
+          "width": 800
+        },
+        {
+          "style": "neo",
+          "width": 640
+        },
+        {
+          "style": "glass",
+          "width": 1440
+        },
+        {
+          "style": "glass",
+          "width": 800
+        },
+        {
+          "style": "glass",
+          "width": 640
+        },
+        {
+          "style": "minimal",
+          "width": 1440
+        },
+        {
+          "style": "minimal",
+          "width": 800
+        },
+        {
+          "style": "minimal",
+          "width": 640
+        },
+        {
+          "style": "sharp",
+          "width": 1440
+        },
+        {
+          "style": "sharp",
+          "width": 800
+        },
+        {
+          "style": "sharp",
+          "width": 640
+        },
+        {
+          "style": "airy",
+          "width": 1440
+        },
+        {
+          "style": "airy",
+          "width": 800
+        },
+        {
+          "style": "airy",
+          "width": 640
+        }
+      ],
+      "runtimeErrors": []
+    },
+    {
+      "mode": "json",
+      "reusedComponent": true,
+      "status": "passed",
+      "pagedBeforeAfter": true,
+      "cancelPreservesDraftAndDisk": true,
+      "staleBodyQueryScopeRejected": true,
+      "refreshCurrentProposal": true,
+      "scopedCapturesAndOneUndo": true,
+      "explicitSaveOnly": true,
+      "ownerSwitchClosesPreview": true,
+      "readonlyHidden": true,
+      "unchangedInlineFeedback": true,
+      "combinations": [],
+      "runtimeErrors": []
+    },
+    {
+      "mode": "yaml",
+      "reusedComponent": true,
+      "status": "passed",
+      "pagedBeforeAfter": true,
+      "cancelPreservesDraftAndDisk": true,
+      "staleBodyQueryScopeRejected": true,
+      "refreshCurrentProposal": true,
+      "scopedCapturesAndOneUndo": true,
+      "explicitSaveOnly": true,
+      "ownerSwitchClosesPreview": true,
+      "readonlyHidden": true,
+      "unchangedInlineFeedback": true,
+      "combinations": [],
+      "runtimeErrors": []
+    },
+    {
+      "mode": "xml",
+      "reusedComponent": true,
+      "status": "passed",
+      "pagedBeforeAfter": true,
+      "cancelPreservesDraftAndDisk": true,
+      "staleBodyQueryScopeRejected": true,
+      "refreshCurrentProposal": true,
+      "scopedCapturesAndOneUndo": true,
+      "explicitSaveOnly": true,
+      "ownerSwitchClosesPreview": true,
+      "readonlyHidden": true,
+      "unchangedInlineFeedback": true,
+      "combinations": [],
+      "runtimeErrors": []
+    },
+    {
+      "mode": "toml",
+      "reusedComponent": true,
+      "status": "passed",
+      "pagedBeforeAfter": true,
+      "cancelPreservesDraftAndDisk": true,
+      "staleBodyQueryScopeRejected": true,
+      "refreshCurrentProposal": true,
+      "scopedCapturesAndOneUndo": true,
+      "explicitSaveOnly": true,
+      "ownerSwitchClosesPreview": true,
+      "readonlyHidden": true,
+      "unchangedInlineFeedback": true,
+      "combinations": [],
+      "runtimeErrors": []
+    }
+  ]
+}

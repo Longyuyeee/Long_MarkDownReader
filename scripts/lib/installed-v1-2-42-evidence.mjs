@@ -8,7 +8,7 @@ export const tomlBlockArraysEdited="# 配置 中文😀\nlabel = '我的草稿'\
 export const tomlBlockArraysConflict="# 配置 中文😀\nlabel = '我的草稿'\nitems = [\n  \"\"\"后一段\\n折叠\"\"\", # 第二段\n  \"\"\"后一段\\n折叠\"\"\", # 第二段\n\n# independent\n\n  0xFF, # number\n  '''第一行😀\n第二行''' # 第一段\n]\nkept = [\n  \"\"\"\n# 正文\n\ntext\n\"\"\" # keep\n]\nempty = ['''''', 0xFF]\nblocked = ['''old''', [1]]\nambiguous = [\n# attached?\n  '''old''',\n  false\n]\nlast = 8_080\n"
 export const tomlBlockArraysOutputFiles=['installed-v1242-block-arrays-observations.json','installed-v1242-toml-saved.toml','installed-v1242-toml-copy.toml','installed-v1242-toml-external.toml']
 export function validateInstalledTomlBlockArrays(r,m){
- assert.ok(['1.2.42','1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.42','1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-toml-block-array-operations-trusted-input-and-file-bytes')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const prefix of ['locked','external']){assert.match(r[prefix+'Before'],/^[a-f0-9]{64}$/);assert.equal(r[prefix+'Before'],r[prefix+'After'])}

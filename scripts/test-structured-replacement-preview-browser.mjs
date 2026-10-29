@@ -30,7 +30,7 @@ try{
   await replacement.dispatchEvent('compositionstart');await replacement.dispatchEvent('keydown',{key:'Enter',code:'Enter',keyCode:13,isComposing:true,bubbles:true});await replacement.dispatchEvent('compositionend');assert.equal(await body(),positionDraft(mode))
   await preview();assert.match(await modal.locator('.replacement-summary').innerText(),/100/);assert.equal(await modal.locator('.replacement-item').count(),20)
   assert.equal(await modal.locator('.replacement-before mark').first().innerText(),'我的草稿');assert.equal(await modal.locator('.replacement-after mark').first().innerText(),'预览修改')
-  await modal.getByRole('button',{name:'下一页',exact:true}).click();assert.match(await modal.locator('.replacement-location').first().innerText(),/^21 ·/)
+  await modal.getByRole('button',{name:'下一页',exact:true}).click();assert.match((await modal.locator('.replacement-location').first().innerText()).trim(),/^21 ·/)
   await cancel();assert.equal(await body(),positionDraft(mode));assert.equal(await page.evaluate(m=>structuredAudit.files['C:/ui/A.'+m].content,mode),positionSource(mode))
   // Content changes cannot apply an old proposal, even if an invocation bypasses the disabled button.
   await preview();await page.evaluate(()=>structuredAudit.previewTest.edit({from:0,insert:'\n'}));await modal.locator('[role=alert]').waitFor();assert.equal(await apply().isDisabled(),true)
@@ -42,7 +42,7 @@ try{
   await preview();await page.evaluate(()=>structuredAudit.previewTest.query({replace:'查询更新'}));await modal.locator('[role=alert]').waitFor();assert.equal(await page.evaluate(()=>structuredAudit.previewTest.tryApply()),false)
   await refresh().click();assert.equal(await modal.locator('.replacement-after mark').first().innerText(),'查询更新');await cancel()
   await preview();await page.evaluate(()=>structuredAudit.previewTest.scope());await modal.locator('[role=alert]').waitFor();assert.equal(await page.evaluate(()=>structuredAudit.previewTest.tryApply()),false)
-  await refresh().click();assert.match(await modal.locator('.replacement-summary').innerText(),/修改 3 处/);assert.match(await modal.locator('.replacement-summary').innerText(),/选区内/);await cancel()
+  await refresh().click();assert.match(await modal.locator('.replacement-summary').innerText(),/3 处/);assert.match(await modal.locator('.replacement-summary').innerText(),/选区内/);await cancel()
   await find.fill('我的草稿 (\\d+)');await replacement.fill('确认 $1');await panel.locator('input[name=re]').check();await preview()
   assert.equal(await modal.locator('.replacement-after mark').first().innerText(),'确认 3');await apply().click()
   const expected=positionDraft(mode).replace(/我的草稿 ([345])(?!\d)/g,'确认 $1');await exact(expected);await modal.waitFor({state:'hidden'})

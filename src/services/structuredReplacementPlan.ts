@@ -1,4 +1,4 @@
-import { type ChangeSet, type EditorState, type Text } from '@codemirror/state'
+import { ChangeSet, type EditorState, type Text } from '@codemirror/state'
 import { getSearchQuery, type SearchQuery } from '@codemirror/search'
 import { createNativeSearchQuery } from './boundedSearchQuery.ts'
 
@@ -6,6 +6,14 @@ export interface ReplacementPlan {
   doc: Text; query: SearchQuery; changes: ChangeSet
   edits: readonly { from: number; to: number; insert: string }[]
   matches: number; unchanged: number
+}
+
+// Selection refers only to edits in this immutable plan, never to positions in
+// a subsequently changed document. The caller still validates the plan owner.
+export function selectedReplacementChanges(plan: ReplacementPlan, excluded: ReadonlySet<number>): ChangeSet | undefined {
+  for (const index of excluded) if (!Number.isInteger(index) || index < 0 || index >= plan.edits.length) return
+  if (excluded.size === plan.edits.length) return
+  return excluded.size ? ChangeSet.of(plan.edits.filter((_, index) => !excluded.has(index)), plan.doc.length) : plan.changes
 }
 export function buildReplacementPlan(state: EditorState, limits = { matches: 10000, changedText: 4000000, insertedText: 2000000 }): { plan?: ReplacementPlan; message?: string } {
   const query = getSearchQuery(state)

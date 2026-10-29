@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.3.7已发布：JSON、YAML、XML、TOML支持按需打开分页替换预览，沿用查找条件和选区范围，确认后应用为一次可撤销的草稿修改；旧预览失效时可刷新。[本版审计](docs/V1_3_7_Unsigned_Community_Release_Audit_2026-10-29.md)。下一版1.3.8规划按处选择替换，在既有预览中排除不想修改的位置。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_8_2026-10-29.md)。
+v1.3.8正在实现预览内按处选择替换，跨页保留选择并保护草稿。[本版记录](docs/V1_3_8_Unsigned_Community_Release_Audit_2026-10-29.md)。当前公开下载仍为v1.3.7。
 
 ## 不只是打开文件，更是接续你的工作
 
