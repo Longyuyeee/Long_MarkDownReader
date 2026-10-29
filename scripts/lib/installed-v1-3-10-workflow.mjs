@@ -1,0 +1,52 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import crypto from 'node:crypto'
+import {nativeUserInput} from './v118-native-user-input.mjs'
+import {positionSource,positionDraft} from './structured-source-position-fixture.mjs'
+import {sourceMatchesChecks,sourceMatchesOutputFiles,validateInstalledSourceMatches,assertSourceMatchesOutputBytes} from './installed-v1-3-10-evidence.mjs'
+const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex'),key=p=>String(p||'').replaceAll('\\','/').replace('//?/','').toLowerCase()
+export async function runInstalledV1310SourceMatchesWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
+ for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
+ assert.equal(appVersion,'1.3.10');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ const folder=path.join(library,'000-v1310-matches-'+crypto.randomUUID()),ui=nativeUserInput({send,evaluate},{timeoutMs:45000}),store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`
+ const r={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-search-matches-trusted-input-and-output-bytes',inputProtocol:'trusted-keyboard-and-pointer',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],modes:[],outputs:[],viewportWidths:[]},observations={},outputs=[]
+ const mark=i=>{r.checks.push({id:sourceMatchesChecks[i],status:'passed'});observations[sourceMatchesChecks[i]]=true}
+ let failure
+ try{
+  await evaluate(`window.__v1310Prior=${store}.tabs.filter(t=>t.isDirty).map(t=>({id:t.id,path:t.path,content:t.content}));window.__v1310Trace=[];window.__v1310Errors=[];for(const type of ['click','pointerdown','keydown','input'])document.addEventListener(type,e=>window.__v1310Trace.push({type,trusted:e.isTrusted}),true);window.addEventListener('error',e=>window.__v1310Errors.push(String(e.message)));window.addEventListener('unhandledrejection',e=>window.__v1310Errors.push(String(e.reason)))`)
+  await fs.mkdir(folder,{recursive:true});await fs.writeFile(path.join(folder,'.v119-installed-owner'),'owned search matches fixture')
+  for(const mode of ['json','yaml','xml','toml']){
+   const file=path.join(folder,mode+'.'+mode),other=path.join(folder,mode+'-other.'+mode),root='.'+mode+'-workspace',source=root+' .cm-content',panel=root+' .cm-search',field=panel+' input[name=search]',view=`document.querySelector(${q(source)}).cmTile.root.view`,body=()=>evaluate(`${view}.state.doc.toString()`),entry={mode},modal='.structured-search-matches-dialog'
+   const fresh=()=>ui.waitFor(`document.querySelector('${root}')?.dataset.loading==='false'&&document.querySelector('${root}')?.dataset.analysisCurrent==='true'`,'current matches '+mode)
+   const exact=text=>ui.waitFor(`${view}.state.doc.toString()===${q(text)}`,'source content exact')
+   const open=async target=>{await navigate('#/library?path='+encodeURIComponent(target),root,'match source '+mode);await fresh()}
+   const show=async()=>{if(await evaluate(`${view}.state.readOnly`)){const button=root+' header button[aria-label^="'+(mode==='json'?'搜索源码':'查找')+'"]';if(mode==='json'&&!await evaluate(`!!document.querySelector(${q(button)})?.getClientRects().length`))await ui.clickText(root+' header button','编辑工具');await ui.click(button)}else{await ui.click(source);await ui.key('f','KeyF',70,2)}await ui.waitFor(`!!document.querySelector(${q(field)})?.getClientRects().length`,'find panel')}
+   const hidden=()=>ui.waitFor(`![...document.querySelectorAll('${modal},.n-modal-mask')].some(e=>e.getClientRects().length)`,'matches modal closed')
+   const matches=async()=>{await ui.waitFor(`document.querySelector('${panel} button[name=showMatches]')?.disabled===false`,'matches ready');await ui.click(panel+' button[name=showMatches]');await ui.waitFor(`!!document.querySelector('${modal}')?.getClientRects().length`,'match list visible')}
+   await fs.writeFile(file,'\uFEFF'+positionSource(mode).replaceAll('\n','\r\n'));await fs.writeFile(other,positionSource(mode,'另一份资料'))
+   const draft=positionDraft(mode);await open(file);await ui.fill(source,draft);await exact(draft);await fresh();await show();await ui.fill(field,'我的草稿');await matches()
+   assert.ok((await evaluate(`document.querySelector('${modal} .matches-summary').textContent`)).includes('100 处'));assert.equal(await evaluate(`document.querySelectorAll('${modal} .matches-item').length`),20)
+   await ui.clickText(modal+' button','下一页');await ui.waitFor(`document.querySelector('${modal} .matches-location')?.textContent.trim().startsWith('21 ·')`,'second matches page');entry.pagedExact=true
+   await ui.click(modal+' .matches-item');await hidden();await ui.waitFor(`document.activeElement===document.querySelector('${source}')`,'navigation returns source focus');assert.equal(await evaluate(`${view}.state.sliceDoc(${view}.state.selection.main.from,${view}.state.selection.main.to)`),'我的草稿');assert.equal(await body(),draft);entry.navigationExact=true
+   await ui.key('z','KeyZ',90,2);await exact(positionSource(mode));await ui.key('y','KeyY',89,2);await exact(draft);await fresh();entry.undoRedoExact=true
+   await show();await matches();await ui.key('Escape','Escape',27);await hidden();await ui.waitFor(`document.activeElement?.name==='showMatches'`,'cancel returns original search action');assert.equal(await body(),draft);entry.cancelExact=true
+   await ui.click(source);await ui.key('Home','Home',36,2);for(let i=0;i<3+(['json','xml'].includes(mode)?1:0);i++)await ui.key('ArrowDown','ArrowDown',40);await ui.key('Home','Home',36);for(let i=0;i<3;i++)await ui.key('ArrowDown','ArrowDown',40,8)
+   await ui.key('f','KeyF',70,2);await ui.fill(field,'我的草稿 (\\d+)');await ui.click(panel+' input[name=re]');await ui.click(panel+' input[name=scope]');await matches();assert.ok((await evaluate(`document.querySelector('${modal} .matches-summary').textContent`)).includes('3 处'));assert.equal(await evaluate(`document.querySelector('${modal} mark').textContent`),'我的草稿 3');entry.scopeExact=true
+   // Switching file must dismiss the list; its old coordinates cannot act on B.
+   await open(other);await hidden();assert.equal(await body(),positionSource(mode,'另一份资料'));entry.ownerResetExact=true
+   await open(file);await show();await ui.fill(field,'我的草稿');if(await evaluate(`document.querySelector('${panel} input[name=re]').checked`))await ui.click(panel+' input[name=re]');if(await evaluate(`document.querySelector('${panel} input[name=scope]').checked`))await ui.click(panel+' input[name=scope]')
+   for(const width of [1280,800]){await send('Emulation.setDeviceMetricsOverride',{width,height:width===800?640:820,deviceScaleFactor:1,mobile:false});await new Promise(resolve=>setTimeout(resolve,250));await matches();await new Promise(resolve=>setTimeout(resolve,350));await capture('installed-v1310-matches-'+mode+'-'+width+'.jpg');assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth+1'),false);await ui.key('Escape','Escape',27);await hidden()}await send('Emulation.clearDeviceMetricsOverride',{})
+   await ui.click(source);await ui.key('s','KeyS',83,2);await ui.waitFor(`document.querySelector('${root}')?.dataset.dirty==='false'&&document.querySelector('${root}')?.dataset.saving==='false'`,'explicit source save');assert.equal(await fs.readFile(file,'utf8'),'\uFEFF'+draft.replaceAll('\n','\r\n'));entry.explicitSaveExact=true
+   await fs.chmod(other,0o444);await open(other);await ui.waitFor(`document.querySelector('${source}')?.getAttribute('contenteditable')==='false'`,'real readonly source');await show();await ui.fill(field,'另一份资料');await matches();await ui.click(modal+' .matches-item');await hidden();await ui.waitFor(`document.activeElement===document.querySelector('${source}')`,'readonly source receives navigation focus');await ui.key('Delete','Delete',46);assert.equal(await body(),positionSource(mode,'另一份资料'));assert.equal(await fs.readFile(other,'utf8'),positionSource(mode,'另一份资料'));assert.equal(await evaluate(`!![...document.querySelectorAll('.n-dialog,.n-modal-mask')].find(e=>e.getClientRects().length)`),false);entry.readOnlyExact=true;await fs.chmod(other,0o666)
+   const bytes=await fs.readFile(file);outputs.push([sourceMatchesOutputFiles[1+r.modes.length],bytes]);r.modes.push(entry);mark(r.modes.length-1)
+  }
+  for(const i of [4,5,6,7,8])mark(i);r.viewportWidths=[1280,800]
+  r.otherDraftsPreserved=await evaluate(`window.__v1310Prior.every(p=>${store}.tabs.some(t=>t.id===p.id&&t.path===p.path&&t.content===p.content&&t.isDirty))`);assert.equal(r.otherDraftsPreserved,true);assert.equal(await evaluate(`${store}.tabs.some(t=>(${key.toString()})(t.path).startsWith(${q(key(folder))})&&t.isDirty)`),false);r.disposableDraftsExplicitlySaved=true
+  r.inputTrace=await evaluate('window.__v1310Trace');r.runtimeErrors=await evaluate('window.__v1310Errors');r.errorOverlay=await evaluate('!!document.querySelector("#crash-screen,.global-error-overlay,.startup-fatal-screen,.route-error-fallback")');assert.deepEqual(r.runtimeErrors,[])
+  outputs.unshift([sourceMatchesOutputFiles[0],Buffer.from(JSON.stringify(observations,null,2))]);for(const[fileName,bytes]of outputs){await fs.writeFile(path.join(output,fileName),bytes,{flag:'wx'});r.outputs.push({fileName,sizeBytes:bytes.length,sha256:sha(bytes)})}
+  r.status='passed';validateInstalledSourceMatches(r,{appVersion,sourceCommit,artifacts:[{target:'nsis',sha256:installerSha256}]});assertSourceMatchesOutputBytes(r,name=>outputs.find(([n])=>n===name)[1])
+ }catch(error){failure=error;r.status='failed';r.failure=String(error.stack||error);r.failureUI=await evaluate('({hash:location.hash,focused:document.activeElement?.outerHTML.slice(0,300),body:document.body.innerText.slice(-6000)})').catch(()=>null);await capture('installed-v1310-matches-failure.jpg').catch(()=>{})}
+ finally{await send('Emulation.clearDeviceMetricsOverride',{}).catch(()=>{});await fs.writeFile(path.join(output,'installed-v1310-matches-workflow.json'),JSON.stringify(r,null,2)+'\n')}
+ if(failure)throw failure
+}

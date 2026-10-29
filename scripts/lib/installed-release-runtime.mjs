@@ -1,3 +1,6 @@
+import {validateInstalledSourceMatches,assertSourceMatchesOutputBytes} from './installed-v1-3-10-evidence.mjs'
+import {assertReleaseValidationProfile} from './release-validation-profile.mjs'
+import {assertRustBaselineProof} from './rust-backend-baseline.mjs'
 import {validateInstalledRecentSearch,assertRecentSearchOutputBytes} from './installed-v1-3-9-evidence.mjs'
 import {validateInstalledSelectiveReplacement,assertSelectiveReplacementOutputBytes} from './installed-v1-3-8-evidence.mjs'
 import {validateInstalledReplacementPreview,assertReplacementPreviewOutputBytes} from './installed-v1-3-7-evidence.mjs'
@@ -92,11 +95,21 @@ import { validateInstalledPptxEditing, assertPptxOutputBytes } from './installed
 import {validateInstalledOrganizing,assertOrganizingOutputBytes} from './installed-v1-1-19-evidence.mjs'
 
 export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFileSync(file)) {
+  assertReleaseValidationProfile(manifest, read)
+  if(manifest.validationProfile) {
+    const entry=manifest.backendRegression
+    assert.ok(entry?.path.startsWith(`docs/evidence/v${manifest.appVersion.replaceAll('.','-')}-candidate-lifecycle/`))
+    const bytes=read(entry.path),proof=JSON.parse(bytes.toString('utf8'))
+    assert.equal(bytes.length,entry.sizeBytes);assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),entry.sha256)
+    assert.equal(proof.sourceCommit,manifest.sourceCommit);assert.equal(proof.version,manifest.appVersion)
+    assert.equal(entry.historicalFunctionalResultsCountedAsCurrent,false)
+    if(proof.reused)assertRustBaselineProof(proof)
+  }
   const runtime = manifest.runtimeSmoke
   assert.equal(runtime.status, 'passed-installed-tauri-webview2')
   assert.equal(runtime.checksPassed, 18)
   assert.equal(runtime.routesPassed, 11)
-  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion))
+  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion))
   const versionCandidate = manifest.appVersion !== '1.0.22'
   const evidenceRoot = /^1\.[123]\.\d+$/.test(manifest.appVersion)
     ? `docs/evidence/v${manifest.appVersion.replaceAll('.','-')}-candidate-lifecycle/`
@@ -213,35 +226,40 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.outlineContinuity[key],reports.searchCompleteness[key])
     assertOutlineContinuityOutputBytes(reports.outlineContinuity,file=>read(evidenceRoot+file))
   }
-  if(['1.3.4','1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)){
+  if(['1.3.4','1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)){
     validateInstalledSourcePosition(reports.sourcePosition,manifest)
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.sourcePosition[key],reports.searchCompleteness[key])
     assertSourcePositionOutputBytes(reports.sourcePosition,file=>read(evidenceRoot+file))
   }
-  if(['1.3.5','1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)){
+  if(['1.3.5','1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)){
     validateInstalledSourceSearch(reports.sourceSearch,manifest)
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.sourceSearch[key],reports.searchCompleteness[key])
     assertSourceSearchOutputBytes(reports.sourceSearch,file=>read(evidenceRoot+file))
   }
-  if(['1.3.6','1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)){
+  if(['1.3.6','1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)){
     validateInstalledSourceScope(reports.sourceScope,manifest)
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.sourceScope[key],reports.searchCompleteness[key])
     assertSourceScopeOutputBytes(reports.sourceScope,file=>read(evidenceRoot+file))
   }
-  if(['1.3.7','1.3.8', '1.3.9'].includes(manifest.appVersion)){
+  if(['1.3.7','1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)){
     validateInstalledReplacementPreview(reports.replacementPreview,manifest)
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.replacementPreview[key],reports.searchCompleteness[key])
     assertReplacementPreviewOutputBytes(reports.replacementPreview,file=>read(evidenceRoot+file))
   }
-  if(['1.3.8','1.3.9'].includes(manifest.appVersion)){
+  if(['1.3.8','1.3.9', '1.3.10'].includes(manifest.appVersion)){
     validateInstalledSelectiveReplacement(reports.selectiveReplacement,manifest)
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.selectiveReplacement[key],reports.searchCompleteness[key])
     assertSelectiveReplacementOutputBytes(reports.selectiveReplacement,file=>read(evidenceRoot+file))
   }
-  if(manifest.appVersion==='1.3.9'){
+  if(['1.3.9','1.3.10'].includes(manifest.appVersion)){
     validateInstalledRecentSearch(reports.recentSearch,manifest)
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.recentSearch[key],reports.searchCompleteness[key])
     assertRecentSearchOutputBytes(reports.recentSearch,file=>read(evidenceRoot+file))
+  }
+  if(manifest.appVersion==='1.3.10'){
+    validateInstalledSourceMatches(reports.sourceMatches,manifest)
+    for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.sourceMatches[key],reports.searchCompleteness[key])
+    assertSourceMatchesOutputBytes(reports.sourceMatches,file=>read(evidenceRoot+file))
   }
   if(['1.2.31','1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)){
     validateInstalledYamlFieldOrder(reports.yamlFieldOrder,manifest)
@@ -313,7 +331,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.xmlCreate[key],reports.searchCompleteness[key])
     assertXmlCreateOutputBytes(reports.xmlCreate,file=>read(evidenceRoot+file))
   }
-  if(['1.2.17','1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)){
+  if(['1.2.17','1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)){
     validateInstalledSavepoint(reports.savepoint,manifest)
     for(const key of ['harnessSourceCommit','executableSha256'])assert.equal(reports.savepoint[key],reports.searchCompleteness[key])
     assertSavepointOutputBytes(reports.savepoint,file=>read(evidenceRoot+file))
@@ -534,7 +552,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     assert.equal(reports.workSession.executableSha256, reports.searchCompleteness.executableSha256, 'all current/historical tasks must use the same installed executable')
     assert.equal(reports.workSession.harnessSourceCommit, reports.searchCompleteness.harnessSourceCommit, 'all current/historical tasks must use the same review driver')
   }
-  if (['1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)) {
+  if (['1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)) {
     validateInstalledSearchCompleteness(reports.searchCompleteness, reports.searchBaseline, reports.searchUser, reports.searchOffice, manifest)
   }
   if (['1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)) {
@@ -579,7 +597,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'batch-context-dialog-renames-real-files-and-retains-current-draft', 'v114-workflows-have-no-global-error-overlay',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)) {
+  if (['1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)) {
     const foundation = reports.foundation
     assert.equal(foundation.status, 'passed')
     assert.equal(foundation.appVersion, manifest.appVersion)
@@ -594,7 +612,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'txt-history-dialog-creates-copy-without-overwrite', 'foundation-workflow-has-no-global-error-overlay',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)) {
+  if (['1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)) {
     const files = reports.fileManagement
     assert.equal(files.status, 'passed')
     assert.equal(files.appVersion, manifest.appVersion)
@@ -614,7 +632,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'no-global-error-overlay-after-file-operations',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)) {
+  if (['1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)) {
     const experience = reports.experience
     assert.equal(experience.status, 'passed')
     assert.equal(experience.appVersion, manifest.appVersion)
@@ -629,7 +647,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'renaming-retains-file-relationship', 'removing-relation-retains-both-files',
     ].map(id=>[id,'passed']))
   }
-  if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9'].includes(manifest.appVersion)) {
+  if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9', '1.2.10', '1.2.11', '1.2.12', '1.2.13', '1.2.14', '1.2.15', '1.2.16', '1.2.17', '1.2.18', '1.2.19', '1.2.20', '1.2.21', '1.2.22', '1.2.23', '1.2.24', '1.2.25', '1.2.26', '1.2.27', '1.2.28', '1.2.29', '1.2.30', '1.2.31', '1.2.32', '1.2.33', '1.2.34', '1.2.35', '1.2.36', '1.2.37', '1.2.38', '1.2.39', '1.2.40', '1.2.41', '1.2.42', '1.2.43', '1.2.44', '1.2.45', '1.3.0', '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10'].includes(manifest.appVersion)) {
     const workflow = reports.workflow
     assert.equal(workflow.status, 'passed')
     assert.equal(workflow.appVersion, manifest.appVersion)

@@ -9,11 +9,11 @@ name: Community Release Installer Lifecycle
       current_version:
         description: Current package version
         required: true
-        default: "1.3.9"
+        default: "1.3.10"
       previous_version:
         description: Previous official public version
         required: true
-        default: "1.3.8"
+        default: "1.3.9"
       build_only:
         description: Build fixed installers; complete installation runs in the mandatory same-installer review
         type: boolean
@@ -51,11 +51,15 @@ jobs:
           "CANDIDATE_COMMIT=$env:CANDIDATE_COMMIT" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Check out frozen candidate
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ env.CANDIDATE_COMMIT }}
-          fetch-depth: 0
-          path: current-product
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = Join-Path $env:GITHUB_WORKSPACE 'orchestration'
+          $candidate = Join-Path $env:GITHUB_WORKSPACE 'current-product'
+          & git clone --shared --no-checkout $source $candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Local frozen-source clone failed' }
+          & git -C $candidate checkout --detach $env:CANDIDATE_COMMIT
+          if ($LASTEXITCODE -ne 0) { throw 'Frozen product commit is unavailable' }
 
       - name: Check out previous public release
         shell: powershell
@@ -115,7 +119,12 @@ jobs:
         working-directory: current-product
         run: npm run ci:patch-release
 
+      - name: Resolve backend regression baseline
+        working-directory: current-product
+        run: node scripts/prepare-rust-validation.mjs ../backend-regression-proof.json
+
       - name: Run complete Rust regression suite
+        if: ${{ env.REUSE_RUST_BASELINE != '1' }}
         working-directory: current-product
         run: npm run test:rust
 
@@ -152,6 +161,7 @@ jobs:
           }
           $output = Join-Path $env:GITHUB_WORKSPACE 'community-release-output'
           New-Item -ItemType Directory -Path $output -Force | Out-Null
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'backend-regression-proof.json') -Destination $output
           $receipt = [ordered]@{
             schemaVersion = 1
             stage = "V$env:RELEASE_VERSION"

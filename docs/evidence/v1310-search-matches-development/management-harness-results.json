@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-synthetic-protocol-checks",
+  "status": "passed",
+  "command": "node --test scripts/test-installed-management-fixture.mjs scripts/test-release-validation-profile.mjs scripts/test-community-publish-report-bindings.mjs",
+  "testsPassed": 14,
+  "actualInstalledConfigAlsoChecked": true,
+  "sourceUserContentIncluded": false,
+  "compiledProductChanged": false,
+  "files": [
+    {
+      "path": "scripts/lib/installed-management-fixture.mjs",
+      "sha256": "e0cd418eae493afceb66ad10f7d6f15024efeb44b1a68ef5d4c8864adb9b3e6a"
+    },
+    {
+      "path": "scripts/test-installed-management-fixture.mjs",
+      "sha256": "a9b7def15958022df6ebf2ea5e3908b096c13eaf22b978d229e205233c266e9a"
+    }
+  ]
+}

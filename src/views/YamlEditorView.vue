@@ -221,6 +221,7 @@
       <template #footer><div class="value-edit-actions"><n-button @click="moveError=''">关闭</n-button><n-button type="primary" @click="revealMoveSource">定位源码</n-button></div></template>
     </n-modal>
     <StructuredReplacementDialog :search="session.sourceSearch" />
+  <StructuredSearchMatchesDialog :search="session.sourceSearch" />
     <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
 </div>
 </template>
@@ -257,6 +258,7 @@ import {
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextConflictDialog from '../components/TextConflictDialog.vue'
 import StructuredReplacementDialog from '../components/StructuredReplacementDialog.vue'
+import StructuredSearchMatchesDialog from '../components/StructuredSearchMatchesDialog.vue'
 import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
 import StructuredHistoryMenu from '../components/StructuredHistoryMenu.vue'
 import SourceNodeMenu from '../components/SourceNodeMenu.vue'

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-synthetic-protocol-checks",
+  "status": "passed",
+  "command": "node --test scripts/test-installed-management-fixture.mjs scripts/test-release-validation-profile.mjs scripts/test-community-publish-report-bindings.mjs",
+  "testsPassed": 15,
+  "actualStrictImportSucceeded": true,
+  "compiledProductChanged": false,
+  "nativeHarnessCommit": "4e67060b62e214b56493709e68cebca6a3216025",
+  "files": [
+    {
+      "path": "scripts/import-community-release-review.mjs",
+      "sha256": "7e0f8feef1942e8645107f85d33cdb84cd6fad2c5d791d3d13002a6d99788ced"
+    },
+    {
+      "path": "scripts/test-release-validation-profile.mjs",
+      "sha256": "a9d4cb71fa2c0e46e237cb3d35e7c0bf820cf1407072ef5fe3049f9a6704e8ce"
+    }
+  ]
+}

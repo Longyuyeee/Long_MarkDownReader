@@ -33,3 +33,13 @@ test('v1.1.27 management preserves both libraries and every imported condition e
 test('management restore maps every fingerprint only to its matching owned project',()=>{
  const paths=crossConfig().libraries.map(entry=>entry.path),required=paths.map(path=>({pathFingerprint:crypto.createHash('sha256').update(path).digest('hex')}));assert.deepEqual(managementLibraryMappings([...required].reverse(),paths).map(item=>item.path),[...paths].reverse());assert.throws(()=>managementLibraryMappings(required.slice(1),paths));assert.throws(()=>managementLibraryMappings([required[0],required[0]],paths));assert.throws(()=>managementLibraryMappings([{pathFingerprint:'foreign'},required[1]],paths))
 })
+test('focused current management uses its real core fixture without requiring omitted tag or cross-project tasks',()=>{
+ const c=config('1.1.9'),snapshot=assertPreparedManagementFixture(c,library,'1.3.10')
+ assert.equal(snapshot.length,1);assertRestoredManagementFixture(c,library,snapshot)
+ for(const changed of [config('1.1.10'),crossConfig(),{...c,activeLibraryPath:'D:/foreign'}])assert.throws(()=>assertPreparedManagementFixture(changed,library,'1.3.10'))
+ const missing=config('1.1.9');missing.savedSearches=[];assert.throws(()=>assertPreparedManagementFixture(missing,library,'1.3.10'))
+})
+test('published full-regression baseline still requires all cross-project and tag collection records',()=>{
+ assert.equal(assertPreparedManagementFixture(crossConfig(),library,'1.3.9').length,4)
+ assert.throws(()=>assertPreparedManagementFixture(config('1.1.9'),library,'1.3.9'))
+})

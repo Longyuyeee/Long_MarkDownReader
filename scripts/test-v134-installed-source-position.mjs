@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import {releaseValidationProfile} from './lib/release-validation-profile.mjs'
 import crypto from 'node:crypto'
 import {test} from 'node:test'
 import vm from 'node:vm'
@@ -21,7 +22,9 @@ test('the real installed driver uses only trusted UI input and valid evaluated e
 })
 test('current version continues capturing, importing and validating the entire previous132 workflow',()=>{
  const version=JSON.parse(fs.readFileSync('package.json','utf8')).version
- for(const[file,anchor,guard]of [['scripts/capture-r5j-installed-artifact-smoke.mjs','const {runInstalledV132OutlineNavigationWorkflow}','if('],['scripts/lib/installed-release-runtime.mjs','validateInstalledOutlineNavigation(reports.outlineNavigation','if('],['scripts/import-community-release-review.mjs',"[['outlineNavigation','installed-v132",'...('],['.github/workflows/community-release-publish.yml','import {validateInstalledOutlineNavigation','if ($env:RELEASE_VERSION']]){const s=fs.readFileSync(file,'utf8'),end=s.indexOf(anchor),start=s.lastIndexOf(guard,end);assert.ok(end>0&&start>=0,file);assert.ok(s.slice(start,end).includes("'"+version+"'"),file+' omitted the latest version')}
+ const profile=releaseValidationProfile(version),mustRun=!profile||profile.currentReportKeys.includes('outlineNavigation'),required=mustRun?version:profile.baseline.version
+ if(!mustRun)assert.ok(profile.inheritedReportKeys.includes('outlineNavigation'),'An omitted workflow requires an explicit immutable historical reference')
+ for(const[file,anchor,guard]of [['scripts/capture-r5j-installed-artifact-smoke.mjs','const {runInstalledV132OutlineNavigationWorkflow}','if('],['scripts/lib/installed-release-runtime.mjs','validateInstalledOutlineNavigation(reports.outlineNavigation','if('],['scripts/import-community-release-review.mjs',"[['outlineNavigation','installed-v132",'...('],['.github/workflows/community-release-publish.yml','import {validateInstalledOutlineNavigation','if ($env:RELEASE_VERSION']]){const s=fs.readFileSync(file,'utf8'),end=s.indexOf(anchor),start=s.lastIndexOf(guard,end);assert.ok(end>0&&start>=0,file);assert.ok(s.slice(start,end).includes("'"+required+"'"),file+' omitted the declared current or historical workflow');assert.equal(s.slice(start,end).includes("'"+version+"'"),mustRun,file+' must match the declared current scope')}
 })
 
 test('134 retains the complete133 installed workflow',()=>{for(const file of ['scripts/capture-r5j-installed-artifact-smoke.mjs','scripts/import-community-release-review.mjs','scripts/lib/installed-release-runtime.mjs','.github/workflows/community-release-publish.yml'])assert.ok(fs.readFileSync(file,'utf8').includes('installed-v1-3-3-'),file)})

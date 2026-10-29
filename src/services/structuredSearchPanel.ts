@@ -13,7 +13,7 @@ export interface StructuredSearchHistoryControls {
 
 // Keep the existing CodeMirror controls and commands. A custom public panel
 // preserves query predicates when committing input (the default panel drops them).
-export function createStructuredSearchPanel(view: EditorView, scoped: boolean, feedbackId: string, preview?: () => void, history?: StructuredSearchHistoryControls): Panel {
+export function createStructuredSearchPanel(view: EditorView, scoped: boolean, feedbackId: string, preview?: () => void, history?: StructuredSearchHistoryControls, matches?: () => void): Panel {
   let query = getSearchQuery(view.state)
   let composing = false
   const dom = document.createElement('div'); dom.className = 'cm-search'
@@ -33,7 +33,7 @@ export function createStructuredSearchPanel(view: EditorView, scoped: boolean, f
   const button = (name: string, phrase: string, action: () => unknown) => {
     const button = document.createElement('button'); button.type = 'button'; button.name = name; button.className = 'cm-button'
     button.textContent = view.state.phrase(phrase); button.onclick = () => {
-      if (['next', 'prev', 'select', 'replace', 'replaceAll', 'previewReplace'].includes(name)) {
+      if (['next', 'prev', 'select', 'replace', 'replaceAll', 'previewReplace', 'showMatches'].includes(name)) {
         commit(); history?.remember(getSearchQuery(view.state))
       }
       action()
@@ -76,6 +76,7 @@ export function createStructuredSearchPanel(view: EditorView, scoped: boolean, f
   }
   dom.append(button('next', 'next', () => findNext(view)), button('prev', 'previous', () => findPrevious(view)),
     button('select', 'all', () => selectMatches(view)), caseSensitive.wrap, regexp.wrap, wholeWord.wrap)
+  if (scoped && matches) dom.append(button('showMatches', '查看匹配…', matches))
   if (!view.state.readOnly) dom.append(document.createElement('br'), replacement,
     button('replace', 'replace', () => replaceNext(view)), button('replaceAll', 'replace all', () => replaceAll(view)))
   if (!view.state.readOnly && scoped && preview) dom.append(button('previewReplace', '预览替换…', preview))
