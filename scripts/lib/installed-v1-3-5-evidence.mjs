@@ -4,7 +4,7 @@ import {positionSource} from './structured-source-position-fixture.mjs'
 export const sourceSearchChecks=['json-search-and-replace-inputs','yaml-search-and-replace-inputs','xml-search-and-replace-inputs','toml-search-and-replace-inputs','closed-panel-and-selected-text-priority','inline-query-feedback-and-current-body-matches','replace-undo-redo-explicit-save-and-prior-drafts','real-rename-close-and-readonly-ownership','wide-narrow-current-search-controls-and-no-runtime-error']
 export const sourceSearchOutputFiles=['installed-v135-search-observations.json',...['json','yaml','xml','toml'].map(mode=>'installed-v135-saved.'+mode)]
 export function validateInstalledSourceSearch(r,m){
- assert.ok(['1.3.5','1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10', '1.3.11', '1.3.12'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.3.5','1.3.6', '1.3.7', '1.3.8', '1.3.9', '1.3.10', '1.3.11', '1.3.12', '1.3.13'].includes(m.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(r[k],m[k]);assert.equal(r.installerSha256,m.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(r.status,'passed');assert.equal(r.evidenceLevel,'installed-source-search-trusted-input-and-output-bytes');assert.equal(r.inputProtocol,'trusted-keyboard-and-pointer')
  for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(r[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(r[k],false)

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.3.12",
-  "releaseCandidate": true,
+  "appVersion": "1.3.13",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-30",
-  "currentStatus": "v1.3.12-community-release-published",
+  "currentStatus": "v1.3.13-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.3.11",
+    "previousPublicVersion": "1.3.12",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.3.11-to-1.3.12-pending",
-    "scope": "structure-navigation"
+    "managedUpdaterUpgradePath": "1.3.12-to-1.3.13-pending",
+    "scope": "navigation-forward"
   },
   "targetRelease": {
-    "tag": "v1.3.12",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.12",
+    "tag": "v1.3.13",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.13",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "4911981b320a05be23e728a1992e51fe3681fcbc",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 40923725647,
-    "hostedInstalledLifecycleRunId": 40929123847,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.3.12_x64_zh-CN.msi",
-        "sizeBytes": 78254080,
-        "sha256": "1debc7ffd1a2555102719270fb4f0d81718305af5a46cf6577c9d4c33b76bcff",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.3.12_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.3.12_x64-setup.exe",
-        "sizeBytes": 68821495,
-        "sha256": "c7332110f925114f0e4701b44f858411d9cbf187dfe2098ec455fd00a7f35d06",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.3.12_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.3.12",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.12",
-    "databaseId": 428253265,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "4911981b320a05be23e728a1992e51fe3681fcbc",
-    "publishedAt": "2026-10-29T18:36:18Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -180,7 +149,8 @@
     "v1.3.8-to-v1.3.9-managed-update-observation-pending",
     "v1.3.9-to-v1.3.10-managed-update-observation-pending",
     "v1.3.10-to-v1.3.11-managed-update-observation-pending",
-    "v1.3.11-to-v1.3.12-managed-update-observation-pending"
+    "v1.3.11-to-v1.3.12-managed-update-observation-pending",
+    "v1.3.12-to-v1.3.13-managed-update-observation-pending"
   ],
-  "nextAction": "v1.3.13-navigation-forward-planned"
+  "nextAction": "validate-and-build-v1.3.13-installers"
 }

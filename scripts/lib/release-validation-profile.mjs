@@ -13,7 +13,7 @@ export function assertCurrentReviewProfile(version, sourceCommit, harnessCommit,
   if(!profile)return
   const baseline=JSON.parse(fs.readFileSync(profile.baseline.manifestPath,'utf8'))
   const reports=Object.fromEntries(profile.currentReportKeys.map(key=>{
-    const file=key==='structureNavigation'?'installed-v1312-navigation-workflow.json':key==='sourceReturn'?'installed-v1311-return-workflow.json':key==='sourceMatches'?'installed-v1310-matches-workflow.json':path.basename(baseline.runtimeSmoke.reports[key].path)
+    const file=key==='navigationForward'?'installed-v1313-forward-workflow.json':key==='structureNavigation'?'installed-v1312-navigation-workflow.json':key==='sourceReturn'?'installed-v1311-return-workflow.json':key==='sourceMatches'?'installed-v1310-matches-workflow.json':path.basename(baseline.runtimeSmoke.reports[key].path)
     const bytes=fs.readFileSync(path.join(directory,file)),report=JSON.parse(bytes.toString('utf8').replace(/^\uFEFF/,''))
     if(key!=='routes')assert.equal(report.status,'passed',key)
     if(report.appVersion)assert.equal(report.appVersion,version,key)
