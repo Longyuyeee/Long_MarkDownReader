@@ -1,3 +1,5 @@
+> **2026-10-29 当前开发入口：** 公开／运行时v1.3.7已发布，下一目标1.3.8仅为规划。当前结果见[本版审计](V1_3_7_Unsigned_Community_Release_Audit_2026-10-29.md)，后续按[按处选择替换](Foundation_Deepening_Roadmap_1_3_8_2026-10-29.md)推进；[当前开发对齐记录](Development_Alignment_and_Closure_Plan_2026-08-02.md)及shared版本合同为当前事实源。保护未保存内容，沿用已有入口、全部风格和正常动效。下方旧版本、待办和执行入口仅供历史追溯。
+
 > **2026-10-29 当前开发入口：** 公开／运行时v1.3.6已发布，下一目标1.3.7仅为规划。当前结果见[本版审计](V1_3_6_Unsigned_Community_Release_Audit_2026-10-28.md)，后续按[源码替换预览](Foundation_Deepening_Roadmap_1_3_7_2026-10-29.md)推进；[当前开发对齐记录](Development_Alignment_and_Closure_Plan_2026-08-02.md)及shared版本合同为当前事实源。保护未保存内容，沿用已有入口、全部风格和正常动效。下方旧版本、待办和执行入口仅供历史追溯。
 
 > **2026-10-28 当前开发入口：** 公开／运行时v1.3.5已发布，下一目标1.3.6仅为规划。当前结果见[本版审计](V1_3_5_Unsigned_Community_Release_Audit_2026-10-28.md)，后续按[选区内查找与替换](Foundation_Deepening_Roadmap_1_3_6_2026-10-28.md)推进；[当前开发对齐记录](Development_Alignment_and_Closure_Plan_2026-08-02.md)及shared版本合同为当前事实源。保护未保存内容，沿用已有入口、全部风格和正常动效。下方旧版本、待办和执行入口仅供历史追溯。
