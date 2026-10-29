@@ -1,5 +1,8 @@
 # LongEdit 产品需求文档与开发路线图
 
+> **2026-10-29 当前开发入口：** 公开／运行时v1.3.11已发布，下一目标1.3.12仅为规划。当前结果见[本版审计](V1_3_11_Unsigned_Community_Release_Audit_2026-10-29.md)，后续按[结构导航往返](Foundation_Deepening_Roadmap_1_3_12_2026-10-29.md)推进；[开发对齐记录](Development_Alignment_and_Closure_Plan_2026-08-02.md)及shared版本合同为当前事实源。保护草稿，沿用现有入口、全部风格与正常动效。下方旧版本和执行入口保留历史。
+
+
 > **2026-10-29 当前开发入口：** 公开／运行时v1.3.10已发布，下一目标1.3.11仅为规划。当前结果见[本版审计](V1_3_10_Unsigned_Community_Release_Audit_2026-10-29.md)，后续按[返回原编辑位置](Foundation_Deepening_Roadmap_1_3_11_2026-10-29.md)推进；[开发对齐记录](Development_Alignment_and_Closure_Plan_2026-08-02.md)及shared版本合同为当前事实源。保护草稿，沿用现有入口、全部风格与正常动效。下方旧版本和执行入口保留历史。
 
 
