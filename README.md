@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.3.12已发布：从四格式结构提纲、JSON路径与树形定位到源码后，在现有文档操作菜单返回原视图、选区和阅读位置，保护未保存内容。[本版审计](docs/V1_3_12_Unsigned_Community_Release_Audit_2026-10-30.md)。下一版1.3.13规划返回后前进，继续深化文内浏览接续。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_13_2026-10-30.md)。
+v1.3.13正在收尾：返回后可通过现有菜单前进到刚才的结构节点或查找结果，接续选区、视图和滚动，保护未保存内容。[本版审计](docs/V1_3_13_Unsigned_Community_Release_Audit_2026-10-30.md)。当前公开版本仍为1.3.12。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_13_2026-10-30.md)。
 
 ## 不只是打开文件，更是接续你的工作
 

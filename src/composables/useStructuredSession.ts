@@ -51,9 +51,10 @@ export function useStructuredSession(options: Options) {
         .filter((entry): entry is [string, HTMLElement] => !!entry[1]?.clientHeight)
         .map(([key, pane]) => [key, { top: pane.scrollTop, left: pane.scrollLeft }])) }),
       scroll: position.sourceSnapshot,
-      restore: async (context, current) => {
+      restore: async (context, current, snapshot) => {
         if (!current()) return false
         position.remember()
+        position.rememberSource(snapshot)
         const focused = await options.navigation?.restore(context, current)
         await nextTick()
         if (!current()) return false
