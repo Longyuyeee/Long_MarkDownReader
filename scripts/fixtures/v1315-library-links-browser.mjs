@@ -38,7 +38,7 @@ window.__TAURI_INTERNALS__ = {
     if (command === 'scan_directory') return [...directories.map(path => ({name:path.split('/').pop(),path,is_dir:true})), ...[...disk.keys()].map(path => ({name:path.split('/').pop(),path,is_dir:false}))].filter(entry => entry.path.slice(0,entry.path.lastIndexOf('/')) === args.path)
     if(command==='list_relation_files')return{files:[...disk.keys()].filter(path=>path.toLowerCase().includes((args.query||'').toLowerCase())).map(path=>({path,name:path.split('/').pop(),relativePath:path.slice(root.length+1)})),truncated:false}
     if(command==='get_tag_catalog_page')return{items:[],tags:[],total:0,nextCursor:null}
-    if(command==='get_file_stats'){if(window.shellAudit.statsWait)await window.shellAudit.statsWait;if(window.shellAudit.failStats||!disk.has(args.path))throw Error('路径不存在');return{size:disk.get(args.path).length,is_file:true}}
+    if(command==='get_file_stats'){if(new URLSearchParams(location.search).get('native_delay'))await new Promise(resolve=>setTimeout(resolve,Number(new URLSearchParams(location.search).get('native_delay'))));if(window.shellAudit.statsWait)await window.shellAudit.statsWait;if(window.shellAudit.failStats||!disk.has(args.path))throw Error('路径不存在');return{size:disk.get(args.path).length,is_file:true}}
     if(command==='search_library')return [...disk.keys()].filter(path=>path.endsWith('.md')).map(path=>({name:path.split('/').pop(),path,is_dir:false}));
     if (command === 'get_folder_order') return { items: [], pinned: [] }
     if (command === 'get_library_stats') return { file_count: 2, total_words: 300 }
