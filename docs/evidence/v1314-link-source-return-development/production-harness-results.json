@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "kind": "production-Vue-real-Vditor-mocked-file-IPC-and-protocol-unit-checks",
+  "status": "passed",
+  "compiledProductChanged": false,
+  "compiledSourceCommit": "5524648049844fcbd9e9ccdde1dadf3a89b4388f",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "protocolTestsPassed": 14,
+  "productionChecks": [
+    {
+      "mode": "wysiwyg",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "wysiwyg",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "ir",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "ir",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "sv",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "sv",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "runtimeErrors": []
+    }
+  ],
+  "files": [
+    {
+      "path": "scripts/lib/installed-v1-3-14-workflow.mjs",
+      "sha256": "51135c4cf1ecb8190403589da007c50f0952b4d995adb94ab8aa7ca6c5456ebf"
+    },
+    {
+      "path": "scripts/lib/installed-markdown-observation.mjs",
+      "sha256": "6707ecd32132d5105c217f9afece81f3f3c5f6fb97eb9a63da59e18709d0a27f"
+    },
+    {
+      "path": "scripts/test-installed-markdown-observation-browser.mjs",
+      "sha256": "17f4213b5174a589d5d2d4e32bec2b2533765d01677b578e29235c49564801e9"
+    },
+    {
+      "path": "scripts/test-v1314-installed-link-source-return.mjs",
+      "sha256": "e0c142cc43b19572fbcca02cb401a85a898960ebb4fc64382e4628b3c9ea9d2b"
+    },
+    {
+      "path": "scripts/fixtures/v1314-library-links-browser.mjs",
+      "sha256": "90534305b830d00e9fffce1d1b96cd8ea7b302d211f4e8481227bd68d489d3dd"
+    }
+  ]
+}

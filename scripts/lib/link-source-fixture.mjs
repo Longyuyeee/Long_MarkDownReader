@@ -1,0 +1,7 @@
+export const linkSourceText='# 来源笔记\n\n'+Array.from({length:80},(_,i)=>`第${i}段 正文与草稿保留。 [查看笔记](B.md) · [查看结构](C.json) · [查看文本](D.txt)\n\n`).join('')+'[[B]]\n'
+export const linkTargetText='# 目标笔记\n\n目标原文，继续编辑。\n'
+export const linkSourceAddition='来源的未保存补充'
+export const linkTargetAddition='目标的未保存补充'
+export const linkSourceDraft=linkSourceText.trimEnd()+linkSourceAddition+'\n'
+export const linkTargetDraft=linkTargetText.trimEnd()+linkTargetAddition+'\n'
+export const linkPlainDraft='文本目标\n保留未保存内容。\n'

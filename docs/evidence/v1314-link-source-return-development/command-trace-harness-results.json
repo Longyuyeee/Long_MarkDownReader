@@ -1,0 +1,598 @@
+{
+  "schemaVersion": 1,
+  "kind": "production-Vue-real-Vditor-mocked-file-IPC-and-protocol-unit-checks",
+  "status": "passed",
+  "compiledProductChanged": false,
+  "compiledSourceCommit": "5524648049844fcbd9e9ccdde1dadf3a89b4388f",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "protocolTestsPassed": 24,
+  "productionChecks": [
+    {
+      "mode": "wysiwyg",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "wysiwyg",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "ir",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "ir",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "sv",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "sv",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    }
+  ],
+  "productionActions": [
+    "native-keyboard-two-drafts-return-selection-and-undo-redo",
+    "structured-target-return",
+    "text-target-draft-return",
+    "wiki-return",
+    "source-renamed-return",
+    "local-failure-retry",
+    "source-reload-invalidates"
+  ],
+  "mixedWindowsPathExpectations": true,
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "End",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "ArrowLeft",
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "ArrowLeft",
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "ArrowLeft",
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "ArrowLeft",
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "End",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 24
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "y",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "redo",
+      "keyboardEventIndex": 26
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 32
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "y",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "redo",
+      "keyboardEventIndex": 34
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "files": [
+    {
+      "path": "scripts/lib/installed-v1-3-14-workflow.mjs",
+      "sha256": "7af793fc8fc08dd74894f66f9b3cefb3cf2a0368f234b7f5ca8b9c5641e2c709"
+    },
+    {
+      "path": "scripts/lib/installed-v1-3-14-evidence.mjs",
+      "sha256": "70b97fa1717af2475d714e608b5f46f89677ec9a00888dff3c489cb8c127824e"
+    },
+    {
+      "path": "scripts/test-link-source-native-actions-browser.mjs",
+      "sha256": "b7554d3eb432b15b24d15e3c1d473661bf9282fae32efc8c5f860ba71ecc6535"
+    },
+    {
+      "path": "scripts/test-v1314-installed-link-source-return.mjs",
+      "sha256": "4a9f1a3c31b30ffa367c07db1ac18d2494c87da11c1d7c91454b8fad231e589d"
+    }
+  ]
+}

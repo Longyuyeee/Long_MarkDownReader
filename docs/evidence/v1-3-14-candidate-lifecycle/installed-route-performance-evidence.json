@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5J",
+  "capturedAt": "2026-10-30T00:19:33.539Z",
+  "evidenceLevel": "installed-current-tauri-webview2",
+  "sourceUserContentIncluded": false,
+  "routes": [
+    {
+      "routeName": "Graph",
+      "elapsedMs": 183,
+      "recordedAt": "2026-10-30T00:06:53.552Z"
+    },
+    {
+      "routeName": "Graph",
+      "elapsedMs": 536,
+      "recordedAt": "2026-10-30T00:06:53.906Z"
+    },
+    {
+      "routeName": "Settings",
+      "elapsedMs": 86,
+      "recordedAt": "2026-10-30T00:06:54.068Z"
+    },
+    {
+      "routeName": "Graph",
+      "elapsedMs": 30,
+      "recordedAt": "2026-10-30T00:06:55.326Z"
+    },
+    {
+      "routeName": "Settings",
+      "elapsedMs": 41,
+      "recordedAt": "2026-10-30T00:06:55.378Z"
+    },
+    {
+      "routeName": "Graph",
+      "elapsedMs": 36,
+      "recordedAt": "2026-10-30T00:06:56.535Z"
+    },
+    {
+      "routeName": "Graph",
+      "elapsedMs": 10,
+      "recordedAt": "2026-10-30T00:06:56.976Z"
+    },
+    {
+      "routeName": "Settings",
+      "elapsedMs": 26,
+      "recordedAt": "2026-10-30T00:06:57.574Z"
+    },
+    {
+      "routeName": "ReleaseCapabilities",
+      "elapsedMs": 55,
+      "recordedAt": "2026-10-30T00:06:58.783Z"
+    },
+    {
+      "routeName": "WorkspaceHome",
+      "elapsedMs": 23,
+      "recordedAt": "2026-10-30T00:06:59.311Z"
+    },
+    {
+      "routeName": "LibraryMode",
+      "elapsedMs": 42,
+      "recordedAt": "2026-10-30T00:06:59.513Z"
+    },
+    {
+      "routeName": "TextEditor",
+      "elapsedMs": 47,
+      "recordedAt": "2026-10-30T00:06:59.721Z"
+    },
+    {
+      "routeName": "JsonEditor",
+      "elapsedMs": 50,
+      "recordedAt": "2026-10-30T00:06:59.930Z"
+    },
+    {
+      "routeName": "Pdf",
+      "elapsedMs": 88,
+      "recordedAt": "2026-10-30T00:07:00.174Z"
+    },
+    {
+      "routeName": "Workbook",
+      "elapsedMs": 43,
+      "recordedAt": "2026-10-30T00:07:00.405Z"
+    },
+    {
+      "routeName": "Diagram",
+      "elapsedMs": 43,
+      "recordedAt": "2026-10-30T00:07:00.687Z"
+    },
+    {
+      "routeName": "MindMap",
+      "elapsedMs": 42,
+      "recordedAt": "2026-10-30T00:07:00.967Z"
+    },
+    {
+      "routeName": "Graph",
+      "elapsedMs": 23,
+      "recordedAt": "2026-10-30T00:07:01.228Z"
+    },
+    {
+      "routeName": "Canvas",
+      "elapsedMs": 50,
+      "recordedAt": "2026-10-30T00:07:01.435Z"
+    },
+    {
+      "routeName": "ReleaseCapabilities",
+      "elapsedMs": 22,
+      "recordedAt": "2026-10-30T00:07:01.676Z"
+    }
+  ],
+  "measures": [
+    {
+      "name": "longedit:route:Graph",
+      "durationMs": 183,
+      "startTimeMs": 8265
+    },
+    {
+      "name": "longedit:route:Graph",
+      "durationMs": 536,
+      "startTimeMs": 8265
+    },
+    {
+      "name": "longedit:route:Settings",
+      "durationMs": 86,
+      "startTimeMs": 8878
+    },
+    {
+      "name": "longedit:route:Graph",
+      "durationMs": 30,
+      "startTimeMs": 10192
+    },
+    {
+      "name": "longedit:route:Settings",
+      "durationMs": 41,
+      "startTimeMs": 10233
+    },
+    {
+      "name": "longedit:route:Graph",
+      "durationMs": 36,
+      "startTimeMs": 11395
+    },
+    {
+      "name": "longedit:route:Graph",
+      "durationMs": 10,
+      "startTimeMs": 11862
+    },
+    {
+      "name": "longedit:route:Settings",
+      "durationMs": 26,
+      "startTimeMs": 12444
+    },
+    {
+      "name": "longedit:route:ReleaseCapabilities",
+      "durationMs": 55,
+      "startTimeMs": 13623
+    },
+    {
+      "name": "longedit:route:WorkspaceHome",
+      "durationMs": 23,
+      "startTimeMs": 14184
+    },
+    {
+      "name": "longedit:route:LibraryMode",
+      "durationMs": 42,
+      "startTimeMs": 14366
+    },
+    {
+      "name": "longedit:route:TextEditor",
+      "durationMs": 47,
+      "startTimeMs": 14570
+    },
+    {
+      "name": "longedit:route:JsonEditor",
+      "durationMs": 50,
+      "startTimeMs": 14775
+    },
+    {
+      "name": "longedit:route:Pdf",
+      "durationMs": 88,
+      "startTimeMs": 14982
+    },
+    {
+      "name": "longedit:route:Workbook",
+      "durationMs": 43,
+      "startTimeMs": 15257
+    },
+    {
+      "name": "longedit:route:Diagram",
+      "durationMs": 43,
+      "startTimeMs": 15540
+    },
+    {
+      "name": "longedit:route:MindMap",
+      "durationMs": 42,
+      "startTimeMs": 15821
+    },
+    {
+      "name": "longedit:route:Graph",
+      "durationMs": 23,
+      "startTimeMs": 16101
+    },
+    {
+      "name": "longedit:route:Canvas",
+      "durationMs": 50,
+      "startTimeMs": 16281
+    },
+    {
+      "name": "longedit:route:ReleaseCapabilities",
+      "durationMs": 22,
+      "startTimeMs": 16549
+    }
+  ]
+}

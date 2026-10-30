@@ -28,7 +28,7 @@ test('publisher validates each installed report once using a registered filename
  const profile=releaseValidationProfile(version)
  if(profile){
   const baseline=JSON.parse(fs.readFileSync(profile.baseline.manifestPath,'utf8'))
-  const expected=profile.currentReportKeys.map(key=>key==='navigationForward'?'installed-v1313-forward-workflow.json':key==='structureNavigation'?'installed-v1312-navigation-workflow.json':key==='sourceReturn'?'installed-v1311-return-workflow.json':key==='sourceMatches'?'installed-v1310-matches-workflow.json':path.basename(baseline.runtimeSmoke.reports[key].path)).filter(file=>allPrimary.includes(file))
+  const expected=profile.currentReportKeys.map(key=>key==='linkSourceReturn'?'installed-v1314-links-workflow.json':key==='navigationForward'?'installed-v1313-forward-workflow.json':key==='structureNavigation'?'installed-v1312-navigation-workflow.json':key==='sourceReturn'?'installed-v1311-return-workflow.json':key==='sourceMatches'?'installed-v1310-matches-workflow.json':path.basename(baseline.runtimeSmoke.reports[key].path)).filter(file=>allPrimary.includes(file))
   assert.deepEqual(reports.sort(),expected.sort(),'Publisher requirements must match current reruns; omitted features require only their historical reference')
  }
  // The 1.3.0 audit extends the existing history workflow and retains the

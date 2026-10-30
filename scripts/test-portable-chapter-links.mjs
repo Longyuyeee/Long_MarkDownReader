@@ -5,6 +5,7 @@ import {test} from 'node:test'
 import ts from 'typescript'
 import {portableChapterUri,parsePortableChapterLink,chapterHeadingTarget,isPortableChapterLink} from '../src/utils/portableChapterLinks.ts'
 import {markdownChapterLink} from '../src/utils/markdownSections.ts'
+import {installLibraryLinkClickHarness} from './lib/library-link-click-test-harness.mjs'
 
 test('default library links follow the library root and retain Chinese, encoded names and duplicate fragments',()=>{
  const uri=portableChapterUri('C:/旧库','\\\\?\\C:\\旧库\\资料\\方案 #%.md','重复 [方案]','重复-方案-1')
@@ -26,7 +27,7 @@ test('ambiguous or unavailable addresses never become a guessed local document',
 })
 function clickHarness(){
  const source=fs.readFileSync('src/views/LibraryMode.vue','utf8'),start=source.indexOf('const openSourceReference ='),end=source.indexOf('const openPdfReference =',start),calls=[],target={path:'C:/库/目标.md',isDirty:true,content:'目标未保存内容'},context={isPortableChapterLink,parsePortableChapterLink,chapterLinkGeneration:0,activeTabId:{value:'C:/库/当前.md'},store:{libraryPath:'C:/库'},allTabs:{value:[target]},sameLibrary:(a,b)=>a.toLowerCase()===b.toLowerCase(),invoke:async(command,args)=>calls.push({command,args}),snapshotWindowDrafts:()=>calls.push('snapshot'),openManagedFile:async(router,path,query)=>calls.push({path,query}),router:{},nextTick:fn=>fn(),revealLinkedHeading(){},message:{warning:text=>calls.push({warning:text})}}
- vm.runInNewContext(ts.transpileModule(source.slice(start,end)+'\nglobalThis.click=openSourceReference',{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context)
+ installLibraryLinkClickHarness(context,source)
  const event=href=>({target:{closest:()=>({getAttribute:()=>href})},preventDefault(){},stopPropagation(){}})
  return {context,calls,target,click:href=>context.click(event(href))}
 }

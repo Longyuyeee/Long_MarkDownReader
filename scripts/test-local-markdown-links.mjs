@@ -3,6 +3,7 @@ import vm from 'node:vm'
 import assert from 'node:assert/strict'
 import ts from 'typescript'
 import test from 'node:test'
+import {installLibraryLinkClickHarness} from './lib/library-link-click-test-harness.mjs'
 const compile=(file,dependencies={})=>{const context={exports:{},require:name=>dependencies[name]};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,context);return context.exports}
 const image=compile('src/utils/localImagePath.ts'),links=compile('src/utils/localMarkdownLinks.ts',{'./localImagePath':image})
 test('relative document links resolve against their moved note and keep the decoded heading',()=>{
@@ -21,10 +22,10 @@ test('heading navigation handles generated IDs, Chinese, punctuation, duplicate 
  assert.equal(links.markdownAnchorTarget(root,'missing'),undefined)
 })
 test('a real local-link click snapshots current unsaved content and reuses a target draft',async()=>{
- const source=fs.readFileSync('src/views/LibraryMode.vue','utf8'),start=source.indexOf('const openSourceReference ='),end=source.indexOf('const openPdfReference =',start)
+ const source=fs.readFileSync('src/views/LibraryMode.vue','utf8')
  const calls=[],draft={path:'C:/Lib/TARGET.txt',isDirty:true},event={target:{closest:()=>({getAttribute:()=> '../target.txt'})},preventDefault:()=>calls.push('prevent'),stopPropagation:()=>calls.push('stop')}
  const context={isPortableChapterLink:()=>false,localMarkdownLink:links.localMarkdownLink,activeTabId:{value:'C:/Lib/notes/a.md'},store:{libraryPath:'C:/Lib'},allTabs:{value:[draft]},sameLibrary:(a,b)=>a.toLowerCase()===b.toLowerCase(),invoke:async(command,args)=>{calls.push({command,args})},snapshotWindowDrafts:()=>calls.push('snapshot'),openManagedFile:async(router,path)=>calls.push({open:path}),router:{},nextTick:fn=>fn(),revealLinkedHeading(){},message:{warning:value=>calls.push({warning:value})}}
- vm.runInNewContext(ts.transpileModule(source.slice(start,end)+'\nglobalThis.click=openSourceReference',{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context)
+ installLibraryLinkClickHarness(context,source)
  await context.click(event);assert.equal(calls[0],'prevent');assert.equal(calls[1],'stop');assert.equal(calls[2].command,'get_file_stats');assert.equal(calls[2].args.path,'C:/Lib/target.txt');assert.equal(calls[3],'snapshot');assert.equal(calls[4].open,draft.path)
  calls.length=0;context.invoke=async()=>{throw Error('目标已不存在')};await context.click(event);assert.ok(calls.at(-1).warning.includes('目标已不存在'));assert.equal(calls.includes('snapshot'),false)
 })

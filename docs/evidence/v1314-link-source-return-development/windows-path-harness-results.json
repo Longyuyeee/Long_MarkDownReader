@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "kind": "production-Vue-real-Vditor-mocked-file-IPC-and-protocol-unit-checks",
+  "status": "passed",
+  "compiledProductChanged": false,
+  "compiledSourceCommit": "5524648049844fcbd9e9ccdde1dadf3a89b4388f",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "protocolTestsPassed": 23,
+  "productionChecks": [
+    {
+      "mode": "wysiwyg",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "wysiwyg",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "ir",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "ir",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "sv",
+      "crlf": false,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    },
+    {
+      "mode": "sv",
+      "crlf": true,
+      "privateInstanceAbsent": true,
+      "initialBodyExact": true,
+      "draftExact": true,
+      "undoRedoExact": true,
+      "managedTooltipRefresh": true,
+      "runtimeErrors": []
+    }
+  ],
+  "productionActions": [
+    "native-keyboard-two-drafts-return-selection-and-undo-redo",
+    "structured-target-return",
+    "text-target-draft-return",
+    "wiki-return",
+    "source-renamed-return",
+    "local-failure-retry",
+    "source-reload-invalidates"
+  ],
+  "mixedWindowsPathExpectations": true,
+  "files": [
+    {
+      "path": "scripts/lib/installed-v1-3-14-workflow.mjs",
+      "sha256": "5c452bb9a0e5d5a2c4fafbb7e1a01c9562bf38f6e27aae4a1cc9e14503da148d"
+    },
+    {
+      "path": "scripts/test-link-source-native-actions-browser.mjs",
+      "sha256": "24328867b9db49ad5cbb0ca9c10bb4e438ab9a7632786427b590e7acd986dd4c"
+    },
+    {
+      "path": "scripts/test-v1314-installed-link-source-return.mjs",
+      "sha256": "deeeed5859a28c471f8ac2cb4f7ff6b97777a7ffa09b6117522f45b0f1bdd642"
+    }
+  ]
+}

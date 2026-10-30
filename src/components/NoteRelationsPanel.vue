@@ -39,7 +39,7 @@ import { searchResultPath } from '../utils/searchResultPath'
 interface Note { path: string; name: string; content: string; dirty: boolean }
 interface Backlink { title: string; path: string; context: string }
 const props = defineProps<{ note: Note | null; otherFileOpen: boolean; pinned: boolean }>()
-const emit = defineEmits<{ open: [path: string]; graph: []; pin: [pinned: boolean]; browse: []; search: [target: string] }>()
+const emit = defineEmits<{ open: [path: string]; openLink: [path: string]; graph: []; pin: [pinned: boolean]; browse: []; search: [target: string] }>()
 const store = useAppStore()
 const direction = ref<'outgoing' | 'incoming'>('outgoing'), outgoing = ref<string[]>([]), incoming = ref<Backlink[]>([])
 const outLoading = ref(false), inLoading = ref(false), outError = ref(''), inError = ref('')
@@ -79,13 +79,13 @@ async function openTarget(target: string) {
     const files = await invoke<LinkFile[]>('search_library', { libraryRoot: root, query: title, namesOnly: true })
     if (token !== openGeneration || !current(path, root)) return
     const found = noteLinkTargets(target, files, root, path)
-    if (found.length === 1) emit('open', found[0].path)
+    if (found.length === 1) emit('openLink', found[0].path)
     else if (found.length > 1) choices.value = found
     else openError.value = `未找到“${target}”笔记，可以查找文件，或在正文中调整链接。`
   } catch (error) { if (token === openGeneration && current(path, root)) { openError.value = '暂时没能打开引用的笔记，请查找文件后重试。'; openErrorDetails.value = String(error) } }
   finally { if (token === openGeneration) opening.value = '' }
 }
-const chooseTarget = (path: string) => { choices.value = []; emit('open', path) }
+const chooseTarget = (path: string) => { choices.value = []; emit('openLink', path) }
 watch(() => [props.note?.path, store.libraryPath] as const, () => {
   ++outGeneration; ++inGeneration; clearTarget(); if (debounce) clearTimeout(debounce)
   outgoing.value = []; incoming.value = []; outError.value = ''; inError.value = ''; outLoading.value = false; inLoading.value = false

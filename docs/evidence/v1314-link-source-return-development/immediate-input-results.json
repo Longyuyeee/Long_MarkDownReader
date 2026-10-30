@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "mode": "wysiwyg",
+      "status": "passed",
+      "lastInputPreserved": true,
+      "oneUndoStep": true,
+      "redoExact": true,
+      "targetUnchanged": true,
+      "noWrites": true
+    },
+    {
+      "mode": "ir",
+      "status": "passed",
+      "lastInputPreserved": true,
+      "oneUndoStep": true,
+      "redoExact": true,
+      "targetUnchanged": true,
+      "noWrites": true
+    },
+    {
+      "mode": "sv",
+      "status": "passed",
+      "lastInputPreserved": true,
+      "oneUndoStep": true,
+      "redoExact": true,
+      "targetUnchanged": true,
+      "noWrites": true
+    }
+  ]
+}
