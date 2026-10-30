@@ -13,3 +13,10 @@ test('stale reports, synthetic input, false results and unrelated source edits a
  for(const change of [r=>r.sourceCommit='e'.repeat(40),r=>r.nativeBridgeMocked=true,r=>r.otherDraftsPreserved=false,r=>r.inputTrace[0].trusted=false,r=>r.runtimeErrors.push('failure'),r=>r.checks.pop()]){const{r}=fixture();change(r);assert.throws(()=>validateInstalledInlineLinkRepair(r,manifest))}
  const{r,bytes}=fixture();bytes.set(inlineLinkRepairOutputFiles[1],Buffer.from('unrelated content'));assert.throws(()=>assertInlineLinkRepairOutputBytes(r,n=>bytes.get(n)))
 })
+
+
+test('picker queries the exact relative fixture path even with duplicate filenames',async()=>{
+ const {inlineRepairTargetRelative}=await import('./lib/inline-link-repair-actions.mjs')
+ const paths={libraryRoot:'C:\\LongEditR5ILibrary',A:'\\\\?\\C:\\LongEditR5ILibrary\\owned-uuid\\A.md',target:'C:\\LongEditR5ILibrary\\owned-uuid\\资料\\新 目标.md'}
+ assert.equal(inlineRepairTargetRelative(paths,'B.md'),'owned-uuid/b.md');assert.equal(inlineRepairTargetRelative(paths,'新 目标.md'),'owned-uuid/资料/新 目标.md')
+})

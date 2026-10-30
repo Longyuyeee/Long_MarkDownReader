@@ -17,7 +17,7 @@ export async function runInstalledV1315InlineLinkRepairWorkflow({send,evaluate,n
   await fs.mkdir(path.dirname(paths.target),{recursive:true});await fs.writeFile(path.join(folder,'.v119-installed-owner'),'owned inline repair fixture')
   for(const[p,t]of [[paths.A,linkSourceText],[paths.B,'# 磁盘上的其他标题\n']])await fs.writeFile(p,'\uFEFF'+t.replaceAll('\n','\r\n'))
   await fs.writeFile(paths.readonly,linkSourceText);await fs.writeFile(paths.target,linkTargetText);await fs.writeFile(path.join(folder,'资料','无章节.md'),'# 其他标题\n');await fs.writeFile(path.join(folder,'C.json'),'{"target":true}\n');await fs.writeFile(path.join(folder,'D.txt'),'文本目标\n')
-  const result=await inlineRepairActions({send,evaluate,navigate,capture,paths,read:p=>fs.readFile(p,'utf8'),write:async(p,t)=>{if(t===null)await fs.unlink(p);else await fs.writeFile(p,t)},readOnly:(p,yes)=>fs.chmod(p,yes?0o444:0o666)})
+  const result=await inlineRepairActions({send,evaluate,navigate,capture,paths:{...paths,libraryRoot:library},read:p=>fs.readFile(p,'utf8'),write:async(p,t)=>{if(t===null)await fs.unlink(p);else await fs.writeFile(p,t)},readOnly:(p,yes)=>fs.chmod(p,yes?0o444:0o666)})
   r.checks=inlineRepairChecks.map(id=>({id,status:result.observations[id]?'passed':'failed'}));r.viewportWidths=[1280,800]
   r.otherDraftsPreserved=await evaluate(`window.__v1315Prior.every(p=>${store}.tabs.some(t=>t.id===p.id&&t.path===p.path&&t.content===p.content&&t.isDirty))`)
   r.disposableDraftsExplicitlySaved=await evaluate(`!${store}.tabs.some(t=>(${linkSourcePathKey.toString()})(t.path).startsWith(${JSON.stringify(linkSourcePathKey(folder))})&&t.isDirty)`)

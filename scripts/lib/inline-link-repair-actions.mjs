@@ -4,6 +4,11 @@ import {installedMarkdownValueExpression} from './installed-markdown-observation
 import {linkSourcePathKey,linkSourceLibrarySelector} from './installed-v1-3-14-workflow.mjs'
 import {replacedSource} from './inline-link-fixture.mjs'
 export const inlineRepairChecks=['single-selected-link','three-modes-draft-undo-redo','text-and-structured-targets','valid-fragments-and-target-draft','stale-source-protection','missing-target-local-retry','readonly-source-protection','wide-narrow-dialog','explicit-save-and-other-drafts']
+export function inlineRepairTargetRelative(paths,name){
+ const key=linkSourcePathKey,parent=key(paths.A).slice(0,key(paths.A).lastIndexOf('/')+1)
+ const target=name==='新 目标.md'?key(paths.target):name==='无章节.md'?key(paths.target).replace(/[^/]+$/,'无章节.md'):parent+name.toLowerCase()
+ return target.slice(key(paths.libraryRoot).replace(/\/$/,'').length+1)
+}
 export async function inlineRepairActions({send,evaluate,navigate,capture,paths,read,write,readOnly}){
  const ui=nativeUserInput({send,evaluate},{timeoutMs:45000}),q=JSON.stringify,key=linkSourcePathKey,store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`,editor=installedMarkdownValueExpression,observations={},pause=ms=>new Promise(r=>setTimeout(r,ms))
  const same=(expr,p)=>`(${key.toString()})(${expr})===${q(key(p))}`,tab=p=>`${store}.tabs.find(t=>${same('t.path',p)})`,visible=s=>`!!document.querySelector(${q(s)})?.getClientRects().length`
@@ -15,7 +20,7 @@ export async function inlineRepairActions({send,evaluate,navigate,capture,paths,
  const setMode=async next=>{await menu();await ui.clickText('.mode-toggle button',{wysiwyg:'所见',ir:'IR',sv:'源码'}[next]);mode=next;await closeMenu();await ready()}
  const linkTarget=()=>mode==='sv'?`[...document.querySelectorAll('#vditor-lib .vditor-sv__marker--link')].find(e=>e.textContent.includes('missing.md'))`:mode==='ir'?`[...document.querySelectorAll('#vditor-lib .vditor-ir__link')].find(e=>e.textContent==='同一份资料')`:`[...document.querySelectorAll('#vditor-lib a[href]')].find(e=>e.textContent==='同一份资料')`
  const show=async()=>{await ui.clickTarget(linkTarget(),'right');await ui.clickTarget(`[...document.querySelectorAll('.n-dropdown-option-body__label')].find(e=>e.getClientRects().length&&e.textContent.trim()==='更换文件目标…')`);await ui.waitFor(visible('[data-testid=inline-link-repair-dialog]'),'repair dialog')}
- const select=async name=>{await ui.click('.inline-link-repair-dialog .n-base-selection');await ui.clickTarget(`[...document.querySelectorAll('.n-base-select-option')].find(e=>e.getClientRects().length&&e.querySelector('strong')?.textContent===${q(name)})`);await ui.waitFor('!document.querySelector("[data-testid=inline-link-repair-apply]").disabled','selected target ready')}
+ const select=async name=>{const relative=inlineRepairTargetRelative(paths,name);await ui.click('.inline-link-repair-dialog .n-base-selection');await ui.fill('.inline-link-repair-dialog input[aria-label="新的链接文件"]',relative);await ui.clickTarget(`[...document.querySelectorAll('.n-base-select-option')].find(e=>e.getClientRects().length&&e.querySelector('strong')?.textContent===${q(name)}&&(${key.toString()})(e.querySelector('small')?.textContent)===${q(relative)})`);await ui.waitFor('!document.querySelector("[data-testid=inline-link-repair-apply]").disabled','selected target ready')}
  const apply=async()=>{await ui.click('[data-testid=inline-link-repair-apply]');await ui.waitFor('!document.querySelector("[data-testid=inline-link-repair-dialog]")','repair committed')},cancel=async()=>{await ui.clickText('.inline-link-repair-dialog button','取消');await pause(200)}
  const undo=async text=>{await ui.key('z','KeyZ',90,2);await exact(text)},redo=async text=>{await ui.key('y','KeyY',89,2);await exact(text)}
  await open(paths.A);await setMode('wysiwyg');await ui.clickTarget(`document.querySelector(${q(root())}).lastElementChild`);await ui.key('End','End',35,2);await send('Input.insertText',{text:'草稿保留。'});await pause(1000)
