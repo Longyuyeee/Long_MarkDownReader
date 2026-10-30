@@ -10,6 +10,17 @@ export const linkSourcePathKey=p=>String(p||'').replaceAll('\\','/').replace('//
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex'),key=linkSourcePathKey
 export const linkSourceLibrarySelector='[data-ui-shell="library-editor"]'
 export const linkSourceRefreshSelector='button[data-app-tooltip="刷新列表"],button[title="刷新列表"]'
+export function recordLinkSourceInput(){
+ window.__v1314Trace=[]
+ let keyboardEventIndex=-1
+ for(const type of ['click','pointerdown','keydown','input'])document.addEventListener(type,event=>{
+  const entry={type,trusted:event.isTrusted}
+  if(type==='keydown')Object.assign(entry,{key:event.key,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey})
+  if(!event.isTrusted&&type==='click')Object.assign(entry,{editorCommand:event.target.closest?.('#vditor-lib .vditor-toolbar [data-type="undo"],#vditor-lib .vditor-toolbar [data-type="redo"]')?.getAttribute('data-type'),keyboardEventIndex})
+  window.__v1314Trace.push(entry)
+  if(event.isTrusted&&type==='keydown')keyboardEventIndex=window.__v1314Trace.length-1
+ },true)
+}
 export async function runInstalledV1314LinkSourceReturnWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
  assert.equal(appVersion,'1.3.14');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
@@ -34,7 +45,7 @@ export async function runInstalledV1314LinkSourceReturnWorkflow({send,evaluate,n
  const closeMenu=async()=>{if(await evaluate(visible('.document-menu-content')))await menu()}
  let failure
  try{
-  await evaluate(`window.__v1314Prior=${store}.tabs.filter(t=>t.isDirty).map(t=>({id:t.id,path:t.path,content:t.content}));window.__v1314Trace=[];window.__v1314Errors=[];for(const type of ['click','pointerdown','keydown','input'])document.addEventListener(type,e=>window.__v1314Trace.push({type,trusted:e.isTrusted}),true);window.addEventListener('error',e=>window.__v1314Errors.push(String(e.message)));window.addEventListener('unhandledrejection',e=>window.__v1314Errors.push(String(e.reason)))`)
+  await evaluate(`window.__v1314Prior=${store}.tabs.filter(t=>t.isDirty).map(t=>({id:t.id,path:t.path,content:t.content}));(${recordLinkSourceInput.toString()})();window.__v1314Errors=[];window.addEventListener('error',e=>window.__v1314Errors.push(String(e.message)));window.addEventListener('unhandledrejection',e=>window.__v1314Errors.push(String(e.reason)))`)
   await fs.mkdir(folder,{recursive:true});await fs.writeFile(path.join(folder,'.v119-installed-owner'),'owned link return fixture')
   for(const[p,text]of [[A,linkSourceText],[B,linkTargetText]])await fs.writeFile(p,'\uFEFF'+text.replaceAll('\n','\r\n'))
   await fs.writeFile(C,'{"readonly":true}\n');await fs.writeFile(D,'文本目标\n保留原文。\n');await fs.writeFile(E,linkSourceText)
