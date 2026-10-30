@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-224-v1.3.14-link-source-return-candidate",
-  "binaryVersionTransition": "v1.3.14-quality-gate-pending",
+  "binaryVersionTransition": "v1.3.14-release-ready",
   "displayLabel": "v1.3.14 链接来源返回候选 · 当前公开 v1.3.13",
   "activeSlice": {
     "id": "v1.3.14-link-source-return",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_3_14_Unsigned_Community_Release_Audit_2026-10-30.md"
   }
 }
