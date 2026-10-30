@@ -46,7 +46,7 @@ window.__TAURI_INTERNALS__ = {
     if(command==='validate_local_json_schema')return{status:'no-schema',schemaApplied:false,diagnostics:[],diagnosticsTruncated:false}
     if(command==='get_json_schema_config')return null
     if(command.startsWith('read_')&&command.endsWith('_source_document'))return snapshot(args.path)
-    if(command.startsWith('read_')&&command.includes('text_document')){const r=snapshot(args.path);return command.endsWith('_range')?{...r,offset:0,nextOffset:r.size,eof:true,readOnlyReason:''}:r}
+    if(command.startsWith('read_')&&command.includes('text_document')){if(args.libraryRoot!==root||!args.formatId)throw Error('Native text read requires libraryRoot and formatId');const r=snapshot(args.path);return command.endsWith('_range')?{...r,offset:0,nextOffset:r.size,eof:true,readOnlyReason:''}:r}
     if (command === 'read_text_document') { if (!disk.has(args.path)) throw Error('文件不存在'); return snapshot(args.path) }
     if (command === 'write_text_document') { if (window.shellAudit.failSave) throw Error('保存失败，请重试'); disk.set(args.path,args.content); return snapshot(args.path) }
     if (command === 'prepare_writing_delivery') { if(window.shellAudit.failDelivery)throw Error('图片缺失，未完成');return window.shellAudit.deliveryResources||{images:[],warnings:[]} }

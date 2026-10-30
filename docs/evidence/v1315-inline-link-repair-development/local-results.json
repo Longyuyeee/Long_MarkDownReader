@@ -1,6 +1,6 @@
 {
   "appVersion": "1.3.15",
-  "finalUnitTestsPassed": 38,
+  "finalUnitTestsPassed": 40,
   "finalTypeCheckPassed": true,
   "actualOperationGroups": 9,
   "markdownModes": 3,
@@ -15,5 +15,7 @@
   "currentNativeWorkflowGroups": 18,
   "historicalResultsCountedAsCurrent": false,
   "productionFixture": "built-production-Vue-with-modeled-file-IPC",
-  "lastReadonlyFeedbackGuard": "covered-by-real-handler-unit-and-current-native-check"
+  "lastReadonlyFeedbackGuard": "covered-by-real-handler-unit-and-current-native-check",
+  "strictNativeReadArguments": true,
+  "fullTrustedInputTraceChecked": true
 }

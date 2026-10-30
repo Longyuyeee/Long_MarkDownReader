@@ -32,8 +32,8 @@ async function verify(path:string){
  const format=findFileFormat(path);if(!format)throw Error('请选择软件支持的文件类型')
  await invoke('get_file_stats',{libraryRoot:props.request.root,path})
  if(!fragment||format.id!=='markdown')return ''
- const draft=store.tabs.find(tab=>tab.isDirty&&sameWorkspacePath(tab.path,path))
- const content=draft?.content??(await invoke<{content:string}>('read_text_document',{path})).content
+ const opened=store.tabs.find(tab=>sameWorkspacePath(tab.path,path))
+ const content=(opened?.isDirty?opened.content:undefined)??(await invoke<{content:string}>('read_text_document',{libraryRoot:props.request.root,path,formatId:format.id,...(opened?.textReadEncoding?{readOptions:{encoding:opened.textReadEncoding}}:{})})).content
  return markdownSections(content).sections.some(section=>section.slug===fragment||section.text===fragment)?fragment:''
 }
 async function check(){
