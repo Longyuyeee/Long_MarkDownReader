@@ -1,4 +1,4 @@
-import { resolveLocalImagePath } from './localImagePath'
+import { resolveLocalImagePath } from './localImagePath.ts'
 
 export function localMarkdownLink(documentPath: string, href: string) {
   if (!href || (/^[a-z][a-z\d+.-]*:/i.test(href) && !/^[a-z]:[\\/]/i.test(href)) || href.startsWith('//')) return null

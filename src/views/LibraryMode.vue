@@ -406,7 +406,7 @@
             <template #description>同步中...</template>
           </n-spin>
         </div>
-        <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance" @pointerdown.capture="rememberLinkPosition" @click.capture="openSourceReference"></div>
+        <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance" @pointerdown.capture="rememberLinkPosition" @click.capture="openSourceReference" @contextmenu.capture="openInlineLinkMenu"></div>
         <Teleport v-if="documentShortcutHost && activeIsMarkdown && !activeEmbeddedEditor" :to="documentShortcutHost">
           <div class="document-inline-shortcuts" aria-label="文档快捷操作">
             <n-dropdown trigger="click" :options="[{label:'所见即所得',key:'wysiwyg'},{label:'即时渲染 IR',key:'ir'},{label:'源码编辑',key:'sv'}]" @select="switchEditorMode">
@@ -462,6 +462,8 @@
       :repair-source="repairPinnedReference" :insert-target="activeIsMarkdown && activeFormatCanEdit ? activeTabId?.split(/[\\/]/).pop() : undefined" @insert-excerpt="insertReferenceExcerpt"
       @close="referenceVisible = false" @clear-source="referenceVisible = false; searchPreviewResult = null" @return-to-editor="referenceVisible = false; returnToEditorFromReference()" @open="openSearchPreview" />
     <ReferenceRepairDialog v-if="referenceRepairRequest" :library-root="referenceRepairRequest.root" :source="referenceRepairRequest.source" :effect="referenceRepairRequest.effect" :commit="referenceRepairRequest.commit" @close="referenceRepairRequest = null" @open="openRepairedSource" />
+    <InlineLinkRepairDialog v-if="inlineLinkRepair" :request="inlineLinkRepair" @close="closeInlineLinkRepair" />
+    <n-dropdown :show="inlineLinkMenu.show" trigger="manual" :x="inlineLinkMenu.x" :y="inlineLinkMenu.y" :options="inlineLinkMenuOptions" @clickoutside="closeInlineLinkMenu" @select="chooseInlineLinkRepair" />
     <aside v-if="!searchPreviewResult && referenceVisible && !store.isZen" id="library-reference" class="reference-empty" aria-label="只读参考文档">
       <header><strong>参考</strong><n-button quaternary size="small" @click="referenceVisible = false">关闭</n-button><WorkspaceHelp label="说明：在搜索结果旁点击“在侧边参考”即可打" text="在搜索结果旁点击“在侧边参考”即可打开。参考内容不会替换当前草稿。" /></header>
       <p>选择一份资料作为参考，边看边写。</p>
@@ -692,6 +694,10 @@ import { belongsToLibrary } from '../utils/workSessions'
 import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { useSearchReturn } from '../composables/useSearchReturn'
 import ReferenceRepairDialog from '../components/ReferenceRepairDialog.vue'
+import InlineLinkRepairDialog from '../components/InlineLinkRepairDialog.vue'
+import type {InlineLinkRepairRequest} from '../services/inlineLinkRepair'
+import {inlineLinkContext,inlineSourceMatches,applyInlineLinkDraft,focusInlineLink,type InlineLinkContext} from '../utils/vditorInlineLink'
+import {relativeFileDestination,replaceInlineDestination} from '../utils/inlineFileLinks'
 import { type ReferenceTarget } from '../services/referenceRepair'
 import { searchResultPath } from '../utils/searchResultPath'
 import { readWorkspaceReference, writeWorkspaceReference } from '../services/workspaceReference'
@@ -776,7 +782,7 @@ import { useLinkSourceReturn } from '../composables/useLinkSourceReturn'
 import { isPortableChapterLink, parsePortableChapterLink, chapterHeadingTarget } from '../utils/portableChapterLinks'
 import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
-import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
+import { resolveCollectionPath, sameWorkspacePath, toCollectionRelativePath } from '../utils/savedCollections'
 import { resolveLibraryTreeAncestors } from '../utils/libraryTreeAncestors'
 import type { GraphData } from '../types/graph'
 import {
@@ -1046,12 +1052,13 @@ const activeTextSnapshotLabel = computed(() => {
   if (!tab?.textEncoding) return ''
   const bom = tab.textBom && tab.textBom !== 'none' ? ` · ${tab.textBom.toUpperCase()} BOM` : ''
   const lineEnding = tab.textLineEnding ? ` · ${tab.textLineEnding.toUpperCase()}` : ''
-  const readOnly = tab.textReadOnlyReason ? ' · 大文件只读' : ''
+  const readOnly = tab.textReadOnlyReason ? (tab.textReadOnlyReason==='readonly'?' · 文件只读':' · 大文件只读') : ''
   return `${tab.textEncoding}${bom}${lineEnding}${readOnly}`
 })
 const activeTextSnapshotTitle = computed(() => {
   const tab = activeTextTab.value
   if (tab?.textLoadError) return tab.textLoadError
+  if (tab?.textReadOnlyReason==='readonly') return '文件为只读，可在文件属性中恢复写入权限后重新读取'
   if (tab?.textReadOnlyReason) {
     const loaded = tab.textRangeNextOffset || 0
     return `大文件范围预览 · 已加载 ${loaded} / ${tab.textSize || 0} 字节`
@@ -1063,7 +1070,7 @@ const activeTextSnapshotTitle = computed(() => {
 const activeSaveTitle = computed(() => {
   if (!activeTabId.value) return '保存到磁盘 (Ctrl+S)'
   if (activeTextTab.value?.textLoadError) return activeTextTab.value.textLoadError
-  if (activeTextTab.value?.textReadOnlyReason) return '大文件范围预览为只读模式'
+  if (activeTextTab.value?.textReadOnlyReason) return activeTextTab.value.textReadOnlyReason==='readonly'?'文件为只读，不能覆盖保存':'大文件范围预览为只读模式'
   if (!activeFormatCanEdit.value) return `${activeDocumentFormat.value?.label || '当前格式'}不可覆盖保存`
   return `保存到磁盘 (Ctrl+S) · ${activeDocumentFormat.value?.userCapability.label || '可编辑'}`
 })
@@ -2822,7 +2829,62 @@ const rememberLinkPosition = (event: PointerEvent) => {
   if (position) pressedLinkPosition = { tab: activeTextTab.value, editor: vditor, generation: editorLoadGeneration, position }
 }
 const canReturnLinkSource = computed(() => Boolean(linkReturn.current.value && !fileOperationBusy.value && !editorModeChangeBusy.value && !currentFileReloadBusy.value && !editorLoading.value))
-const openLinkedFile = async (path: string, query: Record<string, string> = {}) => {
+const inlineLinkMenu=reactive({show:false,x:0,y:0}),inlineLinkRepair=shallowRef<InlineLinkRepairRequest|null>(null)
+const inlineLinkMenuOptions=[{label:'更换文件目标…',key:'replace',icon:()=>h(NIcon,{component:LinkIcon})},{label:'复制链接地址',key:'copy'}]
+let inlineLinkMenuContext:InlineLinkContext|undefined,inlineRepairFocus:(()=>void)|undefined
+const closeInlineLinkMenu=()=>{inlineLinkMenu.show=false;inlineLinkMenuContext=undefined}
+const closeInlineLinkRepair=()=>{inlineLinkRepair.value=null;const focus=inlineRepairFocus;inlineRepairFocus=undefined;void nextTick(()=>focus?.())}
+const inlineLinkReady=()=>Boolean(activeIsMarkdown.value&&activeTextTab.value&&!activeTextTab.value.textReadOnlyReason&&!hasPendingMainTextSave(activeTabId.value||'')&&!documentPreviewActive.value&&isVditorReady&&!editorLoading.value&&!editorModeChangeBusy.value&&!currentFileReloadBusy.value&&!fileOperationBusy.value&&!suppressEditorInput&&lastLoadedPath===activeTabId.value)
+const openInlineLinkDialog=(initial:InlineLinkContext)=>{
+ if(!inlineLinkReady()||vditor.getValue()!==initial.content||!initial.target.isConnected)return
+ snapshotWindowDrafts()
+ if(!inlineSourceMatches(activeTextTab.value!.content??'',initial.content)){message.info('当前模式无法完整保留原文格式，可切换源码模式后使用链接工具调整；原文未改动');return}
+ const tab=activeTextTab.value!,editor=vditor,root=store.libraryPath,path=tab.path,generation=editorLoadGeneration
+ let context=initial,revision=tab.content
+ const owned=()=>Boolean(inlineLinkReady()&&activeTextTab.value===tab&&allTabs.value.includes(tab)&&tab.path===path&&store.libraryPath===root&&vditor===editor&&editorLoadGeneration===generation&&editor.vditor[context.mode]?.element===context.root&&context.root.isConnected)
+ const current=()=>owned()&&context.target.isConnected&&editor.getValue()===context.content&&tab.content===revision
+ inlineRepairFocus=()=>{if(current())focusInlineLink(editor,context)}
+ inlineLinkRepair.value={root,path,href:context.link.href,current,refresh:()=>{
+  if(!owned()||!context.target.isConnected)return false
+  const next=inlineLinkContext(editor,path,{target:context.target,clientX:0,clientY:0}as unknown as MouseEvent)
+  if(!next)return false
+  snapshotWindowDrafts();context=next;revision=tab.content;return true
+ },commit:(target,fragment)=>{
+  if(!current())throw Error('原文或编辑位置已变化，未修改正文')
+  toCollectionRelativePath(root,target)
+  const after=replaceInlineDestination(context.content,context.link,relativeFileDestination(path,target,fragment))
+  if(after===context.content)return
+  applyInlineLinkDraft(editor,context,after)
+  store.updateTabContent(path,after);tab.isDirty=true;recordWindowDraftActivity();snapshotWindowDrafts();updateWordCount();syncOutlineManual(true)
+  inlineRepairFocus=()=>{if(owned()&&editor.getValue()===after)focusInlineLink(editor,context)}
+  message.success('链接已更新，尚未保存')
+ }}
+}
+const openInlineLinkRepairFromTarget=(target:Element)=>{
+ if(!inlineLinkReady())return
+ const context=inlineLinkContext(vditor,activeTabId.value!,{target,clientX:0,clientY:0}as unknown as MouseEvent)
+ if(context)openInlineLinkDialog(context)
+ else message.info('这处链接暂时无法准确定位，可使用编辑器的链接工具调整；原文未改动')
+}
+const openInlineLinkMenu=(event:MouseEvent)=>{
+ closeInlineLinkMenu();if(!inlineLinkReady())return
+ const context=inlineLinkContext(vditor,activeTabId.value!,event);if(!context)return
+ event.preventDefault();event.stopPropagation();contextMenu.show=false;documentActionsVisible.value=false
+ const popover=vditor.vditor[context.mode]?.popover;if(popover)popover.style.display='none'
+ const bounds=context.target.getBoundingClientRect();inlineLinkMenuContext=context
+ Object.assign(inlineLinkMenu,{show:true,x:event.clientX||bounds.left,y:event.clientY||bounds.bottom})
+}
+const chooseInlineLinkRepair=async(key:string)=>{
+ const context=inlineLinkMenuContext;closeInlineLinkMenu();if(!context)return
+ if(key==='copy'){try{await navigator.clipboard.writeText(context.link.href);message.success('链接地址已复制')}catch{message.warning('暂时无法复制链接地址')}return}
+ openInlineLinkDialog(context)
+}
+const showInlineLinkProblem=(repair:()=>void)=>{
+ if(!inlineLinkReady()){message.warning('文件不可用，当前页面和草稿已保留。');return}
+ const notice=message.warning(()=>h('span',null,['文件不可用，当前草稿已保留。 ',h('button',{type:'button',style:{border:0,background:'transparent',color:'inherit',textDecoration:'underline',cursor:'pointer',font:'inherit'},onClick:()=>{notice.destroy();repair()}},'更换目标…')]),{duration:7000})
+}
+watch(()=>store.libraryPath,()=>{closeInlineLinkMenu();closeInlineLinkRepair()})
+const openLinkedFile = async (path: string, query: Record<string, string> = {}, repair?:()=>void) => {
   const source = activeTextTab.value, editor = vditor, root = store.libraryPath, generation = editorLoadGeneration, ticket = ++linkNavigationTicket
   if (!source || !activeIsMarkdown.value || !isVditorReady || lastLoadedPath !== source.path || suppressEditorInput || editorModeChangeBusy.value || currentFileReloadBusy.value || fileOperationBusy.value) return
   const before = pressedLinkPosition
@@ -2834,7 +2896,7 @@ const openLinkedFile = async (path: string, query: Record<string, string> = {}) 
   const current = () => ticket === linkNavigationTicket && store.libraryPath === root && activeTextTab.value === source && allTabs.value.includes(source)
     && vditor === editor && editorLoadGeneration === generation && lastLoadedPath === source.path && editor.getValue() === position.content
   try {
-    if (!findFileFormat(path)) { message.warning('暂不支持在编辑区打开此类文件'); return }
+    if (!findFileFormat(path)) { if(repair)showInlineLinkProblem(repair);else message.warning('暂不支持在编辑区打开此类文件'); return }
     await invoke('get_file_stats', { libraryRoot: root, path })
     if (!current()) return
     snapshotWindowDrafts()
@@ -2843,7 +2905,7 @@ const openLinkedFile = async (path: string, query: Record<string, string> = {}) 
     const target = allTabs.value.find(tab => tab.id === activeTabId.value && sameLibrary(tab.path, path))
     if (ticket === linkNavigationTicket && store.libraryPath === root && target && allTabs.value.includes(source)) linkReturn.push(source, target, position)
     void nextTick(revealLinkedHeading)
-  } catch (error) { if (current()) message.warning(`无法打开链接文件，当前草稿已保留：${String(error)}`) }
+  } catch (error) { if (current()) {if(repair)showInlineLinkProblem(repair);else message.warning(`无法打开链接文件，当前草稿已保留：${String(error)}`)} }
 }
 const openNoteLink = (path: string) => { void openLinkedFile(path) }
 const returnToLinkSource = async () => {
@@ -2974,7 +3036,7 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
     tab.textLineEnding = snapshot.lineEnding
     tab.textHasFinalNewline = snapshot.hasFinalNewline
     tab.textReadEncoding = readEncoding
-    tab.textReadOnlyReason = undefined
+    tab.textReadOnlyReason = snapshot.readOnlyReason || undefined
     tab.textLoadError = undefined
     tab.textRangeNextOffset = undefined
     tab.textRangeEof = undefined
@@ -2995,7 +3057,7 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
       const res = await invoke<TextDocumentSnapshot>('read_text_document', { libraryRoot: store.libraryPath, path, formatId: format.id, readOptions })
       if (!isCurrentRequest()) return
       applyTextSnapshot(currentTab, res, currentTab?.textReadEncoding)
-      setEditorValue(res.content)
+      setEditorValue(res.content,Boolean(res.readOnlyReason))
       readSucceeded = true
     } catch (err: any) {
       if (!isCurrentRequest()) return
@@ -3027,7 +3089,7 @@ const updateTabFromTextSnapshot = (tab: TabInfo, snapshot: TextDocumentSnapshot,
   tab.textLineEnding = snapshot.lineEnding
   tab.textHasFinalNewline = snapshot.hasFinalNewline
   tab.textReadEncoding = readEncoding
-  tab.textReadOnlyReason = undefined
+  tab.textReadOnlyReason = snapshot.readOnlyReason || undefined
   tab.textLoadError = undefined
   tab.textRangeNextOffset = undefined
   tab.textRangeEof = undefined
@@ -4015,7 +4077,7 @@ const saveCurrentFile = async (options: unknown = {}) => {
     let finishWindowSave: (() => void) | undefined
     try { 
       finishWindowSave = beginWindowSave()
-      if (t.textReadOnlyReason) throw new Error('大文件范围预览为只读模式，不能覆盖保存')
+      if (t.textReadOnlyReason) throw new Error(t.textReadOnlyReason==='readonly'?'文件为只读，不能覆盖保存':'大文件范围预览为只读模式，不能覆盖保存')
       let content = submittedContent;
       
       const format = findFileFormat(t.path)
@@ -4423,7 +4485,7 @@ const openSourceReference = async (event: MouseEvent) => {
   if (local) {
     event.preventDefault(); event.stopPropagation()
     if (!local.path) { message.warning('链接地址无法识别，请检查文件路径'); return }
-    await openLinkedFile(local.path, local.fragment ? { markdownAnchor: local.fragment } : {})
+    await openLinkedFile(local.path, local.fragment ? { markdownAnchor: local.fragment } : {}, () => openInlineLinkRepairFromTarget(anchor!))
     return
   }
   if (href.toLowerCase().startsWith('longedit://source')) {

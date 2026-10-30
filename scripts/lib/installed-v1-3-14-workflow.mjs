@@ -23,7 +23,7 @@ export function recordLinkSourceInput(){
 }
 export async function runInstalledV1314LinkSourceReturnWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
- assert.equal(appVersion,'1.3.14');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.ok(['1.3.14','1.3.15'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const folder=path.join(library,'000-v1314-links-'+crypto.randomUUID()),A=path.join(folder,'A.md'),B=path.join(folder,'B.md'),C=path.join(folder,'C.json'),D=path.join(folder,'D.txt'),E=path.join(folder,'E.md'),renamed=path.join(folder,'改名来源.md')
  const ui=nativeUserInput({send,evaluate},{timeoutMs:45000}),store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`,source='#vditor-lib .vditor-wysiwyg > pre'
  const r={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-link-source-return-trusted-input-and-output-bytes',inputProtocol:'trusted-keyboard-and-pointer',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[],viewportWidths:[]},observations={},outputs=[]
