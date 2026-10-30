@@ -32,18 +32,18 @@
 </p>
 
 <p align="center">
-  <img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.3.13 真实安装版，紧凑导航、多文档标签与主编辑区">
+  <img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.3.14 真实安装版，紧凑导航、多文档标签与主编辑区">
 </p>
 
 <p align="center"><sub>真实安装版工作区：紧凑导航、稳定的多文档标签与主编辑区，把更多空间留给内容。</sub></p>
 
 ## 开发进展
 
-v1.3.14正在收尾：从文件链接打开资料后，按需返回来源标签与阅读位置，保留两边草稿和独立撤销记录。[本版审计](docs/V1_3_14_Unsigned_Community_Release_Audit_2026-10-30.md)。当前公开版本仍为1.3.13。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_14_2026-10-30.md)。
+v1.3.14已发布：通过Markdown文件／章节链接或关系页的双向链接打开资料后，在现有菜单返回来源，接续原标签、选区和阅读位置，保留两边草稿及独立撤销记录。[本版审计](docs/V1_3_14_Unsigned_Community_Release_Audit_2026-10-30.md)。下一版1.3.15规划在原文中修正文件链接，继续深化基础编辑体验。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_15_2026-10-30.md)。
 
 ## 不只是打开文件，更是接续你的工作
 
-> **v1.3.13 已正式发布**：返回后继续前进。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.13) · [发布说明](docs/RELEASE_NOTES_v1.3.13.md)。
+> **v1.3.14 已正式发布**：从文件链接回到来源。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.14) · [发布说明](docs/RELEASE_NOTES_v1.3.14.md)。
 
 
 
@@ -81,19 +81,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.13"><img src="https://img.shields.io/badge/Stable-v1.3.13-cca43b" alt="v1.3.13 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.14"><img src="https://img.shields.io/badge/Stable-v1.3.14-cca43b" alt="v1.3.14 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.3.13**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.3.14**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.3.13_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.13/LongEdit_1.3.13_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.3.13_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.13/LongEdit_1.3.13_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.3.13](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.13) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.3.14_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.14/LongEdit_1.3.14_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.3.14_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.14/LongEdit_1.3.14_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.3.14](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.14) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.13/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.14/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -101,12 +101,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.3.13_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.3.14_x64-setup.exe
 ```
 
 ```text
-69c74201f3f98c43e046dc1973861032a92c9081c85c0b4b38b4eefb3c4c1854  LongEdit_1.3.13_x64_zh-CN.msi
-ed3d71d8296a003d20c5fec88f41f73130df34c132b1a8e0817af4400a4c21c3  LongEdit_1.3.13_x64-setup.exe
+09e1c9e3d0ae4bf4d56b0ff0e1e377e4f52198f2950067b067f03e2259663837  LongEdit_1.3.14_x64_zh-CN.msi
+d609c4c7ab149e2af54be0f470d8e7e963bc65ac0bd97fef30061ea12755a447  LongEdit_1.3.14_x64-setup.exe
 ```
 
 </details>
@@ -236,19 +236,19 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 ## 真实界面
 
-主图、模板、TXT 恢复、文件整理、图谱与查找结果截图来自 **v1.3.13 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
+主图、模板、TXT 恢复、文件整理、图谱与查找结果截图来自 **v1.3.14 真实安装版**。其余旧版截图保留版本标注，用于说明对应功能；测试库名称和原始截图文件名中的历史版本文字不代表当前软件版本。
 
 ### 模板与文本历史
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.3.13 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.3.13 从 TXT 历史恢复独立副本"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.3.14 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.3.14 从 TXT 历史恢复独立副本"></td></tr>
   <tr><td align="center"><sub>在弹窗中编辑模板与变量</sub></td><td align="center"><sub>TXT 恢复副本，保留原文件</sub></td></tr>
 </table>
 
 ### 文件整理与回收
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.3.13 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.3.13 资料库回收站，选择文件后恢复"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.3.14 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.3.14 资料库回收站，选择文件后恢复"></td></tr>
   <tr><td align="center"><sub>选择或输入目标目录</sub></td><td align="center"><sub>在回收站选择恢复</sub></td></tr>
 </table>
 
@@ -283,10 +283,10 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 ### 知识图谱与思维导图
 
 <p align="center">
-  <img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.3.13 知识图谱与关系健康面板">
+  <img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.3.14 知识图谱与关系健康面板">
 </p>
 
-<p align="center"><sub>v1.3.13 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
+<p align="center"><sub>v1.3.14 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
 
 知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持稳定后自动全图适配、搜索、筛选、多种布局与主题、框选和拖动、缩放、适应当前选择、有界且尊重减少动效设置的选择反馈、可点击/拖动/键盘操作的语义缩略导航、右键操作、中心节点、视图保存以及 SVG/PNG 导出；密集中景会主动降低普通箭头和状态环噪声，近景仍保留方向语义。
 
@@ -586,6 +586,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.3.14 | 从文件链接回到来源 | [发布说明](docs/RELEASE_NOTES_v1.3.14.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.14) · [审计](docs/V1_3_14_Unsigned_Community_Release_Audit_2026-10-30.md) |
 | v1.3.13 | 返回后继续前进 | [发布说明](docs/RELEASE_NOTES_v1.3.13.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.13) · [审计](docs/V1_3_13_Unsigned_Community_Release_Audit_2026-10-30.md) |
 | v1.3.12 | 结构导航与源码定位往返 | [发布说明](docs/RELEASE_NOTES_v1.3.12.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.12) · [审计](docs/V1_3_12_Unsigned_Community_Release_Audit_2026-10-30.md) |
 | v1.3.11 | 查找后返回编辑位置 | [发布说明](docs/RELEASE_NOTES_v1.3.11.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.11) · [审计](docs/V1_3_11_Unsigned_Community_Release_Audit_2026-10-29.md) |
@@ -694,9 +695,18 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - [1.2.39—1.2.40](docs/Foundation_Deepening_Roadmap_1_2_39_to_1_2_40_2026-10-26.md) 已交付 **2/2 版**：TOML 数组多行正文与 YAML 列表条目复制排序。
 - [1.2.41—1.2.42](docs/Foundation_Deepening_Roadmap_1_2_41_to_1_2_42_2026-10-26.md) 已交付 **2/2 版**：YAML多行字段与TOML多行数组项复制排序。
 - [1.2.43—1.2.44](docs/Foundation_Deepening_Roadmap_1_2_43_to_1_2_44_2026-10-27.md) 已交付 **2/2 版**：TOML多行字段复制排序和多行数组项删除。
-- 1.3.0—1.3.13已交付；下一目标1.3.14规划从文件链接回到来源。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_14_2026-10-30.md)。
+- 1.3.0—1.3.14已交付；下一目标1.3.15规划在原文中修正文件链接。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_15_2026-10-30.md)。
 
-### v1.3.13 本次更新
+### v1.3.14 本次更新
+
+- 从文章的本地文件／章节链接、关系页“我提到的”中的双向链接打开资料后，在文档操作菜单或命令面板选择“返回链接来源”。
+- 恢复原标签、编辑模式、选区与阅读位置，保留来源和目标的草稿与各自撤销重做记录；普通标签切换不产生历史，拖动排序不清除已有返回记录。
+- 接续来源的有效改名，关闭或重新读取来源后停用旧记录；来源暂时不可用时当前页面继续可操作，文件恢复后可以重试。
+- 刚输入就打开链接也保留最后输入；导航只切换位置，保存仍由用户主动执行，保留全部风格和正常动效。
+
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v1314-links-1280.jpg" alt="v1.3.14 安装版文档菜单中的返回链接来源，保留两边未保存内容" width="960" />
+
+### v1.3.13 既有基础能力
 
 - 返回原位置后，在现有文档操作菜单选择“前进到刚才的位置”；命令面板同样可用。
 - 四格式源码与JSON树形支持当前文档最近20处往返记录，接续选区、滚动和有效视图；保留最新筛选及折叠设置。
@@ -704,7 +714,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 普通编辑接续有效位置，主动定位新目标清除旧前进分支，更换文件或重载停用旧记录。
 - 不修改、不保存正文，不增加正文撤销步骤，支持只读，保留全部风格和正常动效，不增加常驻面板。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v1313-forward-json-1280.jpg" alt="v1.3.13 安装版文档菜单中的前进到刚才的位置" width="960" />
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v1313-forward-json-1280.jpg" alt="v1.3.14 安装版文档菜单中的前进到刚才的位置" width="960" />
 
 ### v1.3.12 既有基础能力
 
@@ -713,7 +723,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 与查找返回共用最近20处记录，支持普通编辑映射和只读文件；不修改、不保存正文，不增加正文撤销步骤。
 - 不增加常驻面板，保留全部风格与正常动效。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v1312-navigation-json-1280.jpg" alt="v1.3.13 安装版通过现有菜单返回结构浏览位置" width="960" />
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v1312-navigation-json-1280.jpg" alt="v1.3.14 安装版通过现有菜单返回结构浏览位置" width="960" />
 
 ### v1.3.11 既有基础能力
 
@@ -722,7 +732,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 返回不编辑、不保存、不增加正文撤销步骤，支持只读文件，保护未保存草稿。
 - 保留全部风格及正常动效，不增加常驻面板。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v1311-return-json-1280.jpg" alt="v1.3.13 安装版文档操作菜单中的返回位置" width="960" />
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v1311-return-json-1280.jpg" alt="v1.3.14 安装版文档操作菜单中的返回位置" width="960" />
 
 ### v1.3.10 既有基础能力
 
@@ -731,7 +741,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 正文或条件变化后停用旧位置并提供刷新，切换文件关闭旧弹窗，保护草稿和当前焦点。
 - 保留全部界面风格及正常动效。安装复查按实际影响范围运行，历史基线独立引用，减少重复等待。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v1310-matches-json-1280.jpg" alt="v1.3.13 安装版查找结果定位" width="960" />
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v1310-matches-json-1280.jpg" alt="v1.3.14 安装版查找结果定位" width="960" />
 
 ### v1.3.9 既有基础能力
 
@@ -747,7 +757,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 应用后回到当前编辑区，可直接继续输入或撤销；取消返回原查找入口，切换文件不抢焦点。
 - 正文、查询、范围或已检测状态变化后停用旧预览；刷新重新全选当前结果并明确提示。保留原有直接替换、只读保护、全部风格及正常动效。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v138-selection-json-1280.jpg" width="800" alt="v1.3.13真实安装版：按处选择替换，保留未选择内容">
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v138-selection-json-1280.jpg" width="800" alt="v1.3.14真实安装版：按处选择替换，保留未选择内容">
 
 ### v1.3.7 既有基础能力
 
@@ -756,7 +766,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 正文、查询、范围或已检测状态变化后停用旧预览并提供刷新，切换文件关闭预览。
 - 替换只修改草稿，保存后才写回；保留只读保护、全部风格和正常动效。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v137-preview-json-1280.jpg" width="800" alt="v1.3.13真实安装版：选区内正则替换预览">
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v137-preview-json-1280.jpg" width="800" alt="v1.3.14真实安装版：选区内正则替换预览">
 
 ### v1.3.6 既有基础能力
 
@@ -765,7 +775,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 范围随草稿编辑及撤销／重做接续，各文件独立保留；正文变化使旧范围失效时暂停操作并保留输入。
 - 替换只修改草稿，保存后才写回；保留只读保护、全部风格和正常动效。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v136-scope-json-1280.jpg" width="800" alt="v1.3.13真实安装版：选区内查找、匹配数量和替换面板">
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v136-scope-json-1280.jpg" width="800" alt="v1.3.14真实安装版：选区内查找、匹配数量和替换面板">
 
 ### v1.3.5 既有基础能力
 
@@ -775,7 +785,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 替换只修改当前草稿，保留撤销／重做；只读文件隐藏替换操作，保存后才写回。
 - 沿用原有入口、全部风格及正常动效，保留源码光标、选区和阅读位置接续。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v135-search-json-1280.jpg" width="800" alt="v1.3.13真实安装版：中文源码查找与替换面板，各文件保留独立输入和条件">
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v135-search-json-1280.jpg" width="800" alt="v1.3.14真实安装版：中文源码查找与替换面板，各文件保留独立输入和条件">
 
 ### v1.3.4 既有基础能力
 
@@ -784,7 +794,7 @@ v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十�
 - 正文变化时自然回退，首次打开的文件从头开始；提纲、搜索和正文中的主动操作优先。
 - 保护未保存内容、显式保存和原有撤销，保留全部风格与正常动效，沿用原有入口。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v134-position-json-1280.jpg" width="800" alt="v1.3.13真实安装版：返回JSON文件后接续源码选区和阅读位置">
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v134-position-json-1280.jpg" width="800" alt="v1.3.14真实安装版：返回JSON文件后接续源码选区和阅读位置">
 
 ### v1.3.3 既有基础能力
 
@@ -1037,7 +1047,7 @@ XML 元素提纲右键“添加子元素…”或“重命名元素…”，必�
 
 JSON/JSONC、YAML、TOML、XML 和 SVG 源码视图在撤销、重做、手动恢复或结构化操作回到已保存原文后，正确更新现有状态栏、标签、保存按钮与关闭确认。基线来自真实读取或保存回执，精确比较源码及所属文件、签名与编码；不重新序列化文件，也不在每次输入时读盘。保存期间后续输入、文件切换、失败重试和冲突继续保护草稿，写入未完成时回到旧基线仍保护关闭；已检测到外部修改或无法确认基线时保守保留未保存状态。不增加页面或常驻表单，全部现有功能、主题和正常动效保留。
 
-<img src="docs/evidence/v1-3-13-candidate-lifecycle/installed-v1217-savepoint-clean.jpg" width="920" alt="v1.3.13 真实安装版：XML 撤销结构操作后恢复准确的已保存状态">
+<img src="docs/evidence/v1-3-14-candidate-lifecycle/installed-v1217-savepoint-clean.jpg" width="920" alt="v1.3.14 真实安装版：XML 撤销结构操作后恢复准确的已保存状态">
 
 ### v1.2.16 XML 属性新增与移除
 
