@@ -725,9 +725,8 @@ body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hov
   height: 100%;
 }
 
-/* 隐藏 Vditor 浮动工具栏，提升专注感 */
-.vditor-panel--focus, 
-.vditor-ir__node { 
+/* 只隐藏浮动工具栏；IR node 是标题、链接等正文内容。 */
+.vditor-panel--focus {
   display: none !important; 
   visibility: hidden !important; 
   opacity: 0 !important; 

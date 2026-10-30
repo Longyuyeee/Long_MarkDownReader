@@ -650,7 +650,7 @@
     "test:structure-navigation": "node --experimental-strip-types --test scripts/test-structured-navigation-return.mjs scripts/test-v1312-installed-structure-navigation.mjs",
     "test:navigation-forward": "node --experimental-strip-types --test scripts/test-structured-navigation-forward.mjs scripts/test-v1313-installed-navigation-forward.mjs",
     "test:link-source-return": "node --experimental-strip-types --test scripts/test-link-source-history.mjs scripts/test-v1314-installed-link-source-return.mjs",
-    "test:inline-link-repair": "node --experimental-strip-types --test scripts/test-inline-file-links.mjs scripts/test-v1315-installed-inline-link-repair.mjs scripts/test-inline-link-target-read.mjs"
+    "test:inline-link-repair": "node --experimental-strip-types --test scripts/test-inline-file-links.mjs scripts/test-v1315-installed-inline-link-repair.mjs scripts/test-inline-link-target-read.mjs scripts/test-vditor-readonly-surface.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.3",

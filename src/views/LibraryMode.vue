@@ -697,6 +697,7 @@ import ReferenceRepairDialog from '../components/ReferenceRepairDialog.vue'
 import InlineLinkRepairDialog from '../components/InlineLinkRepairDialog.vue'
 import type {InlineLinkRepairRequest} from '../services/inlineLinkRepair'
 import {inlineLinkContext,inlineSourceMatches,applyInlineLinkDraft,focusInlineLink,type InlineLinkContext} from '../utils/vditorInlineLink'
+import {setVditorReadOnly} from '../utils/vditorReadOnly'
 import {relativeFileDestination,replaceInlineDestination} from '../utils/inlineFileLinks'
 import { type ReferenceTarget } from '../services/referenceRepair'
 import { searchResultPath } from '../utils/searchResultPath'
@@ -2996,8 +2997,7 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
     setTimeout(() => {
       if (!isCurrentRequest()) return
       suppressEditorInput = false
-      if (readOnly) vditor?.disabled()
-      else vditor?.enable()
+      setVditorReadOnly(vditor,readOnly)
     }, 0)
     if (refreshHistory) fetchHistory()
     nextTick(() => { 
