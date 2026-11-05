@@ -11,7 +11,7 @@
   "sourceUserContentIncluded": false,
   "localQualitySequenceCompleted": false,
   "localQualityCommands": 108,
-  "exactSourceReleaseGate": "pending-single-frozen-source-builder",
+  "exactSourceReleaseGate": "passed-single-frozen-source-builder",
   "currentNativeWorkflowGroups": 18,
   "historicalResultsCountedAsCurrent": false,
   "productionFixture": "built-production-Vue-with-modeled-file-IPC",
@@ -20,5 +20,9 @@
   "fullTrustedInputTraceChecked": true,
   "fullApplicationStylesIncluded": true,
   "readonlyReadingFocusAndNoEditChecked": true,
-  "allStylesRecheckedWithApplicationCSS": true
+  "allStylesRecheckedWithApplicationCSS": true,
+  "productionFixtureAppStylesBundled": true,
+  "finalSourceCommit": "f10f622410d1acfb650d852b1513f50076846771",
+  "sourceQualityRun": 40992763513,
+  "buildRun": 40992763513
 }

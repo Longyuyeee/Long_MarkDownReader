@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-226-v1.3.15-inline-link-repair-candidate",
-  "binaryVersionTransition": "v1.3.15-quality-gate-pending",
+  "binaryVersionTransition": "v1.3.15-release-ready",
   "displayLabel": "v1.3.15 原文链接修正候选 · 当前公开 v1.3.14",
   "activeSlice": {
     "id": "v1.3.15-inline-link-repair",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_3_15_Unsigned_Community_Release_Audit_2026-10-30.md"
   }
 }
