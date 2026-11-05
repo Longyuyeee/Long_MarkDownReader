@@ -1,0 +1,193 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "command": "npm run check:ui4c-release-fact-alignment",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:ui-color-semantics",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:ui-state-semantics",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:dialog-acl",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:settings-navigation-localization",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:settings-information-architecture",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:index-auto-preparation-experience",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:table-row-editing-experience",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:library-context-restoration",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:markdown-default-mode",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:markdown-code-theme-contrast",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:code-editor-theme-contract",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:structured-source-workspace",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:workbook-workspace-experience",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:json-workspace-experience",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:text-workspace-layout",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:external-change-identity",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:managed-file-routing",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:format-registry",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:r1-release-capability-matrix",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:r2-windows-lifecycle-contract",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:d2-safe-degradation-contract",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:v1-installed-hotfix",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:v1-community-release",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run check:ux33j-installed-docx-harness",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run audit:prod",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:table-validation",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:workbook-entry-validation",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:content-restore-continuity",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:copy-reading-outcomes",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:portable-chapter-links",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:outline-navigation",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:outline-continuity",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:source-position",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:source-search",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:source-scope",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:replacement-preview",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:selective-replacement",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:recent-search",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:search-matches",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:release-validation",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:search-return",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:structure-navigation",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:navigation-forward",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:link-source-return",
+      "actualExit": 0
+    },
+    {
+      "command": "npm run test:inline-link-repair",
+      "actualExit": 0
+    }
+  ],
+  "excluded": [
+    "native-cargo-check-left-to-isolated-builder",
+    "complete-development-audit-already-passed-current-source"
+  ]
+}

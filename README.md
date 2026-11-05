@@ -39,7 +39,7 @@
 
 ## 开发进展
 
-v1.3.14已发布：通过Markdown文件／章节链接或关系页的双向链接打开资料后，在现有菜单返回来源，接续原标签、选区和阅读位置，保留两边草稿及独立撤销记录。[本版审计](docs/V1_3_14_Unsigned_Community_Release_Audit_2026-10-30.md)。下一版1.3.15规划在原文中修正文件链接，继续深化基础编辑体验。[开发路线](docs/Foundation_Deepening_Roadmap_1_3_15_2026-10-30.md)。
+当前公开版本v1.3.14。下一版v1.3.15按已有规划开发：在 Markdown 文件链接上右键更换目标，修改保留在草稿，支持一次撤销；正在完成受影响验证与安装复查。[本版审计](docs/V1_3_15_Unsigned_Community_Release_Audit_2026-10-30.md) · [开发路线](docs/Foundation_Deepening_Roadmap_1_3_15_2026-10-30.md)。
 
 ## 不只是打开文件，更是接续你的工作
 

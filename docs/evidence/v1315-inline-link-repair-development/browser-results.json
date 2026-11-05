@@ -1,0 +1,282 @@
+{
+  "status": "passed",
+  "evidenceLevel": "headless-browser-mocked-ipc",
+  "checks": [
+    "wysiwyg:single-link,draft,undo,redo,fragment",
+    "ir:single-link,draft,undo,redo,fragment",
+    "sv:single-link,draft,undo,redo,fragment"
+  ],
+  "layouts": [
+    {
+      "mode": "wysiwyg",
+      "style": "soft",
+      "width": 1440
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "soft",
+      "width": 800
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "soft",
+      "width": 640
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "neo",
+      "width": 1440
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "neo",
+      "width": 800
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "neo",
+      "width": 640
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "glass",
+      "width": 1440
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "glass",
+      "width": 800
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "glass",
+      "width": 640
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "airy",
+      "width": 1440
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "airy",
+      "width": 800
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "airy",
+      "width": 640
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "minimal",
+      "width": 1440
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "minimal",
+      "width": 800
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "minimal",
+      "width": 640
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "sharp",
+      "width": 1440
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "sharp",
+      "width": 800
+    },
+    {
+      "mode": "wysiwyg",
+      "style": "sharp",
+      "width": 640
+    },
+    {
+      "mode": "ir",
+      "style": "soft",
+      "width": 1440
+    },
+    {
+      "mode": "ir",
+      "style": "soft",
+      "width": 800
+    },
+    {
+      "mode": "ir",
+      "style": "soft",
+      "width": 640
+    },
+    {
+      "mode": "ir",
+      "style": "neo",
+      "width": 1440
+    },
+    {
+      "mode": "ir",
+      "style": "neo",
+      "width": 800
+    },
+    {
+      "mode": "ir",
+      "style": "neo",
+      "width": 640
+    },
+    {
+      "mode": "ir",
+      "style": "glass",
+      "width": 1440
+    },
+    {
+      "mode": "ir",
+      "style": "glass",
+      "width": 800
+    },
+    {
+      "mode": "ir",
+      "style": "glass",
+      "width": 640
+    },
+    {
+      "mode": "ir",
+      "style": "airy",
+      "width": 1440
+    },
+    {
+      "mode": "ir",
+      "style": "airy",
+      "width": 800
+    },
+    {
+      "mode": "ir",
+      "style": "airy",
+      "width": 640
+    },
+    {
+      "mode": "ir",
+      "style": "minimal",
+      "width": 1440
+    },
+    {
+      "mode": "ir",
+      "style": "minimal",
+      "width": 800
+    },
+    {
+      "mode": "ir",
+      "style": "minimal",
+      "width": 640
+    },
+    {
+      "mode": "ir",
+      "style": "sharp",
+      "width": 1440
+    },
+    {
+      "mode": "ir",
+      "style": "sharp",
+      "width": 800
+    },
+    {
+      "mode": "ir",
+      "style": "sharp",
+      "width": 640
+    },
+    {
+      "mode": "sv",
+      "style": "soft",
+      "width": 1440
+    },
+    {
+      "mode": "sv",
+      "style": "soft",
+      "width": 800
+    },
+    {
+      "mode": "sv",
+      "style": "soft",
+      "width": 640
+    },
+    {
+      "mode": "sv",
+      "style": "neo",
+      "width": 1440
+    },
+    {
+      "mode": "sv",
+      "style": "neo",
+      "width": 800
+    },
+    {
+      "mode": "sv",
+      "style": "neo",
+      "width": 640
+    },
+    {
+      "mode": "sv",
+      "style": "glass",
+      "width": 1440
+    },
+    {
+      "mode": "sv",
+      "style": "glass",
+      "width": 800
+    },
+    {
+      "mode": "sv",
+      "style": "glass",
+      "width": 640
+    },
+    {
+      "mode": "sv",
+      "style": "airy",
+      "width": 1440
+    },
+    {
+      "mode": "sv",
+      "style": "airy",
+      "width": 800
+    },
+    {
+      "mode": "sv",
+      "style": "airy",
+      "width": 640
+    },
+    {
+      "mode": "sv",
+      "style": "minimal",
+      "width": 1440
+    },
+    {
+      "mode": "sv",
+      "style": "minimal",
+      "width": 800
+    },
+    {
+      "mode": "sv",
+      "style": "minimal",
+      "width": 640
+    },
+    {
+      "mode": "sv",
+      "style": "sharp",
+      "width": 1440
+    },
+    {
+      "mode": "sv",
+      "style": "sharp",
+      "width": 800
+    },
+    {
+      "mode": "sv",
+      "style": "sharp",
+      "width": 640
+    }
+  ],
+  "errors": []
+}

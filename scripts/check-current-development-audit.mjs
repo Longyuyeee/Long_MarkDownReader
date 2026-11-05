@@ -583,6 +583,12 @@ if (pkg.version === '1.3.1') {
   required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.3.1' : '1.3.0') && development.publicTag === `v${development.publicVersion}`]
   required[9] = [published ? '当前阶段：**v1.3.1 已发布**' : '当前阶段：**v1.3.1 YAML 多行字段删除候选**', development.currentStage === (published ? 'M8-199-v1.3.1-published' : 'M8-198-v1.3.1-yaml-block-field-deletion-candidate') && development.activeSlice?.id === 'v1.3.1-yaml-block-field-deletion' && fs.existsSync(development.activeSlice.document)]
 }
+if (pkg.version === '1.3.15') {
+  const published = policy.gates?.githubReleasePublished === true
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.3.16' : '1.3.15')]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.3.15' : '1.3.14') && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? '当前阶段：**v1.3.15 已发布**' : '当前阶段：**v1.3.15 原文链接修正候选**', development.currentStage === (published ? 'M8-227-v1.3.15-published' : 'M8-226-v1.3.15-inline-link-repair-candidate') && development.activeSlice?.id === 'v1.3.15-inline-link-repair' && fs.existsSync(development.activeSlice.document)]
+}
 if (pkg.version === '1.3.14') {
   const published = policy.gates?.githubReleasePublished === true
   required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.3.15' : '1.3.14')]

@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "compiledProductChanged": false,
+  "compiledSourceCommit": "f10f622410d1acfb650d852b1513f50076846771",
+  "protocolTestsPassed": 43,
+  "modeledIpcDelayMs": 120,
+  "actualOperationGroups": 9,
+  "fullInputTraceChecked": true,
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "files": [
+    {
+      "path": "scripts/lib/inline-link-repair-actions.mjs",
+      "sha256": "20da02a4ce8104a2b77d3c7a95624eee2f101333707cc2cf8be358160f6e834b"
+    },
+    {
+      "path": "scripts/fixtures/v1315-library-links-browser.mjs",
+      "sha256": "4c6be2e1bca8dd5541f030f7006e5ccfcee65c947fd828b2ebc8e255b18fd9b2"
+    },
+    {
+      "path": "scripts/test-inline-link-repair-actions-browser.mjs",
+      "sha256": "b71e16ab52ccf142d002e927966e5df84bdbee1e97dc71ff14b0bab449ee18ff"
+    },
+    {
+      "path": "scripts/test-v1315-installed-inline-link-repair.mjs",
+      "sha256": "bf65485d60d4a2a6894c4f1ca95c1c62a956f81aa9aa508d425825f4bbb1dee0"
+    }
+  ]
+}

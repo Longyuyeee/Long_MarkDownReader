@@ -1,0 +1,1173 @@
+{
+  "status": "passed",
+  "evidenceLevel": "production-compatible-headless-trusted-input-mocked-ipc",
+  "observations": {
+    "three-modes-draft-undo-redo": true,
+    "single-selected-link": true,
+    "text-and-structured-targets": true,
+    "valid-fragments-and-target-draft": true,
+    "stale-source-protection": true,
+    "missing-target-local-retry": true,
+    "readonly-source-protection": true,
+    "wide-narrow-dialog": true,
+    "explicit-save-and-other-drafts": true
+  },
+  "final": "# 链接修正\n\n保留正文与标点。\n\n[同一份资料](%E8%B5%84%E6%96%99/%E6%96%B0%20%E7%9B%AE%E6%A0%87.md#%E6%9C%AC%E5%91%A8%E4%BB%BB%E5%8A%A1 \"说明标题\")\n\n不要修改下面同名的链接：\n\n[同一份资料](missing.md#本周任务 \"说明标题\")\n\n[表格](C.json) 与 [文本](D.txt)。\n\n末尾正文。草稿保留。\n",
+  "targetDraft": "# 本周任务\n\n目标草稿保留。\n\n",
+  "before": "# 链接修正\n\n保留正文与标点。\n\n[同一份资料](missing.md#本周任务 \"说明标题\")\n\n不要修改下面同名的链接：\n\n[同一份资料](missing.md#本周任务 \"说明标题\")\n\n[表格](C.json) 与 [文本](D.txt)。\n\n末尾正文。草稿保留。\n",
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "End",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 23
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "y",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "redo",
+      "keyboardEventIndex": 25
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 27
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 48
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "y",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "redo",
+      "keyboardEventIndex": 50
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 52
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 73
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "y",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "redo",
+      "keyboardEventIndex": 75
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 77
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 98
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 113
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 128
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "click",
+      "trusted": false,
+      "editorCommand": "undo",
+      "keyboardEventIndex": 163
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Escape",
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s",
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false
+    }
+  ],
+  "savedSource": "# 链接修正\n\n保留正文与标点。\n\n[同一份资料](%E8%B5%84%E6%96%99/%E6%96%B0%20%E7%9B%AE%E6%A0%87.md#%E6%9C%AC%E5%91%A8%E4%BB%BB%E5%8A%A1 \"说明标题\")\n\n不要修改下面同名的链接：\n\n[同一份资料](missing.md#本周任务 \"说明标题\")\n\n[表格](C.json) 与 [文本](D.txt)。\n\n末尾正文。草稿保留。\n",
+  "savedTarget": "# 本周任务\n\n目标草稿保留。\n",
+  "errors": []
+}

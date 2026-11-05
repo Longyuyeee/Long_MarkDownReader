@@ -5,7 +5,7 @@ import ts from 'typescript'
 import test from 'node:test'
 import {installLibraryLinkClickHarness} from './lib/library-link-click-test-harness.mjs'
 const compile=(file,dependencies={})=>{const context={exports:{},require:name=>dependencies[name]};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,context);return context.exports}
-const image=compile('src/utils/localImagePath.ts'),links=compile('src/utils/localMarkdownLinks.ts',{'./localImagePath':image})
+const image=compile('src/utils/localImagePath.ts'),links=compile('src/utils/localMarkdownLinks.ts',{'./localImagePath.ts':image})
 test('relative document links resolve against their moved note and keep the decoded heading',()=>{
  const target=links.localMarkdownLink('\\\\?\\C:\\Lib\\notes\\a.md','../文档/%E6%96%B0%E5%90%8D.md?view=2#%E6%9C%AC%E5%91%A8%E4%BB%BB%E5%8A%A1')
  assert.equal(target.path,'C:/Lib/文档/新名.md');assert.equal(target.fragment,'本周任务')
