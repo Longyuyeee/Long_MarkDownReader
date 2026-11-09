@@ -1,0 +1,2 @@
+-keep class com.longyuye.longedit.storage.StoragePlugin { *; }
+-keep class com.longyuye.longedit.storage.StorageArgs { *; }

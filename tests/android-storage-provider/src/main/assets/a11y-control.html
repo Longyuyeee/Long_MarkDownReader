@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AX control</title>
+<style>
+body{margin:0;font:18px/1.6 sans-serif;color:#20382d;background:#fafbf7}
+#app{min-height:90vh;display:flex;flex-direction:column}header{padding:16px;border-bottom:1px solid #ccc;display:flex;align-items:center;justify-content:space-between;gap:16px}
+h1,h2{font-size:22px;margin:0}button{font:inherit;padding:12px;min-height:48px;color:inherit}main{padding:16px;flex:1}[contenteditable]{min-height:160px;white-space:pre-wrap;border:1px solid #ccc;padding:12px}
+iframe{width:100%;height:160px;border:1px solid #ccc}#backdrop{position:fixed;inset:0;background:#20382d55;display:flex;align-items:end}#sheet{width:100%;background:#fafbf7;padding:24px;box-sizing:border-box}#sheet button{display:block;width:100%;margin-top:16px;text-align:left}
+</style>
+<div id="app"><div id="workspace"><header><h1 tabindex="-1">Control note</h1><button id="menu" onclick="openMenu()">Document actions</button></header><main id="body"></main></div></div>
+<script>
+const mode='CONTROL_MODE', workspace=document.getElementById('workspace'); let body=document.getElementById('body');
+if(mode.includes('contents')) workspace.style.display='contents';
+else { workspace.style.display='flex'; workspace.style.flexDirection='column'; workspace.style.flex='1'; }
+function editor(){body.innerHTML='<div contenteditable="true" role="textbox" aria-label="Note body">Unsaved control text\nKeep this line</div>';document.querySelector('h1').focus();}
+if(mode.startsWith('busy') || mode.startsWith('navigation')) {
+  body.innerHTML='<button onclick="navigate()">Open control note</button>';
+} else if(mode.startsWith('reader')){
+  body.innerHTML='<iframe title="Control reading" sandbox="allow-scripts" srcdoc="<h2>Saved control text</h2>"></iframe><button onclick="editor()">Continue editing</button>';
+}else editor();
+function navigate(){
+  const busy=mode.startsWith('busy');
+  if(busy) workspace.setAttribute('aria-busy','true');
+  setTimeout(()=>{
+    workspace.innerHTML='<header><h1 tabindex="-1">Control note</h1><button id="menu" onclick="openMenu()">Document actions</button></header><main id="body"></main>';
+    body=document.getElementById('body'); editor();
+    setTimeout(()=>{if(busy) workspace.setAttribute('aria-busy','false'); document.querySelector('h1').focus();},50);
+  },50);
+}
+function openMenu(){
+  workspace.inert=true;
+  document.getElementById('app').insertAdjacentHTML('beforeend','<div id="backdrop"><section id="sheet" tabindex="-1" role="dialog" aria-modal="true" aria-label="Document actions"><h2>Document actions</h2><button onclick="closeMenu()">Close actions</button><button onclick="showInbox()">Received content</button></section></div>');
+  document.getElementById('sheet').focus();
+}
+function closeMenu(){document.getElementById('backdrop').remove();workspace.inert=false;document.getElementById('menu').focus();}
+function showInbox(){document.getElementById('sheet').innerHTML='<h2>Received content</h2><button onclick="closeMenu()">Back to note</button><p>Control receipt</p>';document.getElementById('sheet').focus();}
+</script></html>

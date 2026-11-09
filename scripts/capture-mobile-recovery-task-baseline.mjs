@@ -1,0 +1,12 @@
+import {access,mkdir,writeFile} from 'node:fs/promises'
+import {createRequire} from 'node:module'
+import {activateMobileRoot} from './mobile-settings-navigation.mjs'
+const require=createRequire(import.meta.url),{chromium}=require(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright'),out='docs/evidence/mobile-recovery-task-2026-10-28/before'
+try{await access(out);throw Error('Baseline exists')}catch(e){if(e.code!=='ENOENT')throw e}await mkdir(out,{recursive:true})
+const record={id:'00000000-0000-4000-8000-000000000801',rootId:'outside',relativePath:'行程核对.md',libraryName:'旅行资料',created:1793152800000,hasOriginal:true,readable:true,purpose:'write',original:'\ufeff# 行程核对😀\r\n原始路线\r尾行\n',candidate:'# 行程核对😀\r\n杭州 → 苏州\r保留这份输入\n'},store='longedit-mobile-preview-v1'
+const browser=await chromium.launch({channel:'chrome',headless:true}),page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'}),report={baseHead:'775fe6351',nativeAndroidTest:false,screens:[]}
+const button=name=>page.getByRole('button',{name,exact:true})
+try{await page.addInitScript(({record,store})=>localStorage.setItem(store,JSON.stringify({version:1,documents:{},drafts:{},recoveries:{[record.id]:record}})),{record,store});await page.goto('http://127.0.0.1:9012/mobile.html');await activateMobileRoot(page,'设置');await button('保存恢复记录').tap();await page.locator('[data-recovery-id]').tap();await button('将草稿副本存入手机资料库').waitFor()
+ for(const[name,width,height,font]of[['review',390,844,16],['narrow',320,640,32],['short',320,346,32]]){await page.setViewportSize({width,height});await page.evaluate(font=>document.documentElement.style.fontSize=font+'px',font);if(name!=='review')await button('将草稿副本存入手机资料库').scrollIntoViewIfNeeded();await page.screenshot({path:out+'/'+name+'.png'});report.screens.push({name,viewport:{width,height},font,header:await page.locator('.recovery-center .page-heading').boundingBox(),copy:await button('将草稿副本存入手机资料库').boundingBox(),export:await button('导出完整恢复记录').boundingBox(),bodyScroll:await page.locator('.recovery-body').evaluate(e=>e.scrollTop)})}
+ const css=await page.locator('link[rel=stylesheet]').getAttribute('href');await writeFile(out+'/app.css',await(await page.request.get(new URL(css,page.url()).href)).body());await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2))
+}finally{await browser.close()}

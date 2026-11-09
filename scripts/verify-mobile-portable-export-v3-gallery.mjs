@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict'
+import {readFile,writeFile,access} from 'node:fs/promises'
+import {createRequire} from 'node:module'
+import {sha} from './fixtures/mobile-portable-export-v3.mjs'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright'),out='docs/design/mobile-portable-export-v3',raw='docs/evidence/mobile-0.1.0/portable-export-v3-2026-11-06',m=JSON.parse(await readFile(out+'/manifest.json','utf8'))
+await assert.rejects(access(out+'/validation.json'))
+for(const i of m.images){const b=await readFile(out+'/'+i.target);assert.equal(sha(b),i.sha256);assert.equal(sha(await readFile(i.source)),i.sha256);assert.equal(b.readUInt32BE(16),i.width);assert.equal(b.readUInt32BE(20),i.height)}
+for(const i of m.sources)assert.equal(sha(await readFile(i.file)),i.sha256)
+assert.equal(sha(await readFile(m.candidate.archive+'/app-x86_64-debug.apk')),m.candidate.build.sha256)
+const nativeCount=m.images.filter(i=>i.group==='native').length,report={passed:false,scope:'Full-image hashes, source/APK provenance, gallery layout and links. No altered product screenshots.',images:m.images.length,native:nativeCount,layouts:[],errors:[]},browser=await chromium.launch({channel:'chrome',headless:true})
+try{for(const width of [1280,390]){const page=await browser.newPage({viewport:{width,height:900}});page.on('pageerror',e=>report.errors.push(String(e)));await page.goto('http://127.0.0.1:9031/design/mobile-portable-export-v3/index.html');await page.locator('img').evaluateAll(es=>es.forEach(e=>e.loading='eager'));await page.waitForFunction(()=>[...document.images].every(e=>e.complete&&e.naturalWidth>0));assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);for(const href of await page.locator('a[href]').evaluateAll(es=>[...new Set(es.map(e=>e.href))]))assert.equal((await page.request.get(href)).status(),200,href);await page.locator('#variant').selectOption('native');assert.equal(await page.locator('figure[data-group=native]:visible').count(),nativeCount);await page.locator('#variant').selectOption('390x844-light-16');await page.screenshot({path:raw+'/gallery-'+width+'.png'});report.layouts.push({width,imagesLoaded:m.images.length,overflow:false});await page.close()}assert.deepEqual(report.errors,[]);report.passed=true
+}catch(e){report.failure=String(e.stack||e);process.exitCode=1}finally{await browser.close();await writeFile(out+'/validation.json',JSON.stringify(report,null,2)+'\n')}console.log(JSON.stringify(report))

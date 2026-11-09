@@ -1,0 +1,6 @@
+import {createHash} from 'node:crypto'
+import {fixture as draftFixture} from './mobile-draft-review-v3.mjs'
+export const sha=b=>createHash('sha256').update(b).digest('hex'),store='longedit-mobile-preview-v1',preferences='longedit-mobile-preferences-v1',data=draftFixture(),initialPreferences={version:1,theme:'light',future:{keep:true}}
+export async function seed(context,theme='light'){await context.addInitScript(({store,preferences,data,value})=>{if(window!==top||localStorage.getItem(store))return;localStorage.setItem(store,JSON.stringify(data));localStorage.setItem(preferences,JSON.stringify(value))},{store,preferences,data,value:{...initialPreferences,theme}})}
+export const back=async page=>{await page.evaluate(()=>window.__longeditMobileBack());await page.waitForTimeout(150)}
+export async function open(page){await page.goto((process.env.LONGEDIT_APPEARANCE_BASE_URL||'http://127.0.0.1:9030')+'/mobile.html');await page.waitForFunction(()=>document.querySelector('.mobile-workspace')?.getAttribute('aria-busy')==='false'&&document.querySelector('.file-row'));await page.getByRole('button',{name:'设置',exact:true}).tap();await page.locator('[data-focus-key="settings-appearance"]').tap();await page.getByRole('heading',{name:'外观',exact:true}).waitFor()}

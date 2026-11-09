@@ -1,0 +1,132 @@
+{
+  "kind": "public-textbundle-compatibility-corpus",
+  "samples": {
+    "shinyfrog-v2.textpack": {
+      "bytes": 4569,
+      "sha256": "9a359488031cb2ca6ec074ecda3948047974a0125ac2a433a62d23490b8efc61",
+      "members": {
+        "Textbundle Example.textbundle/text.markdown": {
+          "bytes": 221,
+          "sha256": "ef466c9508c494047144b2a1941d760afbb8e16a592e7de518f9702ea91d1915",
+          "gitBlob": "76dd3cc80e6c8f6912e392ecda0b3706d8a58f87"
+        },
+        "Textbundle Example.textbundle/info.json": {
+          "bytes": 262,
+          "sha256": "cd6e78904e1dcb79678159c9d6d246481fcc370733af8e11ef1ad6d99c5e228f",
+          "gitBlob": "1afdf24e3619c8ddf543b2ab1b2fc686a4ab8eaa"
+        },
+        "Textbundle Example.textbundle/assets/textbundle.png": {
+          "bytes": 3319,
+          "sha256": "5897c340d6f0a2fcd404359629e4b6e21f4eed16b023fdaa8775ce96a94f8c6e",
+          "gitBlob": "e25dbb8b41e557b63dec7e2a607be1201f722959"
+        }
+      }
+    },
+    "fsnotes-ios.textpack": {
+      "bytes": 6295,
+      "sha256": "93cae102a8e91198a1fe9672dd8643e46c45de89394b9c01380989a5b7998db8",
+      "members": {
+        "FSNotes 4.0 for iOS.textbundle/info.json": {
+          "bytes": 136,
+          "sha256": "a24a1b24cc258a8a75f87347fef52d70e46eaf25e1929c6de69d92b6b5bfe0aa",
+          "gitBlob": "a37917fe0a08675b775f8d7ce4a5a5bbaa28c27b"
+        },
+        "FSNotes 4.0 for iOS.textbundle/text.markdown": {
+          "bytes": 1467,
+          "sha256": "96ac662f64853956ae0e0b5f837be0b14b69c73dfa033257aec66f469376f917",
+          "gitBlob": "567ee36782b2ff0a275c487f04a311a97a1021a4"
+        },
+        "FSNotes 4.0 for iOS.textbundle/assets/128.png": {
+          "bytes": 5372,
+          "sha256": "4b9a1c25a07f10a7979b837938962d109a4ebbac736c3a1f0563c57d677ad03c",
+          "gitBlob": "ab6edcd5d82456908d88969f9b704a09e6fed84b"
+        }
+      }
+    },
+    "not-a-bundle.zip": {
+      "bytes": 153,
+      "sha256": "3d9d38f1d18438d88ce15291e6422e8ce7d2c1fb693dbbadb930d835e916fa65",
+      "members": {
+        "readme.txt": {
+          "bytes": 36,
+          "sha256": "0b7073367e67937af72e85938b5ada36c50b9941367adf9ef3d5d19c62308d5b",
+          "gitBlob": "fc290263dd68841c9830149ff25aec80a8d3b80b"
+        }
+      }
+    },
+    "multiple-notes.zip": {
+      "bytes": 7874,
+      "sha256": "5c3a831d7cbd371c66fab4bb9b4851c8211703b0c78ecf77bd907baca183e1d3",
+      "members": {
+        "first.textbundle/text.markdown": {
+          "bytes": 221,
+          "sha256": "ef466c9508c494047144b2a1941d760afbb8e16a592e7de518f9702ea91d1915",
+          "gitBlob": "76dd3cc80e6c8f6912e392ecda0b3706d8a58f87"
+        },
+        "first.textbundle/info.json": {
+          "bytes": 262,
+          "sha256": "cd6e78904e1dcb79678159c9d6d246481fcc370733af8e11ef1ad6d99c5e228f",
+          "gitBlob": "1afdf24e3619c8ddf543b2ab1b2fc686a4ab8eaa"
+        },
+        "first.textbundle/assets/textbundle.png": {
+          "bytes": 3319,
+          "sha256": "5897c340d6f0a2fcd404359629e4b6e21f4eed16b023fdaa8775ce96a94f8c6e",
+          "gitBlob": "e25dbb8b41e557b63dec7e2a607be1201f722959"
+        },
+        "second.textbundle/text.markdown": {
+          "bytes": 221,
+          "sha256": "ef466c9508c494047144b2a1941d760afbb8e16a592e7de518f9702ea91d1915",
+          "gitBlob": "76dd3cc80e6c8f6912e392ecda0b3706d8a58f87"
+        },
+        "second.textbundle/info.json": {
+          "bytes": 262,
+          "sha256": "cd6e78904e1dcb79678159c9d6d246481fcc370733af8e11ef1ad6d99c5e228f",
+          "gitBlob": "1afdf24e3619c8ddf543b2ab1b2fc686a4ab8eaa"
+        },
+        "second.textbundle/assets/textbundle.png": {
+          "bytes": 3319,
+          "sha256": "5897c340d6f0a2fcd404359629e4b6e21f4eed16b023fdaa8775ce96a94f8c6e",
+          "gitBlob": "e25dbb8b41e557b63dec7e2a607be1201f722959"
+        }
+      }
+    },
+    "missing-assets.zip": {
+      "bytes": 653,
+      "sha256": "95e651a2c9be889916840689b03653b5e0528a14c45b0fcdc8480ac1310d0ea1",
+      "members": {
+        "Textbundle Example.textbundle/text.markdown": {
+          "bytes": 221,
+          "sha256": "ef466c9508c494047144b2a1941d760afbb8e16a592e7de518f9702ea91d1915",
+          "gitBlob": "76dd3cc80e6c8f6912e392ecda0b3706d8a58f87"
+        },
+        "Textbundle Example.textbundle/info.json": {
+          "bytes": 262,
+          "sha256": "cd6e78904e1dcb79678159c9d6d246481fcc370733af8e11ef1ad6d99c5e228f",
+          "gitBlob": "1afdf24e3619c8ddf543b2ab1b2fc686a4ab8eaa"
+        }
+      }
+    }
+  },
+  "provenance": {
+    "shinyfrog": {
+      "repository": "shinyfrog/TextBundle",
+      "commit": "28027bff3e606ec3290e8c55fff340a826fedd41",
+      "path": "TextBundleTests/Sample TextBundles/textpack sample.textpack",
+      "gitBlob": "e3fa7ff977629320389b910feaab9d7365017dcd",
+      "packaging": "upstream archive unchanged",
+      "license": "LICENSE-TextBundle.txt"
+    },
+    "fsnotes": {
+      "repository": "glushchenko/fsnotes",
+      "commit": "ca305e464c469e6372cccba11b37d4a58bb51e2c",
+      "path": "Resources/Initial/FSNotes 4.0 for iOS.textbundle",
+      "packaging": "unaltered upstream member bytes, independently zipped by Python with fixed timestamps; not an installed-app export",
+      "license": "LICENSE-FSNotes.txt"
+    },
+    "officialDownload": {
+      "url": "https://textbundle.org/downloads/example-bundle-v2.zip",
+      "sha256": "3e39756bf50c8310680a32ee12399e05034101a0f4e681f5e3dc0eb1b35f3f00",
+      "note": "download checked locally; ZIP not vendored. Same note/image payload as upstream TextPack; Finder metadata differs."
+    }
+  }
+}

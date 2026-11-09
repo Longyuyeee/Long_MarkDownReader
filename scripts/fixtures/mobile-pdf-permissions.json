@@ -1,0 +1,45 @@
+{
+  "sourceSha256": "98b5c92f4f9e18c3462551de600249ce7cd820fbbcef36ff816dd3710f0488b6",
+  "samples": [
+    {
+      "file": "mobile-pdf-permissions-restricted.pdf",
+      "copy": false,
+      "annotate": false,
+      "publicTestPassword": "",
+      "pages": 6,
+      "permissions": 4294967244,
+      "bytes": 76954,
+      "sha256": "4e8fc81b07d82965cb4b02f8219dcbd15389ff4da6d70de123fca097f1ff2368"
+    },
+    {
+      "file": "mobile-pdf-permissions-no-copy.pdf",
+      "copy": false,
+      "annotate": true,
+      "publicTestPassword": "",
+      "pages": 6,
+      "permissions": 4294967276,
+      "bytes": 76954,
+      "sha256": "1d6c2dfefed4c437ef27818ece186935d37e1f1b40a0e306b99a70734eda8166"
+    },
+    {
+      "file": "mobile-pdf-permissions-no-annotations.pdf",
+      "copy": true,
+      "annotate": false,
+      "publicTestPassword": "",
+      "pages": 6,
+      "permissions": 4294967260,
+      "bytes": 76954,
+      "sha256": "8dac6ca5fdbdeb97c85dc6f7a6e5fc499c2c149872e8fed3e3b02e7a52b83aa1"
+    },
+    {
+      "file": "mobile-pdf-permissions-password.pdf",
+      "copy": false,
+      "annotate": false,
+      "publicTestPassword": "LongEdit-2026!",
+      "pages": 6,
+      "permissions": 4294967244,
+      "bytes": 76954,
+      "sha256": "dad261f9aae1949a8f9b578bf62c2432a714f47f93b31f06398143db2dffffd3"
+    }
+  ]
+}

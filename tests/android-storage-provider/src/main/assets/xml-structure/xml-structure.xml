@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?keep value="verbatim"?>
+<root xmlns:p="urn:items" xml:lang="zh">
+  <!-- preserve 中文😎 -->
+  <p:item id='900719925474099312345' name="A &amp; &#x4e2d;"/>
+  <p:item id='second' name="B"><raw><![CDATA[<fake a="1"/> &unknown;]]></raw></p:item>
+  <empty flag="true" escaped="&quot;&apos;&lt;&amp;" blank="" spaces="a	 b
+ c"/>
+</root>

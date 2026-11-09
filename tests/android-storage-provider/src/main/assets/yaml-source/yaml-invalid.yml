@@ -1,0 +1,12 @@
+﻿# 配置：中文😎
+---
+defaults: &base
+  enabled: true
+  id: 900719925474099312345
+copy: *base
+block: |-
+  原样保留\u4e2d
+  <img src=https://example.invalid/yaml>
+---
+values: [-0, 1.2300e+99]
+broken: [true

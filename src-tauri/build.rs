@@ -1,5 +1,10 @@
 fn main() {
     tauri_build::build();
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("android") {
+        // The Android launcher must also load on devices with 16 KB memory pages.
+        println!("cargo:rustc-link-arg-cdylib=-Wl,-z,max-page-size=16384");
+        println!("cargo:rustc-link-arg-cdylib=-Wl,-z,common-page-size=16384");
+    }
     // Unit-test executables can retain the native dialog import too. Activate
     // Common Controls v6 for every MSVC executable, including the test harness.
     if std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {

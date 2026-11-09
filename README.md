@@ -513,6 +513,8 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ### 从源码启动
 
+Android 在 `codex/mobile-0.1.0-foundation` 分支推进，当前为文本资料库开发预览。浏览器体验使用 `npm run dev:mobile`；安卓环境、调试包、模拟器验证和待办见[移动端实施记录](docs/Mobile_Foundation_Implementation_2026-10-23.md)、[开发计划](docs/Mobile_Development_Plan_2026-10-23.md)和[竞品调研](docs/Mobile_Competitor_Research_2026-10-23.md)。界面接入实查见[资料／搜索／设置](docs/design/mobile-v3-implementation/index.html)、[Markdown阅读浅色／深色](docs/design/mobile-markdown-b1-v3/index.html)、[Markdown编辑](docs/design/mobile-markdown-editor-b2-v3/index.html)、[TXT／长文与跳转](docs/design/mobile-text-c1-c3-v3/index.html)、[源码阅读／操作](docs/design/mobile-code-reading-f1-f3-v3/index.html)、[源码触控编辑](docs/design/mobile-code-editor-f2-v3/index.html)、[JSON结构／详情／修改](docs/design/mobile-json-d1-d3-v3/index.html)及[JSON源码／检查／排版](docs/design/mobile-json-workspace-v3/index.html)及[JSON重命名／新增／移除／移动](docs/design/mobile-json-operations-v3/index.html)及[YAML／XML／TOML与PDF](docs/design/mobile-structured-pdf-v3/index.html)、[PDF 批注／编辑／阅读笔记](docs/design/mobile-annotations-v3/index.html)、[新建／文本导入](docs/design/mobile-create-import-v3/index.html)、[收件／图片／附件包](docs/design/mobile-media-pack-v3/index.html)、[文字导出／结果／保存恢复](docs/design/mobile-export-recovery-v3/index.html)。
+
 ```powershell
 git clone https://github.com/Longyuyeee/Long_MarkDownReader.git
 cd Long_MarkDownReader

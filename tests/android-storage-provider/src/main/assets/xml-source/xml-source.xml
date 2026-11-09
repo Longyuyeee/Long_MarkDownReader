@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="https://example.invalid/xml.css" type="text/css"?>
+<root xmlns:p="urn:reader">
+  <!-- 配置中文😎 -->
+  <p:item id='900719925474099312345'>中文😎 &amp; &#x4e2d;</p:item>
+  <raw><![CDATA[<img src="https://example.invalid/xml"> &unknown;]]></raw>
+  <empty flag="true" escaped="&quot;&apos;&lt;&amp;"/>
+</root>

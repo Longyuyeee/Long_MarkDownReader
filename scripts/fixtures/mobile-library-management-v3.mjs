@@ -1,0 +1,8 @@
+import {createHash} from 'node:crypto'
+import {fixture as protectedFixture} from './mobile-draft-review-v3.mjs'
+export const sha=b=>createHash('sha256').update(b).digest('hex'),store='longedit-mobile-preview-v1'
+export function fixture(){const d=protectedFixture(),content='# 外部笔记\r\n这份原文件保持不变。\r\n',key=JSON.stringify(['outside','外部笔记.md']);d.documents[key]={rootId:'outside',relativePath:'外部笔记.md',content,signature:sha(content),modified:1};d.drafts[key]={rootId:'outside',relativePath:'外部笔记.md',content:content+'未保存输入😀\r\n',expectedSignature:sha(content),revision:3,updated:2};d.libraries=[{id:'outside',name:'Documents',external:true,available:true,writable:true}];return d}
+export async function seed(context,{dark=false,data=fixture()}={}){await context.addInitScript(({store,data,dark})=>{if(window!==top||localStorage.getItem(store))return;localStorage.setItem(store,JSON.stringify(data));localStorage.setItem('longedit-mobile-preferences-v1',JSON.stringify({version:1,theme:dark?'dark':'light'}))},{store,data,dark});return data}
+export const back=async page=>{await page.evaluate(()=>window.__longeditMobileBack());await page.waitForTimeout(180)}
+export const selected=page=>page.locator('.library-roots:not([inert]) .root-option[aria-pressed=true]')
+export async function open(page){await page.goto((process.env.LONGEDIT_LIBRARY_MANAGEMENT_URL||'http://127.0.0.1:9030')+'/mobile.html');await page.waitForFunction(()=>document.querySelector('.mobile-workspace')?.getAttribute('aria-busy')==='false'&&document.querySelector('.file-row'));await page.getByRole('button',{name:'设置',exact:true}).tap();await page.locator('[data-focus-key="settings-storage"]').tap();await page.getByRole('heading',{name:'资料库',exact:true}).waitFor()}

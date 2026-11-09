@@ -447,5 +447,179 @@ docs/evidence/v122-review-incomplete-39800610142/** -text whitespace=cr-at-eol
 /docs/evidence/v1-2-10-candidate-lifecycle/installed-v1136-draft.md -text whitespace=-blank-at-eof,cr-at-eol
 
 /docs/evidence/v1.2.11-release/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-0.1.0/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-recovery-continuity-2026-10-26/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-image-continuity-2026-10-26/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-0.1.0/**/*.txt -text whitespace=-trailing-space,cr-at-eol
 /docs/evidence/v1-2-11-candidate-lifecycle/** -text whitespace=cr-at-eol
 /docs/evidence/v1-2-11-candidate-lifecycle/installed-v1136-draft.md -text whitespace=-blank-at-eof,cr-at-eol
+/tests/android-storage-provider/src/main/assets/json-source/*.json -text whitespace=cr-at-eol
+
+/tests/android-storage-provider/src/main/assets/yaml-source/* -text whitespace=cr-at-eol
+
+/tests/android-storage-provider/src/main/assets/xml-source/* -text whitespace=cr-at-eol
+
+tests/android-storage-provider/src/main/assets/xml-structure/* -text whitespace=cr-at-eol
+
+tests/android-storage-provider/src/main/assets/toml-source/* -text whitespace=cr-at-eol
+
+tests/android-storage-provider/src/main/assets/code-source/* -text whitespace=cr-at-eol
+
+tests/android-storage-provider/src/main/assets/code-languages/* -text whitespace=cr-at-eol
+/docs/evidence/mobile-incoming-continuity-2026-10-26/** -text whitespace=cr-at-eol
+/docs/design/mobile-incoming-task-v1/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-library-root-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-library-root-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-search-entry-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-search-entry-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-settings-pages-v1/** -text whitespace=cr-at-eol
+/docs/design/mobile-settings-confirm-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-settings-pages-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-reading-entry-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-reading-entry-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-code-workflow-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-code-workflow-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-json-value-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-json-value-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-json-rename-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-json-rename-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-json-append-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-json-append-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-json-remove-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-json-remove-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-json-move-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-json-move-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-json-diagnostic-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-json-diagnostic-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-json-format-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-json-format-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-yaml-value-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-yaml-value-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-yaml-diagnostic-v1/** -text whitespace=cr-at-eol
+/docs/design/mobile-yaml-diagnostic-v2/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-yaml-diagnostic-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-xml-value-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-xml-value-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-xml-diagnostic-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-xml-diagnostic-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-toml-value-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-toml-value-2026-10-27/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-toml-diagnostic-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-toml-diagnostic-2026-10-28/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-pdf-navigation-v2/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-pdf-navigation-task-2026-10-28/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-pdf-page-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-pdf-page-task-2026-10-28/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-pdf-search-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-pdf-search-task-2026-10-28/** -text whitespace=cr-at-eol
+
+/docs/design/mobile-pdf-settings-v1/** -text whitespace=cr-at-eol
+/docs/evidence/mobile-pdf-settings-task-2026-10-28/** -text whitespace=cr-at-eol
+/docs/design/mobile-pdf-settings-v2/** -text whitespace=cr-at-eol
+/docs/design/mobile-pdf-settings-v3/** -text whitespace=cr-at-eol
+
+docs/design/mobile-pdf-bookmark-task-v*/** -text whitespace=cr-at-eol
+docs/evidence/mobile-pdf-bookmark-task-2026-10-28/** -text whitespace=cr-at-eol
+
+docs/design/mobile-pdf-annotation-editor-v*/** -text whitespace=cr-at-eol
+docs/evidence/mobile-pdf-annotation-editor-2026-10-28/** -text whitespace=cr-at-eol
+
+docs/design/mobile-pdf-annotation-list-v*/** -text whitespace=cr-at-eol
+docs/evidence/mobile-pdf-annotation-list-2026-10-28/** -text whitespace=cr-at-eol
+
+docs/design/mobile-pdf-curation-task-v*/** -text whitespace=cr-at-eol
+docs/evidence/mobile-pdf-curation-task-2026-10-28/** -text whitespace=cr-at-eol
+
+docs/design/mobile-pdf-password-task-v*/** -text whitespace=cr-at-eol
+docs/evidence/mobile-pdf-password-task-2026-10-28/** -text whitespace=cr-at-eol
+
+docs/design/mobile-pdf-permissions-task-v*/** -text whitespace=cr-at-eol
+docs/evidence/mobile-pdf-permissions-task-2026-10-28/** -text whitespace=cr-at-eol
+docs/design/mobile-text-export-task-v*/** -text whitespace=cr-at-eol
+docs/evidence/mobile-text-export-task-2026-10-28/** -text whitespace=cr-at-eol
+docs/design/mobile-document-return-v*/** -text whitespace=cr-at-eol
+docs/evidence/mobile-document-return-2026-10-28/** -text whitespace=cr-at-eol
+docs/design/mobile-import-read-retry-v*/** -text whitespace=cr-at-eol
+docs/evidence/mobile-import-read-retry-2026-10-28/** -text whitespace=cr-at-eol
+docs/design/mobile-import-read-retry-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/design/mobile-pack-read-retry-v*/** -text whitespace=cr-at-eol
+docs/design/mobile-pack-read-retry-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-pack-read-retry-2026-10-28/** -text whitespace=cr-at-eol
+docs/design/mobile-pack-review-task-v*/** -text whitespace=cr-at-eol
+docs/design/mobile-pack-review-task-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-pack-review-task-2026-10-28/** -text whitespace=cr-at-eol
+docs/design/mobile-text-import-task-v*/** -text whitespace=cr-at-eol
+docs/design/mobile-text-import-task-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-text-import-task-2026-10-28/** -text whitespace=cr-at-eol
+docs/design/mobile-image-unavailable-v*/** -text whitespace=cr-at-eol
+docs/design/mobile-image-unavailable-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-image-unavailable-2026-10-28/** -text whitespace=cr-at-eol
+docs/design/mobile-recovery-read-v*/** -text whitespace=cr-at-eol
+docs/design/mobile-recovery-read-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-recovery-read-2026-10-28/** -text whitespace=cr-at-eol
+
+docs/design/mobile-recovery-review-task-v*/** -text whitespace=cr-at-eol
+docs/design/mobile-recovery-review-task-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-recovery-review-task-2026-10-28/** -text whitespace=cr-at-eol
+docs/evidence/mobile-recovery-task-2026-10-28/** -text whitespace=cr-at-eol
+
+docs/design/mobile-pack-source-retry-v*/** -text whitespace=cr-at-eol
+docs/design/mobile-pack-source-retry-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-pack-source-retry-2026-10-28/** -text whitespace=cr-at-eol
+
+docs/design/mobile-pack-record-read-v*/** -text whitespace=cr-at-eol
+docs/design/mobile-pack-record-read-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-pack-record-read-2026-10-29/** -text whitespace=cr-at-eol
+
+docs/design/mobile-markdown-b1-v3/** -text whitespace=cr-at-eol
+docs/design/mobile-markdown-b1-v3/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-0.1.0/markdown-v3-2026-11-05/** -text whitespace=cr-at-eol
+
+docs/design/mobile-markdown-editor-b2-v3/** -text whitespace=cr-at-eol
+docs/design/mobile-markdown-editor-b2-v3/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-0.1.0/markdown-editor-v3-2026-11-05/** -text whitespace=cr-at-eol
+
+docs/design/mobile-structured-pdf-v3/** -text whitespace=cr-at-eol
+docs/design/mobile-structured-pdf-v3/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-0.1.0/structured-pdf-v3-2026-11-06/** -text whitespace=cr-at-eol
+
+docs/design/mobile-pack-export-review-v*/** -text whitespace=cr-at-eol
+docs/design/mobile-pack-export-review-v*/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-pack-export-review-2026-10-29/** -text whitespace=cr-at-eol
+
+docs/design/mobile-annotations-v3/** -text whitespace=cr-at-eol
+docs/design/mobile-annotations-v3/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-0.1.0/annotations-v3-2026-11-06/** -text whitespace=cr-at-eol
+
+docs/design/mobile-create-import-v3/** -text whitespace=cr-at-eol
+docs/design/mobile-create-import-v3/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-0.1.0/create-import-v3-2026-11-06/** -text whitespace=cr-at-eol
+
+docs/design/mobile-media-pack-v3/** -text whitespace=cr-at-eol
+docs/design/mobile-media-pack-v3/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-0.1.0/media-pack-v3-2026-11-06/** -text whitespace=cr-at-eol
+
+docs/design/mobile-export-recovery-v3/** -text whitespace=cr-at-eol
+docs/design/mobile-export-recovery-v3/*.html whitespace=-blank-at-eol,cr-at-eol
+docs/evidence/mobile-0.1.0/export-recovery-v3-2026-11-06/** -text whitespace=cr-at-eol

@@ -19,11 +19,14 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon", "protocol-asset"] }
-tauri-plugin-opener = "2"
-tauri-plugin-single-instance = "2"
+tauri = { version = "2", features = ["protocol-asset"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+tauri-plugin-single-instance = "2"
 jsonc-parser = { version = "=0.33.0", features = ["serde"] }
 jsonschema = { version = "=0.52.1", default-features = false }
 window-vibrancy = "0.5"
@@ -64,6 +67,9 @@ saphyr-parser = "=0.0.11"
 toml_edit = "=0.25.13"
 image = { version = "=0.25.10", default-features = false, features = ["png", "jpeg", "webp", "bmp"] }
 notify = "8.2.0"
+
+[target.'cfg(target_os = "android")'.dependencies]
+tauri-plugin-mobile-storage = { path = "plugins/mobile-storage" }
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55"

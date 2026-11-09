@@ -1,0 +1,18 @@
+﻿# 合成配置😎
+title = "Long编辑"
+version = "0.1.0"
+[server]
+host = "localhost"
+port = 8080 # preserve
+enabled = true
+ports = [8000, 8001]
+precise = 9223372036854775807
+when = 2026-10-24T09:08:07.123456789+08:00
+text = """first
+second"""
+["a.b"]
+name = 'literal'
+[[products]]
+name = "first"
+[[products]]
+name = "second"

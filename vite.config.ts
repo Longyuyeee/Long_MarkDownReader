@@ -22,7 +22,7 @@ function patchVditorEmptyPreview(code: string) {
 }
 
 // https://vite.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig(async ({ mode }) => ({
   plugins: [
     {
       name: 'longedit-vditor-empty-preview',
@@ -45,7 +45,14 @@ export default defineConfig(async () => ({
       },
     }] : []),
     vue(),
-    viteStaticCopy({
+    ...(mode === "mobile" ? [viteStaticCopy({ targets: [
+      { src: "src/assets/fonts/reading-serif/OFL.txt", dest: "licenses/reading-serif" },
+      { src: "src/assets/fonts/reading-serif/provenance.json", dest: "licenses/reading-serif" },
+      ...["@codemirror/lang-markdown", "@codemirror/lang-html", "@codemirror/lang-css", "@codemirror/lang-javascript", "@lezer/markdown", "@lezer/html", "@lezer/css", "@lezer/javascript"].map(name => ({ src: `node_modules/${name}/LICENSE`, dest: `licenses/${name}` })),
+      { src: "node_modules/pdfjs-dist/cmaps/*", dest: "pdf/cmaps" },
+      { src: "node_modules/pdfjs-dist/standard_fonts/*", dest: "pdf/standard_fonts" },
+    ] })] : []),
+    ...(mode === "mobile" ? [] : [viteStaticCopy({
       targets: [
         { src: "node_modules/vditor/dist", dest: "vditor" },
         { src: "node_modules/tesseract.js/dist/worker.min.js", dest: "ocr" },
@@ -55,10 +62,12 @@ export default defineConfig(async () => ({
         { src: "node_modules/@tesseract.js-data/chi_sim/4.0.0/chi_sim.traineddata.gz", dest: "ocr/lang" },
         { src: "node_modules/@tesseract.js-data/eng/4.0.0/eng.traineddata.gz", dest: "ocr/lang" },
       ],
-    }),
+    })]),
   ],
   base: './',
+  cacheDir: mode === "mobile" ? 'node_modules/.vite-mobile' : undefined,
   optimizeDeps: {
+    entries: mode === "mobile" ? ['mobile.html'] : undefined,
     esbuildOptions: {
       plugins: [{
         name: 'longedit-vditor-empty-preview',
@@ -78,14 +87,14 @@ export default defineConfig(async () => ({
   clearScreen: false,
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
-    port: devPort,
+    port: mode === "mobile" ? Number(process.env.LONGEDIT_DEV_PORT || 9010) : devPort,
     strictPort: true,
     host: host || '127.0.0.1',
     hmr: host
       ? {
           protocol: "ws",
           host,
-          port: 1421,
+          port: mode === "mobile" ? 9011 : 1421,
         }
       : undefined,
     watch: {
@@ -96,8 +105,9 @@ export default defineConfig(async () => ({
   build: {
     chunkSizeWarningLimit: 750,
     rollupOptions: {
+      input: mode === "mobile" ? "mobile.html" : undefined,
       output: {
-        manualChunks: {
+        manualChunks: mode === "mobile" ? undefined : {
           "vue-vendor": ["vue", "vue-router", "pinia"],
           "ui-vendor": ["naive-ui"],
           "icon-vendor": ["lucide-vue-next"],

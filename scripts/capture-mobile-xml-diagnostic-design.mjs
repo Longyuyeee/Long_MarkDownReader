@@ -1,0 +1,15 @@
+import {createRequire} from 'node:module'
+import {readFile,writeFile,mkdir,access} from 'node:fs/promises'
+import {createHash} from 'node:crypto'
+const require=createRequire(import.meta.url),{chromium}=require(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright'),output='docs/evidence/mobile-xml-diagnostic-2026-10-27',screens=['invalid','valid','checking','limit','failure','declaration']
+await mkdir(output,{recursive:true})
+try{await access(output+'/design-freeze.json');throw new Error('设计已冻结，禁止覆盖；新设计请使用新版本目录。')}catch(error){if(error.code!=='ENOENT')throw error}
+const browser=await chromium.launch({channel:'chrome',headless:true})
+try{
+ const page=await browser.newPage({viewport:{width:438,height:892},deviceScaleFactor:1}),capture={frozenAt:new Date().toISOString(),runtimeHead:'d81e6c3b6',viewport:{width:390,height:844},files:{},geometry:{},typography:{}}
+ for(const screen of screens){await page.goto('http://127.0.0.1:9025/mobile-xml-diagnostic-v1/index.html?screen='+screen);await page.locator('.phone').screenshot({path:output+'/design-'+screen+'.png'});capture.geometry[screen]=await page.evaluate(top=>{const origin=document.querySelector(".phone").getBoundingClientRect();const box=s=>{const r=document.querySelector(s)?.getBoundingClientRect();return r&&(r.width||r.height)?{x:r.x-origin.x,y:r.y-origin.y,width:r.width,height:r.height}:null};return{header:box('.xml-diagnostic-header'),title:box('.xml-diagnostic-header h1'),body:box('.xml-diagnostic-body'),context:box('.xml-diagnostic-context'),card:box('.xml-diagnostic-card'),resultTitle:box('.xml-diagnostic-result-title'),count:box('.xml-diagnostic-count'),list:box('.xml-diagnostic-issues'),row:box('.xml-diagnostic-issue'),rowTitle:box('.xml-diagnostic-issue strong'),rowMessage:box('.xml-diagnostic-issue span'),position:box('.xml-diagnostic-position'),excerpt:box('.xml-diagnostic-excerpt'),message:box('.xml-diagnostic-message'),notice:box('.xml-diagnostic-notice'),footer:box('.xml-diagnostic-footer')}},0)
+ capture.typography[screen]=await page.evaluate(()=>Object.fromEntries(Object.entries({title:'.xml-diagnostic-header h1',file:'.xml-diagnostic-file',resultTitle:'.xml-diagnostic-result-title',count:'.xml-diagnostic-count',rowTitle:'.xml-diagnostic-issue strong',rowMessage:'.xml-diagnostic-issue span',position:'.xml-diagnostic-position',code:'.xml-diagnostic-excerpt code',message:'.xml-diagnostic-message',notice:'.xml-diagnostic-notice',action:'.xml-diagnostic-footer .button'}).map(([key,selector])=>{const e=document.querySelector(selector);if(!e)return[key,null];const s=getComputedStyle(e);return[key,Object.fromEntries(['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','color'].map(p=>[p,s[p]]))]})))}
+
+ for(const file of ['docs/design/mobile-xml-diagnostic-v1/index.html',...screens.map(s=>output+'/design-'+s+'.png')])capture.files[file]=createHash('sha256').update(await readFile(file)).digest('hex')
+ await writeFile(output+'/design-freeze.json',JSON.stringify(capture,null,2)+'\n');console.log(JSON.stringify({frozenAt:capture.frozenAt,files:capture.files},null,2))
+}finally{await browser.close()}

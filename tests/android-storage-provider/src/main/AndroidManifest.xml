@@ -1,0 +1,22 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application android:label="LongEdit storage test fixture" android:allowBackup="false">
+    <activity android:name=".AccessibilityControlActivity" android:label="LongEdit AX control" android:exported="true" />
+    <activity android:name=".PdfShareFixtureActivity" android:exported="true" />
+    <activity android:name=".ShareFixtureActivity" android:exported="true" />
+    <activity android:name=".PackShareFixtureActivity" android:exported="true" />
+    <activity android:name=".ExternalPackFixtureActivity" android:exported="true" />
+    <activity android:name=".LanguageFixtureActivity" android:exported="true" />
+    <activity android:name=".CodeFixtureActivity" android:exported="true" />
+    <activity android:name=".TomlFixtureActivity" android:exported="true" />
+    <activity android:name=".XmlFixtureActivity" android:exported="true" />
+        <activity android:name=".YamlFixtureActivity" android:exported="true" />
+        <activity android:name=".JsonFixtureActivity" android:exported="true" />
+    <service android:name=".FixtureAccessibilityService" android:exported="true" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+      <intent-filter><action android:name="android.accessibilityservice.AccessibilityService" /></intent-filter>
+      <meta-data android:name="android.accessibilityservice" android:resource="@xml/fixture_accessibility" />
+    </service>
+    <provider android:name=".FixtureProvider" android:authorities="com.longyuye.mdreader.storagefixture.documents" android:exported="true" android:grantUriPermissions="true" android:permission="android.permission.MANAGE_DOCUMENTS">
+      <intent-filter><action android:name="android.content.action.DOCUMENTS_PROVIDER" /></intent-filter>
+    </provider>
+  </application>
+</manifest>

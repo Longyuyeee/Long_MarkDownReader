@@ -1,0 +1,29 @@
+{
+  "identifier": "com.longyuye.mdreader.mobile.dev",
+  "build": {
+    "beforeDevCommand": "npm run dev:mobile",
+    "beforeBuildCommand": "npm run build:mobile",
+    "devUrl": "http://127.0.0.1:9010"
+  },
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost; img-src 'self' asset: http://asset.localhost blob: data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-eval' 'sha256-PQIc6YPh1EhPC7jJPbcKmHvn6eksn6Gc+uhlnJFziVM='; worker-src 'self' blob:"
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "Long编辑",
+        "url": "mobile.html",
+        "visible": true,
+        "transparent": false,
+        "decorations": true
+      }
+    ]
+  },
+  "bundle": {
+    "android": {
+      "minSdkVersion": 29,
+      "versionCode": 1002051
+    }
+  }
+}

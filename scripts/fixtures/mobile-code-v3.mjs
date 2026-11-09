@@ -1,0 +1,25 @@
+export const codeV3Name='reader-v3.js'
+export const codeV3Source='\uFEFF'+[
+ '// 文本读取与高亮',
+ 'export function readFile(path) {',
+ '  return fetch(path)',
+ '    .then(res => {',
+ '      if (!res.ok) {',
+ "        throw new Error('读取失败')",
+ '      }',
+ '      return res.text()',
+ '    })',
+ '}',
+ '',
+ 'export function highlight(text, kw) {',
+ '  if (!kw) return text',
+ '  const reg = new RegExp(',
+ "    `(${kw})`, 'gi'",
+ '  )',
+ '  return text.replace(',
+ '    reg,',
+ "    '<mark>$1</mark>'",
+ '  )',
+ '}',
+ ''
+].join('\r\n')

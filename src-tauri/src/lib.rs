@@ -1,28 +1,41 @@
+#[cfg(desktop)]
 mod commands;
+#[cfg(desktop)]
 mod formats;
+#[cfg(desktop)]
 mod services;
 
+#[cfg(desktop)]
 use commands::ai::ai_chat_completion;
+#[cfg(desktop)]
 use commands::attachments::{inspect_library_attachments, list_library_attachment_uses, preview_attachment_reference, pick_library_attachment};
+#[cfg(desktop)]
 use commands::archive::preflight_archive;
+#[cfg(desktop)]
 use commands::backup::{
     export_management_backup, preflight_management_backup_import, restore_management_backup,
 };
+#[cfg(desktop)]
 use commands::batch_rename::{preview_library_renames, rename_library_items};
+#[cfg(desktop)]
 use commands::canvas::{
     create_canvas_file, create_canvas_from_graph, create_canvas_from_markdown,
     create_project_note_from_graph, read_canvas_file, read_external_canvas_file, resolve_canvas_reference, write_canvas_file,
     write_external_canvas_file,
 };
+#[cfg(desktop)]
 use commands::config::{
     clear_ai_credential, get_ai_credential_status, get_config, prepare_library_path, save_config,
     set_ai_credential, validate_inbox_location,
 };
+#[cfg(desktop)]
 use commands::diagnostics::export_privacy_diagnostic_bundle;
+#[cfg(desktop)]
 use commands::diagram::{
     analyze_diagram_source, create_diagram_file, read_diagram_file, read_external_diagram_file,
     update_diagram_element, write_diagram_file, write_external_diagram_file,
 };
+#[cfg(desktop)]
 use commands::docx::{
     audit_docx_save_readiness, preview_docx_image_alt_text_patch_isolated_copy,
     preview_docx_package_patch_isolated_copy, preview_docx_paragraph_style_patch_isolated_copy,
@@ -31,22 +44,31 @@ use commands::docx::{
     save_docx_patch_batch_copy, save_docx_patch_batch_source, save_docx_patch_copy,
     save_docx_patch_source,
 };
+#[cfg(desktop)]
 use commands::drawio::{
     analyze_drawio_source, transform_drawio_cell_source, write_drawio_source_document,
     write_external_drawio_source_document,
 };
+#[cfg(desktop)]
 use commands::external_apps::{discover_external_applications, open_workspace_file_externally};
+#[cfg(desktop)]
 use commands::file_management::{
     list_library_trash, purge_library_trash, restore_library_trash, transfer_library_items,
     trash_library_items, undo_library_moves,
 };
+#[cfg(desktop)]
 use commands::cross_library_copy::{preview_cross_library_copy, execute_cross_library_copy};
+#[cfg(desktop)]
 use commands::file_operation_history::{list_library_file_operations, restore_library_file_operation, clear_library_file_operations, locate_library_file_operation};
+#[cfg(desktop)]
 use commands::file_relations::{update_file_relation, repair_file_relation};
+#[cfg(desktop)]
 use commands::reference_repair::{inspect_reference_source, preview_source_link_repair};
+#[cfg(desktop)]
 use commands::file_relations::{
     list_file_relations, list_relation_files, remove_file_relation, save_file_relation,
 };
+#[cfg(desktop)]
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
@@ -55,16 +77,22 @@ use commands::files::{
     rename_item, save_folder_order, scan_directory, write_external_markdown_file,
     write_markdown_file,
 };
+#[cfg(desktop)]
 use commands::writing_delivery::{prepare_writing_delivery, save_writing_delivery, insert_writing_image, import_writing_image};
+#[cfg(desktop)]
 pub(crate) use commands::files::{sanitize_filename, FileEntry};
+#[cfg(desktop)]
 use commands::formats::{
     create_format_file, get_file_format_registry, get_text_document_identity,
     read_external_text_document, read_external_text_document_range, read_text_document,
     read_text_document_range, write_external_log_document, write_external_text_document,
     write_log_document, write_text_document,
 };
+#[cfg(desktop)]
 use commands::git::{git_commit, git_init, git_pull, git_push, git_status};
+#[cfg(desktop)]
 pub(crate) use commands::graph::GraphData;
+#[cfg(desktop)]
 use commands::graph::{
     analyze_graph_health, build_link_graph, build_local_graph, export_knowledge_graph_observation,
     export_knowledge_graph_observation_comparison, extract_wikilinks, find_backlinks,
@@ -74,43 +102,56 @@ use commands::graph::{
     update_graph_relation, update_graph_relation_decision,
 };
 #[cfg(test)]
+#[cfg(desktop)]
 pub(crate) use commands::graph::{GraphEdge, GraphNode};
+#[cfg(desktop)]
 use commands::history::{
     clear_all_history, delete_history_version, list_history, save_external_history_version,
     save_history_version, save_shadow_copy,
 };
+#[cfg(desktop)]
 use commands::inbox::{create_inbox_directory, read_inbox_directory};
+#[cfg(desktop)]
 use commands::index::{
     cancel_knowledge_index, delete_knowledge_index, get_knowledge_index_status,
     preview_search_document, rebuild_knowledge_index, recover_knowledge_index_cache,
     search_knowledge, search_knowledge_libraries, search_knowledge_page, search_knowledge_libraries_page, close_knowledge_search, search_collection_page, get_tag_catalog_page,
 };
+#[cfg(desktop)]
 use commands::json::{
     analyze_json_source, append_json_array_item_source, append_json_object_property_source, move_json_array_item_source, copy_json_node_source,
     remove_json_array_item_source, remove_json_object_property_source,
     rename_json_object_key_source, replace_json_scalar_source, transform_json_source,
     validate_local_json_schema, write_external_json_source_document, write_json_source_document,
 };
+#[cfg(desktop)]
 use commands::legacy_binary_office::{
     convert_legacy_binary_office_to_modern_copy, preflight_legacy_binary_office,
 };
+#[cfg(desktop)]
 use commands::legacy_office::{convert_legacy_doc_to_docx_copy, preflight_legacy_doc};
+#[cfg(desktop)]
 use commands::media::{
     discover_video_subtitles, inspect_external_media_file, inspect_image_edit_source,
     inspect_media_file, save_image_transform_copy, save_video_frame_png,
 };
+#[cfg(desktop)]
 use commands::mindmap::{
     create_canvas_from_opml, read_external_opml_file, read_opml_file, write_external_opml_file,
     write_opml_file, save_opml_compatible_copy,
 };
+#[cfg(desktop)]
 use commands::note_templates::{
     create_note_from_template, export_note_template_bundle, read_note_template_bundle,
 };
+#[cfg(desktop)]
 use commands::odf_content::{
     read_external_odf_content_document, read_odf_content_document, save_odp_slide_text_copy,
     save_ods_cell_style_copy, save_ods_cell_value_copy,
 };
+#[cfg(desktop)]
 use commands::odt::read_odt_document;
+#[cfg(desktop)]
 use commands::pdf::{
     build_pdf_annotation_reference, inspect_pdf_form_structure, preview_pdf_form_copy,
     preview_pdf_form_text_copy, preview_pdf_insert_isolated_copy, preview_pdf_merge_isolated_copy,
@@ -122,7 +163,9 @@ use commands::pdf::{
     save_pdf_page_range_copy, save_pdf_redaction_copy, save_pdf_watermark_copy,
     write_pdf_annotations, write_pdf_ocr, read_pdf_annotation_state, write_pdf_annotation_state,
 };
+#[cfg(desktop)]
 use commands::pdf_reading::{refresh_pdf_reading_note, build_pdf_reading_note, verify_pdf_reference, save_pdf_reading_note};
+#[cfg(desktop)]
 use commands::pptx::{
     audit_pptx_edit_baseline, preview_pptx_alt_text_patch_isolated_copy,
     preview_pptx_image_patch_isolated_copy, preview_pptx_patch_transaction,
@@ -131,23 +174,30 @@ use commands::pptx::{
     preview_pptx_text_patch_isolated_copy, read_external_pptx_presentation, read_pptx_presentation,
     save_pptx_patch_copy, save_pptx_patch_copy_transaction, save_pptx_patch_source, save_pptx_patch_source_transaction,
 };
+#[cfg(desktop)]
 use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search_library};
+#[cfg(desktop)]
 use commands::svg::{
     analyze_svg_source, write_external_svg_source_document, write_svg_source_document,
 };
+#[cfg(desktop)]
 use commands::system::{
     exit_app, get_default_app_candidate_status, get_url_title, open_default_apps_settings,
     prepare_default_app_candidate, remove_default_app_candidate, request_default_app_selection,
 };
+#[cfg(desktop)]
 use commands::table::{
     create_table_file, export_table_file, import_table_file, read_external_table_file,
     read_table_file, write_external_table_file, write_table_file,
 };
+#[cfg(desktop)]
 use commands::toml::{
     analyze_toml_source, replace_toml_value_source, write_external_toml_source_document,
     write_toml_source_document,
 };
+#[cfg(desktop)]
 use commands::updater::{check_community_update, install_community_update};
+#[cfg(desktop)]
 use commands::workbook::{
     audit_workbook_pivot_multi_axis_isolated_copy, get_workbook_capabilities,
     import_workbook_sheet, preview_workbook_dynamic_array, preview_workbook_pivot,
@@ -163,33 +213,47 @@ use commands::workbook::{
     update_workbook_table, verify_workbook_pivot_variants_isolated_copy, write_workbook_cells,
     write_workbook_draft,
 };
+#[cfg(desktop)]
 pub use commands::workbook::{
     generate_workbook_array_audit_report, generate_workbook_pivot_aggregation_audit_copy,
     generate_workbook_pivot_audit_copy, generate_workbook_pivot_layout_audit_copy,
     generate_workbook_pivot_multi_axis_audit_copy,
 };
+#[cfg(desktop)]
 use commands::workspace::{
     analyze_workspace_health, get_workspace_overview, set_workspace_markdown_task_state,
     set_workspace_table_task_state,
 };
+#[cfg(desktop)]
 use commands::wps_native::inspect_wps_native_file;
+#[cfg(desktop)]
 use commands::xml::{
     analyze_xml_source, replace_xml_attribute_source, write_external_xml_source_document,
     write_xml_source_document,
 };
+#[cfg(desktop)]
 use commands::yaml::{
     analyze_yaml_source, replace_yaml_value_source, write_external_yaml_source_document,
     write_yaml_source_document,
 };
+#[cfg(desktop)]
 use services::data_migration::check_and_migrate_data;
+#[cfg(desktop)]
 use services::external_file_access::ExternalFileAccess;
+#[cfg(desktop)]
 use services::external_windows::{authorize_and_create_external_window, open_external_file_window};
+#[cfg(desktop)]
 use services::knowledge_index::KnowledgeIndexRuntime;
+#[cfg(desktop)]
 use tauri::menu::{Menu, MenuItem};
+#[cfg(desktop)]
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
+#[cfg(desktop)]
 use tauri::{Emitter, Manager};
+#[cfg(desktop)]
 use window_vibrancy::{apply_blur, apply_mica};
 
+#[cfg(desktop)]
 fn open_external_arguments(app: &tauri::AppHandle, args: &[String]) -> bool {
     let access = app.state::<ExternalFileAccess>();
     let mut opened = false;
@@ -201,6 +265,7 @@ fn open_external_arguments(app: &tauri::AppHandle, args: &[String]) -> bool {
     opened
 }
 
+#[cfg(desktop)]
 fn focus_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.unminimize();
@@ -209,7 +274,7 @@ fn focus_main_window(app: &tauri::AppHandle) {
     }
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
+#[cfg(desktop)]
 pub fn run() {
     let builder = tauri::Builder::default();
 
@@ -725,4 +790,13 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error");
+}
+
+#[cfg(mobile)]
+#[tauri::mobile_entry_point]
+pub fn run() {
+    let builder = tauri::Builder::default();
+    #[cfg(target_os = "android")]
+    let builder = builder.plugin(tauri_plugin_mobile_storage::init());
+    builder.run(tauri::generate_context!()).expect("mobile application failed");
 }

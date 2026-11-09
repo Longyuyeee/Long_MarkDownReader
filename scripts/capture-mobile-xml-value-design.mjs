@@ -1,0 +1,15 @@
+import {createRequire} from 'node:module'
+import {readFile,writeFile,mkdir,access} from 'node:fs/promises'
+import {createHash} from 'node:crypto'
+const require=createRequire(import.meta.url),{chromium}=require(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright'),output='docs/evidence/mobile-xml-value-2026-10-27',screens=['list','detail','edit','review','blocked','preparing','failure']
+await mkdir(output,{recursive:true})
+try{await access(output+'/design-freeze.json');throw new Error('设计已冻结，禁止覆盖；新设计请使用新版本目录。')}catch(error){if(error.code!=='ENOENT')throw error}
+const browser=await chromium.launch({channel:'chrome',headless:true})
+try{
+ const page=await browser.newPage({viewport:{width:438,height:892},deviceScaleFactor:1}),capture={frozenAt:new Date().toISOString(),runtimeHead:'1504e6eb8',viewport:{width:390,height:844},files:{},geometry:{},typography:{}}
+ for(const screen of screens){await page.goto('http://127.0.0.1:9025/mobile-xml-value-v1/index.html?screen='+screen);await page.locator('.phone').screenshot({path:output+'/design-'+screen+'.png'});capture.geometry[screen]=await page.evaluate(top=>{const origin=document.querySelector(".phone").getBoundingClientRect();const box=s=>{const r=document.querySelector(s)?.getBoundingClientRect();return r&&(r.width||r.height)?{x:r.x-origin.x,y:r.y-origin.y,width:r.width,height:r.height}:null};return{header:box('.xml-task-header'),title:box('.xml-task-header h1'),body:box('.xml-task-body'),context:box('.xml-context'),filterLabel:box('label[for=xml-level-filter]'),filter:box('#xml-level-filter'),count:box('.xml-count'),fields:box('.xml-fields'),firstField:box('.xml-field'),card:box('.xml-value-card'),valueTitle:box('.xml-value-card h2'),pre:box('.xml-value-card pre'),source:box('.xml-source-action'),views:box('.xml-value-views'),inputLabel:box('label[for=xml-value]'),input:box('#xml-value'),review:box('.xml-review'),secondCard:box('.xml-review .xml-value-card:nth-child(2)'),statusCard:box('.xml-status-card'),statusTitle:box('.xml-status-title'),message:box('.xml-message'),footer:box('.xml-task-footer')}},0)
+ capture.typography[screen]=await page.evaluate(()=>Object.fromEntries(Object.entries({title:'.xml-task-header h1',file:'.xml-filename',location:'.xml-location',label:'.input-label',count:'.xml-count',field:'.xml-field strong',fieldPreview:'.xml-field span',valueTitle:'.xml-value-card h2',pre:'.xml-value-card pre',input:'#xml-value',action:'.xml-task-footer .button',status:'.xml-status-title',message:'.xml-message'}).map(([key,selector])=>{const e=document.querySelector(selector);if(!e)return[key,null];const s=getComputedStyle(e);return[key,Object.fromEntries(['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','color'].map(p=>[p,s[p]]))]})))}
+
+ for(const file of ['docs/design/mobile-xml-value-v1/index.html',...screens.map(s=>output+'/design-'+s+'.png')])capture.files[file]=createHash('sha256').update(await readFile(file)).digest('hex')
+ await writeFile(output+'/design-freeze.json',JSON.stringify(capture,null,2)+'\n');console.log(JSON.stringify({frozenAt:capture.frozenAt,files:capture.files},null,2))
+}finally{await browser.close()}

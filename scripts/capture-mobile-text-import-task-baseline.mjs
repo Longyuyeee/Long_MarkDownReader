@@ -1,0 +1,12 @@
+import {writeFile,mkdir,access} from 'node:fs/promises'
+import {createRequire} from 'node:module'
+import {createHash} from 'node:crypto'
+import {activateMobileRoot,openMobileSettingsTransfer} from './mobile-settings-navigation.mjs'
+const require=createRequire(import.meta.url),{chromium}=require(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright'),out='docs/evidence/mobile-text-import-task-2026-10-28/before'
+try{await access(out);throw Error('Baseline exists')}catch(e){if(e.code!=='ENOENT')throw e}await mkdir(out,{recursive:true})
+const content='\ufeff# 行程核对😀\r\n杭州 → 苏州\r保留这份输入\n',entry={id:'00000000-0000-4000-8000-000000000501',name:'行程核对.md',created:1793152800000,bytes:Buffer.byteLength(content),status:'ready',readable:true,content,digest:createHash('sha256').update(content).digest('hex'),error:'',localPath:null}
+const browser=await chromium.launch({channel:'chrome',headless:true}),page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'}),report={baseHead:'ca398d746',nativeAndroidTest:false,screens:[]}
+try{await page.addInitScript(entry=>localStorage.setItem('longedit-mobile-preview-v1',JSON.stringify({version:1,documents:{},drafts:{},fileImports:{[entry.id]:entry}})),entry);await page.goto('http://127.0.0.1:9012/mobile.html');await activateMobileRoot(page,'设置');await openMobileSettingsTransfer(page,'文件导入记录');await page.locator('[data-file-import-id]').tap();await page.getByRole('button',{name:'存入手机资料库并打开',exact:true}).waitFor()
+ for(const [name,width,height,font]of[['review',390,844,16],['narrow',320,640,32],['short',320,346,32]]){await page.setViewportSize({width,height});await page.evaluate(font=>{document.documentElement.style.fontSize=font+'px'},font);if(name!=='review')await page.getByRole('button',{name:'存入手机资料库并打开',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:out+'/'+name+'.png'});report.screens.push({name,header:await page.locator('.sheet-heading').boundingBox(),primary:await page.getByRole('button',{name:'存入手机资料库并打开',exact:true}).boundingBox(),viewport:{width,height},font})}
+ const css=await page.locator('link[rel=stylesheet]').getAttribute('href');await writeFile(out+'/app.css',await(await page.request.get(new URL(css,page.url()).href)).body());await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2))
+}finally{await browser.close()}

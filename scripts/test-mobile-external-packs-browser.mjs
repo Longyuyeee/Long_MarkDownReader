@@ -1,0 +1,47 @@
+import { activateMobileRoot, openMobileSettingsTransfer } from './mobile-settings-navigation.mjs'
+import assert from 'node:assert/strict'
+import { mkdir,readFile,writeFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
+import { createHash } from 'node:crypto'
+import path from 'node:path'
+const require=createRequire(import.meta.url),{chromium}=require(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright'),root='tests/fixtures/mobile-external-packs'
+const manifest=JSON.parse(await readFile(root+'/manifest.json','utf8')),output=`docs/evidence/mobile-0.1.0/external-packs-browser-${Date.now()}`;await mkdir(output,{recursive:true})
+const browser=await chromium.launch({channel:'chrome',headless:true}),report={kind:'public-note-package-compatibility-user-tasks',nativeAndroidTest:false,checks:[],errors:[],externalRequests:[]}
+const key=JSON.stringify(['local','原有.md']),original={rootId:'local',relativePath:'原有.md',content:'# 原有\r\n保留。',signature:'original',modified:1},draft={rootId:'local',relativePath:'原有.md',content:'原有草稿😀\r\n',expectedSignature:'original',revision:12,updated:1}
+let page
+const data=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('longedit-mobile-preview-v1'))),records=async()=>Object.values((await data()).packImports||{})
+const open=async()=>{await activateMobileRoot(page, '设置');await openMobileSettingsTransfer(page, '附件包导入记录')},close=()=>page.getByRole('button',{name:'关闭面板',exact:true}).tap()
+const unchanged=async()=>{const d=await data();assert.deepEqual(d.documents[key],original);assert.deepEqual(d.drafts[key],draft)}
+async function stage(file,name,mime='application/zip'){await page.getByLabel('选择附件包文件',{exact:true}).setInputFiles({name,mimeType:mime,buffer:await readFile(root+'/'+file)});await page.getByRole('heading',{name,exact:true}).waitFor();await page.waitForFunction(()=>!document.querySelector('[role=dialog] [aria-label="关闭面板"]').disabled);return (await records()).find(r=>r.name===name)}
+async function waitReaderImage(width){const element=await page.locator('.mobile-reader').elementHandle(),frame=await element.contentFrame();await frame.waitForFunction(w=>[...document.querySelectorAll('img')].some(img=>img.naturalWidth===w),width)}
+const remove=async()=>{await page.getByRole('button',{name:'移除这份导入记录',exact:true}).tap();await page.getByRole('button',{name:'确认移除导入记录',exact:true}).tap();await page.getByText('导入记录已移除，源文件和已存入的笔记、附件仍保留。',{exact:true}).waitFor()}
+async function verifyPublished(id,file,stem){const d=await data(),r=d.packImports[id],entry=manifest.samples[file],text=Object.entries(entry.members).find(([name])=>name.endsWith('/text.markdown'))
+ assert.equal(r.status,'imported');assert.equal(path.posix.basename(r.localPath),stem+'.md');assert.equal(createHash('sha256').update(d.documents[JSON.stringify(['local',r.localPath])].content).digest('hex'),text[1].sha256)
+ const folder=r.localPath.split('/').slice(0,-1).join('/');for(const[name,expected]of Object.entries(entry.members).filter(([name])=>name.includes('/assets/'))){const asset=name.slice(name.indexOf('assets/'));assert.equal(createHash('sha256').update(Buffer.from(d.attachments[JSON.stringify(['local',folder+'/'+asset])].base64,'base64')).digest('hex'),expected.sha256)}await unchanged();return r.localPath}
+try{
+ const context=await browser.newContext({viewport:{width:360,height:800},isMobile:true,hasTouch:true,colorScheme:'dark'})
+ await context.addInitScript(({key,original,draft})=>{if(window===window.top&&!localStorage.getItem('longedit-mobile-preview-v1'))localStorage.setItem('longedit-mobile-preview-v1',JSON.stringify({version:1,documents:{[key]:original},drafts:{[key]:draft}}))},{key,original,draft})
+ page=await context.newPage();page.on('pageerror',e=>report.errors.push(String(e)));page.on('request',r=>{if(/^https?:/.test(r.url())&&new URL(r.url()).hostname!=='127.0.0.1')report.externalRequests.push(r.url())})
+ await page.goto(process.env.LONGEDIT_MOBILE_PREVIEW_URL||'http://127.0.0.1:9012/mobile.html');await open();await page.getByText(/普通文件压缩包、多篇笔记备份/).waitFor()
+ const first=await stage('shinyfrog-v2.textpack','公开示例.zip');assert.equal(first.status,'ready');assert.equal(Object.keys((await data()).documents).length,1)
+ await page.getByRole('button',{name:'查看包内图片 textbundle.png',exact:true}).tap();await page.waitForFunction(()=>document.querySelector('.pack-import-panel figure img')?.naturalWidth===64);await unchanged();await page.screenshot({path:path.join(output,'360-public-zip-review.png'),fullPage:true})
+ report.checks.push('An unchanged upstream TextPack named ZIP is held for explicit review, with a truly decoded 64px image and clear single-note ZIP guidance; source and draft remain untouched')
+ await page.getByRole('button',{name:'将笔记和附件存入手机资料库',exact:true}).tap();await page.frameLocator('.mobile-reader').getByRole('heading',{name:'Textbundle Example',exact:true}).waitFor();const firstPath=await verifyPublished(first.id,'shinyfrog-v2.textpack','公开示例');await waitReaderImage(64)
+ report.checks.push('Confirmation creates an independent readable note and byte-identical image with a clean note name, preserving the earlier document and protected draft')
+ await page.getByRole('button',{name:'返回资料库',exact:true}).tap();await open();const second=await stage('fsnotes-ios.textpack','FSNotes随记.zip','application/octet-stream')
+ const review=await page.getByLabel('待导入正文（只读）',{exact:true}).inputValue();assert.ok(review.includes('[[WikiLinks with emoji 😎]]'));assert.ok(review.includes('```mermaid'));await page.getByText(/特殊语法/).waitFor()
+ await page.getByRole('button',{name:'查看包内图片 128.png',exact:true}).tap();await page.waitForFunction(()=>document.querySelector('.pack-import-panel figure img')?.naturalWidth===128)
+ await page.getByRole('button',{name:'将笔记和附件存入手机资料库',exact:true}).tap();await page.frameLocator('.mobile-reader').getByRole('heading',{name:'Hello, folks!',exact:true}).waitFor();await verifyPublished(second.id,'fsnotes-ios.textpack','FSNotes随记');await waitReaderImage(128);await page.screenshot({path:path.join(output,'360-fsnotes-reading.png')})
+ report.checks.push('Real FSNotes-shipped member bytes survive octet-stream ZIP import, including its 128px image, wiki-link source, math and Mermaid code; the review explains rendering capability limits')
+ await page.getByRole('button',{name:'返回资料库',exact:true}).tap();await open();const count=Object.keys((await data()).documents).length
+ for(const[file,name,reason]of [['not-a-bundle.zip','普通压缩包.zip',/不支持的文件/],['multiple-notes.zip','多篇笔记.zip',/ZIP/],['missing-assets.zip','缺失图片.zip',/缺少包内附件/]]){await stage(file,name);await page.getByRole('alert').filter({hasText:reason}).waitFor();assert.equal(await page.getByRole('button',{name:'将笔记和附件存入手机资料库',exact:true}).count(),0);assert.equal(Object.keys((await data()).documents).length,count);await remove()}
+ report.checks.push('Ordinary ZIPs, multi-note archives and missing-image variants are rejected by content checks and can be cleaned without partial notes or changes to previous imports')
+ const alias=await stage('shinyfrog-v2.textpack','公开示例.textpack');await page.getByRole('button',{name:'将笔记和附件存入手机资料库',exact:true}).tap();await page.frameLocator('.mobile-reader').getByRole('heading',{name:'Textbundle Example',exact:true}).waitFor();const aliasPath=await verifyPublished(alias.id,'shinyfrog-v2.textpack','公开示例');assert.notEqual(aliasPath,firstPath)
+ report.checks.push('Equivalent ZIP and TextPack names create separate UUID destinations; accepting a new container suffix cannot overwrite an earlier note')
+ await page.getByRole('button',{name:'返回资料库',exact:true}).tap();await open();await page.locator(`[data-pack-import-id="${alias.id}"]`).tap();await remove();assert.ok((await data()).documents[JSON.stringify(['local',aliasPath])]);await close();await page.reload();await open();await page.locator(`[data-pack-import-id="${second.id}"]`).tap();await page.getByRole('button',{name:'打开已导入笔记',exact:true}).waitFor()
+ report.checks.push('Imported notes survive receipt removal, and public-sample receipts remain reopenable after reload')
+ await close();await open();await stage('shinyfrog-v2.textpack','可读性.zip');await page.evaluate(()=>document.documentElement.style.fontSize='32px');await page.evaluate(await readFile(require.resolve('axe-core/axe.min.js'),'utf8'));const violations=await page.evaluate(async()=>(await axe.run(document,{iframes:false,runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}})).violations.map(({id})=>id));assert.deepEqual(violations,[]);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:path.join(output,'360-zip-review-200.png'),fullPage:true});await unchanged()
+ report.checks.push('At 360px and 200% text in dark mode the compatibility explanation and review remain readable, with no checked accessibility violations, overflow or external metadata requests')
+ assert.deepEqual(report.errors,[]);assert.deepEqual(report.externalRequests,[]);report.passed=true
+}catch(error){report.failure=String(error.stack||error);process.exitCode=1;if(page)await page.screenshot({path:path.join(output,'failure.png'),fullPage:true}).catch(()=>{})}
+finally{await writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');await browser.close();console.log(JSON.stringify({output,checks:report.checks.length,passed:report.passed,failure:report.failure},null,2))}

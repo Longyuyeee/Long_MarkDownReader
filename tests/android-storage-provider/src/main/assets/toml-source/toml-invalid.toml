@@ -1,0 +1,18 @@
+﻿# 手机配置 中文😎
+title = "中文😎 <img src=\"https://example.invalid/toml\">" # keep
+precise = 9007199254740993123
+hex = 0x7fff_ffff_ffff_ffff
+negative_zero = -0.0
+when = 2026-10-24T09:08:07.123456789+08:00
+local_date = 2024-02-29
+literal = '''C:\new\path # literal'''
+multiline = """first
+second 中文😎"""
+"quoted.key" = { enabled = true, value = "# literal" }
+[server]
+ports = [8000, 8001,] # order
+[[plugins]]
+name = "first"
+[[plugins]]
+name = 'second'
+pending = [1, 2

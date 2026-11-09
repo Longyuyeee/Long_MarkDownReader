@@ -1,0 +1,13 @@
+﻿# 结构配置：中文😎
+server:
+  enabled: true # keep
+  count: 900719925474099312345
+  sci: 1.2300e+99
+  name: 'yes'
+other:
+  name: "\u4e2d"
+base: &base {locked: true}
+copy: *base
+block: |-
+  保留块文本
+list: [true, -0, null]

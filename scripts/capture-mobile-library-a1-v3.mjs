@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict'
+import {mkdir,readFile,writeFile,access} from 'node:fs/promises'
+import {createHash} from 'node:crypto'
+import {createRequire} from 'node:module'
+const require=createRequire(import.meta.url),{chromium}=require(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
+const root='docs/evidence/mobile-0.1.0/library-a1-v3-2026-11-05',stage=process.argv[2];assert.match(stage||'',/^[a-z0-9-]+$/);await mkdir(root,{recursive:true});await writeFile(root+'/.gitignore','*\n!.gitignore\n');const out=root+'/'+stage;await assert.rejects(access(out));await mkdir(out)
+const names=['夜读随记.md','阅读配置.json','阅读方法.md','demo.py','书签导出.json','阅读方式.md'],dates=['2025-01-20T22:14:00+08:00','2025-01-19T17:36:00+08:00','2025-01-18T16:52:00+08:00','2025-01-16T20:03:00+08:00','2025-01-15T09:40:00+08:00','2025-01-12T16:42:00+08:00']
+const seed={version:1,documents:Object.fromEntries(names.map((name,i)=>[JSON.stringify(['local',name]),{rootId:'local',relativePath:name,content:'# '+name+'\n\n阅读与记录。\n',signature:'a1-'+i,modified:Date.parse(dates[i])}])),drafts:{}}
+const browser=await chromium.launch({channel:'chrome',headless:true}),report={stage,scope:'Actual completed production frontend; full original screenshots. Browser font scaling is an explicit approximation, not Android IME or physical-touch acceptance.',screens:[],source:[]}
+try{
+ for(const file of ['src/mobile/MobileApp.vue','src/mobile/mobile.scss']){const bytes=await readFile(file);report.source.push({file,sha256:createHash('sha256').update(bytes).digest('hex')})}
+ for(const[width,height,scale,dark]of stage.startsWith('baseline')?[[390,844,1,false]]:[[390,844,1,false],[360,800,1,false],[320,640,1,false],[390,844,1,true],[390,844,1.3,false],[320,640,2,false]]){
+  const context=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,reducedMotion:'reduce'});await context.addInitScript(({seed,name,dark,scale})=>{if(window!==window.top)return;localStorage.setItem('longedit-mobile-preview-v1',JSON.stringify(seed));localStorage.setItem('longedit-mobile-recent-v1',JSON.stringify([{rootId:'local',relativePath:name}]));localStorage.setItem('longedit-mobile-preferences-v1',JSON.stringify({version:1,theme:dark?'dark':'light'}));if(scale!==1)document.addEventListener('DOMContentLoaded',()=>document.documentElement.style.fontSize=16*scale+'px',{once:true})},{seed,name:names[0],dark,scale});const page=await context.newPage();await page.goto('http://127.0.0.1:9012/mobile.html');await page.locator('.file-row').first().waitFor();const name='home-'+width+'-'+(dark?'dark':'light')+'-'+scale;await page.screenshot({path:out+'/'+name+'.png'});report.screens.push({name,viewport:{width,height},scale,dark,geometry:await page.evaluate(()=>{const box=selector=>document.querySelector(selector)?.getBoundingClientRect().toJSON()||null;return{heading:box('.library-home h1'),header:box('.library-top-controls')||box('.root-header'),modes:box('.library-modes'),continue:box('.continue-card'),file:box('.file-row'),more:box('.library-file-more'),navigation:box('.bottom-navigation'),fab:box('.new-note-fab'),overflow:document.documentElement.scrollWidth>innerWidth}})});await context.close()
+ }
+ report.passed=true
+}catch(error){report.failure=String(error.stack||error);throw error}finally{await browser.close();await writeFile(out+'/report.json',JSON.stringify(report,null,2))}
+console.log(JSON.stringify({out,screens:report.screens.length,firstFile:report.screens[0]?.geometry.file}))
