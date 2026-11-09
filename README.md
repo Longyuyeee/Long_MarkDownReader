@@ -21,6 +21,11 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.15/LongEdit_1.3.15_x64-setup.exe"><strong>下载 Windows 稳定版</strong></a> ·
+  <a href="#android-预览版"><strong>查看 Android 预览版</strong></a>
+</p>
+
+<p align="center">
   <a href="#下载">下载</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#日常工作流">日常工作流</a> ·
@@ -80,6 +85,8 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 
 ## 下载
 
+### Windows 稳定版
+
 <p>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.15"><img src="https://img.shields.io/badge/Stable-v1.3.15-cca43b" alt="v1.3.15 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
@@ -112,6 +119,20 @@ fda1a3c5534357c5a4905980c1e88b203418f26ff6cb0d571cf68fac72f35a81  LongEdit_1.3.1
 </details>
 
 应用可每 24 小时检查更新，也可在设置中手动检查；自动更新始终需要确认，并校验安装包大小与 SHA-256。v1.0.4 及更早版本需先手动安装当前版本。
+
+### Android 预览版
+
+在手机上打开本地资料库，继续读写 Markdown 和纯文本，浏览 JSON、YAML、XML、TOML，或给 PDF 添加批注。Android 预览版面向 **Android 10 及以上的 ARM64 手机**，需要 Android System WebView 111 或更新版本。
+
+**公开下载准备中。** 发布后，这里的「下载 Android APK」会直接下载安装包。发布页提供版本说明、安装步骤和 SHA-256 校验值。
+
+<p align="center">
+  <a href="design/brand/android-preview/library.png"><img src="design/brand/android-preview/library.png" width="30%" alt="安卓资料库，显示最近文档和按格式区分的文件列表"></a>
+  <a href="design/brand/android-preview/markdown.png"><img src="design/brand/android-preview/markdown.png" width="30%" alt="安卓 Markdown 阅读，显示正文、引用和表格"></a>
+  <a href="design/brand/android-preview/pdf-outline.png"><img src="design/brand/android-preview/pdf-outline.png" width="30%" alt="安卓 PDF 目录，显示章节、当前页和书签入口"></a>
+</p>
+
+从左到右为资料库、Markdown 阅读、PDF 目录。使用示例资料，点击可查看大图。
 
 ## 快速开始
 
