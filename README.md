@@ -9,7 +9,7 @@
 
 <p align="center">
   <strong>让文件成为知识，让工作自然继续。</strong><br>
-  本地优先的 Windows 知识工作台<br>
+  本地优先的知识工作台 · Windows 稳定版与 Android 预览版<br>
   从一份笔记，到一整个项目：把阅读、写作、资料整理与关系探索放在同一个工作空间。
 </p>
 
@@ -22,11 +22,12 @@
 
 <p align="center">
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.15/LongEdit_1.3.15_x64-setup.exe"><strong>下载 Windows 稳定版</strong></a> ·
-  <a href="#android-预览版"><strong>查看 Android 预览版</strong></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/android-v0.1.0-beta.1/LongEdit-Android-arm64.apk"><strong>下载 Android 预览版 APK</strong></a>
 </p>
 
 <p align="center">
   <a href="#下载">下载</a> ·
+  <a href="#android-预览版">Android 预览</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#日常工作流">日常工作流</a> ·
   <a href="#真实界面">真实界面</a> ·
@@ -124,7 +125,12 @@ fda1a3c5534357c5a4905980c1e88b203418f26ff6cb0d571cf68fac72f35a81  LongEdit_1.3.1
 
 在手机上打开本地资料库，继续读写 Markdown 和纯文本，浏览 JSON、YAML、XML、TOML，或给 PDF 添加批注。Android 预览版面向 **Android 10 及以上的 ARM64 手机**，需要 Android System WebView 111 或更新版本。
 
-**公开下载准备中。** 发布后，这里的「下载 Android APK」会直接下载安装包。发布页提供版本说明、安装步骤和 SHA-256 校验值。
+**0.1.0 beta.1** · [下载 Android APK](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/android-v0.1.0-beta.1/LongEdit-Android-arm64.apk) · [安装说明、更新记录与校验值](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/android-v0.1.0-beta.1)
+
+<p>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/android-v0.1.0-beta.1"><img src="design/brand/android-preview/download-qr.png" width="128" alt="扫码打开 Long编辑 Android 预览版发布页"></a><br>
+  <sub>在电脑上浏览时，用手机扫码打开安卓发布页。</sub>
+</p>
 
 <p align="center">
   <a href="design/brand/android-preview/library.png"><img src="design/brand/android-preview/library.png" width="30%" alt="安卓资料库，显示最近文档和按格式区分的文件列表"></a>
