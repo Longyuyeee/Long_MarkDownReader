@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-228-v1.3.16-windows-input-deadlock-candidate",
-  "binaryVersionTransition": "v1.3.16-quality-gate-pending",
+  "binaryVersionTransition": "v1.3.16-release-ready",
   "displayLabel": "v1.3.16 输入死锁修复候选 · 当前公开 v1.3.15",
   "activeSlice": {
     "id": "v1.3.16-windows-input-deadlock",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_3_16_Unsigned_Community_Release_Audit_2026-11-19.md"
   }
 }
