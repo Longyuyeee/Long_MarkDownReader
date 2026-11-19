@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "exitCode": 42,
+      "version": "0.34.5",
+      "output": "keyboard-focus-deadlock"
+    },
+    {
+      "exitCode": 0,
+      "version": "0.37.3",
+      "output": "responsive key_cycles=12590 focus_messages=129122"
+    }
+  ],
+  "sourceCommit": "f1a28ebf99123e7c5bd4aee78899bafe38f2dbb0",
+  "status": "passed",
+  "fixedTao": "0.37.3"
+}

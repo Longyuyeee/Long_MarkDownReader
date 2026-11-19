@@ -8,4 +8,6 @@
 
 针对性原生回归使用独立测试窗口，同时发送按键和焦点消息，并从其他线程探测窗口响应。先使用原 Tao 0.34.5 复现死锁，再使用项目实际解析的版本检查持续响应。运行入口为 GitHub Actions 的 `Windows keyboard and focus regression`，避免操作用户的编辑窗口。
 
-当前修复处于编译和原生回归验证阶段。公开稳定版仍为 1.3.15，正在运行的旧进程仍保留。恢复文件和现场内存数据仅存放在用户本机。
+前端生产构建与 `cargo check --locked` 通过。[原生对照运行 44451757888](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/44451757888) 完整通过，旧 Tao 0.34.5 触发死锁，Tao 0.37.3 在 12590 轮按键和 129122 次焦点消息后正常退出。结果保存在[对照记录](evidence/windows-input-2026-11-19/keyboard-reentrancy-results.json)。第一轮脚本依赖空闲事件结束，在持续消息压力下无法收尾，随后改为独立终止消息压力，完整重跑通过。
+
+Windows 修复程序的优化构建已通过，产物为本机 `release-artifacts/windows-input-fix-20261119/tauri-app.exe`。本机替换需要结束旧的无响应进程，已准备原程序备份与恢复副本，等待用户确认重启。公开稳定版仍为 1.3.15。恢复文件和现场内存数据仅存放在用户本机。
