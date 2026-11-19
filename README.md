@@ -8,7 +8,7 @@
 <p align="center">写 Markdown、查资料、批注 PDF、编辑表格和配置文件，都在同一个工作区。</p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Stable-v1.3.15-2563eb?style=flat-square&amp;label=Windows%2010%2F11" alt="Windows 10/11 稳定版 v1.3.15"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Stable-v1.3.16-2563eb?style=flat-square&amp;label=Windows%2010%2F11" alt="Windows 10/11 稳定版 v1.3.16"></a>
   <a href="#android-预览版"><img src="https://img.shields.io/badge/Android-%E9%A2%84%E8%A7%88%E7%89%88-24765b?style=flat-square" alt="Android 预览版"></a>
   <img src="https://img.shields.io/badge/%E6%A0%BC%E5%BC%8F%E6%94%AF%E6%8C%81-43%20%E7%B1%BB-5846a3?style=flat-square" alt="支持 43 类格式">
 </p>
@@ -77,18 +77,18 @@
 
 ### Windows 稳定版
 
-当前公开稳定版为 **v1.3.15**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.3.16**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 |
 | --- | --- |
-| EXE · 推荐 | [LongEdit_1.3.15_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.15/LongEdit_1.3.15_x64-setup.exe) |
-| MSI · 管理部署 | [LongEdit_1.3.15_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.15/LongEdit_1.3.15_x64_zh-CN.msi) |
-| 发布页与校验 | [Windows Release](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.15) · [SHA256SUMS.txt](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.15/SHA256SUMS.txt) |
+| EXE · 推荐 | [LongEdit_1.3.16_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.16/LongEdit_1.3.16_x64-setup.exe) |
+| MSI · 管理部署 | [LongEdit_1.3.16_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.16/LongEdit_1.3.16_x64_zh-CN.msi) |
+| 发布页与校验 | [Windows Release](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.3.16) · [SHA256SUMS.txt](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.3.16/SHA256SUMS.txt) |
 
 <details>
 <summary>安装提示与校验方法</summary>
 
-社区安装包未进行 Authenticode 签名，Windows 可能提示「未知发布者」。在下载目录运行 `Get-FileHash -Algorithm SHA256 .\LongEdit_1.3.15_x64-setup.exe`，对照发布页的 SHA-256 清单。自动更新会请求确认，并校验下载的安装包。
+社区安装包未进行 Authenticode 签名，Windows 可能提示「未知发布者」。在下载目录运行 `Get-FileHash -Algorithm SHA256 .\LongEdit_1.3.16_x64-setup.exe`，对照发布页的 SHA-256 清单。自动更新会请求确认，并校验下载的安装包。
 
 </details>
 
@@ -161,7 +161,7 @@
 
 | Windows 稳定版 | 更新 |
 | --- | --- |
-| [v1.3.16](docs/RELEASE_NOTES_v1.3.16.md) · 准备发布 | 修复输入文字时可能导致整个窗口无响应的 Windows 死锁。 |
+| [v1.3.16](docs/RELEASE_NOTES_v1.3.16.md) | 修复输入文字时可能导致整个窗口无响应的 Windows 死锁。 |
 | [v1.3.15](docs/RELEASE_NOTES_v1.3.15.md) | 在原文中更换单处文件链接的目标，支持草稿与撤销。 |
 | [v1.3.14](docs/RELEASE_NOTES_v1.3.14.md) | 从文件链接返回来源，接续原来的草稿和位置。 |
 | [v1.3.13](docs/RELEASE_NOTES_v1.3.13.md) | 返回后可前进到刚才的位置。 |
