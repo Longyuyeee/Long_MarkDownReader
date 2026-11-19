@@ -8,7 +8,7 @@ import {recordLinkSourceInput,linkSourcePathKey} from './installed-v1-3-14-workf
 import {inlineLinkRepairOutputFiles,validateInstalledInlineLinkRepair,assertInlineLinkRepairOutputBytes} from './installed-v1-3-15-evidence.mjs'
 export async function runInstalledV1315InlineLinkRepairWorkflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
- assert.equal(appVersion,'1.3.15');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.ok(['1.3.15','1.3.16'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const folder=path.join(library,'000-v1315-links-'+crypto.randomUUID()),paths={A:path.join(folder,'A.md'),B:path.join(folder,'B.md'),target:path.join(folder,'资料','新 目标.md'),readonly:path.join(folder,'R.md')},store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
  const r={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-inline-link-repair-trusted-input-and-output-bytes',inputProtocol:'trusted-keyboard-and-pointer',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[],viewportWidths:[]},outputs=[]
  let failure

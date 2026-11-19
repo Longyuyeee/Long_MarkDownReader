@@ -161,11 +161,11 @@
 
 | Windows 稳定版 | 更新 |
 | --- | --- |
+| [v1.3.16](docs/RELEASE_NOTES_v1.3.16.md) · 准备发布 | 修复输入文字时可能导致整个窗口无响应的 Windows 死锁。 |
 | [v1.3.15](docs/RELEASE_NOTES_v1.3.15.md) | 在原文中更换单处文件链接的目标，支持草稿与撤销。 |
 | [v1.3.14](docs/RELEASE_NOTES_v1.3.14.md) | 从文件链接返回来源，接续原来的草稿和位置。 |
 | [v1.3.13](docs/RELEASE_NOTES_v1.3.13.md) | 返回后可前进到刚才的位置。 |
 | [v1.3.12](docs/RELEASE_NOTES_v1.3.12.md) | 在结构提纲和源码位置之间往返。 |
-| [v1.3.11](docs/RELEASE_NOTES_v1.3.11.md) | 查找后可返回编辑位置。 |
 
 [全部发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases) · [历史发布记录](docs/README_Release_History.md)
 

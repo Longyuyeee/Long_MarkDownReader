@@ -36,7 +36,12 @@ test('publisher validates each installed report once using a registered filename
  const aggregateReports=version==='1.3.0'
   ?['installed-v1126-workflow.json','installed-v1245-block-field-delete-workflow.json']
   :null
- if(aggregateReports){
+ if(version==='1.3.16'){
+  // A dependency hotfix retains the previous feature workflows and separately
+  // binds the native old/new control; it does not invent a new UI workflow.
+  assert.ok(reports.includes('installed-v1315-links-workflow.json'))
+  assert.ok(run.includes('node scripts/assert-windows-input-fix.mjs'))
+ }else if(aggregateReports){
   for(const file of aggregateReports)assert.ok(reports.includes(file),`Current version ${version} is missing publisher validation: ${file}`)
  }else{
   const current=`installed-v${version.replaceAll('.','')}`
