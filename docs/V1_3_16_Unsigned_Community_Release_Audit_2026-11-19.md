@@ -13,3 +13,5 @@ community-unsigned（未签名社区版），企业 releaseCandidate=false；验
 原规划的引用式文件链接单处修正顺延到 [1.3.17](Foundation_Deepening_Roadmap_1_3_17_2026-11-19.md)，不混入本次修复。
 
 首轮构建 [44480429134](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/44480429134) 在版本迁移检查停止，未生成安装包：旧测试将 1.3.16 的前版误回退为 1.2.15，并仍把已批准的 1.3.16 列为未知版本。已补齐准确前版 1.3.15，未知版本边界移至 1.3.17；21 项版本、固定源码与报告范围检查通过，原断言仍保留。
+
+第二轮 [44481369196](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/44481369196) 在后端基线测试停止，未生成安装包。旧测试直接要求当前 HEAD 始终与 1.3.9 依赖相同，这与本次窗口框架更新不符。已将不变性比较固定到已发布的 1.3.15，同时检查当前指纹变化必须返回 `reused=false` 并执行完整 Rust 回归；不放宽历史结果与当前结果的边界。
