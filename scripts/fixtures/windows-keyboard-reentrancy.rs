@@ -11,7 +11,6 @@ use std::{
     time::{Duration, Instant},
 };
 use tao::{
-    event::Event,
     event_loop::{ControlFlow, EventLoop},
     platform::{run_return::EventLoopExtRunReturn, windows::WindowExtWindows},
     window::WindowBuilder,
@@ -72,6 +71,13 @@ fn main() {
         thread::sleep(Duration::from_millis(500));
         let mut misses = 0;
         while !watchdog_stop.load(Ordering::Relaxed) {
+            if start.elapsed() >= duration {
+                // Continuous sent messages may keep MainEventsCleared from firing.
+                // End the pressure independently so the event loop can drain.
+                watchdog_stop.store(true, Ordering::Relaxed);
+                unsafe { PostMessageW(hwnd as _, WM_NULL, 0, 0); }
+                break;
+            }
             let mut result = 0;
             let responded = unsafe {
                 SendMessageTimeoutW(hwnd as _, WM_NULL, 0, 0, SMTO_ABORTIFHUNG, 500, &mut result)
@@ -85,9 +91,9 @@ fn main() {
         }
     });
 
-    event_loop.run_return(|event, _, control_flow| {
+    event_loop.run_return(|_, _, control_flow| {
         *control_flow = ControlFlow::Poll;
-        if matches!(event, Event::MainEventsCleared) && start.elapsed() >= duration {
+        if start.elapsed() >= duration {
             stop.store(true, Ordering::Relaxed);
             *control_flow = ControlFlow::Exit;
         }

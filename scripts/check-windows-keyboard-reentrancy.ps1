@@ -13,6 +13,7 @@ $fixtureSource = Join-Path $PSScriptRoot 'fixtures/windows-keyboard-reentrancy.r
 $work = Join-Path $env:RUNNER_TEMP 'longedit-keyboard-regression'
 New-Item -ItemType Directory -Path $work -Force | Out-Null
 $results = @()
+$resultPath = Join-Path $repoRoot 'keyboard-reentrancy-results.json'
 
 foreach ($version in @('0.34.5', $fixedVersion)) {
     $project = Join-Path $work $version
@@ -43,8 +44,8 @@ windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_UI_Wind
     $expected = if ($version -eq '0.34.5') { 42 } else { 0 }
     if ($process.ExitCode -ne $expected) { throw "Unexpected Tao $version result $($process.ExitCode). $text" }
     $results += @{ version = $version; exitCode = $process.ExitCode; output = $text.Trim() }
+    @{ status = 'running'; sourceCommit = $env:GITHUB_SHA; fixedTao = $fixedVersion; results = $results } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $resultPath -Encoding utf8
 }
 
-$resultPath = Join-Path $repoRoot 'keyboard-reentrancy-results.json'
-@{ sourceCommit = $env:GITHUB_SHA; fixedTao = $fixedVersion; results = $results } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $resultPath -Encoding utf8
+@{ status = 'passed'; sourceCommit = $env:GITHUB_SHA; fixedTao = $fixedVersion; results = $results } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $resultPath -Encoding utf8
 Write-Output 'Original Tao deadlock reproduced; current resolved Tao stayed responsive under concurrent key and focus messages.'

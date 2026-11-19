@@ -14,13 +14,17 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
-      - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri -> target
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /src-tauri/Cargo.lock
+            /scripts/check-windows-keyboard-reentrancy.ps1
+            /scripts/fixtures/windows-keyboard-reentrancy.rs
       - name: Reproduce the previous lock and check the resolved fix
         shell: pwsh
         run: ./scripts/check-windows-keyboard-reentrancy.ps1
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: windows-input-regression-${{ github.run_id }}
           path: keyboard-reentrancy-results.json
