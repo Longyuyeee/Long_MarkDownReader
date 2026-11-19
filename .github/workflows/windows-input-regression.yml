@@ -1,0 +1,27 @@
+name: Windows keyboard and focus regression
+
+"on":
+  push:
+    branches: [codex/fix-windows-input-deadlock]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-input:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - name: Reproduce the previous lock and check the resolved fix
+        shell: pwsh
+        run: ./scripts/check-windows-keyboard-reentrancy.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-input-regression-${{ github.run_id }}
+          path: keyboard-reentrancy-results.json
+          if-no-files-found: error
